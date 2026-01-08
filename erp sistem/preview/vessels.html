@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP - Vessel Management</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo"><i class="fas fa-anchor"></i><span>IndoOcean ERP</span></div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+            <a href="contracts.html" class="nav-item"><i class="fas fa-file-contract"></i><span>Contracts</span></a>
+            <a href="vessels.html" class="nav-item active"><i class="fas fa-ship"></i><span>Vessels</span></a>
+            <a href="clients.html" class="nav-item"><i class="fas fa-building"></i><span>Clients</span></a>
+            <a href="payroll.html" class="nav-item"><i class="fas fa-money-bill-wave"></i><span>Payroll</span></a>
+            <a href="reports.html" class="nav-item"><i class="fas fa-chart-bar"></i><span>Reports</span></a>
+            <div class="nav-divider"></div>
+            <a href="#" class="nav-item"><i class="fas fa-cog"></i><span>Settings</span></a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <img src="https://ui-avatars.com/api/?name=Admin&background=D4AF37&color=fff" alt="Admin">
+                <div><span class="user-name">Admin HR</span><span class="user-role">Master Admin</span></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="main-header">
+            <div class="header-left">
+                <button class="menu-toggle"><i class="fas fa-bars"></i></button>
+                <div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Search vessels...">
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="header-btn notification-btn"><i class="fas fa-bell"></i><span
+                        class="badge">3</span></button>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>Vessel Management</h1>
+                    <p>Manage fleet vessels and their crews</p>
+                </div>
+                <button class="btn btn-primary" onclick="openModal('addVesselModal')"><i class="fas fa-plus"></i> Add
+                    Vessel</button>
+            </div>
+
+            <!-- Vessel Cards Grid -->
+            <div class="vessel-grid">
+                <div class="vessel-card">
+                    <div class="vessel-header">
+                        <div class="vessel-icon"><i class="fas fa-ship"></i></div>
+                        <div class="vessel-status active">Active</div>
+                    </div>
+                    <div class="vessel-body">
+                        <h3>MV Pacific Star</h3>
+                        <div class="vessel-details">
+                            <div class="detail-row"><span>Type:</span><strong>Container Ship</strong></div>
+                            <div class="detail-row"><span>IMO:</span><strong>9876543</strong></div>
+                            <div class="detail-row"><span>Flag:</span><strong>🇸🇬 Singapore</strong></div>
+                            <div class="detail-row"><span>Owner:</span><strong>Pacific Shipping Co.</strong></div>
+                        </div>
+                        <div class="vessel-crew">
+                            <div class="crew-avatars">
+                                <img src="https://ui-avatars.com/api/?name=J&background=0A2463&color=fff&size=28"
+                                    alt="">
+                                <img src="https://ui-avatars.com/api/?name=A&background=1E5AA8&color=fff&size=28"
+                                    alt="">
+                                <img src="https://ui-avatars.com/api/?name=B&background=27ae60&color=fff&size=28"
+                                    alt="">
+                                <span class="more">+12</span>
+                            </div>
+                            <span class="crew-count">15 Crew Onboard</span>
+                        </div>
+                    </div>
+                    <div class="vessel-footer">
+                        <button class="btn-icon" title="View"><i class="fas fa-eye"></i></button>
+                        <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon" title="Crew List"><i class="fas fa-users"></i></button>
+                    </div>
+                </div>
+
+                <div class="vessel-card">
+                    <div class="vessel-header">
+                        <div class="vessel-icon"><i class="fas fa-ship"></i></div>
+                        <div class="vessel-status active">Active</div>
+                    </div>
+                    <div class="vessel-body">
+                        <h3>MV Ocean Glory</h3>
+                        <div class="vessel-details">
+                            <div class="detail-row"><span>Type:</span><strong>Bulk Carrier</strong></div>
+                            <div class="detail-row"><span>IMO:</span><strong>9876544</strong></div>
+                            <div class="detail-row"><span>Flag:</span><strong>🇵🇦 Panama</strong></div>
+                            <div class="detail-row"><span>Owner:</span><strong>Oceanwide Maritime</strong></div>
+                        </div>
+                        <div class="vessel-crew">
+                            <div class="crew-avatars">
+                                <img src="https://ui-avatars.com/api/?name=D&background=9b59b6&color=fff&size=28"
+                                    alt="">
+                                <img src="https://ui-avatars.com/api/?name=E&background=e74c3c&color=fff&size=28"
+                                    alt="">
+                                <span class="more">+18</span>
+                            </div>
+                            <span class="crew-count">20 Crew Onboard</span>
+                        </div>
+                    </div>
+                    <div class="vessel-footer">
+                        <button class="btn-icon" title="View"><i class="fas fa-eye"></i></button>
+                        <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon" title="Crew List"><i class="fas fa-users"></i></button>
+                    </div>
+                </div>
+
+                <div class="vessel-card">
+                    <div class="vessel-header">
+                        <div class="vessel-icon tanker"><i class="fas fa-gas-pump"></i></div>
+                        <div class="vessel-status active">Active</div>
+                    </div>
+                    <div class="vessel-body">
+                        <h3>MT Borneo</h3>
+                        <div class="vessel-details">
+                            <div class="detail-row"><span>Type:</span><strong>Oil Tanker</strong></div>
+                            <div class="detail-row"><span>IMO:</span><strong>9876545</strong></div>
+                            <div class="detail-row"><span>Flag:</span><strong>🇮🇩 Indonesia</strong></div>
+                            <div class="detail-row"><span>Owner:</span><strong>Asia Marine Ltd</strong></div>
+                        </div>
+                        <div class="vessel-crew">
+                            <div class="crew-avatars">
+                                <img src="https://ui-avatars.com/api/?name=F&background=f39c12&color=fff&size=28"
+                                    alt="">
+                                <span class="more">+21</span>
+                            </div>
+                            <span class="crew-count">22 Crew Onboard</span>
+                        </div>
+                    </div>
+                    <div class="vessel-footer">
+                        <button class="btn-icon" title="View"><i class="fas fa-eye"></i></button>
+                        <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon" title="Crew List"><i class="fas fa-users"></i></button>
+                    </div>
+                </div>
+
+                <div class="vessel-card">
+                    <div class="vessel-header">
+                        <div class="vessel-icon"><i class="fas fa-ship"></i></div>
+                        <div class="vessel-status maintenance">Maintenance</div>
+                    </div>
+                    <div class="vessel-body">
+                        <h3>MV Java Sea</h3>
+                        <div class="vessel-details">
+                            <div class="detail-row"><span>Type:</span><strong>Cargo Ship</strong></div>
+                            <div class="detail-row"><span>IMO:</span><strong>9876546</strong></div>
+                            <div class="detail-row"><span>Flag:</span><strong>🇮🇩 Indonesia</strong></div>
+                            <div class="detail-row"><span>Owner:</span><strong>Pacific Shipping Co.</strong></div>
+                        </div>
+                        <div class="vessel-crew">
+                            <span class="crew-count" style="color: var(--text-muted);">No crew assigned</span>
+                        </div>
+                    </div>
+                    <div class="vessel-footer">
+                        <button class="btn-icon" title="View"><i class="fas fa-eye"></i></button>
+                        <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon" title="Crew List"><i class="fas fa-users"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Vessel Modal -->
+    <div class="modal-overlay" id="addVesselModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-ship"></i> Add New Vessel</h3>
+                <button class="modal-close" onclick="closeModal('addVesselModal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Vessel Name</label><input type="text"
+                            class="form-control" placeholder="e.g. MV Pacific Star"></div>
+                    <div class="form-group"><label class="form-label">IMO Number</label><input type="text"
+                            class="form-control" placeholder="e.g. 9876543"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Vessel Type</label>
+                        <select class="form-control">
+                            <option>Container Ship</option>
+                            <option>Bulk Carrier</option>
+                            <option>Oil Tanker</option>
+                            <option>LNG Carrier</option>
+                            <option>Cargo Ship</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="form-label">Flag State</label>
+                        <select class="form-control">
+                            <option>🇮🇩 Indonesia</option>
+                            <option>🇸🇬 Singapore</option>
+                            <option>🇵🇦 Panama</option>
+                            <option>🇱🇷 Liberia</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group"><label class="form-label">Ship Owner / Principal</label>
+                    <select class="form-control">
+                        <option>Pacific Shipping Co.</option>
+                        <option>Oceanwide Maritime</option>
+                        <option>Asia Marine Ltd</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('addVesselModal')">Cancel</button>
+                <button class="btn btn-primary"><i class="fas fa-save"></i> Save Vessel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <style>
+        .vessel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .vessel-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .vessel-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .vessel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .vessel-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-navy));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--text-primary);
+        }
+
+        .vessel-icon.tanker {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        .vessel-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .vessel-status.active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10B981;
+        }
+
+        .vessel-status.maintenance {
+            background: rgba(245, 158, 11, 0.2);
+            color: #F59E0B;
+        }
+
+        .vessel-body {
+            padding: 20px;
+        }
+
+        .vessel-body h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .vessel-details {
+            margin-bottom: 16px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-row span {
+            color: var(--text-muted);
+        }
+
+        .detail-row strong {
+            color: var(--text-primary);
+        }
+
+        .vessel-crew {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .crew-avatars {
+            display: flex;
+        }
+
+        .crew-avatars img {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            margin-left: -8px;
+            border: 2px solid var(--primary-navy);
+        }
+
+        .crew-avatars img:first-child {
+            margin-left: 0;
+        }
+
+        .crew-avatars .more {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--accent-gold);
+            color: var(--primary-dark);
+            font-size: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: -8px;
+        }
+
+        .crew-count {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .vessel-footer {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.1);
+            border-top: 1px solid var(--border-color);
+        }
+    </style>
+</body>
+
+</html>

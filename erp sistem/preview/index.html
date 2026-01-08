@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP Crew Contract - Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-anchor"></i>
+                <span>IndoOcean ERP</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="nav-item active">
+                <i class="fas fa-th-large"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="contracts.html" class="nav-item">
+                <i class="fas fa-file-contract"></i>
+                <span>Contracts</span>
+            </a>
+            <a href="vessels.html" class="nav-item">
+                <i class="fas fa-ship"></i>
+                <span>Vessels</span>
+            </a>
+            <a href="clients.html" class="nav-item">
+                <i class="fas fa-building"></i>
+                <span>Clients</span>
+            </a>
+            <a href="payroll.html" class="nav-item">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>Payroll</span>
+            </a>
+            <a href="reports.html" class="nav-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
+            </a>
+            <div class="nav-divider"></div>
+            <a href="#" class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <img src="https://ui-avatars.com/api/?name=Admin&background=D4AF37&color=fff" alt="Admin">
+                <div>
+                    <span class="user-name">Admin HR</span>
+                    <span class="user-role">Master Admin</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="header-left">
+                <button class="menu-toggle"><i class="fas fa-bars"></i></button>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search contracts, crew, vessels...">
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="header-btn notification-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge">5</span>
+                </button>
+                <button class="header-btn"><i class="fas fa-envelope"></i></button>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="page-content">
+            <div class="page-header">
+                <h1>Dashboard</h1>
+                <p>Welcome back! Here's your contract overview.</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue"><i class="fas fa-file-contract"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-value">156</span>
+                        <span class="stat-label">Active Contracts</span>
+                    </div>
+                    <div class="stat-trend up"><i class="fas fa-arrow-up"></i> 12%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-value">23</span>
+                        <span class="stat-label">Expiring Soon</span>
+                    </div>
+                    <div class="stat-trend warning"><i class="fas fa-exclamation"></i> Alert</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green"><i class="fas fa-users"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-value">342</span>
+                        <span class="stat-label">Total Crew</span>
+                    </div>
+                    <div class="stat-trend up"><i class="fas fa-arrow-up"></i> 8%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon gold"><i class="fas fa-dollar-sign"></i></div>
+                    <div class="stat-info">
+                        <span class="stat-value">$485K</span>
+                        <span class="stat-label">Monthly Payroll</span>
+                    </div>
+                    <div class="stat-trend down"><i class="fas fa-arrow-down"></i> 3%</div>
+                </div>
+            </div>
+
+            <!-- Alerts Section -->
+            <div class="alerts-section">
+                <h3><i class="fas fa-bell"></i> Contract Alerts</h3>
+                <div class="alerts-grid">
+                    <div class="alert-card danger">
+                        <div class="alert-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="alert-content">
+                            <span class="alert-count">5</span>
+                            <span class="alert-text">Contracts expiring in 7 days</span>
+                        </div>
+                        <a href="#" class="alert-action">View <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div class="alert-card warning">
+                        <div class="alert-icon"><i class="fas fa-clock"></i></div>
+                        <div class="alert-content">
+                            <span class="alert-count">12</span>
+                            <span class="alert-text">Contracts expiring in 30 days</span>
+                        </div>
+                        <a href="#" class="alert-action">View <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div class="alert-card info">
+                        <div class="alert-icon"><i class="fas fa-info-circle"></i></div>
+                        <div class="alert-content">
+                            <span class="alert-count">6</span>
+                            <span class="alert-text">Contracts expiring in 60 days</span>
+                        </div>
+                        <a href="#" class="alert-action">View <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Contracts by Vessel</h3>
+                        <select class="chart-filter">
+                            <option>This Month</option>
+                            <option>Last 3 Months</option>
+                            <option>This Year</option>
+                        </select>
+                    </div>
+                    <div class="chart-body">
+                        <div class="pie-chart-placeholder">
+                            <div class="pie-segment s1" style="--value: 35"></div>
+                            <div class="pie-segment s2" style="--value: 25"></div>
+                            <div class="pie-segment s3" style="--value: 20"></div>
+                            <div class="pie-segment s4" style="--value: 20"></div>
+                        </div>
+                        <div class="chart-legend">
+                            <div class="legend-item"><span class="dot blue"></span>MV Pacific Star (35)</div>
+                            <div class="legend-item"><span class="dot green"></span>MV Ocean Glory (25)</div>
+                            <div class="legend-item"><span class="dot orange"></span>MT Borneo (20)</div>
+                            <div class="legend-item"><span class="dot purple"></span>Others (20)</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Monthly Contracts</h3>
+                        <select class="chart-filter">
+                            <option>2024</option>
+                            <option>2023</option>
+                        </select>
+                    </div>
+                    <div class="chart-body">
+                        <div class="bar-chart">
+                            <div class="bar-group">
+                                <div class="bar" style="height: 60%"><span>24</span></div>
+                                <span class="bar-label">Jan</span>
+                            </div>
+                            <div class="bar-group">
+                                <div class="bar" style="height: 75%"><span>30</span></div>
+                                <span class="bar-label">Feb</span>
+                            </div>
+                            <div class="bar-group">
+                                <div class="bar" style="height: 55%"><span>22</span></div>
+                                <span class="bar-label">Mar</span>
+                            </div>
+                            <div class="bar-group">
+                                <div class="bar" style="height: 80%"><span>32</span></div>
+                                <span class="bar-label">Apr</span>
+                            </div>
+                            <div class="bar-group">
+                                <div class="bar" style="height: 65%"><span>26</span></div>
+                                <span class="bar-label">May</span>
+                            </div>
+                            <div class="bar-group">
+                                <div class="bar active" style="height: 90%"><span>36</span></div>
+                                <span class="bar-label">Jun</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Contracts Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>Recent Contracts</h3>
+                    <a href="contracts.html" class="btn-link">View All <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Contract No</th>
+                            <th>Crew Name</th>
+                            <th>Rank</th>
+                            <th>Vessel</th>
+                            <th>Sign On</th>
+                            <th>Sign Off</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>CTR-2024-0156</strong></td>
+                            <td>
+                                <div class="crew-info">
+                                    <img src="https://ui-avatars.com/api/?name=John+Doe&background=0A2463&color=fff&size=32"
+                                        alt="">
+                                    <span>John Doe</span>
+                                </div>
+                            </td>
+                            <td>Captain</td>
+                            <td>MV Pacific Star</td>
+                            <td>01 Jan 2024</td>
+                            <td>30 Jun 2024</td>
+                            <td><span class="status-badge active">Active</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-icon" title="View"><i class="fas fa-eye"></i></button>
+                                    <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-icon" title="Renew"><i class="fas fa-redo"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>CTR-2024-0155</strong></td>
+                            <td>
+                                <div class="crew-info">
+                                    <img src="https://ui-avatars.com/api/?name=Ahmad+Wijaya&background=1E5AA8&color=fff&size=32"
+                                        alt="">
+                                    <span>Ahmad Wijaya</span>
+                                </div>
+                            </td>
+                            <td>Chief Engineer</td>
+                            <td>MV Ocean Glory</td>
+                            <td>15 Dec 2023</td>
+                            <td>14 Jun 2024</td>
+                            <td><span class="status-badge expiring">Expiring</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-icon" title="View"><i class="fas fa-eye"></i></button>
+                                    <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-icon" title="Renew"><i class="fas fa-redo"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>CTR-2024-0154</strong></td>
+                            <td>
+                                <div class="crew-info">
+                                    <img src="https://ui-avatars.com/api/?name=Budi+Santoso&background=27ae60&color=fff&size=32"
+                                        alt="">
+                                    <span>Budi Santoso</span>
+                                </div>
+                            </td>
+                            <td>Chief Officer</td>
+                            <td>MT Borneo</td>
+                            <td>01 Feb 2024</td>
+                            <td>31 Jul 2024</td>
+                            <td><span class="status-badge active">Active</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-icon" title="View"><i class="fas fa-eye"></i></button>
+                                    <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-icon" title="Renew"><i class="fas fa-redo"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>CTR-2024-0153</strong></td>
+                            <td>
+                                <div class="crew-info">
+                                    <img src="https://ui-avatars.com/api/?name=Dedi+Kurniawan&background=9b59b6&color=fff&size=32"
+                                        alt="">
+                                    <span>Dedi Kurniawan</span>
+                                </div>
+                            </td>
+                            <td>2nd Engineer</td>
+                            <td>MV Pacific Star</td>
+                            <td>10 Jan 2024</td>
+                            <td>09 Jul 2024</td>
+                            <td><span class="status-badge draft">Draft</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-icon" title="View"><i class="fas fa-eye"></i></button>
+                                    <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-icon" title="Renew"><i class="fas fa-redo"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

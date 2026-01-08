@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP - Contract Management</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-anchor"></i>
+                <span>IndoOcean ERP</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="nav-item">
+                <i class="fas fa-th-large"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="contracts.html" class="nav-item active">
+                <i class="fas fa-file-contract"></i>
+                <span>Contracts</span>
+            </a>
+            <a href="vessels.html" class="nav-item">
+                <i class="fas fa-ship"></i>
+                <span>Vessels</span>
+            </a>
+            <a href="clients.html" class="nav-item">
+                <i class="fas fa-building"></i>
+                <span>Clients</span>
+            </a>
+            <a href="payroll.html" class="nav-item">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>Payroll</span>
+            </a>
+            <a href="reports.html" class="nav-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
+            </a>
+            <div class="nav-divider"></div>
+            <a href="#" class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <img src="https://ui-avatars.com/api/?name=Admin&background=D4AF37&color=fff" alt="Admin">
+                <div>
+                    <span class="user-name">Admin HR</span>
+                    <span class="user-role">Master Admin</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="main-header">
+            <div class="header-left">
+                <button class="menu-toggle"><i class="fas fa-bars"></i></button>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search contracts...">
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="header-btn notification-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge">5</span>
+                </button>
+                <button class="header-btn"><i class="fas fa-envelope"></i></button>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>Contract Management</h1>
+                    <p>Manage all crew contracts</p>
+                </div>
+                <a href="contract-form.html" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> New Contract
+                </a>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active">All Contracts</button>
+                <button class="tab-btn">Active</button>
+                <button class="tab-btn">Expiring Soon</button>
+                <button class="tab-btn">Draft</button>
+                <button class="tab-btn">Completed</button>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <select class="form-control">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="draft">Draft</option>
+                    <option value="expiring">Expiring Soon</option>
+                    <option value="completed">Completed</option>
+                    <option value="terminated">Terminated</option>
+                </select>
+                <select class="form-control">
+                    <option value="">All Vessels</option>
+                    <option value="1">MV Pacific Star</option>
+                    <option value="2">MV Ocean Glory</option>
+                    <option value="3">MT Borneo</option>
+                    <option value="4">MV Java Sea</option>
+                </select>
+                <select class="form-control">
+                    <option value="">All Clients</option>
+                    <option value="1">Pacific Shipping Co.</option>
+                    <option value="2">Oceanwide Maritime</option>
+                    <option value="3">Asia Marine Ltd</option>
+                </select>
+                <input type="month" class="form-control" placeholder="Period">
+                <div class="search-input" style="flex: 1;">
+                    <input type="text" class="form-control" placeholder="Search by contract no, crew name..."
+                        style="width: 100%;">
+                </div>
+            </div>
+
+            <!-- Contracts Table -->
+            <div class="table-card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox"></th>
+                            <th>Contract No</th>
+                            <th>Crew Name</th>
+                            <th>Rank</th>
+                            <th>Vessel</th>
+                            <th>Client</th>
+                            <th>Sign On</th>
+                            <th>Sign Off</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td><strong>CTR-2024-0156</strong></td>
+                            <td>
+                                <div class="crew-info">
+                                    <img src="https://ui-avatars.com/api/?name=John+Doe&background=0A2463&color=fff&size=32"
+                                        alt="">
+                                    <span>John Doe</span>
+                                </div>
+                            </td>
+                            <td>Captain</td>
+                            <td>MV Pacific Star</td>
+                            <td>Pacific Shipping Co.</td>
+                            <td>01 Jan 2024</td>
+                            <td>30 Jun 2024</td>
+                            <td>6 months</td>
+                            <td><span class="status-badge active">Active</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-icon" title="View"><i class="fas fa-eye"></i></button>
+                                    <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-icon" title="Renew"><i class="fas fa-redo"></i></button>
+                                    <button class="btn-icon" title="More"><i class="fas fa-ellipsis-v"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td><strong>CTR-2024-0155</strong></td>
+                            <td>
+                                <div class="crew-info">
+                                    <img src="https://ui-avatars.com/api/?name=Ahmad+Wijaya&background=1E5AA8&color=fff&size=32"
+                                        alt="">
+                                    <span>Ahmad Wijaya</span>
+                                </div>
+                            </td>
+                            <td>Chief Engineer</td>
+                            <td>MV Ocean Glory</td>
+                            <td>Oceanwide Maritime</td>
+                            <td>15 Dec 2023</td>
+                            <td>14 Jun 2024</td>
+                            <td>6 months</td>
+                            <td><span class="status-badge expiring">Expiring</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-icon" title="View"><i class="fas fa-eye"></i></button>
+                                    <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-icon" title="Renew"><i class="fas fa-redo"></i></button>
+                                    <button class="btn-icon" title="More"><i class="fas fa-ellipsis-v"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td><strong>CTR-2024-0154</strong></td>
+                            <td>
+                                <div class="crew-info">
+                                    <img src="https://ui-avatars.com/api/?name=Budi+Santoso&background=27ae60&color=fff&size=32"
+                                        alt="">
+                                    <span>Budi Santoso</span>
+                                </div>
+                            </td>
+                            <td>Chief Officer</td>
+                            <td>MT Borneo</td>
+                            <td>Asia Marine Ltd</td>
+                            <td>01 Feb 2024</td>
+                            <td>31 Jul 2024</td>
+                            <td>6 months</td>
+                            <td><span class="status-badge active">Active</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-icon" title="View"><i class="fas fa-eye"></i></button>
+                                    <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-icon" title="Renew"><i class="fas fa-redo"></i></button>
+                                    <button class="btn-icon" title="More"><i class="fas fa-ellipsis-v"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td><strong>CTR-2024-0153</strong></td>
+                            <td>
+                                <div class="crew-info">
+                                    <img src="https://ui-avatars.com/api/?name=Dedi+K&background=9b59b6&color=fff&size=32"
+                                        alt="">
+                                    <span>Dedi Kurniawan</span>
+                                </div>
+                            </td>
+                            <td>2nd Engineer</td>
+                            <td>MV Pacific Star</td>
+                            <td>Pacific Shipping Co.</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td><span class="status-badge draft">Draft</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-icon" title="View"><i class="fas fa-eye"></i></button>
+                                    <button class="btn-icon" title="Edit"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-icon" title="Delete"><i class="fas fa-trash"></i></button>
+                                    <button class="btn-icon" title="More"><i class="fas fa-ellipsis-v"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td><strong>CTR-2024-0152</strong></td>
+                            <td>
+                                <div class="crew-info">
+                                    <img src="https://ui-avatars.com/api/?name=Eko+P&background=e74c3c&color=fff&size=32"
+                                        alt="">
+                                    <span>Eko Prasetyo</span>
+                                </div>
+                            </td>
+                            <td>Bosun</td>
+                            <td>MV Java Sea</td>
+                            <td>Pacific Shipping Co.</td>
+                            <td>01 Oct 2023</td>
+                            <td>31 Mar 2024</td>
+                            <td>6 months</td>
+                            <td><span class="status-badge completed">Completed</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-icon" title="View"><i class="fas fa-eye"></i></button>
+                                    <button class="btn-icon" title="Renew"><i class="fas fa-redo"></i></button>
+                                    <button class="btn-icon" title="Download"><i class="fas fa-download"></i></button>
+                                    <button class="btn-icon" title="More"><i class="fas fa-ellipsis-v"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Pagination -->
+                <div class="pagination">
+                    <span class="pagination-info">Showing 1-5 of 156 contracts</span>
+                    <div class="pagination-buttons">
+                        <button class="page-btn"><i class="fas fa-chevron-left"></i></button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn">...</button>
+                        <button class="page-btn">32</button>
+                        <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

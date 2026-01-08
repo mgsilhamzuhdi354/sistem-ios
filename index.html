@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-translate="title">
+    PT Indo OceanCrew Services - Professional Crewing Agency & Ship Chandler
+  </title>
+  <meta name="description"
+    content="Professional maritime services including crew management, ship chandler, and vessel documentation for global shipping industry." />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="animations.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+</head>
+
+<body>
+  <!-- Header & Navigation -->
+  <header class="header">
+    <div class="container">
+      <nav class="navbar">
+        <a href="index.html" class="logo">
+          <div class="logo-icon">
+            <img src="assets/logo.jpg" alt="PT indo OceanCrew Services Logo" />
+          </div>
+          <div class="logo-text">
+            <h1>PT Indo OceanCrew Services</h1>
+            <p data-translate="tagline">Professional Maritime Solutions</p>
+          </div>
+        </a>
+        <ul class="nav-menu">
+          <li>
+            <a href="index.html" class="active" data-translate="nav.home">Home</a>
+          </li>
+          <li>
+            <a href="about.html" data-translate="nav.about">About Us</a>
+          </li>
+          <li>
+            <a href="services.html" data-translate="nav.services">Services</a>
+          </li>
+          <li>
+            <a href="departments.html" data-translate="nav.departments">Crewing</a>
+          </li>
+          <li>
+            <a href="contact.html" data-translate="nav.contact">Contact</a>
+          </li>
+        </ul>
+        <div class="nav-actions">
+          <div class="language-switcher">
+            <button class="lang-btn active" id="lang-en" data-lang="en">
+              <i class="fas fa-globe-americas"></i> EN
+            </button>
+            <button class="lang-btn" id="lang-id" data-lang="id">
+              <i class="fas fa-globe-asia"></i> ID
+            </button>
+            <button class="lang-btn" id="lang-zh" data-lang="zh">
+              <i class="fas fa-globe-asia"></i> CN
+            </button>
+          </div>
+          <a href="contact.html" class="btn btn-primary" data-translate="nav.contactBtn">
+            <i class="fas fa-headset"></i> Contact Us
+          </a>
+          <div class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section with Video Background -->
+  <section class="hero hero-video">
+    <!-- Video Background -->
+    <div class="hero-video-wrapper">
+      <video autoplay muted loop playsinline class="hero-video-bg" id="heroVideo">
+        <!-- Silakan download video kapal dari Pexels/Pixabay dan simpan sebagai videos/ship-sailing.mp4 -->
+        <source src="videos/ship-sailing.mp4" type="video/mp4">
+        <source src="videos/ocean-ship.webm" type="video/webm">
+      </video>
+      <div class="hero-video-overlay"></div>
+    </div>
+
+    <!-- Hero Content -->
+    <div class="container">
+      <div class="hero-content-wrapper">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <i class="fas fa-anchor"></i>
+            <span data-translate="hero.badge">Professional Maritime Services</span>
+          </div>
+          <h1 class="hero-title" data-translate="hero.title">
+            Maritime Excellence <span class="highlight">Across Oceans</span>
+          </h1>
+          <p class="hero-description" data-translate="hero.description">
+            Trusted maritime service provider specializing in crew
+            management and ship supply solutions. Ensuring every vessel
+            operates smoothly, safely, and efficiently.
+          </p>
+          <div class="hero-buttons">
+            <a href="services.html" class="btn btn-primary btn-glow" data-translate="hero.servicesBtn">
+              <i class="fas fa-ship"></i> Our Services
+            </a>
+            <a href="contact.html" class="btn btn-outline btn-light" data-translate="hero.contactBtn">
+              <i class="fas fa-phone-alt"></i> Get Quote
+            </a>
+          </div>
+
+          <!-- Hero Stats -->
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <span class="hero-stat-number">500+</span>
+              <span class="hero-stat-label" data-translate="hero.stat1">Certified Crew</span>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat">
+              <span class="hero-stat-number">100+</span>
+              <span class="hero-stat-label" data-translate="hero.stat2">Vessels Served</span>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat">
+              <span class="hero-stat-number">15+</span>
+              <span class="hero-stat-label" data-translate="hero.stat3">Countries</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll Indicator -->
+    <div class="hero-scroll-indicator">
+      <div class="scroll-mouse">
+        <div class="scroll-wheel"></div>
+      </div>
+      <span>Scroll Down</span>
+    </div>
+
+    <!-- Decorative Elements -->
+    <div class="hero-decoration">
+      <div class="hero-wave">
+        <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+          <path d="M0,64 C288,89 720,30 1440,64 L1440,120 L0,120 Z" fill="rgba(255,255,255,1)"></path>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services Highlights -->
+  <section class="services-highlights">
+    <div class="container">
+      <div class="services-grid">
+        <div class="service-highlight-card">
+          <div class="service-icon">
+            <i class="fas fa-users-gear"></i>
+          </div>
+          <h3 data-translate="services.highlight1.title">
+            Crewing Agency Services
+          </h3>
+          <p data-translate="services.highlight1.desc">
+            Professional crew management and recruitment solutions for all
+            vessel types
+          </p>
+          <a href="departments.html" class="service-link" data-translate="services.learnMore">Learn More <i
+              class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="service-highlight-card">
+          <div class="service-icon">
+            <i class="fas fa-ship"></i>
+          </div>
+          <h3 data-translate="services.highlight2.title">
+            Ship Chandler Services
+          </h3>
+          <p data-translate="services.highlight2.desc">
+            Quality marine provisions and supply solutions for global fleets
+          </p>
+          <a href="services.html#chandler" class="service-link" data-translate="services.learnMore">Learn More <i
+              class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="service-highlight-card">
+          <div class="service-icon">
+            <i class="fas fa-file-contract"></i>
+          </div>
+          <h3 data-translate="services.highlight3.title">
+            Vessel Documentation
+          </h3>
+          <p data-translate="services.highlight3.desc">
+            Compliance support with international maritime regulations
+          </p>
+          <a href="services.html#documentation" class="service-link" data-translate="services.learnMore">Learn More <i
+              class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Preview -->
+  <section class="about-preview">
+    <div class="container">
+      <div class="about-preview-content">
+        <div class="about-preview-image">
+          <img src="images/about-company.jpg" alt="PT Indo OceanCrew Services Team"
+            class="animate__animated animate__fadeInLeft" />
+          <div class="experience-badge">
+            <span class="years">15+</span>
+            <span data-translate="about.experience">Years Experience</span>
+          </div>
+        </div>
+        <div class="about-preview-text animate__animated animate__fadeInRight">
+          <h5 class="section-subtitle" data-translate="about.subtitle">
+            About Our Company
+          </h5>
+          <h2 class="section-title" data-translate="about.title">
+            Your Trusted <span class="highlight">Maritime Partner</span>
+          </h2>
+          <p data-translate="about.description1">
+            PT Indo OceanCrew Services is an Indonesian maritime company
+            providing qualified seafarers and comprehensive ship supply
+            solutions for the global shipping industry.
+          </p>
+          <p data-translate="about.description2">
+            As a trusted Crewing Agency and Ship Chandler, we offer end-to-end
+            services — from crew recruitment and deployment to vessel
+            provisioning and logistics.
+          </p>
+          <div class="about-features">
+            <div class="feature">
+              <i class="fas fa-check-circle"></i>
+              <span data-translate="about.feature1">MLC, STCW, ISM Compliant</span>
+            </div>
+            <div class="feature">
+              <i class="fas fa-check-circle"></i>
+              <span data-translate="about.feature2">Global Network</span>
+            </div>
+            <div class="feature">
+              <i class="fas fa-check-circle"></i>
+              <span data-translate="about.feature3">24/7 Support</span>
+            </div>
+            <div class="feature">
+              <i class="fas fa-check-circle"></i>
+              <span data-translate="about.feature4">Quality Assured</span>
+            </div>
+          </div>
+          <a href="about.html" class="btn btn-secondary" data-translate="about.learnMoreBtn">
+            <i class="fas fa-book-open"></i> Learn More About Us
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Core Services -->
+  <section class="core-services">
+    <div class="container">
+      <div class="section-header center">
+        <h5 class="section-subtitle" data-translate="coreServices.subtitle">
+          What We Offer
+        </h5>
+        <h2 class="section-title" data-translate="coreServices.title">
+          Comprehensive <span class="highlight">Maritime Solutions</span>
+        </h2>
+        <p class="section-description" data-translate="coreServices.description">
+          With excellence in execution and innovative maritime solutions, we
+          are committed to delivering outstanding value to our partners.
+        </p>
+      </div>
+
+      <div class="services-grid-large">
+        <div class="service-card-large">
+          <div class="service-card-header">
+            <div class="service-icon-large">
+              <i class="fas fa-users"></i>
+            </div>
+            <h3 data-translate="coreServices.service1.title">
+              Crewing Agency Services
+            </h3>
+          </div>
+          <p data-translate="coreServices.service1.description">
+            We provide professional crew management and recruitment solutions
+            for a wide range of vessels. Our certified seafarers are trained
+            to meet international standards.
+          </p>
+          <ul class="service-features">
+            <li data-translate="coreServices.service1.feature1">
+              Crew Recruitment & Selection
+            </li>
+            <li data-translate="coreServices.service1.feature2">
+              Training & Certification
+            </li>
+            <li data-translate="coreServices.service1.feature3">
+              Travel & Logistics
+            </li>
+            <li data-translate="coreServices.service1.feature4">
+              Crew Welfare Management
+            </li>
+          </ul>
+        </div>
+
+        <div class="service-card-large">
+          <div class="service-card-header">
+            <div class="service-icon-large">
+              <i class="fas fa-handshake"></i>
+            </div>
+            <h3 data-translate="coreServices.service2.title">
+              Shipowner Cooperation
+            </h3>
+          </div>
+          <p data-translate="coreServices.service2.description">
+            Strong collaboration between the vessel's crew and shipowners is
+            essential to ensure the delivery of high-quality, standardized
+            services.
+          </p>
+          <ul class="service-features">
+            <li data-translate="coreServices.service2.feature1">
+              Strategic Partnership
+            </li>
+            <li data-translate="coreServices.service2.feature2">
+              Performance Monitoring
+            </li>
+            <li data-translate="coreServices.service2.feature3">
+              Compliance Assurance
+            </li>
+            <li data-translate="coreServices.service2.feature4">
+              Continuous Improvement
+            </li>
+          </ul>
+        </div>
+
+        <div class="service-card-large">
+          <div class="service-card-header">
+            <div class="service-icon-large">
+              <i class="fas fa-file-alt"></i>
+            </div>
+            <h3 data-translate="coreServices.service3.title">
+              Document Ship Services
+            </h3>
+          </div>
+          <p data-translate="coreServices.service3.description">
+            We provide comprehensive vessel documentation support to help ship
+            owners and operators maintain compliance with local and
+            international maritime regulations.
+          </p>
+          <ul class="service-features">
+            <li data-translate="coreServices.service3.feature1">
+              Registration & Licensing
+            </li>
+            <li data-translate="coreServices.service3.feature2">
+              Certification Management
+            </li>
+            <li data-translate="coreServices.service3.feature3">
+              Compliance Documentation
+            </li>
+            <li data-translate="coreServices.service3.feature4">
+              Audit Preparation
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Statistics -->
+  <section class="statistics">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number" data-count="500">0</div>
+          <div class="stat-title" data-translate="stats.crew">
+            Certified Seafarers
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" data-count="100">0</div>
+          <div class="stat-title" data-translate="stats.vessels">
+            Vessels Served
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" data-count="15">0</div>
+          <div class="stat-title" data-translate="stats.countries">
+            Countries Covered
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" data-count="24">0</div>
+          <div class="stat-title" data-translate="stats.support">
+            /7 Support
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-content">
+        <h2 data-translate="cta.title">
+          Ready to Partner with Maritime Experts?
+        </h2>
+        <p data-translate="cta.description">
+          Connect with us for reliable crew management, ship supply solutions,
+          and comprehensive maritime services that meet global standards.
+        </p>
+        <div class="cta-buttons">
+          <a href="contact.html" class="btn btn-primary" data-translate="cta.contactBtn">
+            <i class="fas fa-envelope"></i> Contact Us Today
+          </a>
+          <a href="tel:+622112345678" class="btn btn-outline">
+            <i class="fas fa-phone"></i> +62 21 1234 5678
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-main">
+          <div class="footer-about">
+            <a href="index.html" class="footer-logo">
+              <div class="logo-icon">
+                <i class="fas fa-anchor"></i>
+              </div>
+              <div class="logo-text">
+                <h3>PT Indo OceanCrew Services</h3>
+                <p data-translate="footer.tagline">
+                  Professional Maritime Solutions
+                </p>
+              </div>
+            </a>
+            <p data-translate="footer.description">
+              Leading maritime service provider specializing in crew
+              management and ship supply solutions for the global shipping
+              industry.
+            </p>
+            <div class="social-links">
+              <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
+              <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
+              <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+              <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+            </div>
+          </div>
+
+          <div class="footer-links">
+            <div class="footer-column">
+              <h4 data-translate="footer.services">Services</h4>
+              <ul>
+                <li>
+                  <a href="services.html#crewing" data-translate="nav.crewing">Crewing Agency</a>
+                </li>
+                <li>
+                  <a href="services.html#chandler" data-translate="nav.chandler">Ship Chandler</a>
+                </li>
+                <li>
+                  <a href="services.html#documentation" data-translate="nav.documentation">Vessel Documentation</a>
+                </li>
+                <li>
+                  <a href="services.html#logistics" data-translate="nav.logistics">Maritime Logistics</a>
+                </li>
+              </ul>
+            </div>
+
+            <div class="footer-column">
+              <h4 data-translate="footer.company">Company</h4>
+              <ul>
+                <li>
+                  <a href="about.html" data-translate="nav.about">About Us</a>
+                </li>
+                <li>
+                  <a href="departments.html" data-translate="nav.crew">Our Crew</a>
+                </li>
+                <li>
+                  <a href="#" data-translate="footer.careers">Careers</a>
+                </li>
+                <li><a href="#" data-translate="footer.blog">Blog</a></li>
+              </ul>
+            </div>
+
+            <div class="footer-column">
+              <h4 data-translate="footer.contact">Contact</h4>
+              <ul class="contact-info">
+                <li>
+                  <i class="fas fa-map-marker-alt"></i>
+                  <span data-translate="footer.address">Jl. Sudirman No. 123, Jakarta 12190, Indonesia</span>
+                </li>
+                <li><i class="fas fa-phone"></i> +62 21 1234 5678</li>
+                <li><i class="fas fa-envelope"></i> info@indoceancrew.com</li>
+                <li>
+                  <i class="fas fa-clock"></i>
+                  <span data-translate="footer.hours">Mon - Fri: 8:00 - 17:00</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p>
+            &copy; <span id="currentYear"></span> PT Indo OceanCrew Services.
+            <span data-translate="footer.rights">All rights reserved.</span>
+          </p>
+          <div class="footer-legal">
+            <a href="#" data-translate="footer.privacy">Privacy Policy</a>
+            <a href="#" data-translate="footer.terms">Terms of Service</a>
+            <a href="#" data-translate="footer.cookies">Cookies Policy</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript Files -->
+  <script src="translate.js"></script>
+  <script src="main.js"></script>
+</body>
+
+</html>

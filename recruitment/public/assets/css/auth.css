@@ -1,0 +1,372 @@
+/**
+ * PT Indo Ocean Crew Services - Recruitment System
+ * Authentication Pages Stylesheet
+ */
+
+/* ==================== Variables ==================== */
+:root {
+    --primary: #0A2463;
+    --primary-light: #1E5AA8;
+    --secondary: #D4AF37;
+    --success: #28A745;
+    --danger: #DC3545;
+    --dark: #1a1a2e;
+    --gray: #6c757d;
+    --light: #f8f9fa;
+    --white: #ffffff;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.15);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --transition: all 0.3s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body.auth-body {
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+    background: var(--light);
+}
+
+/* ==================== Auth Container ==================== */
+.auth-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ==================== Auth Image ==================== */
+.auth-image {
+    flex: 1;
+    background: linear-gradient(135deg, rgba(10, 36, 99, 0.95), rgba(22, 33, 62, 0.95)),
+        url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200') center/cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    position: relative;
+}
+
+.auth-image.register-image {
+    background: linear-gradient(135deg, rgba(10, 36, 99, 0.95), rgba(22, 33, 62, 0.95)),
+        url('https://images.unsplash.com/photo-1532619675605-1ede6c2ed2b0?w=1200') center/cover;
+}
+
+.image-content {
+    max-width: 500px;
+    color: var(--white);
+    text-align: center;
+}
+
+.image-content h1 {
+    font-size: 36px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.image-content h1 i {
+    color: var(--secondary);
+}
+
+.image-content p {
+    font-size: 18px;
+    opacity: 0.9;
+    line-height: 1.7;
+}
+
+.benefits-list {
+    list-style: none;
+    text-align: left;
+    margin-top: 40px;
+}
+
+.benefits-list li {
+    padding: 12px 0;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    opacity: 0.9;
+}
+
+.benefits-list i {
+    color: var(--secondary);
+    font-size: 18px;
+}
+
+/* ==================== Auth Form ==================== */
+.auth-form-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    background: var(--white);
+}
+
+.auth-form-wrapper {
+    width: 100%;
+    max-width: 420px;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.auth-header h2 {
+    font-size: 32px;
+    color: var(--dark);
+    margin-bottom: 8px;
+}
+
+.auth-header p {
+    color: var(--gray);
+}
+
+/* Alert Styles */
+.alert {
+    padding: 15px 20px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-danger {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Form Styles */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-group label i {
+    color: var(--primary);
+}
+
+.form-group input {
+    padding: 14px 16px;
+    border: 2px solid #e8e8e8;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: inherit;
+    transition: var(--transition);
+}
+
+.form-group input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(10, 36, 99, 0.1);
+}
+
+.form-group input::placeholder {
+    color: #aaa;
+}
+
+.password-input {
+    position: relative;
+}
+
+.password-input input {
+    width: 100%;
+    padding-right: 50px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--gray);
+    cursor: pointer;
+    padding: 5px;
+    transition: var(--transition);
+}
+
+.toggle-password:hover {
+    color: var(--primary);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.error {
+    color: var(--danger);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* Form Options */
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--dark);
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+}
+
+.checkbox-label a {
+    color: var(--primary);
+}
+
+.forgot-link {
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.forgot-link:hover {
+    color: var(--primary-light);
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px 25px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(10, 36, 99, 0.35);
+}
+
+.btn-block {
+    width: 100%;
+}
+
+/* Auth Footer */
+.auth-footer {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 1px solid #eee;
+}
+
+.auth-footer p {
+    color: var(--gray);
+}
+
+.auth-footer a {
+    color: var(--primary);
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.auth-footer a:hover {
+    color: var(--secondary);
+}
+
+.back-link {
+    text-align: center;
+    margin-top: 25px;
+}
+
+.back-link a {
+    color: var(--gray);
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+}
+
+.back-link a:hover {
+    color: var(--primary);
+}
+
+/* ==================== Responsive ==================== */
+@media (max-width: 992px) {
+    .auth-image {
+        display: none;
+    }
+
+    .auth-form-container {
+        padding: 30px 20px;
+    }
+}
+
+@media (max-width: 576px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-header h2 {
+        font-size: 26px;
+    }
+
+    .form-options {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+}

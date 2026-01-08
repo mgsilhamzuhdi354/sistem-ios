@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP - Reports</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo"><i class="fas fa-anchor"></i><span>IndoOcean ERP</span></div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+            <a href="contracts.html" class="nav-item"><i class="fas fa-file-contract"></i><span>Contracts</span></a>
+            <a href="vessels.html" class="nav-item"><i class="fas fa-ship"></i><span>Vessels</span></a>
+            <a href="clients.html" class="nav-item"><i class="fas fa-building"></i><span>Clients</span></a>
+            <a href="payroll.html" class="nav-item"><i class="fas fa-money-bill-wave"></i><span>Payroll</span></a>
+            <a href="reports.html" class="nav-item active"><i class="fas fa-chart-bar"></i><span>Reports</span></a>
+            <div class="nav-divider"></div>
+            <a href="#" class="nav-item"><i class="fas fa-cog"></i><span>Settings</span></a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info"><img src="https://ui-avatars.com/api/?name=Admin&background=D4AF37&color=fff"
+                    alt="Admin">
+                <div><span class="user-name">Admin HR</span><span class="user-role">Master Admin</span></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="main-header">
+            <div class="header-left"><button class="menu-toggle"><i class="fas fa-bars"></i></button>
+                <h2 style="font-size: 18px;">Reports & Analytics</h2>
+            </div>
+            <div class="header-right"><button class="header-btn"><i class="fas fa-bell"></i></button></div>
+        </header>
+
+        <div class="page-content">
+            <div class="page-header">
+                <h1>Reports</h1>
+                <p>Generate and download reports</p>
+            </div>
+
+            <!-- Report Categories -->
+            <div class="report-grid">
+                <!-- Contract Reports -->
+                <div class="report-section">
+                    <div class="section-title"><i class="fas fa-file-contract"></i> Contract Reports</div>
+                    <div class="report-list">
+                        <div class="report-item">
+                            <div class="report-info">
+                                <span class="report-name">Active Contracts</span>
+                                <span class="report-desc">List of all currently active contracts</span>
+                            </div>
+                            <div class="report-actions">
+                                <button class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Preview</button>
+                                <button class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Excel</button>
+                            </div>
+                        </div>
+                        <div class="report-item">
+                            <div class="report-info">
+                                <span class="report-name">Expiring Contracts</span>
+                                <span class="report-desc">Contracts expiring within 60 days</span>
+                            </div>
+                            <div class="report-actions">
+                                <button class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Preview</button>
+                                <button class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Excel</button>
+                            </div>
+                        </div>
+                        <div class="report-item">
+                            <div class="report-info">
+                                <span class="report-name">Contracts by Vessel</span>
+                                <span class="report-desc">Contract breakdown per vessel</span>
+                            </div>
+                            <div class="report-actions">
+                                <button class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Preview</button>
+                                <button class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Excel</button>
+                            </div>
+                        </div>
+                        <div class="report-item">
+                            <div class="report-info">
+                                <span class="report-name">Contracts by Client</span>
+                                <span class="report-desc">Contract summary per client/principal</span>
+                            </div>
+                            <div class="report-actions">
+                                <button class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Preview</button>
+                                <button class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Excel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payroll Reports -->
+                <div class="report-section">
+                    <div class="section-title"><i class="fas fa-money-bill-wave"></i> Payroll Reports</div>
+                    <div class="report-list">
+                        <div class="report-item">
+                            <div class="report-info">
+                                <span class="report-name">Monthly Payroll Summary</span>
+                                <span class="report-desc">Complete payroll breakdown per month</span>
+                            </div>
+                            <div class="report-actions">
+                                <button class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Preview</button>
+                                <button class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Excel</button>
+                            </div>
+                        </div>
+                        <div class="report-item">
+                            <div class="report-info">
+                                <span class="report-name">Tax Report (PPh 21)</span>
+                                <span class="report-desc">Tax deduction report for tax filing</span>
+                            </div>
+                            <div class="report-actions">
+                                <button class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Preview</button>
+                                <button class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Excel</button>
+                            </div>
+                        </div>
+                        <div class="report-item">
+                            <div class="report-info">
+                                <span class="report-name">Cost per Vessel</span>
+                                <span class="report-desc">Total crew cost breakdown per vessel</span>
+                            </div>
+                            <div class="report-actions">
+                                <button class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Preview</button>
+                                <button class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Excel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Crew Reports -->
+                <div class="report-section">
+                    <div class="section-title"><i class="fas fa-users"></i> Crew Reports</div>
+                    <div class="report-list">
+                        <div class="report-item">
+                            <div class="report-info">
+                                <span class="report-name">Crew Roster</span>
+                                <span class="report-desc">Complete list of all crew members</span>
+                            </div>
+                            <div class="report-actions">
+                                <button class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Preview</button>
+                                <button class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Excel</button>
+                            </div>
+                        </div>
+                        <div class="report-item">
+                            <div class="report-info">
+                                <span class="report-name">Crew per Vessel</span>
+                                <span class="report-desc">Current crew assignment per vessel</span>
+                            </div>
+                            <div class="report-actions">
+                                <button class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Preview</button>
+                                <button class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Excel</button>
+                            </div>
+                        </div>
+                        <div class="report-item">
+                            <div class="report-info">
+                                <span class="report-name">Contract History</span>
+                                <span class="report-desc">Crew contract history and renewals</span>
+                            </div>
+                            <div class="report-actions">
+                                <button class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Preview</button>
+                                <button class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Excel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audit Reports -->
+                <div class="report-section">
+                    <div class="section-title"><i class="fas fa-shield-alt"></i> Audit & Compliance</div>
+                    <div class="report-list">
+                        <div class="report-item">
+                            <div class="report-info">
+                                <span class="report-name">Contract Change Log</span>
+                                <span class="report-desc">Audit trail of all contract changes</span>
+                            </div>
+                            <div class="report-actions">
+                                <button class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Preview</button>
+                                <button class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Excel</button>
+                            </div>
+                        </div>
+                        <div class="report-item">
+                            <div class="report-info">
+                                <span class="report-name">User Activity Log</span>
+                                <span class="report-desc">System access and activity report</span>
+                            </div>
+                            <div class="report-actions">
+                                <button class="btn btn-secondary btn-sm"><i class="fas fa-eye"></i> Preview</button>
+                                <button class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Excel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+    <style>
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .report-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .section-title {
+            padding: 16px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: var(--accent-gold);
+        }
+
+        .report-list {
+            padding: 8px 0;
+        }
+
+        .report-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s ease;
+        }
+
+        .report-item:last-child {
+            border-bottom: none;
+        }
+
+        .report-item:hover {
+            background: var(--card-hover);
+        }
+
+        .report-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .report-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .report-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        @media (max-width: 1024px) {
+            .report-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+
+</html>

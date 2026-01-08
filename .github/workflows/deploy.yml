@@ -1,0 +1,75 @@
+# =============================================================================
+# GitHub Actions - Auto Deploy to Domainesia via FTP
+# =============================================================================
+# Workflow ini akan otomatis deploy ke hosting Domainesia setiap kali ada push
+# ke branch 'main' atau 'master'
+#
+# SETUP REQUIRED:
+# 1. Buka GitHub Repository > Settings > Secrets and variables > Actions
+# 2. Tambahkan secrets berikut:
+#    - FTP_SERVER   : ftp.yourdomain.com (dari cPanel Domainesia)
+#    - FTP_USERNAME : username FTP Anda
+#    - FTP_PASSWORD : password FTP Anda
+#    - FTP_PATH     : /public_html/ (atau sesuai struktur hosting Anda)
+# =============================================================================
+
+name: 🚀 Deploy to Domainesia
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  
+  # Memungkinkan trigger manual dari GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: 📦 Deploy Website
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Checkout repository
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch semua history untuk perbandingan
+
+      # Step 2: Sync files ke FTP Server
+      - name: 📤 Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_PATH }}
+          
+          # Exclude files/folders yang tidak perlu di-deploy
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/node_modules/**
+            **/.vscode/**
+            **/.idea/**
+            **/README.md
+            **/*.log
+            **/.env
+            **/.env.local
+            **/.env.*.local
+            **/composer.lock
+            **/package-lock.json
+            **/.gitignore
+            **/docs/**
+            **/.agent/**
+
+      # Step 3: Notifikasi sukses (opsional)
+      - name: ✅ Deployment Notification
+        if: success()
+        run: |
+          echo "🎉 Deployment berhasil!"
+          echo "📅 Waktu: $(date)"
+          echo "🔗 Branch: ${{ github.ref_name }}"
+          echo "👤 By: ${{ github.actor }}"
+          echo "📝 Commit: ${{ github.sha }}"

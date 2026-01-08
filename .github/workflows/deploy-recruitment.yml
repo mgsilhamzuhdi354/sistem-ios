@@ -1,0 +1,62 @@
+# =============================================================================
+# GitHub Actions - Deploy Recruitment System Only
+# =============================================================================
+# Workflow khusus untuk deploy folder recruitment saja
+# Berguna jika Anda ingin deploy recruitment ke subdomain terpisah
+#
+# SETUP SECRETS:
+# - FTP_SERVER           : ftp.yourdomain.com
+# - FTP_USERNAME         : username FTP 
+# - FTP_PASSWORD         : password FTP
+# - FTP_PATH_RECRUITMENT : /public_html/recruitment/ (atau subdomain path)
+# =============================================================================
+
+name: 🚀 Deploy Recruitment System
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      # Hanya trigger jika ada perubahan di folder recruitment
+      - 'recruitment/**'
+  
+  workflow_dispatch:
+
+jobs:
+  deploy-recruitment:
+    name: 📦 Deploy Recruitment
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📤 Deploy Recruitment via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_PATH_RECRUITMENT }}
+          local-dir: ./recruitment/
+          
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/writable/logs/**
+            **/writable/cache/**
+            **/writable/session/**
+            **/writable/debugbar/**
+            **/.env
+            **/composer.lock
+            **/*.log
+
+      - name: ✅ Recruitment Deployed
+        if: success()
+        run: |
+          echo "🎉 Recruitment System deployed successfully!"
+          echo "📅 Time: $(date)"

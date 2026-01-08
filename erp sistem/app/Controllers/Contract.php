@@ -1,0 +1,614 @@
+<?php
+/**
+ * PT Indo Ocean - ERP System
+ * Contract Controller - Handles all 15 features
+ */
+
+namespace App\Controllers;
+
+require_once APPPATH . 'Models/ContractModel.php';
+require_once APPPATH . 'Models/VesselModel.php';
+require_once APPPATH . 'Models/ClientModel.php';
+
+use App\Models\ContractModel;
+use App\Models\ContractSalaryModel;
+use App\Models\ContractTaxModel;
+use App\Models\ContractDeductionModel;
+use App\Models\ContractApprovalModel;
+use App\Models\ContractLogModel;
+use App\Models\VesselModel;
+use App\Models\VesselTypeModel;
+use App\Models\FlagStateModel;
+use App\Models\RankModel;
+use App\Models\CurrencyModel;
+use App\Models\ClientModel;
+
+class Contract extends BaseController
+{
+    private $contractModel;
+    
+    public function __construct()
+    {
+        parent::__construct();
+        $this->contractModel = new ContractModel($this->db);
+    }
+    
+    /**
+     * Feature 1: Contract List with filters
+     */
+    public function index()
+    {
+        $page = (int)$this->input('page', 1);
+        $filters = [
+            'status' => $this->input('status'),
+            'vessel_id' => $this->input('vessel_id'),
+            'client_id' => $this->input('client_id'),
+            'search' => $this->input('search'),
+        ];
+        
+        $vesselModel = new VesselModel($this->db);
+        $clientModel = new ClientModel($this->db);
+        
+        $data = [
+            'title' => 'Contract Management',
+            'contracts' => $this->contractModel->getList($filters, $page),
+            'total' => $this->contractModel->countList($filters),
+            'page' => $page,
+            'perPage' => ITEMS_PER_PAGE,
+            'filters' => $filters,
+            'vessels' => $vesselModel->getForDropdown(),
+            'clients' => $clientModel->getForDropdown(),
+            'statuses' => CONTRACT_STATUSES,
+            'flash' => $this->getFlash()
+        ];
+        
+        return $this->view('contracts/index', $data);
+    }
+    
+    /**
+     * Feature 1-7: Create Contract Form
+     */
+    public function create()
+    {
+        $vesselModel = new VesselModel($this->db);
+        $clientModel = new ClientModel($this->db);
+        $rankModel = new RankModel($this->db);
+        $currencyModel = new CurrencyModel($this->db);
+        
+        $data = [
+            'title' => 'Create New Contract',
+            'contractNo' => $this->contractModel->generateContractNumber(),
+            'vessels' => $vesselModel->getForDropdown(),
+            'clients' => $clientModel->getForDropdown(),
+            'ranks' => $rankModel->getForDropdown(),
+            'currencies' => $currencyModel->getForDropdown(),
+            'contractTypes' => CONTRACT_TYPES,
+            'taxTypes' => TAX_TYPES,
+            'deductionTypes' => DEDUCTION_TYPES,
+        ];
+        
+        return $this->view('contracts/form', $data);
+    }
+    
+    /**
+     * Store new contract with salary, tax, deductions
+     */
+    public function store()
+    {
+        if (!$this->isPost()) {
+            $this->redirect('contracts');
+        }
+        
+        // Contract data
+        $contractData = [
+            'contract_no' => $this->input('contract_no'),
+            'crew_id' => $this->input('crew_id'),
+            'crew_name' => $this->input('crew_name'),
+            'vessel_id' => $this->input('vessel_id'),
+            'client_id' => $this->input('client_id'),
+            'rank_id' => $this->input('rank_id'),
+            'contract_type' => $this->input('contract_type'),
+            'status' => $this->input('submit_approval') ? CONTRACT_STATUS_PENDING : CONTRACT_STATUS_DRAFT,
+            'sign_on_date' => $this->input('sign_on_date') ?: null,
+            'sign_off_date' => $this->input('sign_off_date') ?: null,
+            'duration_months' => $this->input('duration_months'),
+            'embarkation_port' => $this->input('embarkation_port'),
+            'disembarkation_port' => $this->input('disembarkation_port'),
+            'notes' => $this->input('notes'),
+            'created_by' => $this->getCurrentUser()['id'] ?? null,
+        ];
+        
+        // Salary data (Feature 4)
+        $exchangeRate = str_replace([',', '.'], '', $this->input('exchange_rate', ''));
+        $clientRate = str_replace([',', '.'], '', $this->input('client_rate', ''));
+        $salaryData = [
+            'currency_id' => $this->input('currency_id', 1),
+            'exchange_rate' => !empty($exchangeRate) ? floatval($exchangeRate) : null,
+            'client_rate' => !empty($clientRate) ? floatval($clientRate) : null,
+            'basic_salary' => floatval(str_replace(',', '', $this->input('basic_salary', 0))),
+            'overtime_allowance' => floatval(str_replace(',', '', $this->input('overtime_allowance', 0))),
+            'leave_pay' => floatval(str_replace(',', '', $this->input('leave_pay', 0))),
+            'bonus' => floatval(str_replace(',', '', $this->input('bonus', 0))),
+            'other_allowance' => floatval(str_replace(',', '', $this->input('other_allowance', 0))),
+        ];
+        
+        // Tax data (Feature 5)
+        $taxData = [
+            'tax_type' => $this->input('tax_type', TAX_TYPE_PPH21),
+            'npwp_number' => $this->input('npwp_number'),
+            'tax_rate' => TAX_RATES[$this->input('tax_type', TAX_TYPE_PPH21)] ?? 5,
+            'effective_from' => $this->input('sign_on_date'),
+        ];
+        
+        try {
+            $contractId = $this->contractModel->createWithDetails($contractData, $salaryData, $taxData);
+            
+            // Save deductions (Feature 6)
+            if (!empty($_POST['deduction_type'])) {
+                $deductionModel = new ContractDeductionModel($this->db);
+                foreach ($_POST['deduction_type'] as $i => $type) {
+                    $amount = $_POST['deduction_amount'][$i] ?? 0;
+                    // Clean amount - remove commas and dots that are thousand separators
+                    $amount = str_replace([',', '.'], '', $amount);
+                    $amount = floatval($amount);
+                    
+                    if (!empty($type) && $amount > 0) {
+                        $deductionModel->insert([
+                            'contract_id' => $contractId,
+                            'deduction_type' => $type,
+                            'description' => $_POST['deduction_desc'][$i] ?? '',
+                            'amount' => $amount,
+                            'is_recurring' => ($_POST['deduction_recurring'][$i] ?? 'monthly') === 'monthly' ? 1 : 0,
+                        ]);
+                    }
+                }
+            }
+            
+            // Create approval workflow (Feature 9)
+            if ($contractData['status'] === CONTRACT_STATUS_PENDING) {
+                $approvalModel = new ContractApprovalModel($this->db);
+                $approvalModel->insert([
+                    'contract_id' => $contractId,
+                    'approval_level' => APPROVAL_CREWING,
+                    'status' => 'pending'
+                ]);
+            }
+            
+            // Log creation (Feature 15)
+            $logModel = new ContractLogModel($this->db);
+            $logModel->log($contractId, 'created', [], 
+                $this->getCurrentUser()['id'] ?? null,
+                $this->getCurrentUser()['name'] ?? 'System'
+            );
+            
+            $this->setFlash('success', 'Contract created successfully');
+            $this->redirect('contracts/' . $contractId);
+            
+        } catch (\Exception $e) {
+            $this->setFlash('error', 'Failed to create contract: ' . $e->getMessage());
+            $this->redirect('contracts/create');
+        }
+    }
+    
+    /**
+     * View contract detail
+     */
+    public function show($id)
+    {
+        $contract = $this->contractModel->getWithDetails($id);
+        if (!$contract) {
+            $this->setFlash('error', 'Contract not found');
+            $this->redirect('contracts');
+        }
+        
+        $deductionModel = new ContractDeductionModel($this->db);
+        $approvalModel = new ContractApprovalModel($this->db);
+        $logModel = new ContractLogModel($this->db);
+        
+        // Get documents
+        $documents = $this->db->query("SELECT * FROM contract_documents WHERE contract_id = $id ORDER BY created_at DESC");
+        $docList = [];
+        if ($documents) {
+            while ($row = $documents->fetch_assoc()) {
+                $docList[] = $row;
+            }
+        }
+        
+        $data = [
+            'title' => 'Contract Detail - ' . $contract['contract_no'],
+            'contract' => $contract,
+            'deductions' => $deductionModel->getByContract($id),
+            'approvals' => $approvalModel->getByContract($id),
+            'logs' => $logModel->getByContract($id, 20),
+            'documents' => $docList,
+            'daysRemaining' => $this->calculateDaysRemaining($contract['sign_off_date']),
+            'flash' => $this->getFlash()
+        ];
+        
+        return $this->view('contracts/view', $data);
+    }
+    
+    /**
+     * Edit contract form
+     */
+    public function edit($id)
+    {
+        $contract = $this->contractModel->getWithDetails($id);
+        if (!$contract) {
+            $this->setFlash('error', 'Contract not found');
+            $this->redirect('contracts');
+        }
+        
+        $vesselModel = new VesselModel($this->db);
+        $clientModel = new ClientModel($this->db);
+        $rankModel = new RankModel($this->db);
+        $currencyModel = new CurrencyModel($this->db);
+        $deductionModel = new ContractDeductionModel($this->db);
+        
+        $data = [
+            'title' => 'Edit Contract - ' . $contract['contract_no'],
+            'contract' => $contract,
+            'deductions' => $deductionModel->getByContract($id),
+            'vessels' => $vesselModel->getForDropdown(),
+            'clients' => $clientModel->getForDropdown(),
+            'ranks' => $rankModel->getForDropdown(),
+            'currencies' => $currencyModel->getForDropdown(),
+            'contractTypes' => CONTRACT_TYPES,
+            'taxTypes' => TAX_TYPES,
+            'deductionTypes' => DEDUCTION_TYPES,
+        ];
+        
+        return $this->view('contracts/form', $data);
+    }
+    
+    /**
+     * Update contract
+     */
+    public function update($id)
+    {
+        if (!$this->isPost()) {
+            $this->redirect('contracts/' . $id);
+        }
+        
+        $oldContract = $this->contractModel->find($id);
+        
+        // Update contract
+        $contractData = [
+            'vessel_id' => $this->input('vessel_id'),
+            'client_id' => $this->input('client_id'),
+            'rank_id' => $this->input('rank_id'),
+            'contract_type' => $this->input('contract_type'),
+            'sign_on_date' => $this->input('sign_on_date') ?: null,
+            'sign_off_date' => $this->input('sign_off_date') ?: null,
+            'duration_months' => $this->input('duration_months'),
+            'notes' => $this->input('notes'),
+            'updated_by' => $this->getCurrentUser()['id'] ?? null,
+        ];
+        
+        $this->contractModel->update($id, $contractData);
+        
+        // Update salary
+        $salaryModel = new ContractSalaryModel($this->db);
+        $existingSalary = $salaryModel->getByContract($id);
+        $exchangeRate = str_replace([',', '.'], '', $this->input('exchange_rate', ''));
+        $clientRate = str_replace([',', '.'], '', $this->input('client_rate', ''));
+        $salaryData = [
+            'contract_id' => $id,
+            'currency_id' => $this->input('currency_id', 1),
+            'exchange_rate' => !empty($exchangeRate) ? floatval($exchangeRate) : null,
+            'client_rate' => !empty($clientRate) ? floatval($clientRate) : null,
+            'basic_salary' => floatval(str_replace(',', '', $this->input('basic_salary', 0))),
+            'overtime_allowance' => floatval(str_replace(',', '', $this->input('overtime_allowance', 0))),
+            'leave_pay' => floatval(str_replace(',', '', $this->input('leave_pay', 0))),
+            'bonus' => floatval(str_replace(',', '', $this->input('bonus', 0))),
+        ];
+        
+        if ($existingSalary) {
+            $salaryModel->update($existingSalary['id'], $salaryData);
+        } else {
+            $salaryModel->insert($salaryData);
+        }
+        
+        // Update deductions (Feature 6) - delete old and insert new
+        $deductionModel = new ContractDeductionModel($this->db);
+        // Delete existing deductions for this contract
+        $this->db->query("DELETE FROM contract_deductions WHERE contract_id = " . intval($id));
+        
+        // Insert new deductions from form
+        if (!empty($_POST['deduction_type'])) {
+            foreach ($_POST['deduction_type'] as $i => $type) {
+                $amount = $_POST['deduction_amount'][$i] ?? 0;
+                // Clean amount - remove commas and dots that are thousand separators
+                $amount = str_replace([',', '.'], '', $amount);
+                $amount = floatval($amount);
+                
+                if (!empty($type) && $amount > 0) {
+                    $deductionModel->insert([
+                        'contract_id' => $id,
+                        'deduction_type' => $type,
+                        'description' => $_POST['deduction_desc'][$i] ?? '',
+                        'amount' => $amount,
+                        'is_recurring' => ($_POST['deduction_recurring'][$i] ?? 'monthly') === 'monthly' ? 1 : 0,
+                    ]);
+                }
+            }
+        }
+        
+        // Log update (Feature 15)
+        $logModel = new ContractLogModel($this->db);
+        $logModel->log($id, 'updated', [],
+            $this->getCurrentUser()['id'] ?? null,
+            $this->getCurrentUser()['name'] ?? 'System'
+        );
+        
+        $this->setFlash('success', 'Contract updated successfully');
+        $this->redirect('contracts/' . $id);
+    }
+    
+    /**
+     * Feature 9: Approve contract
+     */
+    public function approve($id)
+    {
+        if (!$this->isPost()) {
+            $this->redirect('contracts/' . $id);
+        }
+        
+        $approvalModel = new ContractApprovalModel($this->db);
+        $pending = $approvalModel->getPending($id);
+        
+        if ($pending) {
+            $approvalModel->update($pending['id'], [
+                'status' => 'approved',
+                'approver_id' => $this->getCurrentUser()['id'] ?? null,
+                'approver_name' => $this->getCurrentUser()['name'] ?? 'Admin',
+                'approved_at' => date('Y-m-d H:i:s'),
+                'notes' => $this->input('notes')
+            ]);
+            
+            // Check if all approvals done, then activate contract
+            $allApprovals = $approvalModel->getByContract($id);
+            $allApproved = true;
+            foreach ($allApprovals as $a) {
+                if ($a['status'] !== 'approved') {
+                    $allApproved = false;
+                    break;
+                }
+            }
+            
+            if ($allApproved) {
+                $this->contractModel->update($id, ['status' => CONTRACT_STATUS_ACTIVE]);
+            } else {
+                // Create next level approval
+                $nextLevel = $pending['approval_level'] === APPROVAL_CREWING ? APPROVAL_HR : APPROVAL_DIRECTOR;
+                $approvalModel->insert([
+                    'contract_id' => $id,
+                    'approval_level' => $nextLevel,
+                    'status' => 'pending'
+                ]);
+            }
+            
+            // Log (Feature 15)
+            $logModel = new ContractLogModel($this->db);
+            $logModel->log($id, 'approved', [
+                'field' => 'approval_level',
+                'new' => $pending['approval_level']
+            ]);
+        }
+        
+        $this->setFlash('success', 'Contract approved');
+        $this->redirect('contracts/' . $id);
+    }
+    
+    /**
+     * Feature 9: Reject contract
+     */
+    public function reject($id)
+    {
+        if (!$this->isPost()) {
+            $this->redirect('contracts/' . $id);
+        }
+        
+        $approvalModel = new ContractApprovalModel($this->db);
+        $pending = $approvalModel->getPending($id);
+        
+        if ($pending) {
+            $approvalModel->update($pending['id'], [
+                'status' => 'rejected',
+                'approver_id' => $this->getCurrentUser()['id'] ?? null,
+                'approver_name' => $this->getCurrentUser()['name'] ?? 'Admin',
+                'approved_at' => date('Y-m-d H:i:s'),
+                'rejection_reason' => $this->input('reason')
+            ]);
+            
+            $this->contractModel->update($id, ['status' => CONTRACT_STATUS_DRAFT]);
+            
+            // Log
+            $logModel = new ContractLogModel($this->db);
+            $logModel->log($id, 'rejected', [
+                'field' => 'rejection_reason',
+                'new' => $this->input('reason')
+            ]);
+        }
+        
+        $this->setFlash('warning', 'Contract rejected');
+        $this->redirect('contracts/' . $id);
+    }
+    
+    /**
+     * Feature 11: Renew contract
+     */
+    public function renew($id)
+    {
+        $oldContract = $this->contractModel->getWithDetails($id);
+        if (!$oldContract) {
+            $this->setFlash('error', 'Contract not found');
+            $this->redirect('contracts');
+        }
+        
+        if ($this->isPost()) {
+            // Create new contract based on old one
+            $newContractData = [
+                'contract_no' => $this->contractModel->generateContractNumber(),
+                'crew_id' => $oldContract['crew_id'],
+                'crew_name' => $oldContract['crew_name'],
+                'vessel_id' => $this->input('vessel_id', $oldContract['vessel_id']),
+                'client_id' => $this->input('client_id', $oldContract['client_id']),
+                'rank_id' => $this->input('rank_id', $oldContract['rank_id']),
+                'contract_type' => $oldContract['contract_type'],
+                'status' => CONTRACT_STATUS_DRAFT,
+                'sign_on_date' => $this->input('sign_on_date'),
+                'sign_off_date' => $this->input('sign_off_date'),
+                'duration_months' => $this->input('duration_months'),
+                'is_renewal' => 1,
+                'previous_contract_id' => $id,
+                'created_by' => $this->getCurrentUser()['id'] ?? null,
+            ];
+            
+            // Copy salary
+            $salaryData = [
+                'currency_id' => 1,
+                'basic_salary' => $oldContract['basic_salary'] ?? 0,
+                'overtime_allowance' => $oldContract['overtime_allowance'] ?? 0,
+                'leave_pay' => $oldContract['leave_pay'] ?? 0,
+                'bonus' => $oldContract['bonus'] ?? 0,
+            ];
+            
+            // Copy tax
+            $taxData = [
+                'tax_type' => $oldContract['tax_type'] ?? TAX_TYPE_PPH21,
+                'npwp_number' => $oldContract['npwp_number'],
+                'tax_rate' => $oldContract['tax_rate'] ?? 5,
+            ];
+            
+            $newContractId = $this->contractModel->createWithDetails($newContractData, $salaryData, $taxData);
+            
+            // Mark old contract as completed
+            $this->contractModel->update($id, ['status' => CONTRACT_STATUS_COMPLETED]);
+            
+            // Log
+            $logModel = new ContractLogModel($this->db);
+            $logModel->log($id, 'renewed', ['field' => 'new_contract_id', 'new' => $newContractId]);
+            $logModel->log($newContractId, 'created_from_renewal', ['field' => 'previous_contract_id', 'new' => $id]);
+            
+            $this->setFlash('success', 'Contract renewed successfully');
+            $this->redirect('contracts/' . $newContractId);
+        }
+        
+        // Show renewal form
+        $vesselModel = new VesselModel($this->db);
+        $clientModel = new ClientModel($this->db);
+        $rankModel = new RankModel($this->db);
+        
+        $data = [
+            'title' => 'Renew Contract - ' . $oldContract['contract_no'],
+            'contract' => $oldContract,
+            'newContractNo' => $this->contractModel->generateContractNumber(),
+            'vessels' => $vesselModel->getForDropdown(),
+            'clients' => $clientModel->getForDropdown(),
+            'ranks' => $rankModel->getForDropdown(),
+        ];
+        
+        return $this->view('contracts/renew', $data);
+    }
+    
+    /**
+     * Feature 12: Terminate contract
+     */
+    public function terminate($id)
+    {
+        $contract = $this->contractModel->find($id);
+        if (!$contract) {
+            $this->setFlash('error', 'Contract not found');
+            $this->redirect('contracts');
+        }
+        
+        if ($this->isPost()) {
+            $this->contractModel->update($id, [
+                'status' => CONTRACT_STATUS_TERMINATED,
+                'actual_sign_off_date' => $this->input('actual_sign_off_date', date('Y-m-d')),
+                'termination_reason' => $this->input('termination_reason'),
+                'updated_by' => $this->getCurrentUser()['id'] ?? null,
+            ]);
+            
+            // Log
+            $logModel = new ContractLogModel($this->db);
+            $logModel->log($id, 'terminated', [
+                'field' => 'termination_reason',
+                'new' => $this->input('termination_reason')
+            ]);
+            
+            $this->setFlash('warning', 'Contract terminated');
+            $this->redirect('contracts/' . $id);
+        }
+        
+        $data = [
+            'title' => 'Terminate Contract - ' . $contract['contract_no'],
+            'contract' => $contract,
+        ];
+        
+        return $this->view('contracts/terminate', $data);
+    }
+    
+    /**
+     * Feature 10: Get expiring contracts for alerts
+     */
+    public function expiring()
+    {
+        $days = (int)$this->input('days', 60);
+        $contracts = $this->contractModel->getExpiring($days);
+        
+        $data = [
+            'title' => 'Expiring Contracts',
+            'contracts' => $contracts,
+            'days' => $days,
+        ];
+        
+        return $this->view('contracts/expiring', $data);
+    }
+    
+    /**
+     * Delete contract (soft delete or hard delete for draft only)
+     */
+    public function delete($id)
+    {
+        $contract = $this->contractModel->find($id);
+        
+        if ($contract && $contract['status'] === CONTRACT_STATUS_DRAFT) {
+            $this->contractModel->delete($id);
+            $this->setFlash('success', 'Contract deleted');
+        } else {
+            $this->setFlash('error', 'Only draft contracts can be deleted');
+        }
+        
+        $this->redirect('contracts');
+    }
+    
+    // Helper methods
+    private function calculateDaysRemaining($signOffDate)
+    {
+        if (!$signOffDate) return null;
+        $diff = strtotime($signOffDate) - time();
+        return floor($diff / 86400);
+    }
+    
+    /**
+     * Feature 8: Export contract as PDF
+     */
+    public function exportPdf($id)
+    {
+        $contract = $this->contractModel->getWithDetails($id);
+        if (!$contract) {
+            $this->setFlash('error', 'Contract not found');
+            $this->redirect('contracts');
+        }
+        
+        $deductionModel = new ContractDeductionModel($this->db);
+        $deductions = $deductionModel->getByContract($id);
+        
+        require_once APPPATH . 'Libraries/PDFGenerator.php';
+        $pdf = new \App\Libraries\PDFGenerator();
+        $pdf->generateContract($contract, $deductions);
+        $pdf->output('Contract_' . $contract['contract_no'] . '.pdf', 'I');
+    }
+}

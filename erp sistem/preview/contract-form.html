@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP - Create Contract</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-anchor"></i>
+                <span>IndoOcean ERP</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="nav-item">
+                <i class="fas fa-th-large"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="contracts.html" class="nav-item active">
+                <i class="fas fa-file-contract"></i>
+                <span>Contracts</span>
+            </a>
+            <a href="vessels.html" class="nav-item">
+                <i class="fas fa-ship"></i>
+                <span>Vessels</span>
+            </a>
+            <a href="clients.html" class="nav-item">
+                <i class="fas fa-building"></i>
+                <span>Clients</span>
+            </a>
+            <a href="payroll.html" class="nav-item">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>Payroll</span>
+            </a>
+            <a href="reports.html" class="nav-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
+            </a>
+            <div class="nav-divider"></div>
+            <a href="#" class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <img src="https://ui-avatars.com/api/?name=Admin&background=D4AF37&color=fff" alt="Admin">
+                <div>
+                    <span class="user-name">Admin HR</span>
+                    <span class="user-role">Master Admin</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="main-header">
+            <div class="header-left">
+                <button class="menu-toggle"><i class="fas fa-bars"></i></button>
+                <nav class="breadcrumb">
+                    <a href="contracts.html">Contracts</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span>Create New Contract</span>
+                </nav>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-secondary" onclick="window.location.href='contracts.html'">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Contract
+                </button>
+            </div>
+        </header>
+
+        <div class="page-content">
+            <div class="page-header">
+                <h1>Create New Contract</h1>
+                <p>Fill in the contract details below</p>
+            </div>
+
+            <form class="contract-form">
+                <!-- Contract Info Section -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <i class="fas fa-file-contract"></i>
+                        <h3>Contract Information</h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-row three-cols">
+                            <div class="form-group">
+                                <label class="form-label">Contract Number</label>
+                                <input type="text" class="form-control" value="CTR-2024-0157" readonly
+                                    style="background: rgba(0,0,0,0.3);">
+                                <small class="form-hint">Auto-generated</small>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Contract Type <span class="required">*</span></label>
+                                <select class="form-control">
+                                    <option value="">Select type...</option>
+                                    <option value="temporary">Temporary / Voyage Contract</option>
+                                    <option value="fixed">Fixed Term Contract</option>
+                                    <option value="permanent">Permanent (Office Staff)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <select class="form-control">
+                                    <option value="draft">Draft</option>
+                                    <option value="active">Active</option>
+                                    <option value="onboard">Onboard</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Crew & Assignment Section -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <i class="fas fa-user"></i>
+                        <h3>Crew & Assignment</h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Select Crew <span class="required">*</span></label>
+                                <select class="form-control">
+                                    <option value="">Search crew...</option>
+                                    <option value="1">John Doe - Captain</option>
+                                    <option value="2">Ahmad Wijaya - Chief Engineer</option>
+                                    <option value="3">Budi Santoso - Chief Officer</option>
+                                    <option value="4">Dedi Kurniawan - 2nd Engineer</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Rank / Position <span class="required">*</span></label>
+                                <select class="form-control">
+                                    <option value="">Select rank...</option>
+                                    <option value="captain">Captain</option>
+                                    <option value="chief_officer">Chief Officer</option>
+                                    <option value="2nd_officer">2nd Officer</option>
+                                    <option value="3rd_officer">3rd Officer</option>
+                                    <option value="chief_engineer">Chief Engineer</option>
+                                    <option value="2nd_engineer">2nd Engineer</option>
+                                    <option value="3rd_engineer">3rd Engineer</option>
+                                    <option value="bosun">Bosun</option>
+                                    <option value="ab">Able Seaman (AB)</option>
+                                    <option value="os">Ordinary Seaman (OS)</option>
+                                    <option value="oiler">Oiler</option>
+                                    <option value="wiper">Wiper</option>
+                                    <option value="cook">Cook</option>
+                                    <option value="steward">Steward</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Vessel <span class="required">*</span></label>
+                                <select class="form-control">
+                                    <option value="">Select vessel...</option>
+                                    <option value="1">MV Pacific Star</option>
+                                    <option value="2">MV Ocean Glory</option>
+                                    <option value="3">MT Borneo</option>
+                                    <option value="4">MV Java Sea</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Client / Principal <span class="required">*</span></label>
+                                <select class="form-control">
+                                    <option value="">Select client...</option>
+                                    <option value="1">Pacific Shipping Co.</option>
+                                    <option value="2">Oceanwide Maritime</option>
+                                    <option value="3">Asia Marine Ltd</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contract Period -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <i class="fas fa-calendar-alt"></i>
+                        <h3>Contract Period</h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-row three-cols">
+                            <div class="form-group">
+                                <label class="form-label">Sign On Date <span class="required">*</span></label>
+                                <input type="date" class="form-control" id="sign_on_date">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Sign Off Date <span class="required">*</span></label>
+                                <input type="date" class="form-control" id="sign_off_date">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Duration</label>
+                                <input type="text" class="form-control" id="duration" readonly
+                                    placeholder="Auto calculated" style="background: rgba(0,0,0,0.3);">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Salary Details -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <i class="fas fa-dollar-sign"></i>
+                        <h3>Salary Details</h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Currency</label>
+                                <select class="form-control">
+                                    <option value="USD">USD - US Dollar</option>
+                                    <option value="IDR">IDR - Indonesian Rupiah</option>
+                                    <option value="SGD">SGD - Singapore Dollar</option>
+                                    <option value="EUR">EUR - Euro</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Basic Salary <span class="required">*</span></label>
+                                <input type="text" class="form-control currency-input" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="form-row three-cols">
+                            <div class="form-group">
+                                <label class="form-label">Overtime Allowance</label>
+                                <input type="text" class="form-control currency-input" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Leave Pay</label>
+                                <input type="text" class="form-control currency-input" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Bonus</label>
+                                <input type="text" class="form-control currency-input" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="summary-box">
+                            <div class="summary-row">
+                                <span>Total Monthly Salary:</span>
+                                <strong>USD 0.00</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tax Settings -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <i class="fas fa-percentage"></i>
+                        <h3>Tax Settings (PPh 21)</h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-row three-cols">
+                            <div class="form-group">
+                                <label class="form-label">Tax Type</label>
+                                <select class="form-control">
+                                    <option value="pph21">PPh 21 (With NPWP)</option>
+                                    <option value="pph21_non">PPh 21 (Non-NPWP) +20%</option>
+                                    <option value="exempt">Tax Exempt</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">NPWP Number</label>
+                                <input type="text" class="form-control" placeholder="00.000.000.0-000.000">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tax Rate</label>
+                                <input type="text" class="form-control" value="5%" readonly
+                                    style="background: rgba(0,0,0,0.3);">
+                            </div>
+                        </div>
+                        <div class="info-box">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Tax will be automatically calculated during payroll based on the settings
+                                above.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deductions -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <i class="fas fa-minus-circle"></i>
+                        <h3>Deductions & Additions</h3>
+                    </div>
+                    <div class="section-body">
+                        <table class="deduction-table">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Recurring</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <select class="form-control">
+                                            <option value="insurance">Insurance</option>
+                                            <option value="medical">Medical Cost</option>
+                                            <option value="training">Training Cost</option>
+                                            <option value="advance">Advance Payment</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </td>
+                                    <td><input type="text" class="form-control" placeholder="Description"></td>
+                                    <td><input type="text" class="form-control currency-input" placeholder="0"></td>
+                                    <td>
+                                        <select class="form-control">
+                                            <option value="monthly">Monthly</option>
+                                            <option value="once">One-time</option>
+                                        </select>
+                                    </td>
+                                    <td><button type="button" class="btn-icon delete"><i
+                                                class="fas fa-trash"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn btn-secondary" style="margin-top: 12px;">
+                            <i class="fas fa-plus"></i> Add Deduction
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Approval Workflow -->
+                <div class="form-section">
+                    <div class="section-header">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>Approval Workflow</h3>
+                    </div>
+                    <div class="section-body">
+                        <div class="approval-timeline">
+                            <div class="approval-step pending">
+                                <div class="step-icon"><i class="fas fa-user"></i></div>
+                                <div class="step-info">
+                                    <span class="step-title">Crewing Officer</span>
+                                    <span class="step-status">Pending</span>
+                                </div>
+                            </div>
+                            <div class="approval-step disabled">
+                                <div class="step-icon"><i class="fas fa-user-tie"></i></div>
+                                <div class="step-info">
+                                    <span class="step-title">HR Manager</span>
+                                    <span class="step-status">Waiting</span>
+                                </div>
+                            </div>
+                            <div class="approval-step disabled">
+                                <div class="step-icon"><i class="fas fa-crown"></i></div>
+                                <div class="step-info">
+                                    <span class="step-title">Director</span>
+                                    <span class="step-status">Optional</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='contracts.html'">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-secondary">
+                        <i class="fas fa-save"></i> Save as Draft
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Submit for Approval
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+    <style>
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .breadcrumb a {
+            color: var(--text-secondary);
+        }
+
+        .breadcrumb a:hover {
+            color: var(--accent-gold);
+        }
+
+        .breadcrumb i {
+            font-size: 10px;
+        }
+
+        .breadcrumb span {
+            color: var(--text-primary);
+        }
+
+        .form-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 24px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-header i {
+            color: var(--accent-gold);
+            font-size: 18px;
+        }
+
+        .section-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .section-body {
+            padding: 24px;
+        }
+
+        .required {
+            color: var(--danger);
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .summary-box {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: var(--border-radius-sm);
+            padding: 16px 20px;
+            margin-top: 16px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 15px;
+        }
+
+        .summary-row strong {
+            color: var(--accent-gold);
+            font-size: 18px;
+        }
+
+        .info-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: var(--border-radius-sm);
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .info-box i {
+            color: var(--info);
+        }
+
+        .deduction-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .deduction-table th,
+        .deduction-table td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        .deduction-table th {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .deduction-table .form-control {
+            width: 100%;
+        }
+
+        .approval-timeline {
+            display: flex;
+            gap: 24px;
+        }
+
+        .approval-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 24px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            flex: 1;
+        }
+
+        .approval-step .step-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(100, 116, 139, 0.2);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .approval-step.pending .step-icon {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .approval-step.approved .step-icon {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .approval-step .step-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .approval-step .step-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .approval-step .step-status {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .approval-step.pending .step-status {
+            color: var(--warning);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+    </style>
+</body>
+
+</html>
