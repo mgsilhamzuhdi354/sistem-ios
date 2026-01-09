@@ -19,7 +19,7 @@ on:
       - master
     paths:
       # Hanya trigger jika ada perubahan di folder ERP
-      - 'erp sistem/**'
+      - 'erp/**'
   
   workflow_dispatch:
 
@@ -41,7 +41,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: ${{ secrets.FTP_PATH_ERP }}
-          local-dir: "./erp sistem/"
+          local-dir: "./erp/"
           
           exclude: |
             **/.git*

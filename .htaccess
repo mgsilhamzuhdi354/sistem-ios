@@ -7,6 +7,9 @@
 # - /erp/* -> ERP System
 # =============================================================================
 
+# Force index.html over index.php for the main website
+DirectoryIndex index.html index.php
+
 RewriteEngine On
 RewriteBase /
 
