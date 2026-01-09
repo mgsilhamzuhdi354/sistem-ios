@@ -961,7 +961,7 @@ class TranslationSystem {
           contact: "Contact",
           careers: "Careers",
           blog: "Blog",
-          address: "Jl. Sudirman No. 123, Jakarta 12190, Indonesia",
+          address: "Menara Cakrawala lt 15 no 1506 jl M.H. Thamrin Kec. Menteng, Kota Jakarta Pusat 10340",
           hours: "Mon - Fri: 8:00 - 17:00",
           rights: "All rights reserved.",
           privacy: "Privacy Policy",
@@ -1001,7 +1001,7 @@ class TranslationSystem {
           visionTitle: "Our Vision",
           visionText:
             "To be the leading maritime service provider in Southeast Asia, recognized for our integrity, professionalism, and commitment to sustainable maritime operations.",
-          experienceText: "Years of Maritime Excellence",
+          experienceText: "Years",
           valuesSubtitle: "Our Principles",
           valuesTitle: "Core <span class='highlight'>Values</span>",
           value1Title: "Integrity",
@@ -1064,7 +1064,7 @@ class TranslationSystem {
           },
           office: {
             title: "Head Office",
-            address: "Jl. Sudirman No. 123\nJakarta 12190, Indonesia",
+            address: "Menara Cakrawala lt 15 no 1506 jl M.H. Thamrin\nKec. Menteng, Kota Jakarta Pusat 10340",
           },
           getDirections: "Get Directions",
           phone: {
@@ -1308,7 +1308,7 @@ class TranslationSystem {
           contact: "Kontak",
           careers: "Karir",
           blog: "Blog",
-          address: "Jl. Sudirman No. 123, Jakarta 12190, Indonesia",
+          address: "Menara Cakrawala lt 15 no 1506 jl M.H. Thamrin Kec. Menteng, Kota Jakarta Pusat 10340",
           hours: "Sen - Jum: 8:00 - 17:00",
           rights: "Hak cipta dilindungi.",
           privacy: "Kebijakan Privasi",
@@ -1348,7 +1348,7 @@ class TranslationSystem {
           visionTitle: "Visi Kami",
           visionText:
             "Menjadi penyedia layanan maritim terkemuka di Asia Tenggara, diakui atas integritas, profesionalisme, dan komitmen kami terhadap operasi maritim yang berkelanjutan.",
-          experienceText: "Tahun Keunggulan Maritim",
+          experienceText: "Tahun",
           valuesSubtitle: "Prinsip Kami",
           valuesTitle: "Nilai Inti <span class='highlight'>Kami</span>",
           value1Title: "Integritas",
@@ -1410,7 +1410,7 @@ class TranslationSystem {
           },
           office: {
             title: "Kantor Pusat",
-            address: "Jl. Sudirman No. 123\nJakarta 12190, Indonesia",
+            address: "Menara Cakrawala lt 15 no 1506 jl M.H. Thamrin\nKec. Menteng, Kota Jakarta Pusat 10340",
           },
           getDirections: "Dapatkan Petunjuk",
           phone: {
@@ -2661,7 +2661,7 @@ class TranslationSystem {
           contact: "联系我们",
           careers: "职业发展",
           blog: "博客",
-          address: "印度尼西亚雅加达Sudirman街123号，邮编12190",
+          address: "Menara Cakrawala lt 15 no 1506 jl M.H. Thamrin Kec. Menteng, Kota Jakarta Pusat 10340",
           hours: "周一至周五：8:00 - 17:00",
           rights: "保留所有权利。",
           privacy: "隐私政策",
@@ -2701,7 +2701,7 @@ class TranslationSystem {
           visionTitle: "我们的愿景",
           visionText:
             "成为东南亚领先的海事服务提供商，以我们的诚信、专业精神和对可持续海事运营的承诺而闻名。",
-          experienceText: "海事卓越年",
+          experienceText: "年",
           valuesSubtitle: "我们的原则",
           valuesTitle: "核心<span class='highlight'>价值观</span>",
           value1Title: "诚信",
@@ -2754,7 +2754,7 @@ class TranslationSystem {
           },
           office: {
             title: "总部办公室",
-            address: "印度尼西亚雅加达Sudirman街123号\n邮编12190",
+            address: "Menara Cakrawala lt 15 no 1506 jl M.H. Thamrin\nKec. Menteng, Kota Jakarta Pusat 10340",
           },
           getDirections: "获取路线",
           phone: {
