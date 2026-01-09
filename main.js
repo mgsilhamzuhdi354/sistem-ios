@@ -405,17 +405,24 @@ class WebsiteApp {
 
     // Hide loader function
     const hideLoader = () => {
+      // Prevent multiple calls
+      if (loader.classList.contains("hidden")) return;
+
       setTimeout(() => {
         loader.classList.add("hidden");
       }, 600);
     };
 
     // Check if page is already loaded
-    if (document.readyState === "complete") {
+    if (document.readyState === "complete" || document.readyState === "interactive") {
       hideLoader();
     } else {
       window.addEventListener("load", hideLoader);
+      window.addEventListener("DOMContentLoaded", hideLoader); // Faster fallback
     }
+
+    // Safety timeout: Force hide after 5 seconds max (prevents infinite loading)
+    setTimeout(hideLoader, 5000);
 
     // Handle link clicks for transition
     document.addEventListener("click", (e) => {
