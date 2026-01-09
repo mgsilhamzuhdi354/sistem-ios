@@ -4,10 +4,23 @@
  * Application Configuration
  */
 
+// Detect environment
+$isProduction = (
+    isset($_SERVER['HTTP_HOST']) && 
+    strpos($_SERVER['HTTP_HOST'], 'localhost') === false &&
+    strpos($_SERVER['HTTP_HOST'], '127.0.0.1') === false
+);
+
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+
+// Production: /recruitment/ | Local: /PT_indoocean/recruitment/public/
+$basePath = $isProduction ? '/recruitment/' : '/PT_indoocean/recruitment/public/';
+
 return [
     'appName'    => 'PT Indo Ocean Crew Services - Recruitment',
     'appVersion' => '1.0.0',
-    'baseURL'    => ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/PT_indoocean/recruitment/public/',
+    'baseURL'    => $protocol . '://' . $host . $basePath,
     'indexPage'  => '',
     'timezone'   => 'Asia/Jakarta',
     'language'   => 'id',

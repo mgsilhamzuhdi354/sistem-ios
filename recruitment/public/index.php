@@ -59,8 +59,15 @@ function getDB() {
 $requestMethod = $_SERVER['REQUEST_METHOD'];
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// Remove base path
-$basePath = '/PT_indoocean/recruitment/public';
+// Detect environment for base path
+$isProduction = (
+    isset($_SERVER['HTTP_HOST']) && 
+    strpos($_SERVER['HTTP_HOST'], 'localhost') === false &&
+    strpos($_SERVER['HTTP_HOST'], '127.0.0.1') === false
+);
+
+// Production: /recruitment | Local: /PT_indoocean/recruitment/public
+$basePath = $isProduction ? '/recruitment' : '/PT_indoocean/recruitment/public';
 $requestUri = str_replace($basePath, '', $requestUri);
 $requestUri = $requestUri ?: '/';
 
@@ -503,11 +510,15 @@ function old($key, $default = '') {
 }
 
 function asset($path) {
-    return '/PT_indoocean/recruitment/public/assets/' . ltrim($path, '/');
+    global $isProduction;
+    $base = $isProduction ? '/recruitment/assets/' : '/PT_indoocean/recruitment/public/assets/';
+    return $base . ltrim($path, '/');
 }
 
 function url($path = '') {
-    return '/PT_indoocean/recruitment/public' . $path;
+    global $isProduction;
+    $base = $isProduction ? '/recruitment' : '/PT_indoocean/recruitment/public';
+    return $base . $path;
 }
 
 // Route matcher

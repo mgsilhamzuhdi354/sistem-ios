@@ -10,10 +10,19 @@ define('APPPATH', BASEPATH . 'app/');
 define('WRITEPATH', BASEPATH . 'writable/');
 define('FCPATH', BASEPATH);
 
-// Dynamic BASE_URL detection (works with localhost and ngrok)
+// Dynamic BASE_URL detection (works with localhost and production)
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-define('BASE_URL', $protocol . '://' . $host . '/PT_indoocean/erp%20sistem/');
+
+// Detect environment
+$isProduction = (
+    strpos($host, 'localhost') === false &&
+    strpos($host, '127.0.0.1') === false
+);
+
+// Production: /erp/ | Local: /PT_indoocean/erp/
+$basePath = $isProduction ? '/erp/' : '/PT_indoocean/erp/';
+define('BASE_URL', $protocol . '://' . $host . $basePath);
 
 
 // Error reporting (disable in production)

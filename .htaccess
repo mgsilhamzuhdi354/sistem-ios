@@ -1,0 +1,60 @@
+# =============================================================================
+# PT Indo Ocean - URL Routing Configuration
+# =============================================================================
+# Routes:
+# - / -> Company Profile (static HTML)
+# - /recruitment/* -> Recruitment System
+# - /erp/* -> ERP System
+# =============================================================================
+
+RewriteEngine On
+RewriteBase /
+
+# =============================================================================
+# RECRUITMENT SYSTEM ROUTING
+# =============================================================================
+# Route /recruitment requests to recruitment/public/index.php
+
+# Serve recruitment assets directly
+RewriteCond %{REQUEST_URI} ^/recruitment/assets/(.*)$ [NC]
+RewriteRule ^recruitment/assets/(.*)$ recruitment/public/assets/$1 [L]
+
+# Route all other /recruitment requests to recruitment/public/index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^recruitment/?(.*)$ recruitment/public/index.php [L,QSA]
+
+# =============================================================================
+# ERP SYSTEM ROUTING
+# =============================================================================
+# Route /erp requests to erp/index.php
+
+# Serve ERP public assets directly
+RewriteCond %{REQUEST_URI} ^/erp/public/(.*)$ [NC]
+RewriteRule ^erp/public/(.*)$ erp/public/$1 [L]
+
+# Route all other /erp requests to erp/index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^erp/?(.*)$ erp/index.php?url=$1 [L,QSA]
+
+# =============================================================================
+# MAIN WEBSITE (Company Profile)
+# =============================================================================
+# Serve static files directly (HTML, CSS, JS, images)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Handle clean URLs for main pages (optional)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/recruitment
+RewriteCond %{REQUEST_URI} !^/erp
+RewriteRule ^([a-zA-Z0-9-]+)$ $1.html [L]
+
+# Default to index.html if no file matched
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/recruitment
+RewriteCond %{REQUEST_URI} !^/erp
+RewriteRule ^$ index.html [L]
