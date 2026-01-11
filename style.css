@@ -1480,28 +1480,38 @@ img {
     display: none;
   }
 
-  /* Language switcher in mobile menu */
+  /* Language switcher - always visible in header on mobile */
   .language-switcher {
-    position: fixed;
-    bottom: 30px;
-    right: -100%;
-    background: var(--white);
-    padding: 12px 20px;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    transition: var(--transition-normal);
-    z-index: 1001;
+    display: flex;
+    gap: 3px;
+    background: transparent;
+    padding: 0;
+    margin-right: var(--space-sm);
   }
 
-  .nav-menu.active~.nav-actions .language-switcher,
-  .language-switcher.mobile-visible {
-    right: 40px;
+  .language-switcher .lang-btn {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+
+  .language-switcher .lang-btn i {
+    display: none;
   }
 
   /* Hero Section */
   .hero {
-    margin-top: 70px;
-    min-height: 500px;
+    margin-top: 100px;
+    min-height: 400px;
+  }
+
+  .page-hero {
+    margin-top: 100px;
+    padding: 40px 0;
+    min-height: auto;
+  }
+
+  .page-hero h1 {
+    font-size: 1.8rem;
   }
 
   .hero-title {
@@ -1520,6 +1530,29 @@ img {
   .hero-buttons .btn {
     width: 100%;
     justify-content: center;
+  }
+
+  /* Sticky Nav for Services */
+  .services-nav-sticky {
+    position: relative;
+    top: 0;
+    padding: 10px 0;
+  }
+
+  .services-nav-sticky .container {
+    overflow-x: auto;
+    padding-bottom: 10px;
+  }
+
+  .services-nav-list {
+    min-width: 500px;
+    gap: 8px;
+  }
+
+  .services-nav-list li a {
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    white-space: nowrap;
   }
 
   /* Logo */
