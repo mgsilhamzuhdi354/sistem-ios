@@ -140,9 +140,15 @@ class WebsiteApp {
 
     // Mobile menu toggle
     if (hamburger) {
+      const langSwitcher = document.querySelector(".language-switcher");
+
       hamburger.addEventListener("click", () => {
         hamburger.classList.toggle("active");
         navMenu.classList.toggle("active");
+        // Toggle language switcher on mobile
+        if (langSwitcher) {
+          langSwitcher.classList.toggle("mobile-visible");
+        }
         document.body.style.overflow = navMenu.classList.contains("active")
           ? "hidden"
           : "";
@@ -150,10 +156,12 @@ class WebsiteApp {
     }
 
     // Close mobile menu on link click
+    const langSwitcher = document.querySelector(".language-switcher");
     document.querySelectorAll(".nav-menu a").forEach((link) => {
       link.addEventListener("click", () => {
         hamburger.classList.remove("active");
         navMenu.classList.remove("active");
+        if (langSwitcher) langSwitcher.classList.remove("mobile-visible");
         document.body.style.overflow = "";
       });
     });
@@ -172,6 +180,8 @@ class WebsiteApp {
       if (e.key === "Escape" && navMenu.classList.contains("active")) {
         hamburger.classList.remove("active");
         navMenu.classList.remove("active");
+        const ls = document.querySelector(".language-switcher");
+        if (ls) ls.classList.remove("mobile-visible");
         document.body.style.overflow = "";
       }
     });

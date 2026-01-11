@@ -1480,8 +1480,22 @@ img {
     display: none;
   }
 
+  /* Language switcher in mobile menu */
   .language-switcher {
-    display: none;
+    position: fixed;
+    bottom: 30px;
+    right: -100%;
+    background: var(--white);
+    padding: 12px 20px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    transition: var(--transition-normal);
+    z-index: 1001;
+  }
+
+  .nav-menu.active~.nav-actions .language-switcher,
+  .language-switcher.mobile-visible {
+    right: 40px;
   }
 
   /* Hero Section */
