@@ -305,15 +305,16 @@ img {
 }
 
 .logo-icon {
-  width: 90px;
-  height: 90px;
+  width: 110px;
+  height: 110px;
   background: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
 }
 
 /* Logo image */
@@ -1509,16 +1510,16 @@ img {
 
   /* Logo */
   .logo-icon {
-    width: 60px;
-    height: 60px;
+    width: 80px;
+    height: 80px;
   }
 
   .logo-text h1 {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
 
   .logo-text p {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
   }
 
   /* Sections */
