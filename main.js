@@ -137,32 +137,62 @@ class WebsiteApp {
     const hamburger = document.getElementById("hamburger");
     const navMenu = document.querySelector(".nav-menu");
     const header = document.querySelector(".header");
+    const mobileCloseBtn = document.getElementById("mobileCloseBtn");
+
+    // Function to close mobile menu
+    const closeMobileMenu = () => {
+      if (hamburger) hamburger.classList.remove("active");
+      if (navMenu) navMenu.classList.remove("active");
+      document.body.style.overflow = "";
+    };
 
     // Mobile menu toggle
     if (hamburger) {
-      const langSwitcher = document.querySelector(".language-switcher");
-
       hamburger.addEventListener("click", () => {
         hamburger.classList.toggle("active");
         navMenu.classList.toggle("active");
-        // Toggle language switcher on mobile
-        if (langSwitcher) {
-          langSwitcher.classList.toggle("mobile-visible");
-        }
         document.body.style.overflow = navMenu.classList.contains("active")
           ? "hidden"
           : "";
       });
     }
 
+    // Close button in mobile menu
+    if (mobileCloseBtn) {
+      mobileCloseBtn.addEventListener("click", closeMobileMenu);
+    }
+
     // Close mobile menu on link click
-    const langSwitcher = document.querySelector(".language-switcher");
     document.querySelectorAll(".nav-menu a").forEach((link) => {
-      link.addEventListener("click", () => {
-        hamburger.classList.remove("active");
-        navMenu.classList.remove("active");
-        if (langSwitcher) langSwitcher.classList.remove("mobile-visible");
-        document.body.style.overflow = "";
+      link.addEventListener("click", closeMobileMenu);
+    });
+
+    // Mobile language buttons
+    document.querySelectorAll(".mobile-lang-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const lang = btn.getAttribute("data-lang");
+
+        // Update mobile buttons active state
+        document.querySelectorAll(".mobile-lang-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        // Also update desktop language switcher buttons
+        document.querySelectorAll(".lang-btn").forEach(b => {
+          b.classList.remove("active");
+          if (b.getAttribute("data-lang") === lang) {
+            b.classList.add("active");
+          }
+        });
+
+        // Trigger language change (uses existing translate.js functionality)
+        if (typeof setLanguage === 'function') {
+          setLanguage(lang);
+        } else if (window.changeLanguage) {
+          window.changeLanguage(lang);
+        }
+
+        // Close menu after language selection
+        setTimeout(closeMobileMenu, 300);
       });
     });
 
@@ -178,11 +208,7 @@ class WebsiteApp {
     // Close mobile menu on escape key
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && navMenu.classList.contains("active")) {
-        hamburger.classList.remove("active");
-        navMenu.classList.remove("active");
-        const ls = document.querySelector(".language-switcher");
-        if (ls) ls.classList.remove("mobile-visible");
-        document.body.style.overflow = "";
+        closeMobileMenu();
       }
     });
   }
