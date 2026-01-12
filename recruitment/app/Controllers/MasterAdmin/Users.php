@@ -274,36 +274,33 @@ class Users extends BaseController {
             // Start transaction
             $this->db->begin_transaction();
             
-            // Delete or update related records in all tables with foreign keys to users
+            // Delete or update related records - use @ to suppress errors for non-existent tables
             
-            // 1. application_assignments - assigned_to and assigned_by
-            $this->db->query("DELETE FROM application_assignments WHERE assigned_to = $id OR assigned_by = $id");
+            // 1. application_assignments
+            @$this->db->query("DELETE FROM application_assignments WHERE assigned_to = $id OR assigned_by = $id");
             
-            // 2. email_logs - user_id
-            $this->db->query("DELETE FROM email_logs WHERE user_id = $id");
+            // 2. email_logs
+            @$this->db->query("DELETE FROM email_logs WHERE user_id = $id");
             
-            // 3. notifications - user_id
-            $this->db->query("DELETE FROM notifications WHERE user_id = $id");
+            // 3. notifications
+            @$this->db->query("DELETE FROM notifications WHERE user_id = $id");
             
-            // 4. activity_logs - user_id
-            $this->db->query("DELETE FROM activity_logs WHERE user_id = $id");
+            // 4. leader_profiles
+            @$this->db->query("DELETE FROM leader_profiles WHERE user_id = $id");
             
-            // 5. leader_profiles
-            $this->db->query("DELETE FROM leader_profiles WHERE user_id = $id");
+            // 5. crewing_profiles
+            @$this->db->query("DELETE FROM crewing_profiles WHERE user_id = $id");
             
-            // 6. crewing_profiles
-            $this->db->query("DELETE FROM crewing_profiles WHERE user_id = $id");
+            // 6. Set NULL for optional references
+            @$this->db->query("UPDATE applications SET reviewed_by = NULL WHERE reviewed_by = $id");
+            @$this->db->query("UPDATE job_vacancies SET created_by = NULL WHERE created_by = $id");
+            @$this->db->query("UPDATE application_status_history SET changed_by = NULL WHERE changed_by = $id");
+            @$this->db->query("UPDATE documents SET verified_by = NULL WHERE verified_by = $id");
+            @$this->db->query("UPDATE interview_question_banks SET created_by = NULL WHERE created_by = $id");
+            @$this->db->query("UPDATE contract_requests SET processed_by = NULL WHERE processed_by = $id");
+            @$this->db->query("UPDATE email_archive SET archived_by = NULL WHERE archived_by = $id");
             
-            // 7. Set NULL for optional references (reviewed_by, created_by, changed_by, verified_by, processed_by)
-            $this->db->query("UPDATE applications SET reviewed_by = NULL WHERE reviewed_by = $id");
-            $this->db->query("UPDATE job_vacancies SET created_by = NULL WHERE created_by = $id");
-            $this->db->query("UPDATE application_status_history SET changed_by = NULL WHERE changed_by = $id");
-            $this->db->query("UPDATE documents SET verified_by = NULL WHERE verified_by = $id");
-            $this->db->query("UPDATE interview_question_banks SET created_by = NULL WHERE created_by = $id");
-            $this->db->query("UPDATE contract_requests SET processed_by = NULL WHERE processed_by = $id");
-            $this->db->query("UPDATE email_archive SET archived_by = NULL WHERE archived_by = $id");
-            
-            // 8. Now delete the user
+            // 7. Now delete the user
             $stmt = $this->db->prepare("DELETE FROM users WHERE id = ?");
             $stmt->bind_param('i', $id);
             $stmt->execute();
