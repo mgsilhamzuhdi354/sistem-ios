@@ -248,7 +248,7 @@ class Users extends BaseController {
     
     public function delete($id) {
         if (!$this->isPost()) {
-            redirect('/master-admin/users');
+            redirect(url('/master-admin/users'));
         }
         
         validate_csrf();
@@ -256,10 +256,10 @@ class Users extends BaseController {
         // Cannot delete yourself
         if ($id == $_SESSION['user_id']) {
             flash('error', 'Cannot delete your own account.');
-            redirect('/master-admin/users');
+            redirect(url('/master-admin/users'));
         }
         
-        // Check if user exists and is deletable (Admin or Leader only)
+        // Check if user exists and is deletable (Admin, Leader, or Crewing)
         $checkStmt = $this->db->prepare("SELECT id, role_id FROM users WHERE id = ? AND role_id IN (1, 4, 5)");
         $checkStmt->bind_param('i', $id);
         $checkStmt->execute();
@@ -267,7 +267,7 @@ class Users extends BaseController {
         
         if (!$user) {
             flash('error', 'User not found or cannot be deleted.');
-            redirect('/master-admin/users');
+            redirect(url('/master-admin/users'));
         }
         
         try {
@@ -304,7 +304,7 @@ class Users extends BaseController {
             flash('error', 'Failed to delete user. The user may have related data that cannot be deleted.');
         }
         
-        redirect('/master-admin/users');
+        redirect(url('/master-admin/users'));
     }
     
     /**
