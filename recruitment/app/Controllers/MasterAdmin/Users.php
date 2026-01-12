@@ -259,13 +259,49 @@ class Users extends BaseController {
             redirect('/master-admin/users');
         }
         
-        $stmt = $this->db->prepare("DELETE FROM users WHERE id = ? AND role_id IN (1, 4)");
-        $stmt->bind_param('i', $id);
+        // Check if user exists and is deletable (Admin or Leader only)
+        $checkStmt = $this->db->prepare("SELECT id, role_id FROM users WHERE id = ? AND role_id IN (1, 4, 5)");
+        $checkStmt->bind_param('i', $id);
+        $checkStmt->execute();
+        $user = $checkStmt->get_result()->fetch_assoc();
         
-        if ($stmt->execute()) {
+        if (!$user) {
+            flash('error', 'User not found or cannot be deleted.');
+            redirect('/master-admin/users');
+        }
+        
+        try {
+            // Start transaction
+            $this->db->begin_transaction();
+            
+            // Delete related application_assignments first
+            $deleteAssignments = $this->db->prepare("DELETE FROM application_assignments WHERE assigned_to = ?");
+            $deleteAssignments->bind_param('i', $id);
+            $deleteAssignments->execute();
+            
+            // Delete leader_profiles if exists
+            $deleteLeaderProfile = $this->db->prepare("DELETE FROM leader_profiles WHERE user_id = ?");
+            $deleteLeaderProfile->bind_param('i', $id);
+            $deleteLeaderProfile->execute();
+            
+            // Delete crewing_profiles if exists
+            $deleteCrewingProfile = $this->db->prepare("DELETE FROM crewing_profiles WHERE user_id = ?");
+            $deleteCrewingProfile->bind_param('i', $id);
+            $deleteCrewingProfile->execute();
+            
+            // Now delete the user
+            $stmt = $this->db->prepare("DELETE FROM users WHERE id = ?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            
+            // Commit transaction
+            $this->db->commit();
+            
             flash('success', 'User deleted successfully.');
-        } else {
-            flash('error', 'Failed to delete user.');
+        } catch (Exception $e) {
+            // Rollback on error
+            $this->db->rollback();
+            flash('error', 'Failed to delete user. The user may have related data that cannot be deleted.');
         }
         
         redirect('/master-admin/users');
