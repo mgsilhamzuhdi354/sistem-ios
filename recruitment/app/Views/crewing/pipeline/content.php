@@ -1,123 +1,204 @@
-<!-- Crewing Pipeline with Request System -->
+<!-- Crewing Pipeline Content with Claim Request -->
+<style>
+.pipeline-header {
+    background: linear-gradient(135deg, #0d9488, #14b8a6);
+    color: white;
+    padding: 25px 30px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+}
+.pipeline-header h2 { margin: 0; font-weight: 600; }
+
+.view-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.view-tab {
+    padding: 12px 25px;
+    background: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.3s;
+}
+.view-tab.active {
+    background: linear-gradient(135deg, #0d9488, #14b8a6);
+    color: white;
+}
+.view-tab:hover:not(.active) { background: #f0f0f0; }
+
+.pending-requests-box {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 4px solid #f59e0b;
+}
+.pending-requests-box h5 { margin: 0 0 10px; color: #92400e; }
+.pending-item {
+    background: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pipeline-board { display: flex; gap: 15px; overflow-x: auto; padding: 10px 0; }
+.pipeline-column { min-width: 300px; max-width: 320px; background: #f5f7fa; border-radius: 16px; flex-shrink: 0; }
+.column-header { padding: 15px 20px; color: white; display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
+.column-header .count { background: rgba(255,255,255,0.3); padding: 4px 12px; border-radius: 15px; }
+.column-body { padding: 15px; max-height: 500px; overflow-y: auto; }
+.empty-column { text-align: center; padding: 40px 20px; color: #aaa; }
+.empty-column i { font-size: 2rem; display: block; margin-bottom: 10px; }
+
+.app-card {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    border-left: 4px solid #14b8a6;
+    transition: all 0.3s;
+}
+.app-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+.app-card h4 { margin: 0 0 5px; font-size: 1.1rem; font-weight: 600; color: #1e3a5f; }
+.app-card .vacancy { color: #666; font-size: 0.85rem; margin-bottom: 15px; }
+
+.btn-claim {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.btn-claim:hover { transform: scale(1.02); box-shadow: 0 5px 20px rgba(59,130,246,0.4); }
+.btn-claim.pending {
+    background: #fbbf24;
+    color: #78350f;
+    cursor: not-allowed;
+}
+.btn-claim.pending:hover { transform: none; box-shadow: none; }
+
+/* Modal */
+.claim-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(5px);
+}
+.claim-modal.show { display: flex; animation: fadeIn 0.3s ease; }
+.claim-modal-box {
+    background: white;
+    border-radius: 20px;
+    max-width: 450px;
+    width: 95%;
+    overflow: hidden;
+    animation: scaleIn 0.4s ease;
+}
+.claim-modal-header {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    padding: 20px 25px;
+}
+.claim-modal-header h3 { margin: 0; }
+.claim-modal-body { padding: 25px; }
+.claim-modal-footer { padding: 15px 25px; background: #f8f9fa; display: flex; gap: 12px; justify-content: flex-end; }
+
+.btn-cancel { background: #e5e7eb; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; }
+.btn-submit { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+</style>
+
 <div class="pipeline-header">
-    <div class="header-left">
-        <div class="header-icon">
-            <i class="fas fa-stream"></i>
-        </div>
+    <h2><i class="fas fa-columns me-2"></i>Pipeline Rekrutmen</h2>
+    <small class="opacity-75">Ambil dan kelola lamaran pelamar</small>
+</div>
+
+<!-- View Tabs -->
+<div class="view-tabs">
+    <a href="<?= url('/crewing/pipeline?view=available') ?>" class="view-tab <?= $currentView == 'available' ? 'active' : '' ?>">
+        <i class="fas fa-inbox me-2"></i>Tersedia
+    </a>
+    <a href="<?= url('/crewing/pipeline?view=my') ?>" class="view-tab <?= $currentView == 'my' ? 'active' : '' ?>">
+        <i class="fas fa-user-check me-2"></i>Milik Saya
+    </a>
+</div>
+
+<!-- Pending Requests Alert -->
+<?php if (!empty($myPendingRequests)): ?>
+<div class="pending-requests-box">
+    <h5><i class="fas fa-hourglass-half me-2"></i>Request Pending Anda (<?= count($myPendingRequests) ?>)</h5>
+    <small class="text-muted">Menunggu approval dari Master Admin</small>
+    <?php foreach ($myPendingRequests as $req): ?>
+    <div class="pending-item">
         <div>
-            <h1>Recruitment Pipeline</h1>
-            <p>Drag cards to request status changes</p>
+            <strong><?= htmlspecialchars($req['applicant_name']) ?></strong>
+            <small class="d-block text-muted"><?= htmlspecialchars($req['vacancy_title'] ?? 'N/A') ?></small>
         </div>
+        <span style="background:#fef3c7;color:#92400e;padding:4px 10px;border-radius:6px;font-size:0.8rem;">
+            <i class="fas fa-clock me-1"></i>Pending
+        </span>
     </div>
-    <div class="header-actions">
-        <div class="view-toggle">
-            <a href="<?= url('/crewing/pipeline?view=my') ?>" class="view-btn <?= $currentView === 'my' ? 'active' : '' ?>">
-                <i class="fas fa-user"></i> My Pipeline
-            </a>
-            <a href="<?= url('/crewing/pipeline?view=team') ?>" class="view-btn <?= $currentView === 'team' ? 'active' : '' ?>">
-                <i class="fas fa-users"></i> Team
-            </a>
-            <a href="<?= url('/crewing/pipeline?view=all') ?>" class="view-btn <?= $currentView === 'all' ? 'active' : '' ?>">
-                <i class="fas fa-globe"></i> All
-            </a>
-        </div>
-        
-        <?php if ($currentView === 'team' && !empty($crewingStaff)): ?>
-        <select id="crewingFilter" class="filter-select" onchange="filterByCrewing(this.value)">
-            <option value="">All Team Members</option>
-            <?php foreach ($crewingStaff as $crew): ?>
-            <option value="<?= $crew['id'] ?>" <?= ($filterCrewingId ?? '') == $crew['id'] ? 'selected' : '' ?>>
-                <?= htmlspecialchars($crew['full_name']) ?>
-            </option>
-            <?php endforeach; ?>
-        </select>
-        <?php endif; ?>
-    </div>
+    <?php endforeach; ?>
 </div>
+<?php endif; ?>
 
-<!-- Info Banner -->
-<div class="info-banner">
-    <i class="fas fa-info-circle"></i>
-    <span>Status changes require Master Admin approval. Drag a card to request a move.</span>
-</div>
-
-<!-- Pipeline Kanban Board -->
-<div class="pipeline-kanban-modern">
+<!-- Pipeline Board -->
+<div class="pipeline-board">
     <?php foreach ($statuses as $status): ?>
-    <div class="kanban-column-modern" data-status-id="<?= $status['id'] ?>">
-        <div class="column-header-modern" style="background: <?= $status['color'] ?>">
-            <h3><?= $status['name'] ?></h3>
-            <span class="column-count"><?= count($pipeline[$status['id']] ?? []) ?></span>
+    <div class="pipeline-column">
+        <div class="column-header" style="background: <?= $status['color'] ?? '#6c757d' ?>;">
+            <span><?= htmlspecialchars($status['name']) ?></span>
+            <span class="count"><?= count($pipeline[$status['id']] ?? []) ?></span>
         </div>
-        
-        <div class="column-body-modern" data-status-id="<?= $status['id'] ?>" data-status-name="<?= $status['name'] ?>">
+        <div class="column-body">
             <?php if (empty($pipeline[$status['id']])): ?>
-            <div class="empty-column-modern">
+            <div class="empty-column">
                 <i class="fas fa-inbox"></i>
-                <span>No applications</span>
+                <small>No applications</small>
             </div>
             <?php else: ?>
             <?php foreach ($pipeline[$status['id']] as $app): ?>
-            <div class="kanban-card-modern" 
-                 data-app-id="<?= $app['id'] ?>"
-                 data-app-name="<?= htmlspecialchars($app['full_name']) ?>"
-                 data-current-status="<?= $status['name'] ?>"
-                 draggable="true">
+            <div class="app-card">
+                <h4><?= htmlspecialchars($app['applicant_name']) ?></h4>
+                <div class="vacancy"><i class="fas fa-briefcase me-1"></i><?= htmlspecialchars($app['vacancy_title'] ?? 'N/A') ?></div>
                 
-                <!-- Card Header with Avatar -->
-                <div class="card-top">
-                    <div class="applicant-avatar">
-                        <?= strtoupper(substr($app['full_name'], 0, 2)) ?>
-                    </div>
-                    <div class="applicant-main">
-                        <strong><?= htmlspecialchars($app['full_name']) ?></strong>
-                        <span class="vacancy-name"><?= htmlspecialchars($app['vacancy_title']) ?></span>
-                    </div>
-                    <?php if (isset($app['priority']) && $app['priority'] !== 'normal'): ?>
-                    <span class="priority-dot <?= $app['priority'] ?>"></span>
+                <?php if ($currentView == 'available'): ?>
+                    <?php if (!empty($app['my_pending_request'])): ?>
+                    <button class="btn-claim pending" disabled>
+                        <i class="fas fa-hourglass-half"></i>
+                        Request Pending...
+                    </button>
+                    <?php else: ?>
+                    <button class="btn-claim" onclick="openClaimModal(<?= $app['id'] ?>, '<?= htmlspecialchars($app['applicant_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($app['vacancy_title'] ?? '', ENT_QUOTES) ?>')">
+                        <i class="fas fa-hand-paper"></i>
+                        Request Ambil
+                    </button>
                     <?php endif; ?>
-                </div>
-                
-                <!-- Applicant Details -->
-                <div class="card-details">
-                    <?php if (!empty($app['email'])): ?>
-                    <div class="detail-row">
-                        <i class="fas fa-envelope"></i>
-                        <span><?= htmlspecialchars($app['email']) ?></span>
+                <?php else: ?>
+                    <div style="background:#dcfce7;color:#166534;padding:10px;border-radius:8px;text-align:center;">
+                        <i class="fas fa-check-circle me-1"></i>Ditangani Anda
                     </div>
-                    <?php endif; ?>
-                    <?php if (!empty($app['phone'])): ?>
-                    <div class="detail-row">
-                        <i class="fas fa-phone"></i>
-                        <span><?= htmlspecialchars($app['phone']) ?></span>
-                    </div>
-                    <?php endif; ?>
-                    <?php if (!empty($app['department_name'])): ?>
-                    <div class="detail-row">
-                        <i class="fas fa-building"></i>
-                        <span><?= htmlspecialchars($app['department_name']) ?></span>
-                    </div>
-                    <?php endif; ?>
-                </div>
-                
-                <!-- Card Footer -->
-                <div class="card-bottom">
-                    <?php if (!empty($app['crewing_name'])): ?>
-                    <span class="handler-tag">
-                        <i class="fas fa-user-tag"></i> <?= htmlspecialchars($app['crewing_name']) ?>
-                    </span>
-                    <?php endif; ?>
-                    <span class="days-badge <?= ($app['days_in_status'] ?? 0) > 5 ? 'warning' : '' ?>">
-                        <?= $app['days_in_status'] ?? 0 ?> days
-                    </span>
-                </div>
-                
-                <!-- Hover Actions -->
-                <div class="card-actions-overlay">
-                    <a href="<?= url('/crewing/applications/' . $app['id']) ?>" class="action-btn view">
-                        <i class="fas fa-eye"></i> View Details
-                    </a>
-                </div>
+                <?php endif; ?>
             </div>
             <?php endforeach; ?>
             <?php endif; ?>
@@ -126,566 +207,88 @@
     <?php endforeach; ?>
 </div>
 
-<!-- Request Status Change Modal -->
-<div class="modal-overlay" id="requestModal">
-    <div class="modal-container">
-        <div class="modal-header">
-            <h3><i class="fas fa-exchange-alt"></i> Request Status Change</h3>
-            <button class="modal-close" onclick="closeModal()">&times;</button>
+<!-- Claim Request Modal -->
+<div class="claim-modal" id="claimModal">
+    <div class="claim-modal-box">
+        <div class="claim-modal-header">
+            <h3><i class="fas fa-hand-paper me-2"></i>Request Ambil Lamaran</h3>
         </div>
-        <form id="requestForm" action="<?= url('/crewing/pipeline/request-status') ?>" method="POST">
-            <?= csrf_field() ?>
-            <input type="hidden" name="application_id" id="reqAppId">
-            <input type="hidden" name="to_status_id" id="reqToStatus">
-            
-            <div class="modal-body">
-                <div class="request-summary">
-                    <div class="summary-item">
-                        <label>Applicant</label>
-                        <span id="reqAppName">-</span>
-                    </div>
-                    <div class="summary-arrow">
-                        <i class="fas fa-arrow-right"></i>
-                    </div>
-                    <div class="summary-item">
-                        <label>From Status</label>
-                        <span id="reqFromStatus" class="status-label">-</span>
-                    </div>
-                    <div class="summary-arrow">
-                        <i class="fas fa-arrow-right"></i>
-                    </div>
-                    <div class="summary-item">
-                        <label>To Status</label>
-                        <span id="reqToStatusName" class="status-label success">-</span>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="reason"><i class="fas fa-comment-alt"></i> Reason for Change <span class="required">*</span></label>
-                    <textarea name="reason" id="reason" rows="3" class="form-input" required 
-                              placeholder="Please provide a reason for this status change request..."></textarea>
-                </div>
+        <div class="claim-modal-body">
+            <div style="background:#f0f4f8;padding:15px;border-radius:12px;margin-bottom:20px;">
+                <strong id="claimAppName">-</strong>
+                <small id="claimVacancy" class="d-block text-muted">-</small>
             </div>
             
-            <div class="modal-footer">
-                <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
-                <button type="submit" class="btn-submit">
-                    <i class="fas fa-paper-plane"></i> Submit Request
-                </button>
+            <p class="text-muted mb-3">Request ini akan dikirim ke Master Admin untuk di-approve. Jika disetujui, Anda akan menjadi handler untuk pelamar ini.</p>
+            
+            <div>
+                <label class="form-label">Alasan (opsional)</label>
+                <textarea id="claimReason" class="form-control" rows="2" placeholder="Mengapa Anda ingin mengambil lamaran ini?"></textarea>
             </div>
-        </form>
+        </div>
+        <div class="claim-modal-footer">
+            <input type="hidden" id="claimAppId">
+            <button class="btn-cancel" onclick="closeClaimModal()">Batal</button>
+            <button class="btn-submit" onclick="submitClaimRequest()">
+                <i class="fas fa-paper-plane me-2"></i>Kirim Request
+            </button>
+        </div>
     </div>
 </div>
 
-<style>
-/* Pipeline Header */
-.pipeline-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem 2rem;
-    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
-    border-radius: 16px;
-    margin-bottom: 1rem;
-    color: white;
-}
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-.header-icon {
-    width: 50px;
-    height: 50px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-}
-.header-left h1 {
-    margin: 0;
-    font-size: 1.25rem;
-}
-.header-left p {
-    margin: 0;
-    opacity: 0.8;
-    font-size: 0.85rem;
-}
-.header-actions {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-}
-.view-toggle {
-    display: flex;
-    background: rgba(255,255,255,0.15);
-    border-radius: 8px;
-    overflow: hidden;
-}
-.view-btn {
-    padding: 0.5rem 1rem;
-    color: rgba(255,255,255,0.7);
-    text-decoration: none;
-    font-size: 0.85rem;
-    transition: all 0.2s;
-}
-.view-btn:hover, .view-btn.active {
-    background: rgba(255,255,255,0.2);
-    color: white;
-}
-.filter-select {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 8px;
-    background: rgba(255,255,255,0.2);
-    color: white;
-    font-size: 0.85rem;
-}
-.filter-select option {
-    color: #333;
-}
-
-/* Info Banner */
-.info-banner {
-    background: #fef3c7;
-    padding: 0.75rem 1.5rem;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-    color: #92400e;
-    font-size: 0.9rem;
-}
-.info-banner i {
-    color: #f59e0b;
-}
-
-/* Kanban Board */
-.pipeline-kanban-modern {
-    display: flex;
-    gap: 1rem;
-    overflow-x: auto;
-    padding-bottom: 1rem;
-    min-height: calc(100vh - 280px);
-}
-.kanban-column-modern {
-    flex: 0 0 300px;
-    background: #f8fafc;
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    max-height: calc(100vh - 280px);
-}
-.column-header-modern {
-    padding: 1rem 1.25rem;
-    border-radius: 12px 12px 0 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: white;
-}
-.column-header-modern h3 {
-    margin: 0;
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-.column-count {
-    background: rgba(255,255,255,0.3);
-    padding: 0.25rem 0.625rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-.column-body-modern {
-    flex: 1;
-    padding: 0.75rem;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-.empty-column-modern {
-    text-align: center;
-    padding: 2rem;
-    color: #9ca3af;
-}
-.empty-column-modern i {
-    font-size: 2rem;
-    display: block;
-    margin-bottom: 0.5rem;
-}
-
-/* Kanban Card */
-.kanban-card-modern {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    cursor: grab;
-    position: relative;
-    transition: all 0.2s;
-    overflow: hidden;
-}
-.kanban-card-modern:hover {
-    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-    transform: translateY(-2px);
-}
-.kanban-card-modern.dragging {
-    opacity: 0.5;
-    transform: rotate(3deg);
-}
-.card-top {
-    padding: 1rem;
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    border-bottom: 1px solid #f3f4f6;
-}
-.applicant-avatar {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 0.85rem;
-    font-weight: 600;
-    flex-shrink: 0;
-}
-.applicant-main {
-    flex: 1;
-    min-width: 0;
-}
-.applicant-main strong {
-    display: block;
-    font-size: 0.9rem;
-    color: #1f2937;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.vacancy-name {
-    display: block;
-    font-size: 0.8rem;
-    color: #6b7280;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.priority-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-.priority-dot.urgent { background: #ef4444; }
-.priority-dot.high { background: #f59e0b; }
-.priority-dot.low { background: #9ca3af; }
-
-.card-details {
-    padding: 0.75rem 1rem;
-    background: #fafafa;
-}
-.detail-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.75rem;
-    color: #6b7280;
-    margin-bottom: 0.25rem;
-}
-.detail-row:last-child {
-    margin-bottom: 0;
-}
-.detail-row i {
-    width: 14px;
-    color: #9ca3af;
-}
-
-.card-bottom {
-    padding: 0.75rem 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.75rem;
-}
-.handler-tag {
-    color: #6b7280;
-}
-.handler-tag i {
-    margin-right: 0.25rem;
-    color: #3b82f6;
-}
-.days-badge {
-    background: #e5e7eb;
-    padding: 0.25rem 0.5rem;
-    border-radius: 10px;
-    color: #374151;
-}
-.days-badge.warning {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-/* Card Hover Actions */
-.card-actions-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(30, 58, 95, 0.9);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-}
-.kanban-card-modern:hover .card-actions-overlay {
-    display: flex;
-}
-.action-btn.view {
-    background: white;
-    color: #1e3a5f;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.85rem;
-}
-
-/* Drag Over State */
-.column-body-modern.drag-over {
-    background: rgba(59, 130, 246, 0.1);
-    border: 2px dashed #3b82f6;
-    border-radius: 8px;
-}
-
-/* Modal */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-.modal-overlay.active {
-    display: flex;
-}
-.modal-container {
-    background: white;
-    border-radius: 16px;
-    width: 100%;
-    max-width: 500px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-}
-.modal-header {
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid #f3f4f6;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.modal-header h3 {
-    margin: 0;
-    font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #9ca3af;
-    cursor: pointer;
-}
-.modal-body {
-    padding: 1.5rem;
-}
-.request-summary {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    padding: 1.25rem;
-    background: #f8fafc;
-    border-radius: 12px;
-    margin-bottom: 1.5rem;
-}
-.summary-item {
-    text-align: center;
-}
-.summary-item label {
-    display: block;
-    font-size: 0.7rem;
-    color: #9ca3af;
-    text-transform: uppercase;
-    margin-bottom: 0.25rem;
-}
-.summary-item span {
-    font-weight: 600;
-    color: #1f2937;
-}
-.status-label {
-    background: #e5e7eb;
-    padding: 0.25rem 0.75rem;
-    border-radius: 6px;
-    font-size: 0.8rem;
-}
-.status-label.success {
-    background: #dcfce7;
-    color: #166534;
-}
-.summary-arrow {
-    color: #9ca3af;
-}
-.form-group {
-    margin-bottom: 1rem;
-}
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-    color: #374151;
-}
-.required {
-    color: #ef4444;
-}
-.form-input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-family: inherit;
-    resize: vertical;
-}
-.form-input:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-}
-.modal-footer {
-    padding: 1rem 1.5rem;
-    background: #f8fafc;
-    border-radius: 0 0 16px 16px;
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-}
-.btn-cancel {
-    padding: 0.625rem 1.25rem;
-    background: #e5e7eb;
-    border: none;
-    border-radius: 8px;
-    color: #374151;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-.btn-submit {
-    padding: 0.625rem 1.25rem;
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    border: none;
-    border-radius: 8px;
-    color: white;
-    cursor: pointer;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-</style>
+<!-- Success Popup -->
+<div class="claim-modal" id="successPopup">
+    <div class="claim-modal-box" style="max-width:400px;text-align:center;padding:40px;">
+        <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;display:flex;align-items:center;justify-content:center;font-size:2.5rem;margin:0 auto 20px;">
+            <i class="fas fa-check"></i>
+        </div>
+        <h3 style="color:#1e3a5f;">Request Terkirim!</h3>
+        <p class="text-muted">Menunggu approval dari Master Admin</p>
+        <button class="btn-submit" onclick="closeSuccessPopup()">OK</button>
+    </div>
+</div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const cards = document.querySelectorAll('.kanban-card-modern');
-    const columns = document.querySelectorAll('.column-body-modern');
+function openClaimModal(appId, appName, vacancy) {
+    document.getElementById('claimAppId').value = appId;
+    document.getElementById('claimAppName').textContent = appName;
+    document.getElementById('claimVacancy').textContent = vacancy || 'Posisi tidak tersedia';
+    document.getElementById('claimReason').value = '';
+    document.getElementById('claimModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeClaimModal() {
+    document.getElementById('claimModal').classList.remove('show');
+    document.body.style.overflow = '';
+}
+
+function closeSuccessPopup() {
+    document.getElementById('successPopup').classList.remove('show');
+    document.body.style.overflow = '';
+    location.reload();
+}
+
+function submitClaimRequest() {
+    const appId = document.getElementById('claimAppId').value;
+    const reason = document.getElementById('claimReason').value;
     
-    let draggedCard = null;
-    let originalColumn = null;
-    
-    cards.forEach(card => {
-        card.addEventListener('dragstart', function(e) {
-            draggedCard = this;
-            originalColumn = this.parentElement;
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-        });
-        
-        card.addEventListener('dragend', function() {
-            this.classList.remove('dragging');
-            draggedCard = null;
-            columns.forEach(col => col.classList.remove('drag-over'));
-        });
+    fetch('<?= url('/crewing/pipeline/request-claim') ?>', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `csrf_token=<?= csrf_token() ?>&application_id=${appId}&reason=${encodeURIComponent(reason)}`
+    })
+    .then(r => r.json())
+    .then(data => {
+        closeClaimModal();
+        if (data.success) {
+            document.getElementById('successPopup').classList.add('show');
+        } else {
+            alert('❌ ' + data.message);
+        }
+    })
+    .catch(err => {
+        alert('Error: ' + err.message);
     });
-    
-    columns.forEach(column => {
-        column.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            this.classList.add('drag-over');
-        });
-        
-        column.addEventListener('dragleave', function() {
-            this.classList.remove('drag-over');
-        });
-        
-        column.addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.classList.remove('drag-over');
-            
-            if (draggedCard && originalColumn !== this) {
-                const newStatusId = this.dataset.statusId;
-                const newStatusName = this.dataset.statusName;
-                const appId = draggedCard.dataset.appId;
-                const appName = draggedCard.dataset.appName;
-                const currentStatus = draggedCard.dataset.currentStatus;
-                
-                // Show request modal
-                showRequestModal(appId, appName, currentStatus, newStatusId, newStatusName);
-            }
-        });
-    });
-});
-
-function showRequestModal(appId, appName, fromStatus, toStatusId, toStatusName) {
-    document.getElementById('reqAppId').value = appId;
-    document.getElementById('reqToStatus').value = toStatusId;
-    document.getElementById('reqAppName').textContent = appName;
-    document.getElementById('reqFromStatus').textContent = fromStatus;
-    document.getElementById('reqToStatusName').textContent = toStatusName;
-    document.getElementById('reason').value = '';
-    document.getElementById('requestModal').classList.add('active');
 }
-
-function closeModal() {
-    document.getElementById('requestModal').classList.remove('active');
-}
-
-function filterByCrewing(crewingId) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('view', 'team');
-    if (crewingId) {
-        url.searchParams.set('crewing', crewingId);
-    } else {
-        url.searchParams.delete('crewing');
-    }
-    window.location.href = url.toString();
-}
-
-// Close modal on outside click
-document.getElementById('requestModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeModal();
-    }
-});
 </script>

@@ -647,6 +647,200 @@
             .stats-grid { grid-template-columns: 1fr !important; }
             .card { padding: 16px; }
         }
+        
+        /* Premium Success Popup Modal */
+        .success-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0);
+            backdrop-filter: blur(0px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .success-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+        }
+        
+        .success-modal {
+            background: linear-gradient(145deg, rgba(20, 30, 48, 0.95), rgba(10, 20, 40, 0.98));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            transform: scale(0.7) translateY(30px);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 
+                0 25px 80px rgba(0, 0, 0, 0.5),
+                0 0 60px rgba(16, 185, 129, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .success-modal-overlay.active .success-modal {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+        
+        .success-modal::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 60%);
+            animation: success-shimmer 4s infinite linear;
+            pointer-events: none;
+        }
+        
+        @keyframes success-shimmer {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .success-icon-wrapper {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 24px;
+            position: relative;
+        }
+        
+        .success-icon-bg {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.05));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: success-pulse 2s ease-out infinite;
+            position: relative;
+        }
+        
+        .success-icon-bg::before {
+            content: '';
+            position: absolute;
+            width: 120%;
+            height: 120%;
+            border: 2px solid rgba(16, 185, 129, 0.2);
+            border-radius: 50%;
+            animation: success-ripple 2s ease-out infinite;
+        }
+        
+        @keyframes success-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        
+        @keyframes success-ripple {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+        
+        .success-icon {
+            font-size: 42px;
+            color: #10B981;
+            animation: success-pop 0.6s ease-out;
+        }
+        
+        @keyframes success-pop {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .success-checkmark {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: success-draw 0.8s ease-out 0.3s forwards;
+        }
+        
+        @keyframes success-draw {
+            to { stroke-dashoffset: 0; }
+        }
+        
+        .success-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #10B981, #34D399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .success-message {
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+        
+        .success-btn {
+            padding: 14px 40px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .success-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .success-btn:hover::before {
+            left: 100%;
+        }
+        
+        .success-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);
+        }
+        
+        .success-confetti {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            animation: confetti-fall 3s ease-out forwards;
+        }
+        
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(300px) rotate(720deg); opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -737,15 +931,40 @@
         </header>
 
         <div class="page-content">
-            <?php if (!empty($flash)): ?>
+            <?php if (!empty($flash) && $flash['type'] !== 'success'): ?>
                 <div class="alert alert-<?= $flash['type'] ?>">
-                    <i class="fas fa-<?= $flash['type'] === 'success' ? 'check-circle' : ($flash['type'] === 'error' ? 'exclamation-circle' : 'exclamation-triangle') ?>"></i>
+                    <i class="fas fa-<?= $flash['type'] === 'error' ? 'exclamation-circle' : 'exclamation-triangle' ?>"></i>
                     <?= htmlspecialchars($flash['message']) ?>
                 </div>
             <?php endif; ?>
             
             <?= $content ?? '' ?>
         </div>
+    
+    <!-- Premium Success Modal -->
+    <div class="success-modal-overlay" id="successModal" onclick="closeSuccessModal(event)">
+        <div class="success-modal" onclick="event.stopPropagation()">
+            <div id="confettiContainer"></div>
+            <div class="success-icon-wrapper">
+                <div class="success-icon-bg">
+                    <i class="fas fa-check success-icon"></i>
+                </div>
+            </div>
+            <h2 class="success-title">Berhasil!</h2>
+            <p class="success-message" id="successMessage"></p>
+            <button class="success-btn" onclick="closeSuccessModal()">
+                <i class="fas fa-thumbs-up"></i> Lanjutkan
+            </button>
+        </div>
+    </div>
+    
+    <?php if (!empty($flash) && $flash['type'] === 'success'): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showSuccessModal('<?= addslashes($flash['message']) ?>');
+        });
+    </script>
+    <?php endif; ?>
     </main>
     
     <!-- Theme and Language Script -->
@@ -910,7 +1129,45 @@
             if (e.key === 'Escape' && document.getElementById('logoutModal').classList.contains('active')) {
                 closeLogoutModal();
             }
+            if (e.key === 'Escape' && document.getElementById('successModal').classList.contains('active')) {
+                closeSuccessModal();
+            }
         });
+        
+        // Success Modal Functions
+        function showSuccessModal(message) {
+            document.getElementById('successMessage').textContent = message;
+            document.getElementById('successModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Create confetti
+            createConfetti();
+        }
+        
+        function closeSuccessModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('successModal').classList.remove('active');
+            document.body.style.overflow = '';
+            
+            // Clear confetti
+            document.getElementById('confettiContainer').innerHTML = '';
+        }
+        
+        function createConfetti() {
+            const container = document.getElementById('confettiContainer');
+            const colors = ['#10B981', '#D4AF37', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'success-confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 1 + 's';
+                confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                confetti.style.opacity = Math.random();
+                container.appendChild(confetti);
+            }
+        }
     </script>
 </body>
 </html>

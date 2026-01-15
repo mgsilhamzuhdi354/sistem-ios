@@ -1,700 +1,563 @@
-<!-- Master Admin Pipeline Content - Simplified -->
-<div class="page-header">
-    <div class="header-left">
-        <h1><i class="fas fa-columns"></i> Recruitment Pipeline</h1>
-        <p class="text-muted">Master Admin - Pipeline Management</p>
+<!-- Modern Pipeline Content -->
+<style>
+/* Pipeline Header */
+.pipeline-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #0d1f33 100%);
+    color: white;
+    padding: 25px 30px;
+    border-radius: 16px;
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.pipeline-header h2 { margin: 0; font-weight: 600; }
+.pipeline-header .badge { background: #dc2626; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; }
+
+/* Stats Row */
+.stats-row { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+.stat-box { 
+    background: white; 
+    padding: 20px; 
+    border-radius: 12px; 
+    flex: 1; 
+    min-width: 150px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.stat-icon { 
+    width: 50px; height: 50px; 
+    border-radius: 12px; 
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem;
+}
+.stat-icon.blue { background: #e3f2fd; color: #1976d2; }
+.stat-icon.green { background: #e8f5e9; color: #388e3c; }
+.stat-icon.red { background: #ffebee; color: #d32f2f; }
+.stat-value { font-size: 1.75rem; font-weight: 700; color: #1a1a2e; }
+.stat-label { font-size: 0.85rem; color: #666; }
+
+/* Pipeline Board */
+.pipeline-board { display: flex; gap: 15px; overflow-x: auto; padding: 10px 0; }
+.pipeline-column { 
+    min-width: 300px; 
+    max-width: 320px; 
+    background: #f5f7fa; 
+    border-radius: 16px; 
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.column-header { 
+    padding: 15px 20px; 
+    color: white; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    font-weight: 600;
+}
+.column-header .count { 
+    background: rgba(255,255,255,0.3); 
+    padding: 4px 12px; 
+    border-radius: 15px; 
+    font-size: 0.85rem;
+}
+.column-body { padding: 15px; max-height: 550px; overflow-y: auto; }
+.empty-column { text-align: center; padding: 40px 20px; color: #aaa; }
+.empty-column i { font-size: 2rem; margin-bottom: 10px; display: block; }
+
+/* Application Card */
+.app-card {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    border-left: 4px solid #3b82f6;
+    transition: all 0.3s;
+}
+.app-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+.app-card.unassigned { border-left-color: #dc2626; background: linear-gradient(to right, #fef2f2, white); }
+
+.app-card h4 { margin: 0 0 5px; font-size: 1.1rem; font-weight: 600; color: #1e3a5f; }
+.app-card .vacancy { color: #666; font-size: 0.85rem; margin-bottom: 12px; }
+
+.handler-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin: 10px 0;
+}
+.handler-badge.assigned { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
+.handler-badge.unassigned { background: #fee2e2; color: #dc2626; }
+
+/* Action Buttons */
+.card-actions { display: flex; gap: 8px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
+.action-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: #f1f5f9;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+}
+.action-btn:hover { background: #e2e8f0; transform: scale(1.02); }
+.action-btn i { font-size: 1rem; }
+
+/* Modal Styles */
+.modern-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(5px);
+}
+.modern-modal.show { display: flex; animation: fadeIn 0.3s ease; }
+.modal-box {
+    background: white;
+    border-radius: 20px;
+    max-width: 550px;
+    width: 95%;
+    overflow: hidden;
+    animation: scaleIn 0.4s ease;
+}
+.modal-box-header {
+    background: linear-gradient(135deg, #4a90d9, #63b3ed);
+    color: white;
+    padding: 20px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.modal-box-header h3 { margin: 0; font-size: 1.25rem; }
+.modal-box-body { padding: 25px; }
+.modal-box-footer { padding: 15px 25px; background: #f8f9fa; display: flex; gap: 12px; justify-content: flex-end; }
+
+.btn-cancel { background: #e5e7eb; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; }
+.btn-submit { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; }
+.btn-submit:hover { transform: scale(1.02); }
+
+.status-select-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 15px 0; }
+.status-option {
+    padding: 15px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+.status-option:hover { border-color: #3b82f6; background: #eff6ff; }
+.status-option.selected { border-color: #3b82f6; background: #dbeafe; }
+.status-option input { display: none; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+</style>
+
+<div class="pipeline-header">
+    <div>
+        <h2><i class="fas fa-columns me-3"></i>Pipeline Rekrutmen</h2>
+        <small class="opacity-75">Kelola status lamaran pelamar</small>
     </div>
-    <div class="header-actions">
-        <div class="filter-group">
-            <select id="filterCrewing" class="form-select form-select-sm" onchange="filterByCrewing(this.value)">
-                <option value="">All Applications</option>
-                <option value="unassigned" <?= $filterUnassigned ? 'selected' : '' ?>>🔴 Unassigned Only</option>
-                <?php foreach ($crewingStaff as $crew): ?>
-                <option value="<?= $crew['id'] ?>" <?= $filterCrewingId == $crew['id'] ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($crew['full_name']) ?> (<?= $crew['active_assignments'] ?>)
-                </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-    </div>
+    <span class="badge"><?= $stats['total'] ?> Total Aplikasi</span>
 </div>
 
-<!-- Stats Cards -->
 <div class="stats-row">
-    <div class="stat-card total">
-        <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
-        <div class="stat-info">
-            <span class="stat-value"><?= $stats['total'] ?></span>
-            <span class="stat-label">Total Applications</span>
+    <div class="stat-box">
+        <div class="stat-icon blue"><i class="fas fa-file-alt"></i></div>
+        <div>
+            <div class="stat-value"><?= $stats['total'] ?></div>
+            <div class="stat-label">Total</div>
         </div>
     </div>
-    <div class="stat-card assigned">
-        <div class="stat-icon"><i class="fas fa-user-check"></i></div>
-        <div class="stat-info">
-            <span class="stat-value"><?= $stats['assigned'] ?></span>
-            <span class="stat-label">Assigned</span>
+    <div class="stat-box">
+        <div class="stat-icon green"><i class="fas fa-user-check"></i></div>
+        <div>
+            <div class="stat-value"><?= $stats['assigned'] ?></div>
+            <div class="stat-label">Assigned</div>
         </div>
     </div>
-    <div class="stat-card unassigned" onclick="filterByCrewing('unassigned')" style="cursor:pointer">
-        <div class="stat-icon"><i class="fas fa-user-times"></i></div>
-        <div class="stat-info">
-            <span class="stat-value"><?= $stats['unassigned'] ?></span>
-            <span class="stat-label">Unassigned</span>
-        </div>
-    </div>
-    <div class="stat-card workload">
-        <div class="stat-icon"><i class="fas fa-chart-bar"></i></div>
-        <div class="stat-info">
-            <span class="stat-label">Top Handlers</span>
-            <div class="mini-chart">
-                <?php foreach (array_slice($stats['by_crewing'], 0, 3) as $c): ?>
-                <div class="mini-bar" title="<?= htmlspecialchars($c['full_name']) ?>: <?= $c['count'] ?>">
-                    <span class="bar-fill" style="width: <?= min(100, ($c['count'] / max(1, $stats['assigned'])) * 300) ?>%"></span>
-                    <span class="bar-label"><?= $c['count'] ?></span>
-                </div>
-                <?php endforeach; ?>
-            </div>
+    <div class="stat-box">
+        <div class="stat-icon red"><i class="fas fa-user-times"></i></div>
+        <div>
+            <div class="stat-value"><?= $stats['unassigned'] ?></div>
+            <div class="stat-label">Unassigned</div>
         </div>
     </div>
 </div>
 
 <!-- Pipeline Board -->
-<div class="pipeline-container">
-    <div class="pipeline-board">
-        <?php foreach ($statuses as $status): ?>
-        <div class="pipeline-column" data-status-id="<?= $status['id'] ?>">
-            <div class="column-header" style="background: <?= $status['color'] ?? '#6c757d' ?>;">
-                <h5><?= htmlspecialchars($status['name']) ?></h5>
-                <span class="badge"><?= count($pipeline[$status['id']] ?? []) ?></span>
-            </div>
-            <div class="column-body">
-                <?php if (empty($pipeline[$status['id']])): ?>
-                    <div class="empty-column">
-                        <i class="fas fa-inbox"></i>
-                        <small>No applications</small>
-                    </div>
-                <?php else: ?>
-                    <?php foreach ($pipeline[$status['id']] as $app): ?>
-                    <div class="pipeline-card <?= !$app['crewing_id'] ? 'unassigned' : '' ?>" data-app-id="<?= $app['id'] ?>">
-                        <!-- Header -->
-                        <div class="card-name">
-                            <h4><?= htmlspecialchars($app['applicant_name']) ?></h4>
-                            <span class="vacancy-title"><?= htmlspecialchars($app['vacancy_title']) ?></span>
-                        </div>
-                        
-                        <!-- Current Handler Section -->
-                        <div class="handler-section">
-                            <span class="handler-label">CURRENT HANDLER:</span>
-                            <?php if ($app['crewing_name']): ?>
-                            <div class="handler-pill assigned">
-                                <i class="fas fa-user-circle"></i>
-                                <span>Handled by: <strong><?= htmlspecialchars($app['crewing_name']) ?></strong></span>
-                            </div>
-                            <?php else: ?>
-                            <div class="handler-pill unassigned">
-                                <i class="fas fa-user-slash"></i>
-                                <span>Unassigned</span>
-                            </div>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <!-- Action Buttons -->
-                        <div class="card-action-buttons">
-                            <div class="action-btn-wrapper">
-                                <button class="action-btn" onclick="openTransferModal(<?= $app['id'] ?>, '<?= htmlspecialchars($app['applicant_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($app['vacancy_title'], ENT_QUOTES) ?>', <?= $app['crewing_id'] ?: 0 ?>, '<?= htmlspecialchars($app['crewing_name'] ?? 'Unassigned', ENT_QUOTES) ?>')">
-                                    <i class="fas fa-exchange-alt"></i>
-                                </button>
-                                <span class="action-label">Reassign</span>
-                            </div>
-                            <div class="action-btn-wrapper">
-                                <button class="action-btn" data-bs-toggle="modal" data-bs-target="#moveModal<?= $app['id'] ?>">
-                                    <i class="fas fa-arrows-alt-v"></i>
-                                </button>
-                                <span class="action-label">Change Status</span>
-                            </div>
-                            <div class="action-btn-wrapper">
-                                <a href="<?= url('/admin/applicants/' . $app['id']) ?>" class="action-btn">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <span class="action-label">View Detail</span>
-                            </div>
-                            <?php if (in_array($app['status_id'], [6, 7])): // Approved or Rejected ?>
-                            <div class="action-btn-wrapper">
-                                <button class="action-btn archive-btn" onclick="archiveApplication(<?= $app['id'] ?>, '<?= htmlspecialchars($app['applicant_name'], ENT_QUOTES) ?>')" title="Move to Archive">
-                                    <i class="fas fa-archive"></i>
-                                </button>
-                                <span class="action-label">Archive</span>
-                            </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    
-                    <!-- Move Modal -->
-                    <div class="modal fade" id="moveModal<?= $app['id'] ?>" tabindex="-1">
-                        <div class="modal-dialog modal-sm">
-                            <div class="modal-content">
-                                <form action="<?= url('/master-admin/pipeline/update-status') ?>" method="post">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="application_id" value="<?= $app['id'] ?>">
-                                    <div class="modal-header">
-                                        <h6 class="modal-title">Move to Status</h6>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <select name="status_id" class="form-select" required>
-                                            <?php foreach ($statuses as $s): ?>
-                                            <option value="<?= $s['id'] ?>" <?= $s['id'] == $status['id'] ? 'selected' : '' ?>>
-                                                <?= htmlspecialchars($s['name']) ?>
-                                            </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="submit" class="btn btn-primary btn-sm">Move</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </div>
+<div class="pipeline-board">
+    <?php foreach ($statuses as $status): ?>
+    <div class="pipeline-column">
+        <div class="column-header" style="background: <?= $status['color'] ?? '#6c757d' ?>;">
+            <span><?= htmlspecialchars($status['name']) ?></span>
+            <span class="count"><?= count($pipeline[$status['id']] ?? []) ?></span>
         </div>
-        <?php endforeach; ?>
+        <div class="column-body">
+            <?php if (empty($pipeline[$status['id']])): ?>
+            <div class="empty-column">
+                <i class="fas fa-inbox"></i>
+                <small>No applications</small>
+            </div>
+            <?php else: ?>
+            <?php foreach ($pipeline[$status['id']] as $app): ?>
+            <div class="app-card <?= !$app['crewing_id'] ? 'unassigned' : '' ?>">
+                <h4><?= htmlspecialchars($app['applicant_name']) ?></h4>
+                <div class="vacancy"><i class="fas fa-briefcase me-1"></i><?= htmlspecialchars($app['vacancy_title'] ?? 'N/A') ?></div>
+                
+                <div class="text-center">
+                    <small class="text-muted d-block mb-2">HANDLER:</small>
+                    <?php if ($app['crewing_name']): ?>
+                    <span class="handler-badge assigned">
+                        <i class="fas fa-user-circle"></i>
+                        <?= htmlspecialchars($app['crewing_name']) ?>
+                    </span>
+                    <?php else: ?>
+                    <span class="handler-badge unassigned">
+                        <i class="fas fa-user-slash"></i> Unassigned
+                    </span>
+                    <?php endif; ?>
+                </div>
+                
+                <div class="card-actions">
+                    <button class="action-btn" onclick="openReassignModal(<?= $app['id'] ?>, '<?= htmlspecialchars($app['applicant_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($app['vacancy_title'] ?? '', ENT_QUOTES) ?>', <?= $app['crewing_id'] ?: 0 ?>, '<?= htmlspecialchars($app['crewing_name'] ?? '', ENT_QUOTES) ?>')">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>Reassign</span>
+                    </button>
+                    <button class="action-btn" onclick="openStatusModal(<?= $app['id'] ?>, '<?= htmlspecialchars($app['applicant_name'], ENT_QUOTES) ?>', <?= $status['id'] ?>)">
+                        <i class="fas fa-arrows-alt-v"></i>
+                        <span>Status</span>
+                    </button>
+                    <button class="action-btn" onclick="openDetailModal(<?= $app['id'] ?>, '<?= htmlspecialchars($app['applicant_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($app['vacancy_title'] ?? '', ENT_QUOTES) ?>', '<?= htmlspecialchars($app['applicant_email'] ?? '', ENT_QUOTES) ?>', '-', '<?= date('d M Y', strtotime($app['created_at'] ?? 'now')) ?>', '<?= htmlspecialchars($status['name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($app['crewing_name'] ?? 'Belum ditugaskan', ENT_QUOTES) ?>')">
+                        <i class="fas fa-eye"></i>
+                        <span>Detail</span>
+                    </button>
+                </div>
+            </div>
+            <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
     </div>
+    <?php endforeach; ?>
 </div>
 
-<!-- Reassign Handler Modal - Exact Mockup Match -->
-<div class="modal fade" id="transferModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
-        <div class="modal-content reassign-modal">
-            <!-- Header with Review Badge -->
-            <div class="modal-header reassign-header">
-                <h5 class="modal-title">Reassign Handler</h5>
-                <span class="review-badge">Review</span>
-                <button type="button" class="btn-close btn-close-white" onclick="closeTransferModal()"></button>
+<!-- Change Status Modal -->
+<div class="modern-modal" id="statusModal">
+    <div class="modal-box">
+        <div class="modal-box-header">
+            <h3><i class="fas fa-arrows-alt-v me-2"></i>Pindah Status</h3>
+            <button onclick="closeModal('statusModal')" style="background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;">&times;</button>
+        </div>
+        <div class="modal-box-body">
+            <p class="text-muted mb-3">Pindahkan <strong id="statusAppName">-</strong> ke status:</p>
+            
+            <div class="status-select-grid">
+                <?php foreach ($statuses as $s): ?>
+                <label class="status-option" onclick="selectStatus(<?= $s['id'] ?>)" id="statusOpt<?= $s['id'] ?>">
+                    <input type="radio" name="new_status" value="<?= $s['id'] ?>">
+                    <div style="color: <?= $s['color'] ?? '#666' ?>; font-weight: 600;">
+                        <?= htmlspecialchars($s['name']) ?>
+                    </div>
+                </label>
+                <?php endforeach; ?>
             </div>
-            <div class="modal-body">
-                <!-- Applicant Info Box -->
-                <div class="applicant-info-box">
-                    <div class="applicant-avatar-lg">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="applicant-details">
-                        <span id="transferApplicantName">-</span> - <span id="transferVacancyTitle">-</span>
-                    </div>
-                </div>
-                
-                <!-- FROM → TO Section -->
-                <div class="reassign-transfer-section">
-                    <!-- FROM Box -->
-                    <div class="from-section">
-                        <div class="section-header from-header">FROM (Current)</div>
-                        <div class="section-content">
-                            <div class="handler-info-card">
-                                <div class="handler-photo">
-                                    <i class="fas fa-user-tie"></i>
-                                </div>
-                                <div class="handler-details">
-                                    <strong id="fromCrewingName">Unassigned</strong>
-                                    <span class="handler-role" id="fromCrewingRole">Crewing Staff</span>
-                                </div>
-                            </div>
-                            <input type="hidden" id="fromCrewingId" value="0">
-                        </div>
-                    </div>
-                    
-                    <!-- Arrow -->
-                    <div class="transfer-arrow-icon">
-                        <i class="fas fa-arrow-right"></i>
-                    </div>
-                    
-                    <!-- TO Box -->
-                    <div class="to-section">
-                        <div class="section-header to-header">TO (New Handler)</div>
-                        <div class="section-content">
-                            <select id="toCrewingId" class="form-select handler-select" required>
-                                <option value="">Select New Handler</option>
-                                <?php foreach ($crewingStaff as $crew): ?>
-                                <option value="<?= $crew['id'] ?>" data-role="<?= $crew['role_id'] == 5 ? 'Crewing Manager' : ($crew['role_id'] == 10 ? 'HR Specialist' : 'Crewing Staff') ?>">
-                                    <?= htmlspecialchars($crew['full_name']) ?> - <?= $crew['role_id'] == 5 ? 'Crewing Manager' : ($crew['role_id'] == 10 ? 'HR Specialist' : 'Crewing Staff') ?>
-                                </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Optional Notes -->
-                <div class="optional-notes-section">
-                    <label class="notes-label">Optional Notes</label>
-                    <textarea id="transferReason" class="form-control notes-textarea" placeholder="Enter reason for reassignment or additional instructions..."></textarea>
-                </div>
+            
+            <div class="mt-3">
+                <label class="form-label">Alasan (opsional)</label>
+                <textarea id="statusReason" class="form-control" rows="2" placeholder="Masukkan alasan perubahan status..."></textarea>
             </div>
-            <div class="modal-footer reassign-footer">
-                <input type="hidden" id="transferAppId" value="">
-                <button type="button" class="btn btn-cancel" onclick="closeTransferModal()">Cancel</button>
-                <button type="button" class="btn btn-reassign" onclick="submitTransfer()">
-                    Reassign Now
-                </button>
-            </div>
+        </div>
+        <div class="modal-box-footer">
+            <input type="hidden" id="statusAppId">
+            <input type="hidden" id="currentStatusId">
+            <input type="hidden" id="selectedStatusId">
+            <button class="btn-cancel" onclick="closeModal('statusModal')">Batal</button>
+            <button class="btn-submit" onclick="submitStatusChange()">
+                <i class="fas fa-paper-plane me-2"></i>Kirim Request
+            </button>
         </div>
     </div>
 </div>
-<style>
-/* Stats Row */
-.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-.stat-card { background: white; border-radius: 12px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.2s; }
-.stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
-.stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
-.stat-card.total .stat-icon { background: #e3f2fd; color: #1976d2; }
-.stat-card.assigned .stat-icon { background: #e8f5e9; color: #388e3c; }
-.stat-card.unassigned .stat-icon { background: #ffebee; color: #d32f2f; }
-.stat-card.workload .stat-icon { background: #fff3e0; color: #f57c00; }
-.stat-info { display: flex; flex-direction: column; }
-.stat-value { font-size: 1.75rem; font-weight: 700; color: #1a1a2e; }
-.stat-label { font-size: 0.85rem; color: #666; }
-.mini-chart { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
-.mini-bar { display: flex; align-items: center; gap: 6px; height: 14px; }
-.bar-fill { height: 8px; background: linear-gradient(90deg, #f57c00, #ff9800); border-radius: 4px; min-width: 8px; }
-.bar-label { font-size: 0.7rem; color: #666; font-weight: 600; }
 
-/* Header */
-.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
-.header-actions { display: flex; gap: 0.75rem; align-items: center; }
-.filter-group select { min-width: 200px; }
+<!-- View Detail Modal - Complete Profile -->
+<div class="modern-modal" id="detailModal">
+    <div class="modal-box" style="max-width: 650px;">
+        <div class="modal-box-header" style="background: linear-gradient(135deg, #1e3a5f, #2d5a8f);">
+            <h3><i class="fas fa-user me-2"></i>Detail Pelamar</h3>
+            <button onclick="closeModal('detailModal')" style="background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;">&times;</button>
+        </div>
+        <div class="modal-box-body" style="max-height: 70vh; overflow-y: auto;">
+            <!-- Profile Header -->
+            <div class="text-center mb-4" style="background: linear-gradient(135deg, #f0f4f8, #e2e8f0); padding: 30px; border-radius: 16px; margin: -25px -25px 20px -25px;">
+                <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:white;display:flex;align-items:center;justify-content:center;font-size:2.5rem;margin:0 auto 15px;box-shadow:0 8px 25px rgba(59,130,246,0.4);">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3 id="detailName" style="margin:0 0 5px;color:#1e3a5f;font-weight:700;">-</h3>
+                <p id="detailVacancy" style="color:#666;margin:0;font-size:1rem;"><i class="fas fa-briefcase me-1"></i>-</p>
+            </div>
+            
+            <!-- Info Grid -->
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:15px;">
+                <div style="background:#f8f9fa;padding:15px;border-radius:12px;">
+                    <small style="color:#888;display:block;margin-bottom:5px;"><i class="fas fa-envelope me-1"></i>Email</small>
+                    <strong id="detailEmail" style="color:#1e3a5f;">-</strong>
+                </div>
+                <div style="background:#f8f9fa;padding:15px;border-radius:12px;">
+                    <small style="color:#888;display:block;margin-bottom:5px;"><i class="fas fa-phone me-1"></i>Telepon</small>
+                    <strong id="detailPhone" style="color:#1e3a5f;">-</strong>
+                </div>
+                <div style="background:#f8f9fa;padding:15px;border-radius:12px;">
+                    <small style="color:#888;display:block;margin-bottom:5px;"><i class="fas fa-hashtag me-1"></i>ID Lamaran</small>
+                    <strong id="detailAppId" style="color:#1e3a5f;">-</strong>
+                </div>
+                <div style="background:#f8f9fa;padding:15px;border-radius:12px;">
+                    <small style="color:#888;display:block;margin-bottom:5px;"><i class="fas fa-calendar me-1"></i>Tanggal Daftar</small>
+                    <strong id="detailDate" style="color:#1e3a5f;">-</strong>
+                </div>
+            </div>
+            
+            <!-- Status & Handler -->
+            <div style="margin-top:20px;display:flex;gap:15px;">
+                <div style="flex:1;background:linear-gradient(135deg,#e0f2fe,#bae6fd);padding:15px;border-radius:12px;text-align:center;">
+                    <small style="color:#0369a1;display:block;margin-bottom:5px;"><i class="fas fa-flag me-1"></i>Status</small>
+                    <strong id="detailStatus" style="color:#0c4a6e;font-size:1.1rem;">-</strong>
+                </div>
+                <div style="flex:1;background:linear-gradient(135deg,#dcfce7,#bbf7d0);padding:15px;border-radius:12px;text-align:center;">
+                    <small style="color:#166534;display:block;margin-bottom:5px;"><i class="fas fa-user-tie me-1"></i>Handler</small>
+                    <strong id="detailHandler" style="color:#14532d;font-size:1.1rem;">-</strong>
+                </div>
+            </div>
+        </div>
+        <div class="modal-box-footer" style="justify-content:space-between;">
+            <button class="btn-cancel" onclick="closeModal('detailModal')">Tutup</button>
+            <a id="detailFullLink" href="#" class="btn-submit" style="text-decoration:none;display:inline-flex;align-items:center;">
+                <i class="fas fa-external-link-alt me-2"></i>Lihat Profil Lengkap
+            </a>
+        </div>
+    </div>
+</div>
 
-/* Pipeline Board */
-.pipeline-board { display: flex; gap: 1rem; overflow-x: auto; padding: 1rem 0; }
-.pipeline-column { min-width: 340px; max-width: 360px; background: #f8f9fa; border-radius: 12px; overflow: hidden; flex-shrink: 0; }
-.column-header { padding: 0.875rem 1rem; color: white; display: flex; justify-content: space-between; align-items: center; }
-.column-header h5 { margin: 0; font-size: 0.95rem; font-weight: 600; }
-.column-header .badge { background: rgba(255,255,255,0.3); padding: 0.3rem 0.6rem; border-radius: 6px; font-weight: 600; }
-.column-body { padding: 0.75rem; max-height: 600px; overflow-y: auto; }
-.empty-column { text-align: center; padding: 2.5rem 1rem; color: #aaa; }
-.empty-column i { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; }
+<!-- Reassign Modal - FROM → TO with Notes -->
+<div class="modern-modal" id="reassignModal">
+    <div class="modal-box" style="max-width: 600px;">
+        <div class="modal-box-header" style="background: linear-gradient(135deg, #4a90d9, #63b3ed);">
+            <h3><i class="fas fa-exchange-alt me-2"></i>Reassign Handler</h3>
+            <span style="background:#22c55e;color:white;padding:5px 12px;border-radius:6px;font-size:0.8rem;font-weight:600;">Transfer</span>
+            <button onclick="closeModal('reassignModal')" style="background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;">&times;</button>
+        </div>
+        <div class="modal-box-body">
+            <!-- Applicant Info -->
+            <div style="background:#f0f4f8;padding:15px 20px;border-radius:12px;display:flex;align-items:center;gap:15px;margin-bottom:20px;">
+                <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:white;display:flex;align-items:center;justify-content:center;font-size:1.25rem;">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div>
+                    <strong id="reassignAppName" style="color:#1e3a5f;font-size:1.1rem;">-</strong>
+                    <small id="reassignVacancy" class="d-block text-muted">-</small>
+                </div>
+            </div>
+            
+            <!-- FROM → TO Section -->
+            <div style="display:flex;align-items:stretch;gap:15px;margin-bottom:20px;">
+                <!-- FROM Box -->
+                <div style="flex:1;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+                    <div style="background:linear-gradient(135deg,#94a3b8,#64748b);color:white;padding:10px 15px;font-size:0.85rem;font-weight:600;">
+                        <i class="fas fa-sign-out-alt me-1"></i>DARI (Sekarang)
+                    </div>
+                    <div style="padding:15px;background:white;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <div id="fromHandlerAvatar" style="width:40px;height:40px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;color:#64748b;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div>
+                                <strong id="fromHandlerName" style="color:#334155;display:block;">Unassigned</strong>
+                                <small id="fromHandlerRole" style="color:#94a3b8;">-</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Arrow -->
+                <div style="display:flex;align-items:center;color:#4a90d9;font-size:1.5rem;">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                
+                <!-- TO Box -->
+                <div style="flex:1;border-radius:12px;overflow:hidden;border:2px solid #22c55e;">
+                    <div style="background:linear-gradient(135deg,#22c55e,#16a34a);color:white;padding:10px 15px;font-size:0.85rem;font-weight:600;">
+                        <i class="fas fa-sign-in-alt me-1"></i>KE (Handler Baru)
+                    </div>
+                    <div style="padding:15px;background:white;">
+                        <select id="reassignTo" class="form-select" style="border:none;background:#f0fdf4;font-weight:500;color:#166534;padding:12px;">
+                            <option value="">Pilih Handler Baru...</option>
+                            <?php foreach ($crewingStaff as $crew): ?>
+                            <option value="<?= $crew['id'] ?>"><?= htmlspecialchars($crew['full_name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Optional Notes -->
+            <div style="background:#fffbeb;padding:15px;border-radius:12px;border-left:4px solid #f59e0b;">
+                <label style="font-size:0.85rem;font-weight:600;color:#92400e;display:block;margin-bottom:8px;">
+                    <i class="fas fa-sticky-note me-1"></i>Catatan (Opsional)
+                </label>
+                <textarea id="reassignNotes" class="form-control" rows="2" placeholder="Masukkan alasan atau instruksi tambahan..." style="border:none;background:white;resize:none;"></textarea>
+            </div>
+        </div>
+        <div class="modal-box-footer">
+            <input type="hidden" id="reassignAppId">
+            <input type="hidden" id="reassignFromId" value="0">
+            <button class="btn-cancel" onclick="closeModal('reassignModal')">Batal</button>
+            <button class="btn-submit" style="background:linear-gradient(135deg,#22c55e,#16a34a);" onclick="submitReassign()">
+                <i class="fas fa-check me-2"></i>Konfirmasi Reassign
+            </button>
+        </div>
+    </div>
+</div>
 
-/* Pipeline Card - Matching Mockup */
-.pipeline-card { 
-    background: white; 
-    border-radius: 16px; 
-    padding: 1.5rem; 
-    margin-bottom: 1rem; 
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08); 
-    transition: all 0.3s ease;
-    border-left: 4px solid #2196f3;
-    display: flex;
-    flex-direction: column;
-}
-.pipeline-card:hover { 
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12); 
-    transform: translateY(-2px); 
-}
-.pipeline-card.unassigned { 
-    border-left-color: #dc3545; 
-    background: linear-gradient(to right, #fff8f8, white); 
-}
-
-/* Card Name Section */
-.card-name h4 { 
-    margin: 0 0 0.25rem 0; 
-    font-size: 1.25rem; 
-    font-weight: 700; 
-    color: #1a1a2e; 
-}
-.card-name .vacancy-title { 
-    color: #666; 
-    font-size: 0.9rem; 
-}
-
-/* Handler Section */
-.handler-section { 
-    margin: 1.25rem 0; 
-    text-align: center; 
-}
-.handler-label { 
-    font-size: 0.75rem; 
-    font-weight: 600; 
-    color: #888; 
-    letter-spacing: 0.5px;
-    display: block;
-    margin-bottom: 0.75rem;
-}
-.handler-pill { 
-    display: inline-flex; 
-    align-items: center; 
-    gap: 0.5rem; 
-    padding: 0.6rem 1.25rem; 
-    border-radius: 50px; 
-    font-size: 0.9rem;
-}
-.handler-pill.assigned { 
-    background: linear-gradient(135deg, #2e7d32, #4caf50); 
-    color: white; 
-}
-.handler-pill.assigned i { font-size: 1.25rem; }
-.handler-pill.assigned strong { font-weight: 600; }
-.handler-pill.unassigned { 
-    background: #ffebee; 
-    color: #c62828; 
-}
-
-/* Action Buttons - Circular */
-.card-action-buttons { 
-    display: flex; 
-    justify-content: center; 
-    gap: 2rem; 
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #eee;
-}
-.action-btn-wrapper { 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    gap: 0.5rem; 
-}
-.action-btn { 
-    width: 50px; 
-    height: 50px; 
-    border-radius: 50%; 
-    border: 2px solid #ddd; 
-    background: #f8f9fa; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: #666;
-    font-size: 1.1rem;
-    text-decoration: none;
-}
-.action-btn:hover { 
-    background: #e9ecef; 
-    border-color: #bbb;
-    transform: scale(1.05);
-}
-.action-label { 
-    font-size: 0.7rem; 
-    color: #666; 
-    font-weight: 500;
-    text-align: center;
-}
-
-
-/* Modal - Bootstrap Modal Override */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1050;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    outline: 0;
-    background: rgba(0,0,0,0.5);
-}
-.modal.show {
-    display: block !important;
-}
-.modal.fade .modal-dialog {
-    transform: translateY(-50px);
-    transition: transform 0.3s ease-out;
-}
-.modal.show .modal-dialog {
-    transform: translateY(0);
-}
-#transferModal .modal-dialog {
-    margin: 1.75rem auto;
-    max-width: 600px;
-}
-
-/* Reassign Modal - Matching Mockup */
-.reassign-modal { 
-    border-radius: 16px; 
-    overflow: hidden; 
-    border: none;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
-}
-.reassign-header { 
-    background: linear-gradient(135deg, #4a90d9, #63b3ed); 
-    color: white; 
-    padding: 1rem 1.5rem;
-    border: none;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-.reassign-header .modal-title { 
-    font-weight: 600; 
-    font-size: 1.25rem;
-    flex: 1;
-}
-.review-badge {
-    background: #28a745;
-    color: white;
-    padding: 0.35rem 0.75rem;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-.reassign-footer { 
-    background: #f8f9fa; 
-    border-top: none; 
-    padding: 1rem 1.5rem;
-    gap: 1rem;
-}
-
-/* Applicant Info Box */
-.applicant-info-box { 
-    display: flex; 
-    align-items: center; 
-    gap: 1rem; 
-    background: #f0f4f8; 
-    padding: 1rem 1.25rem; 
-    border-radius: 12px;
-    margin-bottom: 1.5rem;
-}
-.applicant-avatar-lg { 
-    width: 50px; 
-    height: 50px; 
-    background: #d0d8e0; 
-    border-radius: 50%; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    color: #5a6a7a;
-    font-size: 1.5rem;
-}
-.applicant-details { 
-    font-size: 1.05rem; 
-    color: #333;
-    font-weight: 500;
-}
-
-/* Transfer Section */
-.reassign-transfer-section { 
-    display: flex; 
-    align-items: stretch; 
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-}
-.from-section, .to-section { 
-    flex: 1; 
-    border-radius: 12px; 
-    overflow: hidden;
-    background: white;
-    border: 1px solid #e0e0e0;
-}
-.section-header { 
-    padding: 0.6rem 1rem; 
-    font-size: 0.8rem; 
-    font-weight: 600; 
-    color: white;
-}
-.from-header { background: linear-gradient(135deg, #78909c, #90a4ae); }
-.to-header { background: linear-gradient(135deg, #43a047, #66bb6a); }
-.section-content { 
-    padding: 1rem; 
-    background: white;
-}
-
-/* Handler Info Card */
-.handler-info-card { 
-    display: flex; 
-    align-items: center; 
-    gap: 0.75rem; 
-}
-.handler-photo { 
-    width: 40px; 
-    height: 40px; 
-    background: #e3f2fd; 
-    border-radius: 50%; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    color: #1976d2;
-}
-.handler-details strong { 
-    display: block; 
-    font-size: 0.95rem;
-    color: #333;
-}
-.handler-role { 
-    font-size: 0.75rem; 
-    color: #888; 
-    background: #f0f0f0;
-    padding: 2px 8px;
-    border-radius: 4px;
-    display: inline-block;
-    margin-top: 4px;
-}
-
-/* Transfer Arrow */
-.transfer-arrow-icon { 
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
-    color: #4a90d9;
-    font-size: 1.5rem;
-}
-
-/* Handler Select */
-.handler-select { 
-    border-radius: 8px; 
-    border: 1px solid #ddd;
-    padding: 0.6rem;
-}
-
-/* Optional Notes */
-.optional-notes-section { margin-top: 0; }
-.notes-label { 
-    font-size: 0.9rem; 
-    color: #666; 
-    margin-bottom: 0.5rem;
-    display: block;
-}
-.notes-textarea { 
-    border-radius: 8px; 
-    border: 1px solid #ddd;
-    resize: none;
-    min-height: 80px;
-}
-
-/* Buttons */
-.btn-cancel { 
-    background: #e9ecef; 
-    border: none; 
-    color: #333; 
-    padding: 0.6rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 500;
-}
-.btn-cancel:hover { background: #ddd; }
-.btn-reassign { 
-    background: linear-gradient(135deg, #4a90d9, #63b3ed); 
-    border: none; 
-    color: white; 
-    padding: 0.6rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 500;
-}
-.btn-reassign:hover { 
-    background: linear-gradient(135deg, #3a7fc9, #53a3dd); 
-}
-</style>
+<!-- Success Popup -->
+<div class="modern-modal" id="successPopup">
+    <div class="modal-box" style="max-width:400px;text-align:center;padding:40px;">
+        <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);color:white;display:flex;align-items:center;justify-content:center;font-size:2.5rem;margin:0 auto 20px;">
+            <i class="fas fa-check"></i>
+        </div>
+        <h3 id="successTitle" style="color:#1e3a5f;">Berhasil!</h3>
+        <p id="successMessage" class="text-muted">Request telah dikirim</p>
+        <button class="btn-submit" onclick="closeModal('successPopup');location.reload();">OK</button>
+    </div>
+</div>
 
 <script>
-function filterByCrewing(value) {
-    if (value === 'unassigned') {
-        window.location.href = '<?= url('/master-admin/pipeline') ?>?unassigned=1';
-    } else if (value) {
-        window.location.href = '<?= url('/master-admin/pipeline') ?>?crewing=' + value;
-    } else {
-        window.location.href = '<?= url('/master-admin/pipeline') ?>';
-    }
-}
-
-function openTransferModal(appId, appName, vacancyTitle, fromCrewingId, fromCrewingName) {
-    document.getElementById('transferAppId').value = appId;
-    document.getElementById('transferApplicantName').textContent = appName;
-    document.getElementById('transferVacancyTitle').textContent = vacancyTitle || '-';
-    document.getElementById('fromCrewingId').value = fromCrewingId || 0;
-    document.getElementById('fromCrewingName').textContent = fromCrewingName || 'Unassigned';
-    document.getElementById('toCrewingId').value = '';
-    document.getElementById('transferReason').value = '';
-    
-    // Load crewing staff dynamically
-    const dropdown = document.getElementById('toCrewingId');
-    dropdown.innerHTML = '<option value="">Loading...</option>';
-    
-    fetch('<?= url('/master-admin/pipeline/crewing-staff') ?>')
-        .then(r => r.json())
-        .then(data => {
-            if (data.success && data.data) {
-                dropdown.innerHTML = '<option value="">Select New Handler</option>';
-                data.data.forEach(crew => {
-                    const role = crew.role_id == 5 ? 'Crewing Manager' : 'Crewing Staff';
-                    dropdown.innerHTML += `<option value="${crew.id}">${crew.full_name} - ${role}</option>`;
-                });
-            }
-        })
-        .catch(() => {
-            dropdown.innerHTML = '<option value="">Error loading staff</option>';
-        });
-    
-    // Show modal by adding class
-    document.getElementById('transferModal').classList.add('show');
+function openModal(id) {
+    document.getElementById(id).classList.add('show');
     document.body.style.overflow = 'hidden';
 }
-
-function closeTransferModal() {
-    document.getElementById('transferModal').classList.remove('show');
+function closeModal(id) {
+    document.getElementById(id).classList.remove('show');
     document.body.style.overflow = '';
 }
 
-function submitTransfer() {
-    const appId = document.getElementById('transferAppId').value;
-    const fromCrewingId = document.getElementById('fromCrewingId').value;
-    const toCrewingId = document.getElementById('toCrewingId').value;
-    const reason = document.getElementById('transferReason').value.trim();
+function openStatusModal(appId, appName, currentStatus) {
+    document.getElementById('statusAppId').value = appId;
+    document.getElementById('statusAppName').textContent = appName;
+    document.getElementById('currentStatusId').value = currentStatus;
+    document.getElementById('statusReason').value = '';
+    document.querySelectorAll('.status-option').forEach(el => el.classList.remove('selected'));
+    openModal('statusModal');
+}
+
+function selectStatus(statusId) {
+    document.querySelectorAll('.status-option').forEach(el => el.classList.remove('selected'));
+    document.getElementById('statusOpt' + statusId).classList.add('selected');
+    document.getElementById('selectedStatusId').value = statusId;
+}
+
+function submitStatusChange() {
+    const appId = document.getElementById('statusAppId').value;
+    const fromStatus = document.getElementById('currentStatusId').value;
+    const toStatus = document.getElementById('selectedStatusId').value;
+    const reason = document.getElementById('statusReason').value;
+    
+    if (!toStatus) {
+        alert('Pilih status tujuan!');
+        return;
+    }
+    
+    // For Master Admin - direct change (no request needed)
+    fetch('<?= url('/master-admin/pipeline/update-status') ?>', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `csrf_token=<?= csrf_token() ?>&application_id=${appId}&status_id=${toStatus}`
+    })
+    .then(r => r.text())
+    .then(() => {
+        closeModal('statusModal');
+        document.getElementById('successTitle').textContent = 'Status Diubah!';
+        document.getElementById('successMessage').textContent = 'Status lamaran berhasil diubah';
+        openModal('successPopup');
+    });
+}
+
+function openDetailModal(appId, name, vacancy, email, phone, date, status, handler) {
+    document.getElementById('detailName').textContent = name;
+    document.getElementById('detailVacancy').innerHTML = '<i class="fas fa-briefcase me-1"></i>' + (vacancy || 'Posisi tidak tersedia');
+    document.getElementById('detailEmail').textContent = email || '-';
+    document.getElementById('detailPhone').textContent = phone || '-';
+    document.getElementById('detailAppId').textContent = '#' + appId;
+    document.getElementById('detailDate').textContent = date || '-';
+    document.getElementById('detailStatus').textContent = status || 'Pending';
+    document.getElementById('detailHandler').textContent = handler || 'Belum ditugaskan';
+    document.getElementById('detailFullLink').href = '<?= url('/admin/applicants/') ?>' + appId;
+    openModal('detailModal');
+}
+
+function openReassignModal(appId, appName, vacancy, currentHandlerId, currentHandlerName) {
+    document.getElementById('reassignAppId').value = appId;
+    document.getElementById('reassignAppName').textContent = appName;
+    document.getElementById('reassignVacancy').textContent = vacancy || 'N/A';
+    document.getElementById('reassignFromId').value = currentHandlerId || 0;
+    document.getElementById('fromHandlerName').textContent = currentHandlerName || 'Unassigned';
+    document.getElementById('fromHandlerRole').textContent = currentHandlerId ? 'Crewing Staff' : 'Belum ditugaskan';
+    document.getElementById('reassignTo').value = '';
+    document.getElementById('reassignNotes').value = '';
+    
+    // Update avatar style based on assignment
+    const avatar = document.getElementById('fromHandlerAvatar');
+    if (currentHandlerId) {
+        avatar.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+        avatar.style.color = 'white';
+    } else {
+        avatar.style.background = '#fee2e2';
+        avatar.style.color = '#dc2626';
+    }
+    
+    openModal('reassignModal');
+}
+
+function submitReassign() {
+    const appId = document.getElementById('reassignAppId').value;
+    const toCrewingId = document.getElementById('reassignTo').value;
+    const fromCrewingId = document.getElementById('reassignFromId').value;
+    const notes = document.getElementById('reassignNotes').value;
     
     if (!toCrewingId) {
-        alert('Please select a new handler');
+        alert('Pilih handler baru!');
         return;
     }
     
     fetch('<?= url('/master-admin/pipeline/transfer') ?>', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
-        body: new URLSearchParams({
-            csrf_token: '<?= csrf_token() ?>',
-            application_id: appId,
-            from_crewing_id: fromCrewingId,
-            to_crewing_id: toCrewingId,
-            reason: reason || 'Reassigned'
-        })
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `csrf_token=<?= csrf_token() ?>&application_id=${appId}&to_crewing_id=${toCrewingId}&from_crewing_id=${fromCrewingId}&reason=${encodeURIComponent(notes)}`
     })
     .then(r => r.json())
     .then(data => {
+        closeModal('reassignModal');
         if (data.success) {
-            alert('✅ ' + data.message);
-            transferModal.hide();
-            window.location.reload();
+            document.getElementById('successTitle').textContent = 'Berhasil!';
+            document.getElementById('successMessage').textContent = data.message;
+            openModal('successPopup');
         } else {
-            alert('❌ Error: ' + data.message);
+            alert('Error: ' + data.message);
         }
-    })
-    .catch(err => {
-        alert('Error: ' + err.message);
-    });
-}
-
-// Archive Application Function
-function archiveApplication(appId, applicantName) {
-    if (!confirm(`Archive application from ${applicantName}?\n\nThis will move the application to archive and remove it from the active pipeline.`)) {
-        return;
-    }
-    
-    fetch('<?= url('/master-admin/archive/archive/') ?>' + appId, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: 'csrf_token=<?= csrf_token() ?>'
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ ' + data.message);
-            window.location.reload();
-        } else {
-            alert('❌ ' + data.message);
-        }
-    })
-    .catch(err => {
-        alert('Error: ' + err.message);
     });
 }
 </script>

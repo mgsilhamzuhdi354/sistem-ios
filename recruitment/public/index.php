@@ -10,13 +10,14 @@ define('APPPATH', dirname(__DIR__) . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEP
 define('WRITEPATH', dirname(__DIR__) . DIRECTORY_SEPARATOR . 'writable' . DIRECTORY_SEPARATOR);
 
 // ============================================
-// ROLE CONSTANTS - Use these instead of magic numbers
+// ROLE CONSTANTS - Matches Database Structure
 // ============================================
-define('ROLE_ADMIN', 1);
-define('ROLE_APPLICANT', 3);
-define('ROLE_LEADER', 4);
-define('ROLE_CREWING', 5);        // Crewing PIC (merged from old role 2)
-define('ROLE_MASTER_ADMIN', 11);
+define('ROLE_ADMIN', 1);          // Admin - Job Vacancy
+define('ROLE_HR_STAFF', 2);       // HR Staff
+define('ROLE_APPLICANT', 3);      // Job Applicant
+define('ROLE_LEADER', 4);         // Leader
+define('ROLE_CREWING', 5);        // Crewing Staff
+define('ROLE_MASTER_ADMIN', 11);  // Master Admin - Full Access
 
 // Start session
 session_start();
@@ -90,6 +91,81 @@ function redirect($url) {
 function isLoggedIn() {
     return isset($_SESSION['user_id']);
 }
+
+// ============================================
+// PERMISSION SYSTEM - Dynamic RBAC
+// ============================================
+
+/**
+ * Get user permissions from database and cache in session
+ */
+function getUserPermissions() {
+    if (!isLoggedIn()) return [];
+    
+    // Return cached permissions if available
+    if (isset($_SESSION['permissions'])) {
+        return $_SESSION['permissions'];
+    }
+    
+    $db = getDB();
+    $roleId = $_SESSION['role_id'];
+    
+    // Master Admin has all permissions
+    if ($roleId == ROLE_MASTER_ADMIN) {
+        $result = $db->query("SELECT name FROM permissions");
+        $permissions = [];
+        while ($row = $result->fetch_assoc()) {
+            $permissions[] = $row['name'];
+        }
+        $_SESSION['permissions'] = $permissions;
+        return $permissions;
+    }
+    
+    // Get permissions for this role
+    $stmt = $db->prepare("
+        SELECT p.name 
+        FROM permissions p
+        JOIN role_permissions rp ON p.id = rp.permission_id
+        WHERE rp.role_id = ?
+    ");
+    $stmt->bind_param('i', $roleId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $permissions = [];
+    while ($row = $result->fetch_assoc()) {
+        $permissions[] = $row['name'];
+    }
+    
+    $_SESSION['permissions'] = $permissions;
+    return $permissions;
+}
+
+/**
+ * Check if current user has a specific permission
+ */
+function hasPermission($permissionName) {
+    if (!isLoggedIn()) return false;
+    
+    // Master Admin always has permission
+    if ($_SESSION['role_id'] == ROLE_MASTER_ADMIN) {
+        return true;
+    }
+    
+    $permissions = getUserPermissions();
+    return in_array($permissionName, $permissions);
+}
+
+/**
+ * Clear permission cache (call after role change)
+ */
+function clearPermissionCache() {
+    unset($_SESSION['permissions']);
+}
+
+// ============================================
+// ROLE CHECK FUNCTIONS (Legacy + New)
+// ============================================
 
 function isAdmin() {
     return isset($_SESSION['role_id']) && $_SESSION['role_id'] == ROLE_ADMIN;

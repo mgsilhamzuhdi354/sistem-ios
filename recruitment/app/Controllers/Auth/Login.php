@@ -59,33 +59,27 @@ class Login extends BaseController {
                 // Update last login and online status
                 $this->db->query("UPDATE users SET last_login = NOW(), is_online = 1, last_activity = NOW() WHERE id = " . $user['id']);
                 
+                // Clear permission cache to load fresh permissions
+                clearPermissionCache();
+                
                 flash('success', 'Welcome back, ' . $user['full_name'] . '!');
                 
-                // Redirect based on role
+                // Redirect based on role (Matches Database Structure)
                 switch ($user['role_id']) {
-                    case 11:
-                        // Master Admin
+                    case ROLE_MASTER_ADMIN: // 11 - Master Admin
                         $this->redirect(url('/master-admin/dashboard'));
                         break;
-                    case 1:
-                        // Admin - Job Vacancy only
+                    case ROLE_ADMIN: // 1 - Admin
                         $this->redirect(url('/admin/dashboard'));
                         break;
-                    case 4:
-                        // Leader
+                    case ROLE_LEADER: // 4 - Leader
                         $this->redirect(url('/leader/dashboard'));
                         break;
-                    case 5:
-                        // Crewing PIC
-                        $this->redirect(url('/crewing-pic/dashboard'));
-                        break;
-                    case 2:
-                        // Crewing Staff
+                    case ROLE_CREWING: // 5 - Crewing
                         $this->redirect(url('/crewing/dashboard'));
                         break;
-                    case 3:
+                    case ROLE_APPLICANT: // 3 - Applicant
                     default:
-                        // Applicant
                         $this->redirect(url('/applicant/dashboard'));
                         break;
                 }

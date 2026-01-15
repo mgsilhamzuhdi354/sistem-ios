@@ -84,7 +84,7 @@
             global $db;
             $pendingCount = 0;
             if ($db) {
-                $result = $db->query("SELECT COUNT(*) as c FROM pipeline_requests WHERE status = 'pending'");
+                $result = @$db->query("SELECT COUNT(*) as c FROM status_change_requests WHERE status = 'pending'");
                 if ($result) {
                     $pendingCount = $result->fetch_assoc()['c'];
                 }
@@ -213,6 +213,12 @@
                         <a href="<?= url('/master-admin/email-settings') ?>" class="nav-link <?= strpos($uri, '/master-admin/email-settings') !== false ? 'active' : '' ?>">
                             <i class="fas fa-envelope"></i>
                             <span>Email</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/master-admin/permissions') ?>" class="nav-link <?= strpos($uri, '/master-admin/permissions') !== false ? 'active' : '' ?>">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Hak Akses</span>
                         </a>
                     </li>
                     <li class="nav-item">

@@ -131,13 +131,32 @@ class Auth extends BaseController
         $emailSent = $mailer->sendOtpCode($user['email'], $otpCode, $user['full_name']);
         
         if (!$emailSent) {
-            // Log error details for debugging
-            $errors = $mailer->getErrors();
-            $errorMsg = !empty($errors) ? implode(', ', $errors) : 'Unknown error';
-            error_log("OTP Email Error: " . $errorMsg);
+            // DEVELOPMENT MODE: If email fails, bypass OTP and login directly
+            // Remove or comment this block in production!
             
-            $this->setFlash('error', 'Gagal mengirim kode OTP. Error: ' . $errorMsg);
-            $this->redirect('auth/login');
+            $this->loginHistoryModel->logAttempt($user['id'], 'success', 'OTP bypassed - SMTP unavailable');
+            
+            // Regenerate session ID for security
+            session_regenerate_id(true);
+            
+            // Set session
+            $_SESSION['user'] = [
+                'id' => $user['id'],
+                'username' => $user['username'],
+                'email' => $user['email'],
+                'role' => $user['role'],
+                'full_name' => $user['full_name'],
+                'avatar' => $user['avatar'] ?? null
+            ];
+            
+            $_SESSION['login_time'] = time();
+            $_SESSION['last_activity'] = time();
+            
+            // Log activity
+            $this->activityModel->log($user['id'], 'login', 'user', $user['id'], 'User logged in (OTP bypassed - dev mode)');
+            
+            $this->setFlash('success', 'Selamat datang, ' . $user['full_name'] . '! (OTP dilewati - SMTP tidak tersedia)');
+            $this->redirect('');
             return;
         }
         

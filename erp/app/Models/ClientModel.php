@@ -92,14 +92,24 @@ class ClientModel extends BaseModel
             $symbols = [];
             
             foreach ($costs as $cost) {
-                $currency = $cost['currency_code'] ?? 'USD';
                 $amount = $cost['total_monthly'] ?? 0;
+                $currency = $cost['currency_code'] ?? null;
+                $symbol = $cost['currency_symbol'] ?? null;
                 $contractRate = $cost['contract_rate'] ?? 0;
+                
+                // Auto-detect currency: if amount > 1,000,000 and currency is USD or NULL, treat as IDR
+                if ((!$currency || $currency === 'USD') && $amount > 1000000) {
+                    $currency = 'IDR';
+                    $symbol = 'Rp';
+                } elseif (!$currency) {
+                    $currency = 'USD';
+                    $symbol = '$';
+                }
                 
                 // Sum by currency
                 if (!isset($byCurrency[$currency])) {
                     $byCurrency[$currency] = 0;
-                    $symbols[$currency] = $cost['currency_symbol'] ?? $currency;
+                    $symbols[$currency] = $symbol ?? $currency;
                 }
                 $byCurrency[$currency] += $amount;
                 
@@ -292,16 +302,27 @@ class ClientModel extends BaseModel
         $totalUsd = 0;
         
         foreach ($costs as $cost) {
-            $currency = $cost['currency_code'] ?? 'USD';
             $amount = $cost['total_monthly'] ?? 0;
+            $currency = $cost['currency_code'] ?? null;
+            $symbol = $cost['currency_symbol'] ?? null;
             $contractRate = $cost['contract_rate'] ?? 0;
+            
+            // Auto-detect currency: if amount > 1,000,000 and currency is USD or NULL, treat as IDR
+            if ((!$currency || $currency === 'USD') && $amount > 1000000) {
+                $currency = 'IDR';
+                $symbol = 'Rp';
+            } elseif (!$currency) {
+                $currency = 'USD';
+                $symbol = '$';
+            }
             
             if (!isset($byCurrency[$currency])) {
                 $byCurrency[$currency] = 0;
-                $symbols[$currency] = $cost['currency_symbol'] ?? $currency;
+                $symbols[$currency] = $symbol ?? $currency;
             }
             $byCurrency[$currency] += $amount;
             
+            // Convert to USD
             if ($currency === 'USD') {
                 $totalUsd += $amount;
             } elseif ($contractRate > 0) {

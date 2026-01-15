@@ -125,6 +125,7 @@ $routes['POST']['/crewing/applications/complete/(:num)'] = 'Crewing/Applications
 $routes['GET']['/crewing/pipeline'] = 'Crewing/Pipeline::index';
 $routes['POST']['/crewing/pipeline/update-status'] = 'Crewing/Pipeline::updateStatusAjax';
 $routes['POST']['/crewing/pipeline/request-status'] = 'Crewing/Pipeline::requestStatus';
+$routes['POST']['/crewing/pipeline/request-claim'] = 'Crewing/Pipeline::requestClaim';
 
 // Crewing - Team
 $routes['GET']['/crewing/team'] = 'Crewing/Team::index';
@@ -236,6 +237,8 @@ $routes['POST']['/master-admin/vacancies/toggle/(:num)'] = 'MasterAdmin/Vacancie
 $routes['GET']['/master-admin/requests'] = 'MasterAdmin/Requests::index';
 $routes['POST']['/master-admin/requests/approve/(:num)'] = 'MasterAdmin/Requests::approve/$1';
 $routes['POST']['/master-admin/requests/reject/(:num)'] = 'MasterAdmin/Requests::reject/$1';
+$routes['POST']['/master-admin/requests/approve-claim/(:num)'] = 'MasterAdmin/Requests::approveClaim/$1';
+$routes['POST']['/master-admin/requests/reject-claim/(:num)'] = 'MasterAdmin/Requests::rejectClaim/$1';
 
 // Master Admin - Archive Management
 $routes['GET']['/master-admin/archive'] = 'MasterAdmin/Archive::index';
@@ -254,6 +257,21 @@ $routes['POST']['/master-admin/email-settings/send-test'] = 'MasterAdmin/EmailSe
 $routes['GET']['/master-admin/email-settings/logs'] = 'MasterAdmin/EmailSettings::logs';
 $routes['POST']['/master-admin/email-settings/save'] = 'MasterAdmin/EmailSettings::saveSettings';
 $routes['POST']['/master-admin/email-settings/send-to-applicant'] = 'MasterAdmin/EmailSettings::sendToApplicant';
+
+// Master Admin - Database Migration
+$routes['GET']['/master-admin/db-migration'] = 'MasterAdmin/DbMigration::index';
+$routes['GET']['/master-admin/db-migration/check-connection'] = 'MasterAdmin/DbMigration::checkConnection';
+$routes['GET']['/master-admin/db-migration/run-migrations'] = 'MasterAdmin/DbMigration::runMigrations';
+
+// Master Admin - Permissions Management
+$routes['GET']['/master-admin/permissions'] = 'MasterAdmin/Permissions::index';
+$routes['POST']['/master-admin/permissions/update/(:num)'] = 'MasterAdmin/Permissions::updateRolePermissions/$1';
+
+// Master Admin - ERP Transfer
+$routes['GET']['/master-admin/transfer'] = 'MasterAdmin/Transfer::index';
+$routes['POST']['/master-admin/transfer/(:num)'] = 'MasterAdmin/Transfer::transfer/$1';
+$routes['POST']['/master-admin/transfer/bulk'] = 'MasterAdmin/Transfer::bulkTransfer';
+$routes['GET']['/master-admin/transfer/preview/(:num)'] = 'MasterAdmin/Transfer::preview/$1';
 
 // ============================================
 // CREWING PIC ROUTES - DEPRECATED (Merged to /crewing/*)

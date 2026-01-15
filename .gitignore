@@ -99,6 +99,7 @@ coverage/
 *.sqlite
 *.db
 !database/migrations/*.sql
+!docker/mysql/init.sql
 
 # =============================================================================
 # Backup Files

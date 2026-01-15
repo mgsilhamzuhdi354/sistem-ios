@@ -2,8 +2,7 @@
 require_once APPPATH . 'Controllers/BaseController.php';
 
 /**
- * Master Admin Requests Controller
- * Handle approval/rejection of pipeline status change requests
+ * Requests Controller - Handles both status change and job claim requests
  */
 class Requests extends BaseController {
     
@@ -15,173 +14,189 @@ class Requests extends BaseController {
     }
     
     public function index() {
-        // Get pending requests
-        $pendingResult = $this->db->query("
-            SELECT pr.*, 
-                   a.id as app_id,
-                   u.full_name as applicant_name,
-                   u.email as applicant_email,
-                   jv.title as vacancy_title,
-                   req.full_name as requested_by_name,
+        // Get pending job claim requests
+        $claimResult = @$this->db->query("
+            SELECT jcr.*, jcr.id as request_id, 'claim' as request_type,
+                   a.id as app_id, u.full_name as applicant_name, jv.title as vacancy_title,
+                   ur.full_name as requester_name
+            FROM job_claim_requests jcr
+            JOIN applications a ON jcr.application_id = a.id
+            JOIN users u ON a.user_id = u.id
+            LEFT JOIN job_vacancies jv ON a.vacancy_id = jv.id
+            JOIN users ur ON jcr.requested_by = ur.id
+            WHERE jcr.status = 'pending'
+            ORDER BY jcr.created_at DESC
+        ");
+        $pendingClaims = $claimResult ? $claimResult->fetch_all(MYSQLI_ASSOC) : [];
+        
+        // Get pending status change requests
+        $statusResult = @$this->db->query("
+            SELECT r.*, r.id as request_id, 'status' as request_type,
+                   a.id as app_id, u.full_name as applicant_name, jv.title as vacancy_title,
+                   ur.full_name as requester_name,
                    fs.name as from_status_name, fs.color as from_status_color,
                    ts.name as to_status_name, ts.color as to_status_color
-            FROM pipeline_requests pr
-            JOIN applications a ON pr.application_id = a.id
+            FROM status_change_requests r
+            JOIN applications a ON r.application_id = a.id
             JOIN users u ON a.user_id = u.id
-            JOIN job_vacancies jv ON a.vacancy_id = jv.id
-            JOIN users req ON pr.requested_by = req.id
-            JOIN application_statuses fs ON pr.from_status_id = fs.id
-            JOIN application_statuses ts ON pr.to_status_id = ts.id
-            WHERE pr.status = 'pending'
-            ORDER BY pr.created_at DESC
+            LEFT JOIN job_vacancies jv ON a.vacancy_id = jv.id
+            JOIN users ur ON r.requested_by = ur.id
+            JOIN application_statuses fs ON r.from_status_id = fs.id
+            JOIN application_statuses ts ON r.to_status_id = ts.id
+            WHERE r.status = 'pending'
+            ORDER BY r.created_at DESC
         ");
-        $pendingRequests = $pendingResult ? $pendingResult->fetch_all(MYSQLI_ASSOC) : [];
-        
-        // Get recent history (approved/rejected)
-        $historyResult = $this->db->query("
-            SELECT pr.*, 
-                   u.full_name as applicant_name,
-                   req.full_name as requested_by_name,
-                   resp.full_name as responded_by_name,
-                   fs.name as from_status_name,
-                   ts.name as to_status_name
-            FROM pipeline_requests pr
-            JOIN applications a ON pr.application_id = a.id
-            JOIN users u ON a.user_id = u.id
-            JOIN users req ON pr.requested_by = req.id
-            LEFT JOIN users resp ON pr.responded_by = resp.id
-            JOIN application_statuses fs ON pr.from_status_id = fs.id
-            JOIN application_statuses ts ON pr.to_status_id = ts.id
-            WHERE pr.status IN ('approved', 'rejected')
-            ORDER BY pr.responded_at DESC
-            LIMIT 20
-        ");
-        $historyRequests = $historyResult ? $historyResult->fetch_all(MYSQLI_ASSOC) : [];
+        $pendingStatus = $statusResult ? $statusResult->fetch_all(MYSQLI_ASSOC) : [];
         
         $this->view('master_admin/requests/index', [
-            'pageTitle' => 'Pipeline Requests',
-            'pendingRequests' => $pendingRequests,
-            'historyRequests' => $historyRequests
+            'pageTitle' => 'Approval Requests',
+            'pendingClaims' => $pendingClaims,
+            'pendingStatus' => $pendingStatus,
+            'pendingCount' => count($pendingClaims) + count($pendingStatus)
         ]);
     }
     
-    public function approve($id) {
+    /**
+     * Approve job claim request
+     */
+    public function approveClaim($id) {
         if (!$this->isPost()) {
-            redirect(url('/master-admin/requests'));
+            return $this->json(['success' => false, 'message' => 'Invalid request']);
         }
         
-        $id = intval($id);
-        $notes = trim($this->input('notes') ?? '');
+        $notes = trim($this->input('notes') ?: '');
         $adminId = $_SESSION['user_id'];
         
-        // Get the request
-        $stmt = $this->db->prepare("SELECT * FROM pipeline_requests WHERE id = ? AND status = 'pending'");
+        // Get claim request
+        $stmt = $this->db->prepare("SELECT * FROM job_claim_requests WHERE id = ? AND status = 'pending'");
         $stmt->bind_param('i', $id);
         $stmt->execute();
         $request = $stmt->get_result()->fetch_assoc();
         
         if (!$request) {
-            flash('error', 'Request not found or already processed');
-            redirect(url('/master-admin/requests'));
+            return $this->json(['success' => false, 'message' => 'Request not found']);
         }
         
-        // Update request status
-        $updateStmt = $this->db->prepare("
-            UPDATE pipeline_requests 
-            SET status = 'approved', response_notes = ?, responded_by = ?, responded_at = NOW() 
-            WHERE id = ?
-        ");
-        $updateStmt->bind_param('sii', $notes, $adminId, $id);
+        // Update claim status
+        $stmt = $this->db->prepare("UPDATE job_claim_requests SET status = 'approved', reviewed_by = ?, reviewed_at = NOW(), review_notes = ? WHERE id = ?");
+        $stmt->bind_param('isi', $adminId, $notes, $id);
+        $stmt->execute();
         
-        if ($updateStmt->execute()) {
-            // Update application status
-            $appStmt = $this->db->prepare("
-                UPDATE applications 
-                SET status_id = ?, status_updated_at = NOW(), reviewed_by = ? 
-                WHERE id = ?
-            ");
-            $appStmt->bind_param('iii', $request['to_status_id'], $adminId, $request['application_id']);
-            $appStmt->execute();
-            
-            // Add to history
-            $historyStmt = $this->db->prepare("
-                INSERT INTO application_status_history 
-                (application_id, from_status_id, to_status_id, notes, changed_by, created_at)
-                VALUES (?, ?, ?, ?, ?, NOW())
-            ");
-            $historyNotes = "Approved by Master Admin" . ($notes ? ": $notes" : "");
-            $historyStmt->bind_param('iiisi', 
-                $request['application_id'], 
-                $request['from_status_id'], 
-                $request['to_status_id'], 
-                $historyNotes, 
-                $adminId
-            );
-            $historyStmt->execute();
-            
-            // Notify the requester
-            notifyUser($request['requested_by'], 
-                'Request Approved', 
-                'Your pipeline status change request has been approved.',
-                'success',
-                url('/crewing/pipeline')
-            );
-            
-            flash('success', 'Request approved successfully');
-        } else {
-            flash('error', 'Failed to approve request');
-        }
+        // Mark other pending claims for same application as rejected
+        $this->db->query("UPDATE job_claim_requests SET status = 'rejected', review_notes = 'Another request was approved' WHERE application_id = {$request['application_id']} AND id != $id AND status = 'pending'");
         
-        redirect(url('/master-admin/requests'));
+        // Create assignment
+        $assignStmt = $this->db->prepare("INSERT INTO application_assignments (application_id, assigned_to, assigned_by, notes, status, assigned_at) VALUES (?, ?, ?, 'Approved claim request', 'active', NOW())");
+        $assignStmt->bind_param('iii', $request['application_id'], $request['requested_by'], $adminId);
+        $assignStmt->execute();
+        
+        // Update application
+        $this->db->query("UPDATE applications SET current_crewing_id = {$request['requested_by']} WHERE id = {$request['application_id']}");
+        
+        // Notify requester
+        notifyUser($request['requested_by'], 'Claim Request Approved!', 
+            'Your request to handle an application has been approved. You can now manage this applicant.',
+            'success', url('/crewing/pipeline?view=my'));
+        
+        return $this->json(['success' => true, 'message' => 'Claim approved! Staff has been assigned.']);
     }
     
-    public function reject($id) {
+    /**
+     * Reject job claim request
+     */
+    public function rejectClaim($id) {
         if (!$this->isPost()) {
-            redirect(url('/master-admin/requests'));
+            return $this->json(['success' => false, 'message' => 'Invalid request']);
         }
         
-        $id = intval($id);
-        $notes = trim($this->input('notes') ?? '');
+        $notes = trim($this->input('notes') ?: 'Request ditolak');
         $adminId = $_SESSION['user_id'];
         
-        if (empty($notes)) {
-            flash('error', 'Please provide a reason for rejection');
-            redirect(url('/master-admin/requests'));
+        $stmt = $this->db->prepare("UPDATE job_claim_requests SET status = 'rejected', reviewed_by = ?, reviewed_at = NOW(), review_notes = ? WHERE id = ?");
+        $stmt->bind_param('isi', $adminId, $notes, $id);
+        
+        if ($stmt->execute()) {
+            // Get requester
+            $reqStmt = $this->db->prepare("SELECT requested_by FROM job_claim_requests WHERE id = ?");
+            $reqStmt->bind_param('i', $id);
+            $reqStmt->execute();
+            $req = $reqStmt->get_result()->fetch_assoc();
+            
+            if ($req) {
+                notifyUser($req['requested_by'], 'Claim Request Rejected', 
+                    "Your claim request was rejected. Reason: $notes",
+                    'warning', url('/crewing/pipeline'));
+            }
+            
+            return $this->json(['success' => true, 'message' => 'Request rejected']);
         }
         
-        // Get the request
-        $stmt = $this->db->prepare("SELECT * FROM pipeline_requests WHERE id = ? AND status = 'pending'");
+        return $this->json(['success' => false, 'message' => 'Failed to reject']);
+    }
+    
+    /**
+     * Approve status change request
+     */
+    public function approve($id) {
+        if (!$this->isPost()) {
+            return $this->json(['success' => false, 'message' => 'Invalid request']);
+        }
+        
+        $notes = trim($this->input('notes') ?: '');
+        $adminId = $_SESSION['user_id'];
+        
+        $stmt = $this->db->prepare("SELECT * FROM status_change_requests WHERE id = ? AND status = 'pending'");
         $stmt->bind_param('i', $id);
         $stmt->execute();
         $request = $stmt->get_result()->fetch_assoc();
         
         if (!$request) {
-            flash('error', 'Request not found or already processed');
-            redirect(url('/master-admin/requests'));
+            return $this->json(['success' => false, 'message' => 'Request not found']);
         }
         
-        // Update request status
-        $updateStmt = $this->db->prepare("
-            UPDATE pipeline_requests 
-            SET status = 'rejected', response_notes = ?, responded_by = ?, responded_at = NOW() 
-            WHERE id = ?
-        ");
-        $updateStmt->bind_param('sii', $notes, $adminId, $id);
+        // Update request
+        $stmt = $this->db->prepare("UPDATE status_change_requests SET status = 'approved', reviewed_by = ?, reviewed_at = NOW(), review_notes = ? WHERE id = ?");
+        $stmt->bind_param('isi', $adminId, $notes, $id);
+        $stmt->execute();
         
-        if ($updateStmt->execute()) {
-            // Notify the requester
-            notifyUser($request['requested_by'], 
-                'Request Rejected', 
-                "Your pipeline status change request has been rejected. Reason: $notes",
-                'danger',
-                url('/crewing/pipeline')
-            );
-            
-            flash('success', 'Request rejected');
-        } else {
-            flash('error', 'Failed to reject request');
+        // Apply status change
+        $stmt = $this->db->prepare("UPDATE applications SET status_id = ?, updated_at = NOW() WHERE id = ?");
+        $stmt->bind_param('ii', $request['to_status_id'], $request['application_id']);
+        $stmt->execute();
+        
+        notifyUser($request['requested_by'], 'Status Change Approved', 
+            'Your status change request has been approved.',
+            'success', url('/crewing/pipeline'));
+        
+        return $this->json(['success' => true, 'message' => 'Status change approved']);
+    }
+    
+    /**
+     * Reject status change request
+     */
+    public function reject($id) {
+        if (!$this->isPost()) {
+            return $this->json(['success' => false, 'message' => 'Invalid request']);
         }
         
-        redirect(url('/master-admin/requests'));
+        $notes = trim($this->input('notes') ?: 'Rejected');
+        $adminId = $_SESSION['user_id'];
+        
+        $stmt = $this->db->prepare("UPDATE status_change_requests SET status = 'rejected', reviewed_by = ?, reviewed_at = NOW(), review_notes = ? WHERE id = ?");
+        $stmt->bind_param('isi', $adminId, $notes, $id);
+        $stmt->execute();
+        
+        $reqStmt = $this->db->prepare("SELECT requested_by FROM status_change_requests WHERE id = ?");
+        $reqStmt->bind_param('i', $id);
+        $reqStmt->execute();
+        $req = $reqStmt->get_result()->fetch_assoc();
+        
+        if ($req) {
+            notifyUser($req['requested_by'], 'Status Change Rejected', 
+                "Your request was rejected. Reason: $notes",
+                'warning', url('/crewing/pipeline'));
+        }
+        
+        return $this->json(['success' => true, 'message' => 'Request rejected']);
     }
 }
