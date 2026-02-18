@@ -13,14 +13,45 @@ class Monitoring extends BaseController
     {
         parent::__construct();
 
-        // Connect to recruitment database
-        $this->recruitmentDb = new \mysqli(
-            $_ENV['DB_HOST'] ?? 'localhost',
-            $_ENV['DB_USERNAME'] ?? 'root',
-            $_ENV['DB_PASSWORD'] ?? '',
-            $_ENV['RECRUITMENT_DB_NAME'] ?? 'recruitment_db',
-            $_ENV['DB_PORT'] ?? 3306
-        );
+        // Connect to recruitment database with OS-based detection
+        $isWindows = (PHP_OS_FAMILY === 'Windows' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
+
+        if (!$isWindows) {
+            // Docker / Linux / NAS - use hardcoded values
+            $dbHost = '172.17.0.3';
+            $dbUser = 'root';
+            $dbPass = 'rahasia123';
+            $dbName = 'recruitment_db';
+            $dbPort = 3306;
+
+            // Try primary host, then fallbacks
+            $hostsToTry = ['172.17.0.3', '172.17.0.2', '172.17.0.4', '172.17.0.5'];
+            foreach ($hostsToTry as $host) {
+                try {
+                    $conn = @new \mysqli($host, $dbUser, $dbPass, $dbName, $dbPort);
+                    if (!$conn->connect_error) {
+                        $this->recruitmentDb = $conn;
+                        return;
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+            $this->recruitmentDb = null;
+        } else {
+            // Windows / Laragon
+            try {
+                $this->recruitmentDb = new \mysqli(
+                    $_ENV['DB_HOST'] ?? 'localhost',
+                    $_ENV['DB_USERNAME'] ?? 'root',
+                    $_ENV['DB_PASSWORD'] ?? '',
+                    $_ENV['RECRUITMENT_DB_NAME'] ?? 'recruitment_db',
+                    $_ENV['DB_PORT'] ?? 3306
+                );
+            } catch (\Exception $e) {
+                $this->recruitmentDb = null;
+            }
+        }
     }
 
     /**

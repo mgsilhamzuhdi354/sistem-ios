@@ -92,7 +92,7 @@ $passedTests = count(array_filter($testResults, fn($t) => $t['result']));
         </div>
         <div class="stat-info">
             <h3>
-                <?= round(($passedTests / $totalTests) * 100) ?>%
+                <?= $totalTests > 0 ? $totalTests > 0 ? round(($passedTests / $totalTests) * 100) : 0 : 0 ?>%
             </h3>
             <p>Success Rate</p>
         </div>

@@ -160,7 +160,27 @@ class Api extends BaseController
 
     private function checkRecruitmentConnection()
     {
-        $db = new \mysqli(
+        $isWindows = (PHP_OS_FAMILY === 'Windows' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
+
+        if (!$isWindows) {
+            // Docker / Linux / NAS
+            $hostsToTry = ['172.17.0.3', '172.17.0.2', '172.17.0.4', '172.17.0.5'];
+            foreach ($hostsToTry as $host) {
+                try {
+                    $db = @new \mysqli($host, 'root', 'rahasia123', 'recruitment_db', 3306);
+                    if (!$db->connect_error) {
+                        $db->close();
+                        return true;
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+            return false;
+        }
+
+        // Windows / Laragon
+        $db = @new \mysqli(
             $_ENV['DB_HOST'] ?? 'localhost',
             $_ENV['DB_USERNAME'] ?? 'root',
             $_ENV['DB_PASSWORD'] ?? '',

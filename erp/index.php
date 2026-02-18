@@ -11,16 +11,25 @@ define('WRITEPATH', BASEPATH . 'writable/');
 define('FCPATH', BASEPATH);
 
 // Load Composer Autoload & Environment Variables
-require_once BASEPATH . 'vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable(BASEPATH);
-$dotenv->safeLoad();
+if (file_exists(BASEPATH . 'vendor/autoload.php')) {
+    require_once BASEPATH . 'vendor/autoload.php';
+    
+    // Load .env file if dotenv is available
+    if (class_exists('Dotenv\\Dotenv')) {
+        $dotenv = Dotenv\Dotenv::createImmutable(BASEPATH);
+        $dotenv->safeLoad();
+    }
+}
 
-// Dynamic BASE_URL detection for Laragon
+// Dynamic BASE_URL detection
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-// Detect Laragon Pretty URL (.test domains)
-$isLaragonPrettyUrl = (strpos($host, '.test') !== false || strpos($host, '.local') !== false);
-$basePath = $isLaragonPrettyUrl ? '/erp/' : '/PT_indoocean/PT_indoocean/erp/';
+
+// Get relative base path dynamically
+$scriptDir = dirname($_SERVER['SCRIPT_NAME']);
+$scriptDir = str_replace('\\', '/', $scriptDir); // normalize windows paths
+$basePath = rtrim($scriptDir, '/') . '/';
+
 define('BASE_URL', $protocol . '://' . $host . $basePath);
 
 

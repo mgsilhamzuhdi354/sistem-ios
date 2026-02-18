@@ -104,14 +104,14 @@ class Vessel extends BaseController
         $data = [
             'name' => $this->input('name'),
             'imo_number' => $this->input('imo_number'),
-            'vessel_type_id' => $this->input('vessel_type_id'),
-            'flag_state_id' => $this->input('flag_state_id'),
-            'client_id' => $this->input('client_id'),
-            'gross_tonnage' => $this->input('gross_tonnage'),
-            'dwt' => $this->input('dwt'),
-            'year_built' => $this->input('year_built'),
+            'vessel_type_id' => $this->input('vessel_type_id') ?: null,
+            'flag_state_id' => $this->input('flag_state_id') ?: null,
+            'client_id' => $this->input('client_id') ?: null,
+            'gross_tonnage' => $this->input('gross_tonnage') ?: null,
+            'dwt' => $this->input('dwt') ?: null,
+            'year_built' => $this->input('year_built') ?: null,
             'call_sign' => $this->input('call_sign'),
-            'crew_capacity' => $this->input('crew_capacity', 25),
+            'crew_capacity' => $this->input('crew_capacity', 25) ?: 25,
             'status' => 'active',
         ];
 
@@ -157,14 +157,14 @@ class Vessel extends BaseController
         $data = [
             'name' => $this->input('name'),
             'imo_number' => $this->input('imo_number'),
-            'vessel_type_id' => $this->input('vessel_type_id'),
-            'flag_state_id' => $this->input('flag_state_id'),
-            'client_id' => $this->input('client_id'),
-            'gross_tonnage' => $this->input('gross_tonnage'),
-            'dwt' => $this->input('dwt'),
-            'year_built' => $this->input('year_built'),
+            'vessel_type_id' => $this->input('vessel_type_id') ?: null,
+            'flag_state_id' => $this->input('flag_state_id') ?: null,
+            'client_id' => $this->input('client_id') ?: null,
+            'gross_tonnage' => $this->input('gross_tonnage') ?: null,
+            'dwt' => $this->input('dwt') ?: null,
+            'year_built' => $this->input('year_built') ?: null,
             'call_sign' => $this->input('call_sign'),
-            'crew_capacity' => $this->input('crew_capacity', 25),
+            'crew_capacity' => $this->input('crew_capacity', 25) ?: 25,
             'status' => $this->input('status'),
         ];
 

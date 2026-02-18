@@ -72,18 +72,24 @@ function getDB() {
 $requestMethod = $_SERVER['REQUEST_METHOD'];
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// Base path for router - detect Laragon Pretty URL
-$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$isLaragonPrettyUrl = (strpos($host, '.test') !== false || strpos($host, '.local') !== false);
+// Helper to get relative base path
+$scriptDir = dirname($_SERVER['SCRIPT_NAME']);
+$scriptDir = str_replace('\\', '/', $scriptDir); // normalize windows paths
+$basePath = rtrim($scriptDir, '/');
 
-// Handle both /recruitment/public and /recruitment (via .htaccess rewrite) access patterns
-if ($isLaragonPrettyUrl) {
-    if (strpos($requestUri, '/recruitment/public') === 0) {
-        $basePath = '/recruitment/public';
-    } else {
-        $basePath = '/recruitment';
+// Check if we are being accessed via rewritten URL (e.g. /recruitment/ instead of /recruitment/public/index.php)
+if (strpos($requestUri, $basePath) !== 0) {
+    // Maybe we are in the parent folder via rewrite?
+    $parentDir = dirname($basePath);
+    if (strpos($requestUri, $parentDir) === 0) {
+       $basePath = $parentDir;
     }
-} else {
+}
+
+// Ensure base path is correctly set
+$isLaragonPrettyUrl = (strpos($host, '.test') !== false || strpos($host, '.local') !== false);
+if (!$isLaragonPrettyUrl && strpos($basePath, '/PT_indoocean') === false && strpos($_SERVER['REQUEST_URI'], '/PT_indoocean') !== false) {
+    // Verify if we are actually in a subfolder locally that isn't detected by script_name
     $basePath = '/PT_indoocean/recruitment/public';
 }
 

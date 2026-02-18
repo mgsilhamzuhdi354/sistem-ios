@@ -1,24 +1,19 @@
-Options -Indexes +FollowSymLinks
 DirectoryIndex index.php index.html
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
 
-    # Redirect root to ERP
-    RewriteRule ^$ erp/ [L,R=302]
-
-    # Handle recruitment routing
-    RewriteCond %{REQUEST_URI} ^/recruitment
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^recruitment/(.*)$ recruitment/public/index.php?url=$1 [L,QSA]
+    # Allow direct access to existing files and directories
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
 
     # Handle ERP routing
-    RewriteCond %{REQUEST_URI} ^/erp
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^erp/(.*)$ erp/index.php?url=$1 [L,QSA]
+
+    # Handle recruitment routing
+    RewriteRule ^recruitment/(.*)$ recruitment/public/index.php?url=$1 [L,QSA]
 </IfModule>
 
 # Security: deny access to sensitive files

@@ -549,7 +549,7 @@ function formatNumber($num)
                             ?>
                             <div class="h-56 flex items-end justify-between gap-4">
                                 <?php foreach ($vesselContracts as $i => $vessel):
-                                    $height = ($vessel['count'] / $maxVesselCount) * 100;
+                                    $height = ($maxVesselCount > 0) ? ($vessel['count'] / $maxVesselCount) * 100 : 0;
                                     $color = $vesselColors[$i % 5];
                                 ?>
                                 <div class="flex-1 flex flex-col justify-end gap-2 h-full group">
@@ -581,7 +581,7 @@ function formatNumber($num)
                             ?>
                             <div class="h-56 flex items-end justify-between gap-4">
                                 <?php foreach ($monthlyData as $data):
-                                    $height = ($data['count'] / $maxMonthCount) * 100;
+                                    $height = $maxMonthCount > 0 ? ($data['count'] / $maxMonthCount) * 100 : 0;
                                     $isCurrentMonth = ($data['month'] === $currentMonth);
                                 ?>
                                 <div class="flex-1 flex flex-col justify-end gap-2 h-full group">

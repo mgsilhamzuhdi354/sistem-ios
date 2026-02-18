@@ -13,17 +13,10 @@ class RecruitmentHub extends BaseController
     {
         parent::__construct();
 
-        // Connect to recruitment database
-        $this->recruitmentDb = new \mysqli(
-            $_ENV['DB_HOST'] ?? 'localhost',
-            $_ENV['DB_USERNAME'] ?? 'root',
-            $_ENV['DB_PASSWORD'] ?? '',
-            $_ENV['RECRUITMENT_DB_NAME'] ?? 'recruitment_db',
-            $_ENV['DB_PORT'] ?? 3306
-        );
-
-        if ($this->recruitmentDb->connect_error) {
-            error_log("Recruitment DB connection failed: " . $this->recruitmentDb->connect_error);
+        // recruitmentDb is already connected by BaseController via connectDatabase()
+        // which includes Docker/NAS IP fallback logic
+        if (!$this->recruitmentDb || (property_exists($this->recruitmentDb, 'connect_error') && $this->recruitmentDb->connect_error)) {
+            error_log("RecruitmentHub: Recruitment DB not available via BaseController");
         }
     }
 

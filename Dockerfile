@@ -39,11 +39,22 @@ RUN if [ -f composer.json ]; then composer install --no-dev --optimize-autoloade
 # Back to root
 WORKDIR /var/www/html
 
+# Create required directories
+RUN mkdir -p /var/www/html/uploads \
+    && mkdir -p /var/www/html/erp/writable/logs \
+    && mkdir -p /var/www/html/erp/writable/cache \
+    && mkdir -p /var/www/html/erp/writable/session \
+    && mkdir -p /var/www/html/recruitment/writable/logs \
+    && mkdir -p /var/www/html/recruitment/writable/cache \
+    && mkdir -p /var/www/html/recruitment/writable/session
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
     && find /var/www/html -type f -exec chmod 644 {} \; \
     && find /var/www/html -type d -exec chmod 755 {} \; \
     && chmod -R 775 /var/www/html/uploads \
+    && chmod -R 775 /var/www/html/erp/writable \
+    && chmod -R 775 /var/www/html/recruitment/writable \
     && find /var/www/html -name '.htaccess' -exec chmod 644 {} \;
 
 # Configure Apache

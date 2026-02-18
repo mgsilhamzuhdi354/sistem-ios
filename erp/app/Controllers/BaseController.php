@@ -120,6 +120,44 @@ class BaseController
         // Enable auto-reconnect options
         mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
         
+        // On Linux/Docker: try multiple hosts if connection fails
+        $isWindows = (PHP_OS_FAMILY === 'Windows' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
+        
+        if (!$isWindows) {
+            // Docker: try primary host first, then fallback IPs
+            $hostsToTry = [
+                $config['hostname'],  // Primary (172.17.0.3)
+                '172.17.0.2',
+                '172.17.0.3',
+                '172.17.0.4',
+                '172.17.0.5',
+            ];
+            $hostsToTry = array_unique($hostsToTry);
+            
+            foreach ($hostsToTry as $host) {
+                try {
+                    $conn = @new \mysqli(
+                        $host,
+                        $config['username'],
+                        $config['password'],
+                        $config['database'],
+                        $config['port']
+                    );
+                    if (!$conn->connect_error) {
+                        $conn->set_charset($config['charset']);
+                        $conn->options(MYSQLI_OPT_CONNECT_TIMEOUT, 10);
+                        return $conn;
+                    }
+                } catch (\Exception $e) {
+                    // Try next host
+                    continue;
+                }
+            }
+            // All hosts failed
+            die('Database connection failed: Could not connect to MariaDB on any host. Tried: ' . implode(', ', $hostsToTry));
+        }
+        
+        // Windows/Laragon: direct connection
         $conn = new \mysqli(
             $config['hostname'],
             $config['username'],
