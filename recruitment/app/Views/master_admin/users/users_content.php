@@ -5,13 +5,14 @@
 .users-header .btn-add { background: linear-gradient(135deg, #1e3a5f, #2c5282); color: white; padding: 0.75rem 1.5rem; border-radius: 10px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s; }
 .users-header .btn-add:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3); }
 
-.user-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+.user-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
 .stat-card { background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 1rem; }
 .stat-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
 .stat-icon.master { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; }
 .stat-icon.admin { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: white; }
 .stat-icon.leader { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; }
 .stat-icon.crewing { background: linear-gradient(135deg, #10b981, #34d399); color: white; }
+.stat-icon.applicant { background: linear-gradient(135deg, #6366f1, #818cf8); color: white; }
 .stat-info .stat-value { font-size: 2rem; font-weight: 700; color: #1e293b; line-height: 1; }
 .stat-info .stat-label { color: #64748b; font-size: 0.875rem; margin-top: 0.25rem; }
 
@@ -22,6 +23,7 @@
 .section-header.admin { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: white; }
 .section-header.leader { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; }
 .section-header.crewing { background: linear-gradient(135deg, #10b981, #34d399); color: white; }
+.section-header.applicant { background: linear-gradient(135deg, #6366f1, #818cf8); color: white; }
 .section-header h3 { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; margin: 0; }
 .section-header .count { background: rgba(255,255,255,0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem; }
 
@@ -87,6 +89,13 @@
         <div class="stat-info">
             <div class="stat-value"><?= count($crewingStaff ?? []) ?></div>
             <div class="stat-label">Crewing Staff</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon applicant"><i class="fas fa-users"></i></div>
+        <div class="stat-info">
+            <div class="stat-value"><?= count($applicants ?? []) ?></div>
+            <div class="stat-label">Applicants</div>
         </div>
     </div>
 </div>
@@ -271,6 +280,59 @@
                         <i class="fas fa-pencil-alt"></i>
                     </a>
                     <form action="<?= url('/master-admin/users/delete/' . $user['id']) ?>" method="POST" style="display:inline;" onsubmit="return confirm('Delete this crewing staff?')">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="action-btn delete" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- Applicants -->
+    <div class="user-section" style="grid-column: 1 / -1;">
+        <div class="section-header applicant">
+            <h3><i class="fas fa-users"></i> Applicants</h3>
+            <span class="count"><?= count($applicants ?? []) ?></span>
+        </div>
+        <div class="user-list" style="max-height: 500px;">
+            <?php if (empty($applicants)): ?>
+            <div class="empty-state">
+                <i class="fas fa-user-slash"></i>
+                <p>No applicants yet</p>
+            </div>
+            <?php else: ?>
+            <?php foreach ($applicants as $user): ?>
+            <div class="user-item">
+                <div class="user-info">
+                    <div class="user-avatar <?= $user['is_online'] ? 'online' : '' ?>">
+                        <?php if (!empty($user['avatar'])): ?>
+                        <img src="<?= url('/uploads/avatars/' . $user['avatar']) ?>" alt="">
+                        <?php else: ?>
+                        <?= strtoupper(substr($user['full_name'], 0, 2)) ?>
+                        <?php endif; ?>
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name"><?= htmlspecialchars($user['full_name']) ?></div>
+                        <div class="user-email"><?= htmlspecialchars($user['email']) ?></div>
+                        <div class="user-meta">
+                            <span class="badge <?= $user['is_online'] ? 'badge-online' : 'badge-offline' ?>">
+                                <?= $user['is_online'] ? '● Online' : '○ Offline' ?>
+                            </span>
+                            <?php if (!empty($user['created_at'])): ?>
+                            • Joined <?= date('d M Y', strtotime($user['created_at'])) ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+                <div class="user-actions">
+                    <a href="<?= url('/master-admin/users/edit/' . $user['id']) ?>" class="action-btn edit" title="Edit">
+                        <i class="fas fa-pencil-alt"></i>
+                    </a>
+                    <form action="<?= url('/master-admin/users/delete/' . $user['id']) ?>" method="POST" style="display:inline;" onsubmit="return confirm('Delete this applicant?')">
                         <?= csrf_field() ?>
                         <button type="submit" class="action-btn delete" title="Delete">
                             <i class="fas fa-trash"></i>

@@ -75,6 +75,24 @@
                         <span>Crewing Staff</span>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="<?= url('/admin/email-settings') ?>" class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/admin/email-settings') !== false ? 'active' : '' ?>">
+                        <i class="fas fa-envelope-open-text"></i>
+                        <span>Email Settings</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= url('/admin/settings') ?>" class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/admin/settings') !== false ? 'active' : '' ?>">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= url('/admin/access-control') ?>" class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/admin/access-control') !== false ? 'active' : '' ?>">
+                        <i class="fas fa-user-shield"></i>
+                        <span>Access Control</span>
+                    </a>
+                </li>
             </ul>
         </nav>
         
@@ -107,7 +125,7 @@
                 
                 <div class="user-dropdown">
                     <button class="user-btn">
-                        <img src="<?= asset('images/avatar-default.png') ?>" alt="Avatar">
+                        <img src="<?= asset('images/avatar-default.svg') ?>" alt="Avatar">
                         <span><?= $_SESSION['user_name'] ?? 'Admin' ?></span>
                         <i class="fas fa-chevron-down"></i>
                     </button>

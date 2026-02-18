@@ -10,19 +10,19 @@ define('APPPATH', BASEPATH . 'app/');
 define('WRITEPATH', BASEPATH . 'writable/');
 define('FCPATH', BASEPATH);
 
-// Dynamic BASE_URL detection (works with localhost and production)
+// Load Composer Autoload & Environment Variables
+require_once BASEPATH . 'vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createImmutable(BASEPATH);
+$dotenv->safeLoad();
+
+// Dynamic BASE_URL detection for Laragon
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-
-// Detect environment
-$isProduction = (
-    strpos($host, 'localhost') === false &&
-    strpos($host, '127.0.0.1') === false
-);
-
-// Production: /erp/ | Local: /PT_indoocean/erp/
-$basePath = $isProduction ? '/erp/' : '/PT_indoocean/erp/';
+// Detect Laragon Pretty URL (.test domains)
+$isLaragonPrettyUrl = (strpos($host, '.test') !== false || strpos($host, '.local') !== false);
+$basePath = $isLaragonPrettyUrl ? '/erp/' : '/PT_indoocean/PT_indoocean/erp/';
 define('BASE_URL', $protocol . '://' . $host . $basePath);
+
 
 
 // Error reporting (disable in production)
@@ -39,8 +39,9 @@ if ($isHttps) {
 }
 session_start();
 
-// Load constants
+// Load constants and helpers
 require_once APPPATH . 'Config/Constants.php';
+require_once APPPATH . 'Helpers/common.php';
 
 // Simple Router with numeric ID support
 $uri = $_GET['url'] ?? '';
@@ -71,33 +72,8 @@ if (strpos($method, '-') !== false) {
     $method = lcfirst(str_replace(' ', '', ucwords(str_replace('-', ' ', $method))));
 }
 
-// Map controller name
-$controllerMap = [
-    'Dashboard' => 'Dashboard',
-    'Contracts' => 'Contract',
-    'Contract' => 'Contract',
-    'Vessels' => 'Vessel',
-    'Vessel' => 'Vessel',
-    'Clients' => 'Client',
-    'Client' => 'Client',
-    'Payroll' => 'Payroll',
-    'Reports' => 'Report',
-    'Report' => 'Report',
-    'Settings' => 'Settings',
-    'Notifications' => 'Notification',
-    'Notification' => 'Notification',
-    'Api' => 'Api',
-    // Authentication & User Management
-    'Auth' => 'Auth',
-    'Users' => 'UserManagement',
-    'User' => 'UserManagement',
-    // Crew & Document Management
-    'Crews' => 'Crew',
-    'Crew' => 'Crew',
-    'Documents' => 'CrewDocument',
-    'Document' => 'CrewDocument',
-];
-
+// Load routes configuration
+$controllerMap = require_once APPPATH . 'Config/Routes.php';
 $controllerName = $controllerMap[$controllerName] ?? $controllerName;
 $controllerFile = APPPATH . 'Controllers/' . $controllerName . '.php';
 
@@ -105,13 +81,25 @@ $controllerFile = APPPATH . 'Controllers/' . $controllerName . '.php';
 if (file_exists($controllerFile)) {
     require_once APPPATH . 'Controllers/BaseController.php';
     require_once $controllerFile;
-    
+
     $controllerClass = 'App\\Controllers\\' . $controllerName;
     $controller = new $controllerClass();
-    
-    // Check if method exists
+
+    // Remap method names that conflict with protected BaseController methods
+    $methodRemap = ['view' => 'viewContract'];
+    if (isset($methodRemap[$method])) {
+        $method = $methodRemap[$method];
+    }
+
+    // Check if method exists and is public
     if (method_exists($controller, $method)) {
-        echo call_user_func_array([$controller, $method], $params);
+        $ref = new ReflectionMethod($controller, $method);
+        if ($ref->isPublic()) {
+            echo call_user_func_array([$controller, $method], $params);
+        } else {
+            http_response_code(403);
+            echo "Method not accessible: $method in $controllerName";
+        }
     } else {
         http_response_code(404);
         echo "Method not found: $method in $controllerName";

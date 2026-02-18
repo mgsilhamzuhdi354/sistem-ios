@@ -175,7 +175,11 @@
                                     
                                     <div class="job-actions">
                                         <a href="<?= url('/jobs/' . $job['id']) ?>" class="btn btn-outline" data-translate="jobs.viewDetails">View Details</a>
-                                        <a href="<?= url('/jobs/' . $job['id']) ?>" class="btn btn-primary" data-translate="jobs.applyNow">Apply Now</a>
+                                        <?php if (isLoggedIn()): ?>
+                                            <a href="<?= url('/applicant/select-recruiter/' . $job['id']) ?>" class="btn btn-primary" data-translate="jobs.applyNow">Apply Now</a>
+                                        <?php else: ?>
+                                            <a href="<?= url('/login') ?>" class="btn btn-primary" data-translate="jobs.applyNow">Apply Now</a>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             <?php endforeach; ?>

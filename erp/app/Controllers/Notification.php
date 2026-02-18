@@ -24,11 +24,15 @@ class Notification extends BaseController
     {
         $data = [
             'title' => 'Notifications',
+            'currentPage' => 'notifications',
             'notifications' => $this->notificationModel->getForUser(null, 100),
             'flash' => $this->getFlash()
         ];
         
-        return $this->view('notifications/index', $data);
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
+        $view = $uiMode === 'modern' ? 'notifications/index_modern' : 'notifications/index';
+
+        return $this->view($view, $data);
     }
     
     public function getUnread()

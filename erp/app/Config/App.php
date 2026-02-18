@@ -1,11 +1,16 @@
 <?php
 /**
  * PT Indo Ocean - ERP System
- * Application Configuration
+ * Application Configuration (Laragon)
  */
 
+// Dynamic BASE_URL for Laragon
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$baseURL = $protocol . '://' . $host . '/PT_indoocean/erp/';
+
 return [
-    'baseURL' => 'http://localhost/PT_indoocean/erp%20sistem/public/',
+    'baseURL' => $baseURL,
     'indexPage' => '',
     'uriProtocol' => 'REQUEST_URI',
     'defaultLocale' => 'id',

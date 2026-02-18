@@ -327,6 +327,22 @@ class Mailer
     }
     
     /**
+     * Send payslip email
+     */
+    public function sendPayslip($email, $crewName, $payrollPeriod, $payrollItem)
+    {
+        $subject = "Slip Gaji / Payslip: {$payrollPeriod['period_name']} - PT Indo Ocean";
+        
+        $body = $this->getTemplate('payslip', [
+            'name' => $crewName,
+            'period' => $payrollPeriod,
+            'item' => $payrollItem
+        ]);
+        
+        return $this->send($email, $subject, $body);
+    }
+
+    /**
      * Send login notification
      */
     public function sendLoginNotification($email, $userName, $loginData)
@@ -479,6 +495,60 @@ class Mailer
                     </body></html>
                 ";
                 
+                
+            case 'payslip':
+                $currency = $data['item']['currency_code'];
+                $netSalary = number_format($data['item']['net_salary'], 2);
+                $basic = number_format($data['item']['basic_salary'], 2);
+                $allowances = number_format($data['item']['gross_salary'] - $data['item']['basic_salary'], 2);
+                $deductions = number_format($data['item']['total_deductions'], 2);
+                
+                return "
+                    <html><head>{$baseStyle}</head><body>
+                    <div class='container'>
+                        <div class='header'>
+                            <h1>PT Indo Ocean</h1>
+                            <p>Slip Gaji / Payslip</p>
+                        </div>
+                        <div class='content'>
+                            <p>Yth. <strong>{$data['name']}</strong>,</p>
+                            <p>Berikut adalah rincian gaji Anda untuk periode <strong>{$data['period']['period_name']}</strong>.</p>
+                            
+                            <table style='width:100%; border-collapse:collapse; margin:20px 0; background:#fff;'>
+                                <tr style='background:#f1f1f1;'>
+                                    <td style='padding:10px; border:1px solid #ddd;'><strong>Total Penerimaan (Net)</strong></td>
+                                    <td style='padding:10px; border:1px solid #ddd; text-align:right; font-size:18px; font-weight:bold; color:#0A2463;'>
+                                        {$currency} {$netSalary}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style='padding:10px; border:1px solid #ddd;'>Gaji Pokok</td>
+                                    <td style='padding:10px; border:1px solid #ddd; text-align:right;'>{$currency} {$basic}</td>
+                                </tr>
+                                <tr>
+                                    <td style='padding:10px; border:1px solid #ddd;'>Tunjangan & Lembur</td>
+                                    <td style='padding:10px; border:1px solid #ddd; text-align:right;'>{$currency} {$allowances}</td>
+                                </tr>
+                                <tr>
+                                    <td style='padding:10px; border:1px solid #ddd; color:#EF4444;'>Potongan</td>
+                                    <td style='padding:10px; border:1px solid #ddd; text-align:right; color:#EF4444;'>- {$currency} {$deductions}</td>
+                                </tr>
+                            </table>
+                            
+                            <p>Terima kasih atas kerja keras dan dedikasi Anda.</p>
+                            
+                            <div class='alert alert-warning' style='font-size:12px;'>
+                                Dokumen ini dihasilkan secara otomatis oleh sistem ERP.
+                            </div>
+                        </div>
+                        <div class='footer'>
+                            PT Indo Ocean Crew Management<br>
+                            Jalan ... (Alamat Lengkap Perusahaan)
+                        </div>
+                    </div>
+                    </body></html>
+                ";
+
             case 'login_notification':
                 return "
                     <html><head>{$baseStyle}</head><body>

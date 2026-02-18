@@ -71,9 +71,13 @@ class BaseController {
     }
     
     protected function json($data, $statusCode = 200) {
+        // Clean any buffered output (PHP warnings/notices) that would corrupt JSON
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
         http_response_code($statusCode);
         header('Content-Type: application/json');
-        echo json_encode($data);
+        echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
     }
     

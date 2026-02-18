@@ -75,6 +75,13 @@
                         </div>
                     </div>
 
+                    <!-- Ship Photo -->
+                    <?php if (!empty($job['ship_photo'])): ?>
+                    <div class="ship-photo-section">
+                        <img src="<?= url('/' . $job['ship_photo']) ?>" alt="<?= htmlspecialchars($job['title']) ?> Ship Photo" class="ship-photo">
+                    </div>
+                    <?php endif; ?>
+
                     <!-- Job Description -->
                     <div class="job-section">
                         <h2><i class="fas fa-file-alt"></i> Job Description</h2>
@@ -178,24 +185,18 @@
                                 View My Applications
                             </a>
                         <?php elseif (isLoggedIn()): ?>
-                            <form action="<?= url('/applicant/applications/apply/' . $job['id']) ?>" method="POST">
-                                <?= csrf_field() ?>
-                                <div class="form-group">
-                                    <label>Cover Letter (Optional)</label>
-                                    <textarea name="cover_letter" rows="4" placeholder="Why are you interested in this position?"></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label>Expected Salary (USD)</label>
-                                    <input type="number" name="expected_salary" placeholder="e.g., 5000">
-                                </div>
-                                <div class="form-group">
-                                    <label>Available From</label>
-                                    <input type="date" name="available_date">
-                                </div>
-                                <button type="submit" class="btn btn-primary btn-block btn-lg">
-                                    <i class="fas fa-paper-plane"></i> Apply Now
-                                </button>
-                            </form>
+                            <!-- Step 1: Pilih Perekrut -->
+                            <div style="text-align:center; margin-bottom: 1.25rem;">
+                                <i class="fas fa-user-tie" style="font-size: 2.5rem; color: #2563eb; margin-bottom: 0.75rem; display:block;"></i>
+                                <h4 style="margin: 0 0 0.35rem; color: #1e293b; font-size: 1rem;">Tertarik dengan posisi ini?</h4>
+                                <p style="margin: 0; color: #64748b; font-size: 0.85rem;">Pilih perekrut yang akan memproses lamaran Anda</p>
+                            </div>
+                            <a href="<?= url('/applicant/select-recruiter/' . $job['id']) ?>" class="btn btn-primary btn-block btn-lg" style="margin-bottom: 0.75rem;">
+                                <i class="fas fa-user-check"></i> Pilih Perekrut & Apply
+                            </a>
+                            <a href="<?= url('/applicant/random-recruiter/' . $job['id']) ?>" class="btn btn-outline btn-block" style="font-size: 0.85rem;">
+                                <i class="fas fa-shuffle"></i> Pilihkan Acak & Apply Langsung
+                            </a>
                         <?php else: ?>
                             <p class="login-notice">Please login or register to apply for this position.</p>
                             <a href="<?= url('/login') ?>" class="btn btn-primary btn-block">Login to Apply</a>

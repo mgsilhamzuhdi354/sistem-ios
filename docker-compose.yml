@@ -1,138 +1,78 @@
-# ================================================
-# PT Indoocean - Docker Compose Configuration
-# ================================================
-# Menjalankan:
-#   docker-compose up -d        (start)
-#   docker-compose down         (stop)
-#   docker-compose logs -f      (view logs)
-# ================================================
-
 version: '3.8'
 
 services:
-  # =============================================
-  # Nginx - Reverse Proxy & Static Files
-  # =============================================
-  nginx:
-    image: nginx:alpine
-    container_name: indoocean-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./:/var/www/html:ro
-      - ./uploads:/var/www/html/uploads
-    depends_on:
-      - php-erp
-      - php-recruitment
-    networks:
-      - indoocean-network
-
-  # =============================================
-  # PHP-FPM for ERP System
-  # =============================================
-  php-erp:
-    build:
-      context: ./docker/php
-      dockerfile: Dockerfile
-    container_name: indoocean-php-erp
-    restart: unless-stopped
-    volumes:
-      - ./erp:/var/www/html/erp
-      - ./uploads:/var/www/html/uploads
-    environment:
-      - DB_HOST=${DB_HOST:-mysql}
-      - DB_USER=${DB_USER:-indoocean}
-      - DB_PASS=${DB_PASS:-indoocean_secret}
-      - DB_NAME=${ERP_DB_NAME:-erp_db}
-      - APP_ENV=${APP_ENV:-development}
-    depends_on:
-      mysql:
-        condition: service_healthy
-    networks:
-      - indoocean-network
-
-  # =============================================
-  # PHP-FPM for Recruitment System
-  # =============================================
-  php-recruitment:
-    build:
-      context: ./docker/php
-      dockerfile: Dockerfile
-    container_name: indoocean-php-recruitment
-    restart: unless-stopped
-    volumes:
-      - ./recruitment:/var/www/html/recruitment
-      - ./uploads:/var/www/html/uploads
-    environment:
-      - DB_HOST=${DB_HOST:-mysql}
-      - DB_USER=${DB_USER:-indoocean}
-      - DB_PASS=${DB_PASS:-indoocean_secret}
-      - DB_NAME=${RECRUITMENT_DB_NAME:-recruitment_db}
-      - ERP_DB_NAME=${ERP_DB_NAME:-erp_db}
-      - APP_ENV=${APP_ENV:-development}
-    depends_on:
-      mysql:
-        condition: service_healthy
-    networks:
-      - indoocean-network
-
-  # =============================================
   # MySQL Database
-  # =============================================
   mysql:
     image: mysql:8.0
-    container_name: indoocean-mysql
+    container_name: indoocean_mysql
     restart: unless-stopped
-    ports:
-      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASS}
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
-    environment:
-      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASS:-root_secret}
-      - MYSQL_USER=${DB_USER:-indoocean}
-      - MYSQL_PASSWORD=${DB_PASS:-indoocean_secret}
+      - ./docker/mysql-init:/docker-entrypoint-initdb.d
+    networks:
+      - indoocean_network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - indoocean-network
 
-  # =============================================
-  # phpMyAdmin (Development Only)
-  # =============================================
-  phpmyadmin:
-    image: phpmyadmin:latest
-    container_name: indoocean-phpmyadmin
+  # PHP-Apache Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: indoocean_app
     restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      ERP_DB_NAME: ${ERP_DB_NAME}
+      RECRUITMENT_DB_NAME: ${RECRUITMENT_DB_NAME}
+      APP_ENV: ${APP_ENV}
+      APP_DEBUG: ${APP_DEBUG}
+    volumes:
+      - ./uploads:/var/www/html/uploads
+      - ./logs:/var/www/html/logs
     ports:
       - "8080:80"
-    environment:
-      - PMA_HOST=mysql
-      - PMA_USER=${DB_USER:-indoocean}
-      - PMA_PASSWORD=${DB_PASS:-indoocean_secret}
+    networks:
+      - indoocean_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PhpMyAdmin (Optional - untuk management database)
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: indoocean_phpmyadmin
+    restart: unless-stopped
     depends_on:
       - mysql
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: ${DB_ROOT_PASS}
+    ports:
+      - "8081:80"
     networks:
-      - indoocean-network
-    profiles:
-      - dev
+      - indoocean_network
 
-# =============================================
-# Volumes (Persistent Data)
-# =============================================
+networks:
+  indoocean_network:
+    driver: bridge
+
 volumes:
   mysql_data:
     driver: local
-
-# =============================================
-# Networks
-# =============================================
-networks:
-  indoocean-network:
-    driver: bridge

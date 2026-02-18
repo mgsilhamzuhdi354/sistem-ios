@@ -32,7 +32,7 @@
                 <tr>
                     <td>
                         <div class="user-cell">
-                            <img src="<?= $crew['avatar'] ? asset('uploads/avatars/' . $crew['avatar']) : asset('images/avatar-default.png') ?>" 
+                            <img src="<?= $crew['avatar'] ? asset('uploads/avatars/' . $crew['avatar']) : asset('images/avatar-default.svg') ?>" 
                                  alt="Avatar" class="avatar-sm">
                             <div class="user-info">
                                 <strong><?= htmlspecialchars($crew['full_name']) ?></strong>

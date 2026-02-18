@@ -22,7 +22,7 @@ class Permissions extends BaseController {
         // Get all roles (except Master Admin and Applicant)
         $roles = $this->db->query("
             SELECT * FROM roles 
-            WHERE id NOT IN (1, 5) 
+            WHERE id NOT IN (11, 3) 
             ORDER BY id
         ")->fetch_all(MYSQLI_ASSOC);
         
@@ -43,9 +43,12 @@ class Permissions extends BaseController {
         // Get current role permissions
         $rolePermissions = [];
         foreach ($roles as $role) {
-            $result = $this->db->query("
-                SELECT permission_id FROM role_permissions WHERE role_id = {$role['id']}
+            $rpStmt = $this->db->prepare("
+                SELECT permission_id FROM role_permissions WHERE role_id = ?
             ");
+            $rpStmt->bind_param('i', $role['id']);
+            $rpStmt->execute();
+            $result = $rpStmt->get_result();
             $perms = [];
             while ($row = $result->fetch_assoc()) {
                 $perms[] = $row['permission_id'];
@@ -68,8 +71,10 @@ class Permissions extends BaseController {
     public function updateRolePermissions($roleId) {
         validate_csrf();
         
+        $roleId = intval($roleId);
+        
         // Don't allow modifying Master Admin or Applicant
-        if ($roleId == 1 || $roleId == 5) {
+        if ($roleId == 11 || $roleId == 3) {
             flash('error', 'Role ini tidak dapat dimodifikasi');
             $this->redirect(url('/master-admin/permissions'));
         }
@@ -78,21 +83,25 @@ class Permissions extends BaseController {
         $permissionIds = $_POST['permissions'] ?? [];
         
         // Delete existing permissions for this role
-        $this->db->query("DELETE FROM role_permissions WHERE role_id = $roleId");
+        $delStmt = $this->db->prepare("DELETE FROM role_permissions WHERE role_id = ?");
+        $delStmt->bind_param('i', $roleId);
+        $delStmt->execute();
         
         // Insert new permissions
         if (!empty($permissionIds)) {
-            $values = [];
+            $insertStmt = $this->db->prepare("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)");
             foreach ($permissionIds as $permId) {
-                $permId = (int)$permId;
-                $values[] = "($roleId, $permId)";
+                $permId = intval($permId);
+                $insertStmt->bind_param('ii', $roleId, $permId);
+                $insertStmt->execute();
             }
-            $sql = "INSERT INTO role_permissions (role_id, permission_id) VALUES " . implode(',', $values);
-            $this->db->query($sql);
         }
         
         // Get role name for message
-        $role = $this->db->query("SELECT name FROM roles WHERE id = $roleId")->fetch_assoc();
+        $roleStmt = $this->db->prepare("SELECT name FROM roles WHERE id = ?");
+        $roleStmt->bind_param('i', $roleId);
+        $roleStmt->execute();
+        $role = $roleStmt->get_result()->fetch_assoc();
         
         flash('success', 'Permissions untuk role "' . ucfirst($role['name']) . '" berhasil diupdate');
         $this->redirect(url('/master-admin/permissions'));

@@ -45,7 +45,6 @@ class Profile extends BaseController {
         $employeeId = trim($this->input('employee_id'));
         $specialization = trim($this->input('specialization'));
         $maxApplications = intval($this->input('max_applications') ?: 50);
-        $bio = trim($this->input('bio'));
         
         $stmt = $this->db->prepare("UPDATE users SET full_name = ?, phone = ?, updated_at = NOW() WHERE id = ?");
         $stmt->bind_param('ssi', $fullName, $phone, $userId);
@@ -59,16 +58,16 @@ class Profile extends BaseController {
         if ($exists) {
             $stmt = $this->db->prepare("
                 UPDATE crewing_profiles SET 
-                    employee_id = ?, specialization = ?, max_applications = ?, bio = ?, updated_at = NOW()
+                    employee_id = ?, specialization = ?, max_applications = ?, updated_at = NOW()
                 WHERE user_id = ?
             ");
-            $stmt->bind_param('ssisi', $employeeId, $specialization, $maxApplications, $bio, $userId);
+            $stmt->bind_param('ssii', $employeeId, $specialization, $maxApplications, $userId);
         } else {
             $stmt = $this->db->prepare("
-                INSERT INTO crewing_profiles (user_id, employee_id, specialization, max_applications, bio)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO crewing_profiles (user_id, employee_id, specialization, max_applications)
+                VALUES (?, ?, ?, ?)
             ");
-            $stmt->bind_param('issis', $userId, $employeeId, $specialization, $maxApplications, $bio);
+            $stmt->bind_param('issi', $userId, $employeeId, $specialization, $maxApplications);
         }
         $stmt->execute();
         
@@ -98,8 +97,8 @@ class Profile extends BaseController {
             return $this->json(['success' => false, 'message' => 'Invalid file type']);
         }
         
-        if ($file['size'] > 2 * 1024 * 1024) {
-            return $this->json(['success' => false, 'message' => 'File too large. Max 2MB']);
+        if ($file['size'] > 10 * 1024 * 1024) {
+            return $this->json(['success' => false, 'message' => 'File too large. Max 10MB']);
         }
         
         $uploadDir = FCPATH . 'uploads/avatars/';
@@ -119,6 +118,74 @@ class Profile extends BaseController {
         }
         
         return $this->json(['success' => false, 'message' => 'Upload failed']);
+    }
+    
+    /**
+     * Upload recruiter photo (NEW - for recruiter selection feature)
+     * Optimized with image resizing for performance
+     */
+    public function uploadPhoto() {
+        if (!$this->isPost()) {
+            flash('error', 'Invalid request');
+            redirect(url('/crewing/profile'));
+        }
+        
+        $userId = $_SESSION['user_id'];
+        
+        if (!isset($_FILES['photo']) || $_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
+            flash('error', 'No file uploaded');
+            redirect(url('/crewing/profile'));
+        }
+        
+        $file = $_FILES['photo'];
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        
+        // Validate file type
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+        
+        if (!in_array($mimeType, $allowedTypes)) {
+            flash('error', 'Invalid file type. Please upload JPG or PNG only.');
+            redirect(url('/crewing/profile'));
+        }
+        
+        // Validate file size (max 10MB)
+        if ($file['size'] > 10 * 1024 * 1024) {
+            flash('error', 'File too large. Maximum size is 10MB.');
+            redirect(url('/crewing/profile'));
+        }
+        
+        $uploadDir = FCPATH . 'uploads/recruiters/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+        
+        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = 'recruiter_' . $userId . '_' . time() . '.' . $ext;
+        $targetPath = $uploadDir . $filename;
+        
+        // Simple upload (resize can be added later if needed)
+        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+            // Update crewing_profiles table
+            $checkStmt = $this->db->prepare("SELECT id FROM crewing_profiles WHERE user_id = ?");
+            $checkStmt->bind_param('i', $userId);
+            $checkStmt->execute();
+            $exists = $checkStmt->get_result()->fetch_assoc();
+            
+            if ($exists) {
+                $stmt = $this->db->prepare("UPDATE crewing_profiles SET photo = ?, updated_at = NOW() WHERE user_id = ?");
+                $stmt->bind_param('si', $filename, $userId);
+            } else {
+                $stmt = $this->db->prepare("INSERT INTO crewing_profiles (user_id, photo, created_at) VALUES (?, ?, NOW())");
+                $stmt->bind_param('is', $userId, $filename);
+            }
+            $stmt->execute();
+            
+            flash('success', '✓ Recruiter photo uploaded successfully!');
+            redirect(url('/crewing/profile'));
+        }
+        
+        flash('error', 'Failed to upload photo. Please try again.');
+        redirect(url('/crewing/profile'));
     }
     
     public function changePassword() {

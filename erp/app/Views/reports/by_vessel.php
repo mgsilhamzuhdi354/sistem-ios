@@ -29,11 +29,11 @@ ob_start();
                 <div style="text-align: right;">
                     <span class="badge badge-info"><?= count($vessel['crew_list'] ?? []) ?> Crew</span>
                     <span style="font-size: 18px; color: var(--accent-gold); font-weight: 700; margin-left: 16px;">
-                        $<?= number_format($vessel['monthly_cost'] ?? 0, 2) ?>/mo
+                        $<?= number_format($vessel['monthly_cost']['total_usd'] ?? 0, 2) ?>/mo
                     </span>
                 </div>
             </div>
-            
+
             <?php if (empty($vessel['crew_list'])): ?>
                 <p style="color: var(--text-muted);">No active crew assigned</p>
             <?php else: ?>
@@ -56,9 +56,10 @@ ob_start();
                             <tr>
                                 <td><?= htmlspecialchars($crew['rank_name'] ?? '-') ?></td>
                                 <td><strong><?= htmlspecialchars($crew['crew_name']) ?></strong></td>
-                                <td><a href="<?= BASE_URL ?>contracts/<?= $crew['id'] ?>" style="color: var(--accent-gold);"><?= htmlspecialchars($crew['contract_no']) ?></a></td>
+                                <td><a href="<?= BASE_URL ?>contracts/<?= $crew['id'] ?>"
+                                        style="color: var(--accent-gold);"><?= htmlspecialchars($crew['contract_no']) ?></a></td>
                                 <td><?= $crew['sign_off_date'] ? date('d M Y', strtotime($crew['sign_off_date'])) : '-' ?></td>
-                                <td><?= $d !== null ? '<span class="badge badge-'.$dClass.'">'.$d.' days</span>' : '-' ?></td>
+                                <td><?= $d !== null ? '<span class="badge badge-' . $dClass . '">' . $d . ' days</span>' : '-' ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

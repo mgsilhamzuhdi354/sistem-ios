@@ -8,13 +8,13 @@ ob_start();
 ?>
 
 <div class="page-header">
-    <h1><?= $isEdit ? 'Edit Vessel' : 'Add New Vessel' ?></h1>
-    <p><?= $isEdit ? 'Update vessel details' : 'Enter vessel information below' ?></p>
+    <h1 data-translate="<?= $isEdit ? 'edit_vessel' : 'add_new_vessel' ?>"><?= $isEdit ? 'Edit Vessel' : 'Add New Vessel' ?></h1>
+    <p data-translate="<?= $isEdit ? 'update_vessel_subtitle' : 'vessel_form_subtitle' ?>"><?= $isEdit ? 'Update vessel details' : 'Enter vessel information below' ?></p>
 </div>
 
 <form method="POST" action="<?= BASE_URL ?>vessels/<?= $isEdit ? 'update/' . $vessel['id'] : 'store' ?>">
     <div class="card" style="margin-bottom: 24px;">
-        <h3 style="margin-bottom: 16px;"><i class="fas fa-ship" style="color: var(--accent-gold);"></i> Vessel Information</h3>
+        <h3 style="margin-bottom: 16px;"><i class="fas fa-ship" style="color: var(--accent-gold);"></i> <span data-translate="vessel_information">Vessel Information</span></h3>
         
         <div class="form-row">
             <div class="form-group">
@@ -68,7 +68,7 @@ ob_start();
     </div>
     
     <div class="card" style="margin-bottom: 24px;">
-        <h3 style="margin-bottom: 16px;"><i class="fas fa-info-circle" style="color: var(--accent-gold);"></i> Technical Details</h3>
+        <h3 style="margin-bottom: 16px;"><i class="fas fa-info-circle" style="color: var(--accent-gold);"></i> <span data-translate="technical_details">Technical Details</span></h3>
         
         <div class="form-row">
             <div class="form-group">
@@ -117,9 +117,9 @@ ob_start();
     </div>
     
     <div style="display: flex; gap: 12px; justify-content: flex-end;">
-        <a href="<?= BASE_URL ?>vessels" class="btn btn-secondary">Cancel</a>
+        <a href="<?= BASE_URL ?>vessels" class="btn btn-secondary" data-translate="btn_cancel">Cancel</a>
         <button type="submit" class="btn btn-primary">
-            <i class="fas fa-save"></i> <?= $isEdit ? 'Update Vessel' : 'Add Vessel' ?>
+            <i class="fas fa-save"></i> <span data-translate="<?= $isEdit ? 'update_vessel' : 'add_vessel' ?>"><?= $isEdit ? 'Update Vessel' : 'Add Vessel' ?></span>
         </button>
     </div>
 </form>

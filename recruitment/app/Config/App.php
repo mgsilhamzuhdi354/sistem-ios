@@ -1,26 +1,28 @@
 <?php
 /**
  * PT Indo Ocean Crew Services - Recruitment System
- * Application Configuration
+ * Application Configuration (Laragon)
  */
 
-// Detect environment
-$isProduction = (
-    isset($_SERVER['HTTP_HOST']) && 
-    strpos($_SERVER['HTTP_HOST'], 'localhost') === false &&
-    strpos($_SERVER['HTTP_HOST'], '127.0.0.1') === false
-);
-
+// Dynamic BASE_URL for multiple environments
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 
-// Production: /recruitment/ | Local: /PT_indoocean/recruitment/public/
-$basePath = $isProduction ? '/recruitment/' : '/PT_indoocean/recruitment/public/';
+// Detect if using Laragon Pretty URL (*.test domains)
+$isLaragonPrettyUrl = (strpos($host, '.test') !== false || strpos($host, '.local') !== false);
+
+if ($isLaragonPrettyUrl) {
+    // Laragon: domain.test/recruitment/public/
+    $baseURL = $protocol . '://' . $host . '/recruitment/public/';
+} else {
+    // Localhost: localhost/indoocean/recruitment/public/
+    $baseURL = $protocol . '://' . $host . '/indoocean/recruitment/public/';
+}
 
 return [
     'appName'    => 'PT Indo Ocean Crew Services - Recruitment',
     'appVersion' => '1.0.0',
-    'baseURL'    => $protocol . '://' . $host . $basePath,
+    'baseURL'    => $baseURL,
     'indexPage'  => '',
     'timezone'   => 'Asia/Jakarta',
     'language'   => 'id',

@@ -130,33 +130,45 @@ class Auth extends BaseController
         $mailer = new Mailer();
         $emailSent = $mailer->sendOtpCode($user['email'], $otpCode, $user['full_name']);
         
-        if (!$emailSent) {
-            // DEVELOPMENT MODE: If email fails, bypass OTP and login directly
-            // Remove or comment this block in production!
+if (!$emailSent) {
+            // Strict Security: Only allow bypass in LOCAL environment
+            $isLocal = ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?? 'production') === 'local' || 
+                       ($_SERVER['HTTP_HOST'] === 'localhost') ||
+                       (strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false);
             
-            $this->loginHistoryModel->logAttempt($user['id'], 'success', 'OTP bypassed - SMTP unavailable');
+            if ($isLocal) {
+                // ALLOW BYPASS FOR DEV ONLY
+                $this->loginHistoryModel->logAttempt($user['id'], 'success', 'OTP bypassed - Local Dev Mode');
+                
+                // Regenerate session ID for security
+                session_regenerate_id(true);
+                
+                // Set session
+                $_SESSION['user'] = [
+                    'id' => $user['id'],
+                    'username' => $user['username'],
+                    'email' => $user['email'],
+                    'role' => $user['role'],
+                    'full_name' => $user['full_name'],
+                    'avatar' => $user['avatar'] ?? null
+                ];
+                
+                $_SESSION['login_time'] = time();
+                $_SESSION['last_activity'] = time();
+                $_SESSION['ui_mode'] = 'modern';
+                
+                // Log activity
+                $this->activityModel->log($user['id'], 'login', 'user', $user['id'], 'User logged in (OTP bypassed - Local Mode)');
+                
+                $this->setFlash('warning', 'Peringatan: Login berhasil lewat bypass OTP (Mode Local). Konfigurasi SMTP Anda belum aktif.');
+                $this->redirect('');
+                return;
+            }
             
-            // Regenerate session ID for security
-            session_regenerate_id(true);
-            
-            // Set session
-            $_SESSION['user'] = [
-                'id' => $user['id'],
-                'username' => $user['username'],
-                'email' => $user['email'],
-                'role' => $user['role'],
-                'full_name' => $user['full_name'],
-                'avatar' => $user['avatar'] ?? null
-            ];
-            
-            $_SESSION['login_time'] = time();
-            $_SESSION['last_activity'] = time();
-            
-            // Log activity
-            $this->activityModel->log($user['id'], 'login', 'user', $user['id'], 'User logged in (OTP bypassed - dev mode)');
-            
-            $this->setFlash('success', 'Selamat datang, ' . $user['full_name'] . '! (OTP dilewati - SMTP tidak tersedia)');
-            $this->redirect('');
+            // PRODUCTION: DENY LOGIN if OTP fails
+            $this->loginHistoryModel->logAttempt($user['id'], 'failed', 'OTP Send Failed - SMTP Error');
+            $this->setFlash('error', 'Gagal mengirim kode OTP. Sistem email sedang gangguan. Hubungi IT Support.');
+            $this->redirect('auth/login');
             return;
         }
         
@@ -246,6 +258,7 @@ class Auth extends BaseController
         
         $_SESSION['login_time'] = time();
         $_SESSION['last_activity'] = time();
+        $_SESSION['ui_mode'] = 'modern';
         
         // Log activity
         $this->activityModel->log($user['id'], 'login', 'user', $user['id'], 'User logged in with 2FA');
@@ -327,6 +340,73 @@ class Auth extends BaseController
         if (strpos($userAgent, 'Opera') !== false) return 'Opera';
         
         return 'Unknown Browser';
+    }
+    
+    /**
+     * DEV BYPASS - Auto login without password/OTP (LOCALHOST ONLY)
+     * Access via: /auth/dev-bypass
+     * WARNING: Remove this method in production!
+     */
+    public function devBypass()
+    {
+        // STRICT: Only allow on localhost
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        $isLocal = ($host === 'localhost') || 
+                   (strpos($host, '127.0.0.1') !== false) ||
+                   (strpos($host, '::1') !== false);
+        
+        if (!$isLocal) {
+            $this->setFlash('error', 'Dev bypass is only available on localhost.');
+            $this->redirect('auth/login');
+            return;
+        }
+        
+        // Find first active user - try known usernames
+        $user = null;
+        $tryUsers = ['admin', 'mgs.ilham.zuhdi', 'administrator'];
+        foreach ($tryUsers as $tryLogin) {
+            $user = $this->userModel->findByLogin($tryLogin);
+            if ($user) break;
+        }
+        
+        // Fallback: get any user from model
+        if (!$user) {
+            $allUsers = $this->userModel->getAll();
+            $user = $allUsers[0] ?? null;
+        }
+        
+        if (!$user) {
+            $this->setFlash('error', 'No active users found in database.');
+            $this->redirect('auth/login');
+            return;
+        }
+        
+        // Unlock account if locked
+        $this->userModel->resetLoginAttempts($user['id']);
+        
+        // Regenerate session
+        session_regenerate_id(true);
+        
+        // Set session directly
+        $_SESSION['user'] = [
+            'id' => $user['id'],
+            'username' => $user['username'],
+            'email' => $user['email'],
+            'role' => $user['role'],
+            'full_name' => $user['full_name'],
+            'avatar' => $user['avatar'] ?? null
+        ];
+        
+        $_SESSION['login_time'] = time();
+        $_SESSION['last_activity'] = time();
+        $_SESSION['ui_mode'] = 'modern';
+        
+        // Log
+        $this->loginHistoryModel->logAttempt($user['id'], 'success', 'Dev Bypass Login');
+        $this->activityModel->log($user['id'], 'login', 'user', $user['id'], 'Dev Bypass Login (localhost)');
+        
+        $this->setFlash('warning', '⚠️ Dev Bypass Login as: ' . $user['full_name'] . ' (' . $user['role'] . ')');
+        $this->redirect('');
     }
     
     /**

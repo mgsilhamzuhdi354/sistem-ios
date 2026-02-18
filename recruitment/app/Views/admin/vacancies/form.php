@@ -1,31 +1,133 @@
+<?php
+if (isMasterAdmin()) {
+    $content = 'vacancies/form';
+    include APPPATH . 'Views/layouts/master_admin.php';
+    return;
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= isset($vacancy) ? 'Edit' : 'Create' ?> Vacancy - Admin | PT Indo Ocean Crew</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
+    <?php if (isMasterAdmin()): ?>
+        <style>
+            .admin-sidebar {
+                background: linear-gradient(180deg, #1e3a5f 0%, #0d1f33 100%);
+            }
+
+            .nav-link.active {
+                background: linear-gradient(90deg, #dc2626 0%, #b91c1c 100%);
+            }
+
+            .nav-link:hover {
+                background: rgba(220, 38, 38, 0.2);
+            }
+        </style>
+    <?php endif; ?>
 </head>
+
 <body class="admin-body">
     <aside class="admin-sidebar" id="sidebar">
         <div class="sidebar-header">
-            <a href="<?= url('/admin') ?>" class="logo"><img src="<?= asset('images/logo.jpg') ?>" alt="Indo Ocean" style="width:32px;height:32px;object-fit:contain;"><span>Recruitment</span></a>
+            <?php if (isMasterAdmin()): ?>
+                <a href="<?= url('/master-admin') ?>" class="logo"><img src="<?= asset('images/logo.jpg') ?>"
+                        alt="Indo Ocean" style="width:32px;height:32px;object-fit:contain;"><span>Master Admin</span></a>
+            <?php else: ?>
+                <a href="<?= url('/admin') ?>" class="logo"><img src="<?= asset('images/logo.jpg') ?>" alt="Indo Ocean"
+                        style="width:32px;height:32px;object-fit:contain;"><span>Recruitment</span></a>
+            <?php endif; ?>
         </div>
         <nav class="sidebar-nav">
             <ul>
-                <li><a href="<?= url('/admin/dashboard') ?>" class="nav-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
-                <li><a href="<?= url('/admin/vacancies') ?>" class="nav-link active"><i class="fas fa-briefcase"></i><span>Job Vacancies</span></a></li>
-                <li><a href="<?= url('/admin/applicants') ?>" class="nav-link"><i class="fas fa-users"></i><span>Applicants</span></a></li>
-                <li><a href="<?= url('/admin/applicants/pipeline') ?>" class="nav-link"><i class="fas fa-stream"></i><span>Pipeline</span></a></li>
-                <li><a href="<?= url('/admin/interviews') ?>" class="nav-link"><i class="fas fa-robot"></i><span>AI Interviews</span></a></li>
-                <li><a href="<?= url('/admin/documents') ?>" class="nav-link"><i class="fas fa-file-alt"></i><span>Documents</span></a></li>
-                <li><a href="<?= url('/admin/medical') ?>" class="nav-link"><i class="fas fa-heartbeat"></i><span>Medical</span></a></li>
+                <?php if (isMasterAdmin()): ?>
+                    <li class="nav-item">
+                        <a href="<?= url('/master-admin/dashboard') ?>" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/master-admin/users') ?>" class="nav-link">
+                            <i class="fas fa-users-cog"></i>
+                            <span>User Management</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/master-admin/vacancies') ?>" class="nav-link active">
+                            <i class="fas fa-briefcase"></i>
+                            <span>Job Vacancies</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/master-admin/pipeline') ?>" class="nav-link">
+                            <i class="fas fa-stream"></i>
+                            <span>Pipeline</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/master-admin/requests') ?>" class="nav-link">
+                            <i class="fas fa-clipboard-check"></i>
+                            <span>Requests</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/admin/interviews') ?>" class="nav-link">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Interview</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/admin/documents') ?>" class="nav-link">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Documents</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/admin/medical') ?>" class="nav-link">
+                            <i class="fas fa-heartbeat"></i>
+                            <span>Medical</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/master-admin/reports') ?>" class="nav-link">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/master-admin/settings') ?>" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                <?php else: ?>
+                    <li><a href="<?= url('/admin/dashboard') ?>" class="nav-link"><i
+                                class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+                    <li><a href="<?= url('/admin/vacancies') ?>" class="nav-link active"><i
+                                class="fas fa-briefcase"></i><span>Job Vacancies</span></a></li>
+                    <li><a href="<?= url('/admin/applicants') ?>" class="nav-link"><i
+                                class="fas fa-users"></i><span>Applicants</span></a></li>
+                    <li><a href="<?= url('/admin/applicants/pipeline') ?>" class="nav-link"><i
+                                class="fas fa-stream"></i><span>Pipeline</span></a></li>
+                    <li><a href="<?= url('/admin/interviews') ?>" class="nav-link"><i class="fas fa-robot"></i><span>AI
+                                Interviews</span></a></li>
+                    <li><a href="<?= url('/admin/documents') ?>" class="nav-link"><i
+                                class="fas fa-file-alt"></i><span>Documents</span></a></li>
+                    <li><a href="<?= url('/admin/medical') ?>" class="nav-link"><i
+                                class="fas fa-heartbeat"></i><span>Medical</span></a></li>
+                <?php endif; ?>
             </ul>
         </nav>
         <div class="sidebar-footer">
-            <a href="<?= url('/logout') ?>" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+            <a href="<?= url('/logout') ?>" class="logout-btn"><i
+                    class="fas fa-sign-out-alt"></i><span>Logout</span></a>
         </div>
     </aside>
 
@@ -49,24 +151,29 @@
         <div class="admin-content">
             <div class="page-header">
                 <div>
-                    <a href="<?= url('/admin/vacancies') ?>" class="back-link"><i class="fas fa-arrow-left"></i> Back to Vacancies</a>
+                    <a href="<?= url('/admin/vacancies') ?>" class="back-link"><i class="fas fa-arrow-left"></i> Back to
+                        Vacancies</a>
                     <h1><?= isset($vacancy) ? 'Edit Vacancy' : 'Create New Vacancy' ?></h1>
                 </div>
             </div>
 
-            <form action="<?= url('/admin/vacancies/' . (isset($vacancy) ? 'update/' . $vacancy['id'] : 'store')) ?>" method="POST" class="vacancy-form">
+            <form action="<?= url('/admin/vacancies/' . (isset($vacancy) ? 'update/' . $vacancy['id'] : 'store')) ?>"
+                method="POST" class="vacancy-form" enctype="multipart/form-data">
                 <?= csrf_field() ?>
-                
+
                 <div class="form-grid">
                     <div class="form-main">
                         <div class="card">
-                            <div class="card-header"><h3>Basic Information</h3></div>
+                            <div class="card-header">
+                                <h3>Basic Information</h3>
+                            </div>
                             <div class="card-body">
                                 <div class="form-group">
                                     <label>Job Title <span class="required">*</span></label>
-                                    <input type="text" name="title" class="form-control" value="<?= htmlspecialchars($vacancy['title'] ?? old('title')) ?>" required>
+                                    <input type="text" name="title" class="form-control"
+                                        value="<?= htmlspecialchars($vacancy['title'] ?? old('title')) ?>" required>
                                 </div>
-                                
+
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label>Department <span class="required">*</span></label>
@@ -91,48 +198,77 @@
                                         </select>
                                     </div>
                                 </div>
-                                
+
+                                <div class="form-group">
+                                    <label>Ship Photo</label>
+                                    <div class="ship-photo-upload">
+                                        <?php if (isset($vacancy['ship_photo']) && $vacancy['ship_photo']): ?>
+                                            <div class="current-photo">
+                                                <img src="<?= asset($vacancy['ship_photo']) ?>" alt="Ship Photo" id="shipPhotoPreview">
+                                                <p class="text-muted">Current ship photo</p>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="current-photo" id="photoPreviewContainer" style="display: none;">
+                                                <img src="" alt="Ship Photo Preview" id="shipPhotoPreview">
+                                                <p class="text-muted">Photo preview</p>
+                                            </div>
+                                        <?php endif; ?>
+                                        <input type="file" name="ship_photo" id="shipPhotoInput" class="form-control" accept="image/jpeg,image/jpg,image/png">
+                                        <small class="form-text text-muted">Upload ship photo (JPG, PNG, max 5MB)</small>
+                                    </div>
+                                </div>
+
                                 <div class="form-group">
                                     <label>Description <span class="required">*</span></label>
-                                    <textarea name="description" class="form-control" rows="6" required><?= htmlspecialchars($vacancy['description'] ?? old('description')) ?></textarea>
+                                    <textarea name="description" class="form-control" rows="6"
+                                        required><?= htmlspecialchars($vacancy['description'] ?? old('description')) ?></textarea>
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label>Requirements</label>
-                                    <textarea name="requirements" class="form-control" rows="4" placeholder="Enter each requirement on a new line"><?= htmlspecialchars($vacancy['requirements'] ?? old('requirements')) ?></textarea>
+                                    <textarea name="requirements" class="form-control" rows="4"
+                                        placeholder="Enter each requirement on a new line"><?= htmlspecialchars($vacancy['requirements'] ?? old('requirements')) ?></textarea>
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label>Required Certificates</label>
-                                    <textarea name="certificates_required" class="form-control" rows="3" placeholder="Enter required certificates"><?= htmlspecialchars($vacancy['certificates_required'] ?? old('certificates_required')) ?></textarea>
+                                    <textarea name="certificates_required" class="form-control" rows="3"
+                                        placeholder="Enter required certificates"><?= htmlspecialchars($vacancy['certificates_required'] ?? old('certificates_required')) ?></textarea>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="form-sidebar">
                         <div class="card">
-                            <div class="card-header"><h3>Compensation</h3></div>
+                            <div class="card-header">
+                                <h3>Compensation</h3>
+                            </div>
                             <div class="card-body">
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label>Min Salary ($)</label>
-                                        <input type="number" name="salary_min" class="form-control" value="<?= $vacancy['salary_min'] ?? old('salary_min') ?>">
+                                        <input type="number" name="salary_min" class="form-control"
+                                            value="<?= $vacancy['salary_min'] ?? old('salary_min') ?>">
                                     </div>
                                     <div class="form-group">
                                         <label>Max Salary ($)</label>
-                                        <input type="number" name="salary_max" class="form-control" value="<?= $vacancy['salary_max'] ?? old('salary_max') ?>">
+                                        <input type="number" name="salary_max" class="form-control"
+                                            value="<?= $vacancy['salary_max'] ?? old('salary_max') ?>">
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label>Contract Duration (months)</label>
-                                    <input type="number" name="contract_duration_months" class="form-control" value="<?= $vacancy['contract_duration_months'] ?? old('contract_duration_months') ?? 6 ?>">
+                                    <input type="number" name="contract_duration_months" class="form-control"
+                                        value="<?= $vacancy['contract_duration_months'] ?? old('contract_duration_months') ?? 6 ?>">
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="card">
-                            <div class="card-header"><h3>Settings</h3></div>
+                            <div class="card-header">
+                                <h3>Settings</h3>
+                            </div>
                             <div class="card-body">
                                 <div class="form-group">
                                     <label>Status</label>
@@ -144,21 +280,25 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Positions Available</label>
-                                    <input type="number" name="positions_available" class="form-control" value="<?= $vacancy['positions_available'] ?? old('positions_available') ?? 1 ?>" min="1">
+                                    <input type="number" name="positions_available" class="form-control"
+                                        value="<?= $vacancy['positions_available'] ?? old('positions_available') ?? 1 ?>"
+                                        min="1">
                                 </div>
                                 <div class="form-group">
                                     <label>Application Deadline</label>
-                                    <input type="date" name="deadline" class="form-control" value="<?= $vacancy['deadline'] ?? old('deadline') ?>">
+                                    <input type="date" name="deadline" class="form-control"
+                                        value="<?= $vacancy['deadline'] ?? old('deadline') ?>">
                                 </div>
                                 <div class="form-group">
                                     <label class="checkbox-label">
-                                        <input type="checkbox" name="is_featured" value="1" <?= !empty($vacancy['is_featured']) ? 'checked' : '' ?>>
+                                        <input type="checkbox" name="is_featured" value="1"
+                                            <?= !empty($vacancy['is_featured']) ? 'checked' : '' ?>>
                                         Featured Vacancy
                                     </label>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary btn-block">
                                 <i class="fas fa-save"></i> <?= isset($vacancy) ? 'Update Vacancy' : 'Create Vacancy' ?>
@@ -172,22 +312,153 @@
     </div>
 
     <style>
-    .back-link { color: #0A2463; font-size: 14px; display: inline-flex; align-items: center; gap: 5px; margin-bottom: 10px; }
-    .form-grid { display: grid; grid-template-columns: 1fr 350px; gap: 25px; }
-    .form-main .card, .form-sidebar .card { margin-bottom: 20px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-    .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; font-size: 14px; font-weight: 500; color: #333; margin-bottom: 8px; }
-    .form-group .required { color: #dc3545; }
-    .form-control { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; transition: all 0.3s; }
-    .form-control:focus { border-color: #0A2463; outline: none; box-shadow: 0 0 0 3px rgba(10,36,99,0.1); }
-    textarea.form-control { resize: vertical; }
-    .checkbox-label { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-    .checkbox-label input { width: 18px; height: 18px; }
-    .form-actions { margin-top: 20px; }
-    .btn-block { width: 100%; margin-bottom: 10px; }
-    @media (max-width: 992px) { .form-grid { grid-template-columns: 1fr; } }
+        .back-link {
+            color: #0A2463;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 25px;
+        }
+
+        .form-main .card,
+        .form-sidebar .card {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-group .required {
+            color: #dc3545;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: #0A2463;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .checkbox-label input {
+            width: 18px;
+            height: 18px;
+        }
+
+        .form-actions {
+            margin-top: 20px;
+        }
+
+        .btn-block {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .ship-photo-upload {
+            margin-top: 10px;
+        }
+
+        .current-photo {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .current-photo img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            object-fit: cover;
+        }
+
+        .current-photo .text-muted {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        @media (max-width: 992px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
     <script src="<?= asset('js/admin.js') ?>"></script>
+    <script>
+        // Ship photo preview
+        document.getElementById('shipPhotoInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate file size (5MB max)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size too large. Maximum 5MB allowed.');
+                    this.value = '';
+                    return;
+                }
+
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Invalid file type. Only JPG and PNG allowed.');
+                    this.value = '';
+                    return;
+                }
+
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('shipPhotoPreview');
+                    const container = document.getElementById('photoPreviewContainer');
+                    
+                    if (preview && container) {
+                        preview.src = e.target.result;
+                        container.style.display = 'block';
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
 </body>
+
 </html>

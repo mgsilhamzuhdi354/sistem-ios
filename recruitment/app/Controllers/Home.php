@@ -7,12 +7,15 @@ require_once APPPATH . 'Controllers/BaseController.php';
 class Home extends BaseController {
     
     public function index() {
-        // Get featured vacancies
+        // Get featured vacancies with recruiter info
         $stmt = $this->db->prepare("
-            SELECT v.*, d.name as department_name, d.icon as department_icon, vt.name as vessel_type
+            SELECT v.*, d.name as department_name, d.icon as department_icon, vt.name as vessel_type,
+                   u.full_name as recruiter_name, cp.photo as recruiter_photo
             FROM job_vacancies v
             LEFT JOIN departments d ON v.department_id = d.id
             LEFT JOIN vessel_types vt ON v.vessel_type_id = vt.id
+            LEFT JOIN users u ON v.created_by = u.id
+            LEFT JOIN crewing_profiles cp ON u.id = cp.user_id
             WHERE v.status = 'published' AND v.is_featured = 1
             ORDER BY v.created_at DESC
             LIMIT 6

@@ -99,6 +99,20 @@ class Medical extends BaseController {
             $notifStmt->bind_param('iss', $app['user_id'], $message, $actionUrl);
             $notifStmt->execute();
             
+            // Send email notification
+            try {
+                require_once APPPATH . 'Libraries/Mailer.php';
+                $mailer = new Mailer($this->db);
+                $mailer->sendTemplate($app['user_id'], 'medical_checkup_scheduled', [
+                    'scheduled_date' => date('d F Y', strtotime($scheduledDate)),
+                    'scheduled_time' => $scheduledTime,
+                    'hospital_name' => $hospitalName,
+                    'hospital_address' => $hospitalAddress
+                ]);
+            } catch (Exception $emailErr) {
+                error_log('Medical schedule email error: ' . $emailErr->getMessage());
+            }
+            
             flash('success', 'Medical check-up scheduled');
         } else {
             flash('error', 'Failed to schedule medical check-up');
@@ -171,6 +185,19 @@ class Medical extends BaseController {
             $actionUrl = url('/applicant/applications/' . $checkup['application_id']);
             $notifStmt->bind_param('isss', $checkup['user_id'], $message, $notifType, $actionUrl);
             $notifStmt->execute();
+            
+            // Send email notification
+            try {
+                require_once APPPATH . 'Libraries/Mailer.php';
+                $mailer = new Mailer($this->db);
+                $mailer->sendTemplate($checkup['user_id'], 'medical_result', [
+                    'result' => $resultText,
+                    'result_notes' => $resultNotes ?? '-',
+                    'valid_until' => $validUntil ? date('d F Y', strtotime($validUntil)) : '-'
+                ]);
+            } catch (Exception $emailErr) {
+                error_log('Medical result email error: ' . $emailErr->getMessage());
+            }
             
             flash('success', 'Medical result recorded');
         } else {

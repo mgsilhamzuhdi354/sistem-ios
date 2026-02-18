@@ -142,6 +142,21 @@
                             <?php endif; ?>
                             <span class="salary-period">/month</span>
                         </div>
+                        <?php if (!empty($job['recruiter_name'])): ?>
+                        <div class="job-recruiter">
+                            <div class="recruiter-avatar">
+                                <?php if (!empty($job['recruiter_photo'])): ?>
+                                    <img src="<?= asset('uploads/recruiters/' . $job['recruiter_photo']) ?>" alt="<?= htmlspecialchars($job['recruiter_name']) ?>">
+                                <?php else: ?>
+                                    <i class="fas fa-user"></i>
+                                <?php endif; ?>
+                            </div>
+                            <div class="recruiter-info">
+                                <span class="recruiter-label">Posted by</span>
+                                <span class="recruiter-name"><?= htmlspecialchars($job['recruiter_name']) ?></span>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                         <div class="job-actions">
                             <a href="<?= url('/jobs/' . $job['id']) ?>" class="btn btn-primary btn-block">View Details</a>
                         </div>
@@ -639,6 +654,56 @@
         font-size: 15px;
         color: #6c757d;
         line-height: 1.6;
+    }
+
+    /* Job Recruiter Info */
+    .job-recruiter {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px 0;
+        border-top: 1px solid #e9ecef;
+        margin-top: 15px;
+    }
+    
+    .recruiter-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: linear-gradient(135deg, #0A2463, #1E5AA8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+    
+    .recruiter-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .recruiter-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    
+    .recruiter-label {
+        font-size: 11px;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 500;
+    }
+    
+    .recruiter-name {
+        font-size: 14px;
+        color: #1a1a2e;
+        font-weight: 600;
     }
 
     /* Featured Section */

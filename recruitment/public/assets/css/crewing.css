@@ -10,6 +10,7 @@
 
 .crewing-sidebar .nav-link.active {
     background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+    border-left-color: transparent;
 }
 
 .crewing-sidebar .nav-divider {
@@ -201,10 +202,15 @@
     gap: 12px;
     padding: 12px;
     border-radius: 8px;
-    text-decoration: none;
+    text-decoration: none !important;
     color: inherit;
     background: #f8f9fa;
     transition: background 0.2s;
+}
+
+.application-item:hover,
+.application-item:focus {
+    text-decoration: none !important;
 }
 
 .application-item:hover {
@@ -392,11 +398,16 @@
     padding: 12px 20px;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-radius: 8px;
-    text-decoration: none;
+    text-decoration: none !important;
     color: #333;
     font-size: 14px;
     font-weight: 500;
     transition: all 0.2s;
+}
+
+.action-btn:hover,
+.action-btn:focus {
+    text-decoration: none !important;
 }
 
 .action-btn:hover {

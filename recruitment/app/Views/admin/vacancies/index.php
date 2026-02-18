@@ -1,32 +1,134 @@
+<?php
+if (isMasterAdmin()) {
+    $content = 'vacancies/index';
+    include APPPATH . 'Views/layouts/master_admin.php';
+    return;
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $pageTitle ?? 'Vacancies' ?> - Admin | PT Indo Ocean Crew</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
+    <?php if (isMasterAdmin()): ?>
+        <style>
+            .admin-sidebar {
+                background: linear-gradient(180deg, #1e3a5f 0%, #0d1f33 100%);
+            }
+
+            .nav-link.active {
+                background: linear-gradient(90deg, #dc2626 0%, #b91c1c 100%);
+            }
+
+            .nav-link:hover {
+                background: rgba(220, 38, 38, 0.2);
+            }
+        </style>
+    <?php endif; ?>
 </head>
+
 <body class="admin-body">
     <!-- Sidebar -->
     <aside class="admin-sidebar" id="sidebar">
         <div class="sidebar-header">
-            <a href="<?= url('/admin') ?>" class="logo"><img src="<?= asset('images/logo.jpg') ?>" alt="Indo Ocean" style="width:32px;height:32px;object-fit:contain;"><span>Recruitment</span></a>
+            <?php if (isMasterAdmin()): ?>
+                <a href="<?= url('/master-admin') ?>" class="logo"><img src="<?= asset('images/logo.jpg') ?>"
+                        alt="Indo Ocean" style="width:32px;height:32px;object-fit:contain;"><span>Master Admin</span></a>
+            <?php else: ?>
+                <a href="<?= url('/admin') ?>" class="logo"><img src="<?= asset('images/logo.jpg') ?>" alt="Indo Ocean"
+                        style="width:32px;height:32px;object-fit:contain;"><span>Recruitment</span></a>
+            <?php endif; ?>
         </div>
         <nav class="sidebar-nav">
             <ul>
-                <li><a href="<?= url('/admin/dashboard') ?>" class="nav-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
-                <li><a href="<?= url('/admin/vacancies') ?>" class="nav-link active"><i class="fas fa-briefcase"></i><span>Job Vacancies</span></a></li>
-                <li><a href="<?= url('/admin/applicants') ?>" class="nav-link"><i class="fas fa-users"></i><span>Applicants</span></a></li>
-                <li><a href="<?= url('/admin/applicants/pipeline') ?>" class="nav-link"><i class="fas fa-stream"></i><span>Pipeline</span></a></li>
-                <li><a href="<?= url('/admin/interviews') ?>" class="nav-link"><i class="fas fa-robot"></i><span>AI Interviews</span></a></li>
-                <li><a href="<?= url('/admin/documents') ?>" class="nav-link"><i class="fas fa-file-alt"></i><span>Documents</span></a></li>
-                <li><a href="<?= url('/admin/medical') ?>" class="nav-link"><i class="fas fa-heartbeat"></i><span>Medical</span></a></li>
+                <?php if (isMasterAdmin()): ?>
+                    <li class="nav-item">
+                        <a href="<?= url('/master-admin/dashboard') ?>" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/master-admin/users') ?>" class="nav-link">
+                            <i class="fas fa-users-cog"></i>
+                            <span>User Management</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/master-admin/vacancies') ?>" class="nav-link active">
+                            <i class="fas fa-briefcase"></i>
+                            <span>Job Vacancies</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/master-admin/pipeline') ?>" class="nav-link">
+                            <i class="fas fa-stream"></i>
+                            <span>Pipeline</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/master-admin/requests') ?>" class="nav-link">
+                            <i class="fas fa-clipboard-check"></i>
+                            <span>Requests</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/admin/interviews') ?>" class="nav-link">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Interview</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/admin/documents') ?>" class="nav-link">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Documents</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/admin/medical') ?>" class="nav-link">
+                            <i class="fas fa-heartbeat"></i>
+                            <span>Medical</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/master-admin/reports') ?>" class="nav-link">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= url('/master-admin/settings') ?>" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                <?php else: ?>
+                    <li><a href="<?= url('/admin/dashboard') ?>" class="nav-link"><i
+                                class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+                    <li><a href="<?= url('/admin/vacancies') ?>" class="nav-link active"><i
+                                class="fas fa-briefcase"></i><span>Job Vacancies</span></a></li>
+                    <li><a href="<?= url('/admin/applicants') ?>" class="nav-link"><i
+                                class="fas fa-users"></i><span>Applicants</span></a></li>
+                    <li><a href="<?= url('/admin/applicants/pipeline') ?>" class="nav-link"><i
+                                class="fas fa-stream"></i><span>Pipeline</span></a></li>
+                    <li><a href="<?= url('/admin/interviews') ?>" class="nav-link"><i class="fas fa-robot"></i><span>AI
+                                Interviews</span></a></li>
+                    <li><a href="<?= url('/admin/documents') ?>" class="nav-link"><i
+                                class="fas fa-file-alt"></i><span>Documents</span></a></li>
+                    <li><a href="<?= url('/admin/medical') ?>" class="nav-link"><i
+                                class="fas fa-heartbeat"></i><span>Medical</span></a></li>
+                <?php endif; ?>
             </ul>
         </nav>
         <div class="sidebar-footer">
-            <a href="<?= url('/logout') ?>" class="logout-btn"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+            <a href="<?= url('/logout') ?>" class="logout-btn"><i
+                    class="fas fa-sign-out-alt"></i><span>Logout</span></a>
         </div>
     </aside>
 
@@ -64,7 +166,8 @@
                     <form action="<?= url('/admin/vacancies') ?>" method="GET" class="filters-form">
                         <div class="filter-row">
                             <div class="form-group">
-                                <input type="text" name="search" class="form-control" placeholder="Search vacancies..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+                                <input type="text" name="search" class="form-control" placeholder="Search vacancies..."
+                                    value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
                             </div>
                             <div class="form-group">
                                 <select name="department" class="form-control">
@@ -79,9 +182,11 @@
                             <div class="form-group">
                                 <select name="status" class="form-control">
                                     <option value="">All Status</option>
-                                    <option value="draft" <?= ($_GET['status'] ?? '') === 'draft' ? 'selected' : '' ?>>Draft</option>
+                                    <option value="draft" <?= ($_GET['status'] ?? '') === 'draft' ? 'selected' : '' ?>>
+                                        Draft</option>
                                     <option value="published" <?= ($_GET['status'] ?? '') === 'published' ? 'selected' : '' ?>>Published</option>
-                                    <option value="closed" <?= ($_GET['status'] ?? '') === 'closed' ? 'selected' : '' ?>>Closed</option>
+                                    <option value="closed" <?= ($_GET['status'] ?? '') === 'closed' ? 'selected' : '' ?>>
+                                        Closed</option>
                                 </select>
                             </div>
                             <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
@@ -128,26 +233,34 @@
                                             <td><?= htmlspecialchars($vacancy['department_name'] ?? '-') ?></td>
                                             <td>
                                                 <?php if ($vacancy['salary_min'] && $vacancy['salary_max']): ?>
-                                                    $<?= number_format($vacancy['salary_min']) ?> - $<?= number_format($vacancy['salary_max']) ?>
+                                                    $<?= number_format($vacancy['salary_min']) ?> -
+                                                    $<?= number_format($vacancy['salary_max']) ?>
                                                 <?php else: ?>
                                                     Negotiable
                                                 <?php endif; ?>
                                             </td>
-                                            <td><span class="badge badge-info"><?= $vacancy['applications_count'] ?? 0 ?></span></td>
+                                            <td><span class="badge badge-info"><?= $vacancy['applications_count'] ?? 0 ?></span>
+                                            </td>
                                             <td>
-                                                <?php 
+                                                <?php
                                                 $statusClass = $vacancy['status'] === 'published' ? 'success' : ($vacancy['status'] === 'draft' ? 'secondary' : 'danger');
                                                 ?>
-                                                <span class="badge badge-<?= $statusClass ?>"><?= ucfirst($vacancy['status']) ?></span>
+                                                <span
+                                                    class="badge badge-<?= $statusClass ?>"><?= ucfirst($vacancy['status']) ?></span>
                                             </td>
                                             <td><?= date('d M Y', strtotime($vacancy['created_at'])) ?></td>
                                             <td>
                                                 <div class="action-btns">
-                                                    <a href="<?= url('/jobs/' . $vacancy['id']) ?>" class="action-btn view" title="View" target="_blank"><i class="fas fa-eye"></i></a>
-                                                    <a href="<?= url('/admin/vacancies/edit/' . $vacancy['id']) ?>" class="action-btn edit" title="Edit"><i class="fas fa-edit"></i></a>
-                                                    <form action="<?= url('/admin/vacancies/delete/' . $vacancy['id']) ?>" method="POST" class="delete-form" style="display: inline;">
+                                                    <a href="<?= url('/jobs/' . $vacancy['id']) ?>" class="action-btn view"
+                                                        title="View" target="_blank"><i class="fas fa-eye"></i></a>
+                                                    <a href="<?= url('/admin/vacancies/edit/' . $vacancy['id']) ?>"
+                                                        class="action-btn edit" title="Edit"><i class="fas fa-edit"></i></a>
+                                                    <form action="<?= url('/admin/vacancies/delete/' . $vacancy['id']) ?>"
+                                                        method="POST" class="delete-form" style="display: inline;">
                                                         <?= csrf_field() ?>
-                                                        <button type="submit" class="action-btn delete" title="Delete" onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></button>
+                                                        <button type="submit" class="action-btn delete" title="Delete"
+                                                            onclick="return confirm('Are you sure?')"><i
+                                                                class="fas fa-trash"></i></button>
                                                     </form>
                                                 </div>
                                             </td>
@@ -163,4 +276,5 @@
     </div>
     <script src="<?= asset('js/admin.js') ?>"></script>
 </body>
+
 </html>

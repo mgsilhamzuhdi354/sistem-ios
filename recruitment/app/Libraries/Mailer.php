@@ -2,8 +2,14 @@
 /**
  * Mailer Library
  * Handles email sending with template support
- * Supports both SMTP (Gmail) and simulation mode
+ * Supports both SMTP and simulation mode
  */
+
+// Load PHPMailer via Composer
+$autoloadPath = dirname(APPPATH) . '/vendor/autoload.php';
+if (file_exists($autoloadPath)) {
+    require_once $autoloadPath;
+}
 class Mailer {
     
     private $db;
@@ -11,25 +17,56 @@ class Mailer {
     private $smtpPort;
     private $smtpUsername;
     private $smtpPassword;
+    private $smtpEncryption;
     private $fromEmail;
     private $fromName;
     private $simulationMode = true; // Set false when SMTP configured
+    private $senderUserId; // User ID of the person sending the email
     
-    public function __construct($db) {
+    public function __construct($db, $senderUserId = null) {
         $this->db = $db;
-        $this->loadSettings();
+        $this->senderUserId = $senderUserId;
+        $this->loadSettings($senderUserId);
     }
     
     /**
      * Load SMTP settings from database
+     * Tries user-specific config first, then falls back to global settings
      */
-    private function loadSettings() {
+    private function loadSettings($userId = null) {
+        // Try loading user-specific SMTP config first
+        if ($userId) {
+            $stmt = $this->db->prepare("
+                SELECT * FROM user_smtp_configs 
+                WHERE user_id = ? AND is_active = 1
+                LIMIT 1
+            ");
+            $stmt->bind_param('i', $userId);
+            $stmt->execute();
+            $userConfig = $stmt->get_result()->fetch_assoc();
+            
+            if ($userConfig) {
+                // Use user's own SMTP settings
+                $this->smtpHost = $userConfig['smtp_host'];
+                $this->smtpPort = $userConfig['smtp_port'];
+                $this->smtpUsername = $userConfig['smtp_username'];
+                $this->smtpPassword = $userConfig['smtp_password']; // Use password directly (decryptSmtpPassword function doesn't exist)
+                $this->smtpEncryption = $userConfig['smtp_encryption'];
+                $this->fromEmail = $userConfig['smtp_from_email'];
+                $this->fromName = $userConfig['smtp_from_name'];
+                $this->simulationMode = false; // User has configured SMTP
+                return; // Exit early, user config loaded
+            }
+        }
+        
+        // Fallback to global settings (original code)
         $settings = [
-            'smtp_host' => 'smtp.gmail.com',
-            'smtp_port' => '587',
+            'smtp_host' => '',
+            'smtp_port' => '465',
             'smtp_username' => '',
             'smtp_password' => '',
-            'smtp_from_email' => 'recruitment@indoceancrew.com',
+            'smtp_encryption' => 'ssl',
+            'smtp_from_email' => 'recruitment@indoceancrew.co.id',
             'smtp_from_name' => 'PT Indo Ocean Crew Services'
         ];
         
@@ -44,11 +81,12 @@ class Mailer {
         $this->smtpPort = $settings['smtp_port'];
         $this->smtpUsername = $settings['smtp_username'];
         $this->smtpPassword = $settings['smtp_password'];
+        $this->smtpEncryption = $settings['smtp_encryption'];
         $this->fromEmail = $settings['smtp_from_email'];
         $this->fromName = $settings['smtp_from_name'];
         
         // Enable real SMTP if credentials are set
-        $this->simulationMode = empty($this->smtpUsername) || empty($this->smtpPassword);
+        $this->simulationMode = empty($this->smtpHost) || empty($this->smtpUsername) || empty($this->smtpPassword);
     }
     
     /**
@@ -99,18 +137,20 @@ class Mailer {
     }
     
     /**
-     * Send email directly
+     * Send email directly (with optional attachments)
+     * @param array $attachments Array of ['path' => '/path/to/file', 'name' => 'filename.pdf']
      */
-    public function send($toEmail, $toName, $subject, $body, $userId = null, $templateId = null, $applicationId = null) {
+    public function send($toEmail, $toName, $subject, $body, $userId = null, $templateId = null, $applicationId = null, $attachments = []) {
         // Log the email
-        $logId = $this->logEmail($userId, $applicationId, $templateId, $subject, $toEmail, $toName);
+        $logId = $this->logEmail($templateId, $toEmail, $toName, $subject, $body, $applicationId);
         
         if ($this->simulationMode) {
             // Simulation mode - just mark as sent
             $this->updateEmailLog($logId, 'sent', null);
+            $attachInfo = count($attachments) > 0 ? ' (' . count($attachments) . ' attachment(s))' : '';
             return [
                 'success' => true, 
-                'message' => 'Email logged (simulation mode - no SMTP configured)',
+                'message' => 'Email logged (simulation mode)' . $attachInfo,
                 'log_id' => $logId
             ];
         }
@@ -119,20 +159,54 @@ class Mailer {
         try {
             // Try using PHPMailer if available
             if (class_exists('PHPMailer\PHPMailer\PHPMailer')) {
-                return $this->sendWithPHPMailer($toEmail, $toName, $subject, $body, $logId);
+                return $this->sendWithPHPMailer($toEmail, $toName, $subject, $body, $logId, $attachments);
             }
             
-            // Fallback to PHP mail()
-            $headers = [
-                'MIME-Version: 1.0',
-                'Content-type: text/html; charset=UTF-8',
-                'From: ' . $this->fromName . ' <' . $this->fromEmail . '>',
-                'Reply-To: ' . $this->fromEmail
-            ];
-            
+            // Fallback to PHP mail() with MIME for attachments
             $fullBody = $this->wrapInTemplate($body);
             
-            if (mail($toEmail, $subject, $fullBody, implode("\r\n", $headers))) {
+            if (empty($attachments)) {
+                // Simple send without attachments
+                $headers = [
+                    'MIME-Version: 1.0',
+                    'Content-type: text/html; charset=UTF-8',
+                    'From: ' . $this->fromName . ' <' . $this->fromEmail . '>',
+                    'Reply-To: ' . $this->fromEmail
+                ];
+                $sent = mail($toEmail, $subject, $fullBody, implode("\r\n", $headers));
+            } else {
+                // Multipart MIME with attachments
+                $boundary = md5(time());
+                $headers = [
+                    'MIME-Version: 1.0',
+                    'From: ' . $this->fromName . ' <' . $this->fromEmail . '>',
+                    'Reply-To: ' . $this->fromEmail,
+                    'Content-Type: multipart/mixed; boundary="' . $boundary . '"'
+                ];
+                
+                $message = "--$boundary\r\n";
+                $message .= "Content-Type: text/html; charset=UTF-8\r\n";
+                $message .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
+                $message .= $fullBody . "\r\n";
+                
+                foreach ($attachments as $att) {
+                    if (file_exists($att['path'])) {
+                        $fileContent = chunk_split(base64_encode(file_get_contents($att['path'])));
+                        $mimeType = mime_content_type($att['path']);
+                        $fileName = $att['name'] ?? basename($att['path']);
+                        $message .= "--$boundary\r\n";
+                        $message .= "Content-Type: $mimeType; name=\"$fileName\"\r\n";
+                        $message .= "Content-Disposition: attachment; filename=\"$fileName\"\r\n";
+                        $message .= "Content-Transfer-Encoding: base64\r\n\r\n";
+                        $message .= $fileContent . "\r\n";
+                    }
+                }
+                $message .= "--$boundary--";
+                
+                $sent = mail($toEmail, $subject, $message, implode("\r\n", $headers));
+            }
+            
+            if ($sent) {
                 $this->updateEmailLog($logId, 'sent', null);
                 return ['success' => true, 'message' => 'Email sent successfully', 'log_id' => $logId];
             } else {
@@ -146,37 +220,72 @@ class Mailer {
     }
     
     /**
-     * Send with PHPMailer (if installed)
-     */
-    private function sendWithPHPMailer($toEmail, $toName, $subject, $body, $logId) {
-        $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+ * Send with PHPMailer (if installed) - with attachment support
+ */
+private function sendWithPHPMailer($toEmail, $toName, $subject, $body, $logId, $attachments = []) {
+    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+    
+    try {
+        $mail->isSMTP();
+        $mail->Host = $this->smtpHost;
+        $mail->SMTPAuth = true;
+        $mail->Username = $this->smtpUsername;
+        $mail->Password = $this->smtpPassword;
+        $mail->Timeout = 10; // Short timeout to prevent hanging
+        $mail->SMTPKeepAlive = false; // Don't keep connection alive
         
-        try {
-            $mail->isSMTP();
-            $mail->Host = $this->smtpHost;
-            $mail->SMTPAuth = true;
-            $mail->Username = $this->smtpUsername;
-            $mail->Password = $this->smtpPassword;
+        // Set encryption based on setting
+        if ($this->smtpEncryption === 'ssl') {
+            $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+        } else {
             $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = $this->smtpPort;
-            
-            $mail->setFrom($this->fromEmail, $this->fromName);
-            $mail->addAddress($toEmail, $toName);
-            
-            $mail->isHTML(true);
-            $mail->Subject = $subject;
-            $mail->Body = $this->wrapInTemplate($body);
-            
-            $mail->send();
-            
-            $this->updateEmailLog($logId, 'sent', null);
-            return ['success' => true, 'message' => 'Email sent successfully', 'log_id' => $logId];
-            
-        } catch (Exception $e) {
-            $this->updateEmailLog($logId, 'failed', $mail->ErrorInfo);
-            return ['success' => false, 'message' => $mail->ErrorInfo];
         }
+        $mail->Port = intval($this->smtpPort);
+        
+        // Allow self-signed certificates (needed for many hosting providers)
+        $mail->SMTPOptions = [
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            ]
+        ];
+        
+        $mail->setFrom($this->fromEmail, $this->fromName);
+        $mail->addAddress($toEmail, $toName);
+        
+        $mail->isHTML(true);
+        $mail->Subject = $subject;
+        $mail->Body = $this->wrapInTemplate($body);
+        
+        // Add attachments
+        foreach ($attachments as $att) {
+            if (file_exists($att['path'])) {
+                $mail->addAttachment($att['path'], $att['name'] ?? basename($att['path']));
+            }
+        }
+        
+        $mail->send();
+        
+        $this->updateEmailLog($logId, 'sent', null);
+        return ['success' => true, 'message' => 'Email sent successfully', 'log_id' => $logId];
+        
+    } catch (Exception $e) {
+        $errorMsg = $mail->ErrorInfo;
+        
+        // Make error messages more user-friendly
+        if (strpos($errorMsg, 'Could not connect') !== false) {
+            $errorMsg = 'Cannot connect to SMTP server. Please check host and port settings.';
+        } elseif (strpos($errorMsg, 'SMTP Error: Could not authenticate') !== false) {
+            $errorMsg = 'SMTP authentication failed. Please check username and password.';
+        } elseif (strpos($errorMsg, 'timed out') !== false || strpos($errorMsg, 'Timeout') !== false) {
+            $errorMsg = 'Connection timeout. SMTP server not responding.';
+        }
+        
+        $this->updateEmailLog($logId, 'failed', $errorMsg);
+        return ['success' => false, 'message' => $errorMsg];
     }
+}
     
     /**
      * Parse template variables
@@ -223,14 +332,14 @@ class Mailer {
     }
     
     /**
-     * Log email to database
+     * Log email to database (matches actual email_logs table)
      */
-    private function logEmail($userId, $applicationId, $templateId, $subject, $toEmail, $toName) {
+    private function logEmail($templateId, $toEmail, $toName, $subject, $body, $applicationId = null) {
         $stmt = $this->db->prepare("
-            INSERT INTO email_logs (user_id, application_id, template_id, subject, recipient_email, recipient_name, status)
+            INSERT INTO email_logs (template_id, application_id, to_email, to_name, subject, body, status)
             VALUES (?, ?, ?, ?, ?, ?, 'pending')
         ");
-        $stmt->bind_param('iiisss', $userId, $applicationId, $templateId, $subject, $toEmail, $toName);
+        $stmt->bind_param('iissss', $templateId, $applicationId, $toEmail, $toName, $subject, $body);
         $stmt->execute();
         return $this->db->insert_id;
     }

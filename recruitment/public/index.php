@@ -19,6 +19,18 @@ define('ROLE_LEADER', 4);         // Leader
 define('ROLE_CREWING', 5);        // Crewing Staff
 define('ROLE_MASTER_ADMIN', 11);  // Master Admin - Full Access
 
+// ============================================
+// APPLICATION STATUS CONSTANTS
+// ============================================
+define('STATUS_NEW', 1);           // New Application
+define('STATUS_DOCUMENT_REVIEW', 2); // Document Review
+define('STATUS_INTERVIEW', 3);     // Interview Stage
+define('STATUS_UNDER_REVIEW', 4);  // Under Review
+define('STATUS_SHORTLISTED', 5);   // Shortlisted
+define('STATUS_APPROVED', 6);      // Approved / Hired
+define('STATUS_REJECTED', 7);      // Rejected
+define('STATUS_ARCHIVED', 8);      // Archived
+
 // Start session
 session_start();
 
@@ -60,17 +72,39 @@ function getDB() {
 $requestMethod = $_SERVER['REQUEST_METHOD'];
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// Detect environment for base path
-$isProduction = (
-    isset($_SERVER['HTTP_HOST']) && 
-    strpos($_SERVER['HTTP_HOST'], 'localhost') === false &&
-    strpos($_SERVER['HTTP_HOST'], '127.0.0.1') === false
-);
+// Base path for router - detect Laragon Pretty URL
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$isLaragonPrettyUrl = (strpos($host, '.test') !== false || strpos($host, '.local') !== false);
 
-// Production: /recruitment | Local: /PT_indoocean/recruitment/public
-$basePath = $isProduction ? '/recruitment' : '/PT_indoocean/recruitment/public';
+// Handle both /recruitment/public and /recruitment (via .htaccess rewrite) access patterns
+if ($isLaragonPrettyUrl) {
+    if (strpos($requestUri, '/recruitment/public') === 0) {
+        $basePath = '/recruitment/public';
+    } else {
+        $basePath = '/recruitment';
+    }
+} else {
+    $basePath = '/PT_indoocean/recruitment/public';
+}
+
 $requestUri = str_replace($basePath, '', $requestUri);
 $requestUri = $requestUri ?: '/';
+
+// Load Language Helper
+require_once APPPATH . 'Helpers/Language.php';
+
+// Load user's language preference if logged in
+if (isLoggedIn()) {
+    $db = getDB();
+    $stmt = $db->prepare("SELECT language FROM users WHERE id = ?");
+    $stmt->bind_param('i', $_SESSION['user_id']);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+    if ($result) {
+        $_SESSION['user_language'] = $result['language'] ?? 'id';
+        $_SESSION['language'] = $result['language'] ?? 'id';
+    }
+}
 
 // Helper Functions
 function view($template, $data = []) {
@@ -84,6 +118,12 @@ function view($template, $data = []) {
 }
 
 function redirect($url) {
+    // Auto-prepend base path if URL starts with / and doesn't already include it
+    global $isLaragonPrettyUrl;
+    $base = $isLaragonPrettyUrl ? '/recruitment/public' : '/PT_indoocean/recruitment/public';
+    if (strpos($url, '/') === 0 && strpos($url, $base) !== 0) {
+        $url = $base . $url;
+    }
     header("Location: " . $url);
     exit;
 }
@@ -219,6 +259,10 @@ function canManageVacancy() {
 
 function canCreateVacancy() {
     return isset($_SESSION['role_id']) && $_SESSION['role_id'] == ROLE_MASTER_ADMIN;
+}
+
+function canViewVacancy() {
+    return isset($_SESSION['role_id']) && in_array($_SESSION['role_id'], [ROLE_MASTER_ADMIN, ROLE_ADMIN, ROLE_CREWING]);
 }
 
 function getCrewingId() {
@@ -387,7 +431,9 @@ function updateOnlineStatus() {
     if (!isLoggedIn()) return;
     $db = getDB();
     $userId = $_SESSION['user_id'];
-    $db->query("UPDATE users SET is_online = 1, last_activity = NOW() WHERE id = $userId");
+    $stmt = $db->prepare("UPDATE users SET is_online = 1, last_activity = NOW() WHERE id = ?");
+    $stmt->bind_param('i', $userId);
+    $stmt->execute();
 }
 
 function getOnlineCrewingStaff() {
@@ -422,10 +468,18 @@ function getPendingRequests($leaderId = null) {
         WHERE pr.status = 'pending'
     ";
     if ($leaderId) {
-        $sql .= " AND pr.assigned_to = $leaderId";
+        $sql .= " AND pr.assigned_to = ?";
     }
     $sql .= " ORDER BY pr.created_at DESC";
-    $result = $db->query($sql);
+    
+    if ($leaderId) {
+        $stmt = $db->prepare($sql);
+        $stmt->bind_param('i', $leaderId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+    } else {
+        $result = $db->query($sql);
+    }
     return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 
@@ -493,7 +547,9 @@ function transferHandler($applicationId, $fromCrewingId, $toCrewingId, $reason =
     $stmt->execute();
     
     // Update assignment
-    $db->query("UPDATE application_assignments SET status = 'transferred' WHERE application_id = $applicationId AND status = 'active'");
+    $transferStmt = $db->prepare("UPDATE application_assignments SET status = 'transferred' WHERE application_id = ? AND status = 'active'");
+    $transferStmt->bind_param('i', $applicationId);
+    $transferStmt->execute();
     
     $stmt = $db->prepare("INSERT INTO application_assignments (application_id, assigned_to, assigned_by, status, notes) VALUES (?, ?, ?, 'active', ?)");
     $reason = $reason ?: 'Transferred by leader';
@@ -586,15 +642,36 @@ function old($key, $default = '') {
 }
 
 function asset($path) {
-    global $isProduction;
-    $base = $isProduction ? '/recruitment/assets/' : '/PT_indoocean/recruitment/public/assets/';
+    global $isLaragonPrettyUrl;
+    $base = $isLaragonPrettyUrl ? '/recruitment/public/assets/' : '/PT_indoocean/recruitment/public/assets/';
     return $base . ltrim($path, '/');
 }
 
 function url($path = '') {
-    global $isProduction;
-    $base = $isProduction ? '/recruitment' : '/PT_indoocean/recruitment/public';
+    global $isLaragonPrettyUrl;
+    $base = $isLaragonPrettyUrl ? '/recruitment/public' : '/PT_indoocean/recruitment/public';
     return $base . $path;
+}
+
+/**
+ * Encrypt SMTP password for secure storage
+ * Uses AES-128-CBC encryption with a key from environment or default
+ */
+function encryptSmtpPassword($password) {
+    if (empty($password)) return '';
+    $key = getenv('ENCRYPTION_KEY') ?: 'PT_IndoOcean_2026_Key';  // Change this in production
+    $iv = substr(md5($key), 0, 16);
+    return base64_encode(openssl_encrypt($password, 'AES-128-CBC', $key, 0, $iv));
+}
+
+/**
+ * Decrypt SMTP password from database
+ */
+function decryptSmtpPassword($encrypted) {
+    if (empty($encrypted)) return '';
+    $key = getenv('ENCRYPTION_KEY') ?: 'PT_IndoOcean_2026_Key';  // Must match encryption key
+    $iv = substr(md5($key), 0, 16);
+    return openssl_decrypt(base64_decode($encrypted), 'AES-128-CBC', $key, 0, $iv);
 }
 
 // Route matcher

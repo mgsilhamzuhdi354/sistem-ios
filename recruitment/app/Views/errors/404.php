@@ -1,3 +1,10 @@
+<?php
+// Detect Laragon Pretty URL
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$isLaragon = (strpos($host, '.test') !== false || strpos($host, '.local') !== false);
+$basePath = $isLaragon ? '' : '/indoocean';
+$recruitmentPath = $basePath . '/recruitment/public';
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -71,12 +78,12 @@
 <body>
     <div class="error-container">
         <div class="error-icon">
-            <img src="/PT_indoocean/recruitment/public/assets/images/logo.jpg" alt="Indo Ocean" style="height: 80px;">
+            <img src="<?= $recruitmentPath ?>/assets/images/logo.jpg" alt="Indo Ocean" style="height: 80px;">
         </div>
         <h1>404</h1>
         <h2>Page Not Found</h2>
         <p>The page you're looking for seems to have sailed away.</p>
-        <a href="/PT_indoocean/recruitment/public/" class="btn">
+        <a href="<?= $recruitmentPath ?>/" class="btn">
             <i class="fas fa-home"></i> Back to Home
         </a>
     </div>

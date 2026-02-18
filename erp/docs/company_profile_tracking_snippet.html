@@ -1,0 +1,65 @@
+<!-- 
+    Company Profile Visitor Tracking Script
+    Add this code to all pages in your Company Profile website
+    Location: Before closing </body> tag
+-->
+
+<script>
+    (function () {
+        'use strict';
+
+        // Configuration
+        const API_URL = 'http://localhost/PT_indoocean/erp/api/track-visitor';
+
+        // Track page visit
+        function trackVisitor() {
+            const data = {
+                page_url: window.location.href,
+                referrer: document.referrer || null,
+                user_agent: navigator.userAgent,
+                timestamp: new Date().toISOString()
+            };
+
+            // Use fetch API
+            fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        console.log('Visitor tracked successfully');
+                    }
+                })
+                .catch(error => {
+                    console.log('Tracking failed:', error);
+                });
+        }
+
+        // Track on page load
+        if (document.readyState === 'complete') {
+            trackVisitor();
+        } else {
+            window.addEventListener('load', trackVisitor);
+        }
+
+        // Track duration on page
+        let startTime = Date.now();
+
+        window.addEventListener('beforeunload', function () {
+            const duration = Math.floor((Date.now() - startTime) / 1000);
+
+            // Send duration using sendBeacon (works even when page is closing)
+            if (navigator.sendBeacon) {
+                const durationData = JSON.stringify({
+                    page_url: window.location.href,
+                    visit_duration: duration
+                });
+                navigator.sendBeacon(API_URL + '-duration', durationData);
+            }
+        });
+    })();
+</script>

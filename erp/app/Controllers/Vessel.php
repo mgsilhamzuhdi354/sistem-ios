@@ -17,24 +17,49 @@ use App\Models\ClientModel;
 class Vessel extends BaseController
 {
     private $vesselModel;
-    
+
     public function __construct()
     {
         parent::__construct();
         $this->vesselModel = new VesselModel($this->db);
     }
-    
+
     public function index()
     {
+        // Check UI mode from session
+        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+
+        $vessels = $this->vesselModel->getAllWithDetails();
+
+        // Calculate statistics for modern view
+        $totalCrew = 0;
+        $maintenanceCount = 0;
+
+        foreach ($vessels as &$vessel) {
+            // Get crew count for each vessel
+            $crewList = $this->vesselModel->getCrewList($vessel['id']);
+            $vessel['crew_count'] = count($crewList);
+            $totalCrew += $vessel['crew_count'];
+
+            // Count vessels in maintenance
+            if (isset($vessel['status']) && $vessel['status'] === 'maintenance') {
+                $maintenanceCount++;
+            }
+        }
+
         $data = [
             'title' => 'Vessel Management',
-            'vessels' => $this->vesselModel->getAllWithDetails(),
+            'vessels' => $vessels,
+            'total_crew' => $totalCrew,
+            'maintenance_count' => $maintenanceCount,
             'flash' => $this->getFlash()
         ];
-        
-        return $this->view('vessels/index', $data);
+
+        // Route to appropriate view based on UI mode
+        $view = $uiMode === 'modern' ? 'vessels/modern' : 'vessels/index';
+        return $this->view($view, $data);
     }
-    
+
     public function show($id)
     {
         $vessel = $this->vesselModel->getWithDetails($id);
@@ -42,7 +67,7 @@ class Vessel extends BaseController
             $this->setFlash('error', 'Vessel not found');
             $this->redirect('vessels');
         }
-        
+
         $data = [
             'title' => $vessel['name'],
             'vessel' => $vessel,
@@ -50,32 +75,32 @@ class Vessel extends BaseController
             'totalCost' => $this->vesselModel->getTotalMonthlyCost($id),
             'flash' => $this->getFlash()
         ];
-        
+
         return $this->view('vessels/view', $data);
     }
-    
+
     public function create()
     {
         $vesselTypeModel = new VesselTypeModel($this->db);
         $flagStateModel = new FlagStateModel($this->db);
         $clientModel = new ClientModel($this->db);
-        
+
         $data = [
             'title' => 'Add New Vessel',
             'vesselTypes' => $vesselTypeModel->getForDropdown(),
             'flagStates' => $flagStateModel->getForDropdown(),
             'clients' => $clientModel->getForDropdown(),
         ];
-        
+
         return $this->view('vessels/form', $data);
     }
-    
+
     public function store()
     {
         if (!$this->isPost()) {
             $this->redirect('vessels');
         }
-        
+
         $data = [
             'name' => $this->input('name'),
             'imo_number' => $this->input('imo_number'),
@@ -89,12 +114,12 @@ class Vessel extends BaseController
             'crew_capacity' => $this->input('crew_capacity', 25),
             'status' => 'active',
         ];
-        
+
         $id = $this->vesselModel->insert($data);
         $this->setFlash('success', 'Vessel added successfully');
         $this->redirect('vessels/' . $id);
     }
-    
+
     public function edit($id)
     {
         $vessel = $this->vesselModel->find($id);
@@ -102,11 +127,14 @@ class Vessel extends BaseController
             $this->setFlash('error', 'Vessel not found');
             $this->redirect('vessels');
         }
-        
+
+        // Check UI mode from session
+        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+
         $vesselTypeModel = new VesselTypeModel($this->db);
         $flagStateModel = new FlagStateModel($this->db);
         $clientModel = new ClientModel($this->db);
-        
+
         $data = [
             'title' => 'Edit ' . $vessel['name'],
             'vessel' => $vessel,
@@ -114,40 +142,116 @@ class Vessel extends BaseController
             'flagStates' => $flagStateModel->getForDropdown(),
             'clients' => $clientModel->getForDropdown(),
         ];
-        
-        return $this->view('vessels/form', $data);
+
+        // Route to appropriate view based on UI mode
+        $view = $uiMode === 'modern' ? 'vessels/edit_modern' : 'vessels/form';
+        return $this->view($view, $data);
     }
-    
+
     public function update($id)
     {
         if (!$this->isPost()) {
             $this->redirect('vessels/' . $id);
         }
-        
+
         $data = [
             'name' => $this->input('name'),
             'imo_number' => $this->input('imo_number'),
             'vessel_type_id' => $this->input('vessel_type_id'),
             'flag_state_id' => $this->input('flag_state_id'),
             'client_id' => $this->input('client_id'),
+            'gross_tonnage' => $this->input('gross_tonnage'),
+            'dwt' => $this->input('dwt'),
+            'year_built' => $this->input('year_built'),
+            'call_sign' => $this->input('call_sign'),
+            'crew_capacity' => $this->input('crew_capacity', 25),
             'status' => $this->input('status'),
         ];
-        
+
+        // Handle photo upload
+        if (isset($_FILES['vessel_photo']) && $_FILES['vessel_photo']['error'] === UPLOAD_ERR_OK) {
+            $upload = $this->handlePhotoUpload($_FILES['vessel_photo'], $id);
+            if ($upload['success']) {
+                $data['image_url'] = $upload['url'];
+            }
+        }
+
         $this->vesselModel->update($id, $data);
-        $this->setFlash('success', 'Vessel updated');
-        $this->redirect('vessels/' . $id);
+        $this->setFlash('success', 'Vessel updated successfully');
+        $this->redirect('vessels');
     }
-    
+
+    /**
+     * Handle vessel photo upload
+     */
+    private function handlePhotoUpload($file, $vesselId)
+    {
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        $maxSize = 5 * 1024 * 1024; // 5MB
+
+        // Validate file type
+        if (!in_array($file['type'], $allowedTypes)) {
+            return ['success' => false, 'error' => 'Invalid file type'];
+        }
+
+        // Validate file size
+        if ($file['size'] > $maxSize) {
+            return ['success' => false, 'error' => 'File too large'];
+        }
+
+        // Create upload directory if not exists
+        $uploadDir = APPPATH . '../public/uploads/vessels/';
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        // Generate unique filename
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = 'vessel_' . $vesselId . '_' . time() . '.' . $extension;
+        $filepath = $uploadDir . $filename;
+
+        // Move uploaded file
+        if (move_uploaded_file($file['tmp_name'], $filepath)) {
+            return [
+                'success' => true,
+                'url' => 'public/uploads/vessels/' . $filename  // Store relative path
+            ];
+        }
+
+        return ['success' => false, 'error' => 'Upload failed'];
+    }
+
     public function crewList($id)
     {
         $vessel = $this->vesselModel->getWithDetails($id);
-        
+
         $data = [
             'title' => 'Crew List - ' . $vessel['name'],
             'vessel' => $vessel,
             'crewList' => $this->vesselModel->getCrewList($id),
         ];
-        
+
         return $this->view('vessels/crew', $data);
     }
+
+    /**
+     * Profit per Vessel report
+     */
+    public function profit()
+    {
+        // Check UI mode from session
+        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+
+        $data = [
+            'title' => 'Profit per Vessel',
+            'currentPage' => 'vessels',
+            'profitData' => $this->vesselModel->getAllVesselsProfit(),
+            'flash' => $this->getFlash()
+        ];
+
+        // Route to appropriate view based on UI mode
+        $view = $uiMode === 'modern' ? 'vessels/profit_modern' : 'vessels/profit';
+        return $this->view($view, $data);
+    }
 }
+

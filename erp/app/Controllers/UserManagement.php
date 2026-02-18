@@ -43,6 +43,7 @@ class UserManagement extends BaseController
         
         $data = [
             'title' => 'User Management',
+            'currentPage' => 'users',
             'users' => $this->userModel->getList($filters, $page, 20),
             'total' => $this->userModel->countUsers($filters),
             'filters' => $filters,
@@ -50,7 +51,10 @@ class UserManagement extends BaseController
             'flash' => $this->getFlash()
         ];
         
-        return $this->view('users/index', $data);
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
+        $view = $uiMode === 'modern' ? 'users/index_modern' : 'users/index';
+
+        return $this->view($view, $data);
     }
     
     /**
@@ -63,13 +67,17 @@ class UserManagement extends BaseController
         
         $data = [
             'title' => 'Add New User',
+            'currentPage' => 'users',
             'user' => null,
             'roles' => $this->getRoles(),
             'csrf_token' => $this->getCsrfToken(),
             'flash' => $this->getFlash()
         ];
         
-        return $this->view('users/form', $data);
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
+        $view = $uiMode === 'modern' ? 'users/form_modern' : 'users/form';
+
+        return $this->view($view, $data);
     }
     
     /**
@@ -178,13 +186,17 @@ class UserManagement extends BaseController
         
         $data = [
             'title' => 'Edit User',
+            'currentPage' => 'users',
             'user' => $user,
             'roles' => $this->getRoles(),
             'csrf_token' => $this->getCsrfToken(),
             'flash' => $this->getFlash()
         ];
         
-        return $this->view('users/form', $data);
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
+        $view = $uiMode === 'modern' ? 'users/form_modern' : 'users/form';
+
+        return $this->view($view, $data);
     }
     
     /**
@@ -375,13 +387,17 @@ class UserManagement extends BaseController
         
         $data = [
             'title' => 'User Detail: ' . $user['full_name'],
+            'currentPage' => 'users',
             'user' => $user,
             'loginHistory' => $loginHistoryModel->getByUser($id, 20),
             'activities' => $this->activityModel->getByEntity('user', $id, 50),
             'flash' => $this->getFlash()
         ];
         
-        return $this->view('users/view', $data);
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
+        $view = $uiMode === 'modern' ? 'users/view_modern' : 'users/view';
+
+        return $this->view($view, $data);
     }
     
     /**

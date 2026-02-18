@@ -37,6 +37,7 @@
                 <li><a href="<?= url('/applicant/applications') ?>" class="nav-link"><i class="fas fa-file-alt"></i><span data-translate="nav.applications">My Applications</span></a></li>
                 <li><a href="<?= url('/applicant/documents') ?>" class="nav-link active"><i class="fas fa-folder"></i><span data-translate="nav.documents">Documents</span></a></li>
                 <li><a href="<?= url('/applicant/interview') ?>" class="nav-link"><i class="fas fa-video"></i><span data-translate="nav.interview">Interview</span></a></li>
+                <li><a href="<?= url('/applicant/profile') ?>" class="nav-link"><i class="fas fa-user"></i><span data-translate="nav.profile">Profile</span></a></li>
             </ul>
         </nav>
         <div class="sidebar-footer">
@@ -67,8 +68,8 @@
             <div class="alert alert-info">
                 <i class="fas fa-info-circle"></i>
                 <div>
-                    <strong data-translate="documents.uploadRequiredTitle">Upload Required Documents</strong>
-                    <p data-translate="documents.uploadRequiredDesc">Please upload all required documents to complete your profile. Accepted formats: PDF, JPG, PNG, DOC (max 5MB)</p>
+                    <strong>Upload Required Documents</strong>
+                    <p>Please upload all required documents to complete your profile. Accepted formats: PDF, JPG, PNG, DOC (max 5MB)</p>
                 </div>
             </div>
         </div>

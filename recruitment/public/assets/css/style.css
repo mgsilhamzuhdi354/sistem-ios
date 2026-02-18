@@ -540,6 +540,21 @@ img {
     gap: 8px;
 }
 
+.ship-photo-section {
+    background: var(--white);
+    padding: 20px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.ship-photo {
+    max-width: 100%;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+}
+
 .job-section {
     background: var(--white);
     padding: 30px;

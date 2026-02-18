@@ -1,4 +1,19 @@
-RewriteEngine On
+Options -Indexes +FollowSymLinks
+DirectoryIndex index.php
 
-# Redirect to public folder
-RewriteRule ^(.*)$ public/$1 [L]
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /recruitment/
+
+    # Allow direct access to existing files and directories
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Route everything through public/index.php
+    RewriteRule ^(.*)$ public/index.php?url=$1 [L,QSA]
+</IfModule>
+
+# Security
+<FilesMatch "\.(env|log|sql|sh)$">
+    Require all denied
+</FilesMatch>

@@ -93,7 +93,7 @@
                 
                 <div class="user-dropdown">
                     <button class="user-btn">
-                        <img src="<?= asset('images/avatar-default.png') ?>" alt="Avatar">
+                        <img src="<?= asset('images/avatar-default.svg') ?>" alt="Avatar">
                         <span><?= $_SESSION['user_name'] ?? 'Leader' ?></span>
                         <i class="fas fa-chevron-down"></i>
                     </button>

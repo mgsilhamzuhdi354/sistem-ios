@@ -101,7 +101,7 @@
             <tr class="priority-<?= $app['priority'] ?? 'normal' ?>">
                 <td>
                     <div class="applicant-cell">
-                        <img src="<?= $app['avatar'] ? asset('uploads/avatars/' . $app['avatar']) : asset('images/avatar-default.png') ?>" 
+                        <img src="<?= $app['avatar'] ? asset('uploads/avatars/' . $app['avatar']) : asset('images/avatar-default.svg') ?>" 
                              alt="Avatar" class="avatar-sm">
                         <div class="applicant-info">
                             <strong><?= htmlspecialchars($app['full_name']) ?></strong>

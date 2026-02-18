@@ -31,8 +31,8 @@ class Vacancies extends BaseController {
         // Stats
         $stats = [
             'total' => count($vacancies),
-            'active' => count(array_filter($vacancies, fn($v) => $v['status'] === 'active')),
-            'closed' => count(array_filter($vacancies, fn($v) => $v['status'] !== 'active'))
+            'active' => count(array_filter($vacancies, fn($v) => $v['status'] === 'published')),
+            'closed' => count(array_filter($vacancies, fn($v) => $v['status'] !== 'published'))
         ];
         
         $this->view('master_admin/vacancies/index', [
@@ -57,7 +57,7 @@ class Vacancies extends BaseController {
         $vacancy = $stmt->get_result()->fetch_assoc();
         
         if ($vacancy) {
-            $newStatus = $vacancy['status'] === 'active' ? 'closed' : 'active';
+            $newStatus = $vacancy['status'] === 'published' ? 'closed' : 'published';
             $updateStmt = $this->db->prepare("UPDATE job_vacancies SET status = ? WHERE id = ?");
             $updateStmt->bind_param('si', $newStatus, $id);
             

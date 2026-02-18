@@ -102,6 +102,7 @@ body.admin-body {
     gap: 15px;
     padding: 14px 25px;
     color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
     font-size: 14px;
     font-weight: 500;
     transition: var(--transition);
@@ -118,6 +119,14 @@ body.admin-body {
     color: var(--white);
     background: rgba(255, 255, 255, 0.1);
     border-left-color: var(--secondary);
+}
+
+/* Remove ALL underlines from sidebar links */
+.admin-sidebar .nav-link,
+.admin-sidebar a,
+.crewing-sidebar .nav-link,
+.crewing-sidebar a {
+    text-decoration: none !important;
 }
 
 .nav-link i {

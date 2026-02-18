@@ -43,13 +43,18 @@
         <div class="auth-image">
             <div class="overlay"></div>
             <div class="image-content">
-                <h1><img src="<?= asset('images/logo.jpg') ?>" alt="Indo Ocean" style="height: 32px; vertical-align: middle;"> PT Indo Ocean Crew Services</h1>
+                <h1>PT Indo Ocean Crew Services</h1>
                 <p data-translate="auth.tagline">Join our professional team of seafarers and embark on an exciting maritime career.</p>
             </div>
         </div>
         
         <div class="auth-form-container">
             <div class="auth-form-wrapper">
+                <!-- Centered Logo -->
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <img src="<?= asset('images/logo-circle.png') ?>" alt="Indo Ocean Logo" style="width: 100px; height: 100px; border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                </div>
+                
                 <div class="auth-header">
                     <h2 data-translate="auth.loginTitle">Sign In</h2>
                     <p data-translate="auth.loginSubtitle">Welcome back! Please sign in to your account</p>
@@ -117,7 +122,31 @@
                 </div>
                 
                 <div class="back-link">
-                    <a href="/PT_indoocean/"><i class="fas fa-arrow-left"></i> <span data-translate="common.back">Back to Main Website</span></a>
+                    <?php 
+                    $hostBack = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                    $isLaragonBack = (strpos($hostBack, '.test') !== false || strpos($hostBack, '.local') !== false);
+                    $backUrl = $isLaragonBack ? '/' : '/indoocean/';
+                    ?>
+                    <a href="<?= $backUrl ?>"><i class="fas fa-arrow-left"></i> <span data-translate="common.back">Back to Main Website</span></a>
+                </div>
+                
+                <!-- Divider -->
+                <div style="text-align: center; margin: 20px 0; position: relative;">
+                    <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 0;">
+                    <span style="background: #fff; padding: 0 15px; position: relative; top: -10px; color: #888; font-size: 12px;" data-translate="auth.or">OR</span>
+                </div>
+                
+                <!-- ERP System Access -->
+                <div style="text-align: center;">
+                    <p style="color: #666; font-size: 14px; margin-bottom: 12px;" data-translate="auth.erpAccess">Access Internal System</p>
+                    <?php 
+                    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                    $isLaragonPrettyUrl = (strpos($host, '.test') !== false || strpos($host, '.local') !== false);
+                    $erpUrl = $isLaragonPrettyUrl ? '/erp/' : '/indoocean/erp/';
+                    ?>
+                    <a href="<?= $erpUrl ?>" class="btn-erp" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: linear-gradient(135deg, #0A2463, #1E3A5F); color: white; padding: 12px 28px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(10, 36, 99, 0.3);">
+                        <i class="fas fa-building"></i> <span data-translate="auth.erpBtn">ERP System Login</span>
+                    </a>
                 </div>
             </div>
         </div>

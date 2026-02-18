@@ -81,8 +81,9 @@ class PayrollItemModel extends BaseModel
         'basic_salary', 'overtime', 'leave_pay', 'bonus', 'other_allowance', 'gross_salary',
         'insurance', 'medical', 'advance', 'other_deductions', 'total_deductions',
         'tax_type', 'tax_amount', 'net_salary', 'currency_code',
-        'original_currency', 'original_gross', 'exchange_rate',
-        'status', 'payment_date', 'payment_reference', 'notes'
+        // 'original_currency', 'original_gross', 'exchange_rate',
+        'status', 'payment_date', 'payment_reference', 'notes',
+        'email_sent_at', 'email_status', 'email_failure_reason'
     ];
     
     /**
@@ -226,10 +227,11 @@ class PayrollItemModel extends BaseModel
                 'tax_type' => $contract['tax_type'] ?? 'pph21',
                 'tax_amount' => round($taxAmountUSD, 2),
                 'net_salary' => round($netSalaryUSD, 2),
+                'net_salary' => round($netSalaryUSD, 2),
                 'currency_code' => 'USD', // Always USD after conversion
-                'original_currency' => $originalCurrency,
-                'original_gross' => $originalGross,
-                'exchange_rate' => $exchangeRate,
+                // 'original_currency' => $originalCurrency,
+                // 'original_gross' => $originalGross,
+                // 'exchange_rate' => $exchangeRate,
                 'status' => 'pending'
             ];
             

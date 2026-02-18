@@ -9,14 +9,29 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/crewing.css') ?>">
+    <?php if (isset($_SESSION['ui_scale']) && $_SESSION['ui_scale'] != 1.00): ?>
+    <style>
+        .admin-main {
+            transform: scale(<?= $_SESSION['ui_scale'] ?? 1.00 ?>);
+            transform-origin: top left;
+            width: <?= (100 / ($_SESSION['ui_scale'] ?? 1.00)) ?>%;
+            min-height: <?= (100 / ($_SESSION['ui_scale'] ?? 1.00)) ?>vh;
+        }
+    </style>
+    <?php endif; ?>
 </head>
 <body class="admin-body crewing-body">
     <!-- Sidebar -->
     <aside class="admin-sidebar crewing-sidebar" id="sidebar">
         <div class="sidebar-header">
             <a href="<?= url('/crewing/dashboard') ?>" class="logo">
-                <img src="<?= asset('images/logo.jpg') ?>" alt="Indo Ocean" style="width:32px;height:32px;object-fit:contain;">
-                <span>Crewing</span>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:0.75rem;width:100%;">
+                    <img src="<?= asset('images/logo.jpg') ?>" alt="Indo Ocean" style="width:80px;height:80px;object-fit:contain;border-radius:50%;border:3px solid rgba(255,255,255,0.2);background:white;padding:5px;box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+                    <div style="text-align:center;">
+                        <div style="font-size:1.25rem;font-weight:700;color:#fff;letter-spacing:0.5px;">PT Indo Ocean</div>
+                        <div style="font-size:0.875rem;color:rgba(255,255,255,0.8);font-weight:500;margin-top:0.25rem;">Crewing Services</div>
+                    </div>
+                </div>
             </a>
         </div>
         
@@ -25,31 +40,67 @@
                 <li class="nav-item">
                     <a href="<?= url('/crewing/dashboard') ?>" class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/crewing/dashboard') !== false ? 'active' : '' ?>">
                         <i class="fas fa-tachometer-alt"></i>
-                        <span>Dashboard</span>
+                        <span><?= t('nav.dashboard') ?></span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="<?= url('/crewing/applications') ?>" class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/crewing/applications') !== false ? 'active' : '' ?>">
                         <i class="fas fa-file-alt"></i>
-                        <span>My Applications</span>
+                        <span><?= t('nav.my_applications') ?></span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="<?= url('/crewing/pipeline') ?>" class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/crewing/pipeline') !== false ? 'active' : '' ?>">
                         <i class="fas fa-stream"></i>
-                        <span>Pipeline</span>
+                        <span><?= t('nav.pipeline') ?></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= url('/crewing/daily-report') ?>" class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/crewing/daily-report') !== false ? 'active' : '' ?>">
+                        <i class="fas fa-chart-line"></i>
+                        <span><?= t('nav.daily_report') ?></span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="<?= url('/crewing/team') ?>" class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/crewing/team') !== false ? 'active' : '' ?>">
                         <i class="fas fa-users-cog"></i>
-                        <span>Team Workload</span>
+                        <span><?= t('nav.team_workload') ?></span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="<?= url('/crewing/profile') ?>" class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/crewing/profile') !== false ? 'active' : '' ?>">
-                        <i class="fas fa-user-circle"></i>
-                        <span>My Profile</span>
+                    <a href="<?= url('/crewing/manual-entry') ?>" class="nav-link <?= (strpos($_SERVER['REQUEST_URI'], '/crewing/manual-entry') !== false && strpos($_SERVER['REQUEST_URI'], '/crewing/manual-entries') === false) ? 'active' : '' ?>">
+                        <i class="fas fa-user-plus"></i>
+                        <span><?= t('nav.manual_entry') ?></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= url('/crewing/manual-entries') ?>" class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/crewing/manual-entries') !== false ? 'active' : '' ?>">
+                        <i class="fas fa-list-alt"></i>
+                        <span><?= t('nav.manual_entries_list') ?></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= url('/crewing/vacancies') ?>" class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/crewing/vacancies') !== false ? 'active' : '' ?>">
+                        <i class="fas fa-briefcase"></i>
+                        <span><?= t('nav.job_vacancies') ?></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= url('/crewing/email') ?>" class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/crewing/email') !== false ? 'active' : '' ?>">
+                        <i class="fas fa-envelope"></i>
+                        <span><?= t('nav.email_center') ?></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= url('/crewing/interviews') ?>" class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/crewing/interviews') !== false ? 'active' : '' ?>">
+                        <i class="fas fa-robot"></i>
+                        <span>AI Interview</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= url('/crewing/settings') ?>" class="nav-link <?= strpos($_SERVER['REQUEST_URI'], '/crewing/settings') !== false ? 'active' : '' ?>">
+                        <i class="fas fa-cog"></i>
+                        <span><?= t('nav.settings') ?></span>
                     </a>
                 </li>
                 
@@ -79,7 +130,7 @@
             </div>
             <a href="<?= url('/logout') ?>" class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i>
-                <span>Logout</span>
+                <span><?= t('nav.logout') ?></span>
             </a>
         </div>
     </aside>
@@ -94,7 +145,7 @@
             
             <div class="header-search">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search applications...">
+                <input type="text" placeholder="<?= t('btn.search', 'Search') ?>...">
             </div>
             
             <div class="header-actions">
@@ -105,7 +156,7 @@
                 
                 <div class="user-dropdown">
                     <button class="user-btn">
-                        <img src="<?= asset('images/avatar-default.png') ?>" alt="Avatar">
+                        <img src="<?= asset('images/avatar-default.svg') ?>" alt="Avatar">
                         <span><?= $_SESSION['user_name'] ?? 'Crewing' ?></span>
                         <i class="fas fa-chevron-down"></i>
                     </button>

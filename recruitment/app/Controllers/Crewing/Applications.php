@@ -88,6 +88,11 @@ class Applications extends BaseController {
             ORDER BY s.sort_order
         ")->fetch_all(MYSQLI_ASSOC);
         
+        // Set default UI mode to modern
+        if (!isset($_SESSION['ui_mode'])) {
+            $_SESSION['ui_mode'] = 'modern';
+        }
+        
         $this->view('crewing/applications/index', [
             'applications' => $applications,
             'statuses' => $statuses,
@@ -95,7 +100,8 @@ class Applications extends BaseController {
             'departments' => $departments,
             'crewingStaff' => $crewingStaff,
             'filters' => compact('status', 'department', 'priority', 'search', 'view'),
-            'pageTitle' => 'My Applications'
+            'pageTitle' => 'My Applications',
+            'uiMode' => $_SESSION['ui_mode']
         ]);
     }
     

@@ -87,7 +87,16 @@
                 
                 <div class="user-dropdown">
                     <button class="user-btn">
-                        <img src="<?= asset('images/avatar-default.png') ?>" alt="Avatar">
+                        <?php
+                        $avatar = $_SESSION['user_avatar'] ?? 'images/avatar-default.svg';
+                        if (!empty($avatar) && !str_starts_with($avatar, 'http') && !str_starts_with($avatar, 'images/')) {
+                            // Avatar dari database (uploads/recruiters/...)
+                            $avatarUrl = url('/' . $avatar);
+                        } else {
+                            $avatarUrl = asset($avatar);
+                        }
+                        ?>
+                        <img src="<?= $avatarUrl ?>" alt="Avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
                         <span><?= $_SESSION['user_name'] ?? 'Crewing PIC' ?></span>
                         <i class="fas fa-chevron-down"></i>
                     </button>

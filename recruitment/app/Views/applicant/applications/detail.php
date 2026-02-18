@@ -24,6 +24,7 @@
                 <li><a href="<?= url('/applicant/applications') ?>" class="nav-link active"><i class="fas fa-file-alt"></i><span>My Applications</span></a></li>
                 <li><a href="<?= url('/applicant/documents') ?>" class="nav-link"><i class="fas fa-folder"></i><span>Documents</span></a></li>
                 <li><a href="<?= url('/applicant/interview') ?>" class="nav-link"><i class="fas fa-video"></i><span>Interview</span></a></li>
+                <li><a href="<?= url('/applicant/profile') ?>" class="nav-link"><i class="fas fa-user"></i><span>Profile</span></a></li>
             </ul>
         </nav>
         <div class="sidebar-footer">

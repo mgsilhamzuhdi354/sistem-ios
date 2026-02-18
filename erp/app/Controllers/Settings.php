@@ -27,6 +27,7 @@ class Settings extends BaseController
     {
         $data = [
             'title' => 'Settings',
+            'currentPage' => 'settings',
             'settings' => [
                 'general' => $this->settingsModel->getByGroup('general'),
                 'currency' => $this->settingsModel->getByGroup('currency'),
@@ -38,7 +39,10 @@ class Settings extends BaseController
             'flash' => $this->getFlash()
         ];
         
-        return $this->view('settings/index', $data);
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
+        $view = $uiMode === 'modern' ? 'settings/index_modern' : 'settings/index';
+
+        return $this->view($view, $data);
     }
     
     public function save()

@@ -5,8 +5,8 @@
             <i class="fas fa-anchor"></i>
         </div>
         <div class="welcome-text">
-            <h1>Welcome back, <?= $_SESSION['user_name'] ?? 'Crewing' ?>! 👋</h1>
-            <p>Here's your work overview for today</p>
+            <h1><?= t('dashboard.welcome', 'Welcome back') ?>, <?= $_SESSION['user_name'] ?? 'Crewing' ?>! 👋</h1>
+            <p><?= getCurrentLanguage() === 'en' ? 'Here\'s your work overview for today' : 'Berikut ringkasan pekerjaan Anda hari ini' ?></p>
         </div>
     </div>
     <div class="welcome-date">
@@ -23,7 +23,7 @@
         </div>
         <div class="stat-content">
             <h2><?= $stats['total_assigned'] ?? 0 ?></h2>
-            <span>Active Assignments</span>
+            <span><?= getCurrentLanguage() === 'en' ? 'Active Assignments' : 'Tugas Aktif' ?></span>
         </div>
     </div>
     
@@ -33,7 +33,7 @@
         </div>
         <div class="stat-content">
             <h2><?= $stats['pending_review'] ?? 0 ?></h2>
-            <span>Pending Review</span>
+            <span><?= t('dashboard.pending_review') ?></span>
         </div>
     </div>
     
@@ -43,7 +43,7 @@
         </div>
         <div class="stat-content">
             <h2><?= $stats['in_interview'] ?? 0 ?></h2>
-            <span>In Interview</span>
+            <span><?= getCurrentLanguage() === 'en' ? 'In Interview' : 'Wawancara' ?></span>
         </div>
     </div>
     
@@ -53,7 +53,7 @@
         </div>
         <div class="stat-content">
             <h2><?= $stats['documents_pending'] ?? 0 ?></h2>
-            <span>Docs Pending</span>
+            <span><?= getCurrentLanguage() === 'en' ? 'Docs Pending' : 'Dok. Menunggu' ?></span>
         </div>
     </div>
     
@@ -63,7 +63,7 @@
         </div>
         <div class="stat-content">
             <h2><?= $stats['completed_month'] ?? 0 ?></h2>
-            <span>Completed</span>
+            <span><?= getCurrentLanguage() === 'en' ? 'Completed' : 'Selesai' ?></span>
         </div>
     </div>
     
@@ -73,7 +73,7 @@
         </div>
         <div class="stat-content">
             <h2><?= $stats['new_today'] ?? 0 ?></h2>
-            <span>New Today</span>
+            <span><?= getCurrentLanguage() === 'en' ? 'New Today' : 'Baru Hari Ini' ?></span>
         </div>
     </div>
 </div>
@@ -82,19 +82,19 @@
 <div class="quick-actions-bar">
     <a href="<?= url('/crewing/applications?status=1') ?>" class="quick-action-item">
         <i class="fas fa-eye"></i>
-        <span>Review New</span>
+        <span><?= getCurrentLanguage() === 'en' ? 'Review New' : 'Review Baru' ?></span>
     </a>
     <a href="<?= url('/crewing/pipeline') ?>" class="quick-action-item">
         <i class="fas fa-stream"></i>
-        <span>Pipeline</span>
+        <span><?= t('nav.pipeline') ?></span>
     </a>
     <a href="<?= url('/crewing/team') ?>" class="quick-action-item">
         <i class="fas fa-users"></i>
-        <span>Team</span>
+        <span><?= getCurrentLanguage() === 'en' ? 'Team' : 'Tim' ?></span>
     </a>
     <a href="<?= url('/crewing/applications') ?>" class="quick-action-item">
         <i class="fas fa-list"></i>
-        <span>All Applications</span>
+        <span><?= getCurrentLanguage() === 'en' ? 'All Applications' : 'Semua Lamaran' ?></span>
     </a>
 </div>
 
@@ -104,9 +104,9 @@
         <div class="card-header-modern">
             <div class="header-left">
                 <div class="header-icon blue"><i class="fas fa-stream"></i></div>
-                <h3>My Pipeline</h3>
+                <h3><?= getCurrentLanguage() === 'en' ? 'My Pipeline' : 'Pipeline Saya' ?></h3>
             </div>
-            <a href="<?= url('/crewing/pipeline') ?>" class="view-all-link">View All <i class="fas fa-arrow-right"></i></a>
+            <a href="<?= url('/crewing/pipeline') ?>" class="view-all-link"><?= getCurrentLanguage() === 'en' ? 'View All' : 'Lihat Semua' ?> <i class="fas fa-arrow-right"></i></a>
         </div>
         <div class="card-body-modern">
             <div class="pipeline-visual">
@@ -128,15 +128,15 @@
         <div class="card-header-modern">
             <div class="header-left">
                 <div class="header-icon purple"><i class="fas fa-file-alt"></i></div>
-                <h3>Recent Assignments</h3>
+                <h3><?= getCurrentLanguage() === 'en' ? 'Recent Assignments' : 'Tugas Terbaru' ?></h3>
             </div>
-            <a href="<?= url('/crewing/applications') ?>" class="view-all-link">View All <i class="fas fa-arrow-right"></i></a>
+            <a href="<?= url('/crewing/applications') ?>" class="view-all-link"><?= getCurrentLanguage() === 'en' ? 'View All' : 'Lihat Semua' ?> <i class="fas fa-arrow-right"></i></a>
         </div>
         <div class="card-body-modern">
             <?php if (empty($recentApplications)): ?>
             <div class="empty-state-modern">
                 <i class="fas fa-inbox"></i>
-                <p>No applications assigned yet</p>
+                <p><?= getCurrentLanguage() === 'en' ? 'No applications assigned yet' : 'Belum ada lamaran yang ditugaskan' ?></p>
             </div>
             <?php else: ?>
             <div class="assignments-list">
@@ -165,14 +165,14 @@
         <div class="card-header-modern">
             <div class="header-left">
                 <div class="header-icon orange"><i class="fas fa-robot"></i></div>
-                <h3>Pending Interviews</h3>
+                <h3><?= getCurrentLanguage() === 'en' ? 'Pending Interviews' : 'Wawancara Menunggu' ?></h3>
             </div>
         </div>
         <div class="card-body-modern">
             <?php if (empty($pendingInterviews)): ?>
             <div class="empty-state-modern success">
                 <i class="fas fa-check-circle"></i>
-                <p>No pending interviews</p>
+                <p><?= getCurrentLanguage() === 'en' ? 'No pending interviews' : 'Tidak ada wawancara menunggu' ?></p>
             </div>
             <?php else: ?>
             <div class="interviews-list">
@@ -184,7 +184,7 @@
                     </div>
                     <div class="interview-badges">
                         <span class="days-left <?= $interview['days_left'] <= 2 ? 'danger' : 'warning' ?>">
-                            <i class="fas fa-hourglass-half"></i> <?= $interview['days_left'] ?> days
+                            <i class="fas fa-hourglass-half"></i> <?= $interview['days_left'] ?> <?= getCurrentLanguage() === 'en' ? 'days' : 'hari' ?>
                         </span>
                         <span class="interview-status"><?= ucfirst($interview['status']) ?></span>
                     </div>
@@ -201,9 +201,9 @@
         <div class="card-header-modern">
             <div class="header-left">
                 <div class="header-icon green"><i class="fas fa-users-cog"></i></div>
-                <h3>Team Workload</h3>
+                <h3><?= t('nav.team_workload') ?></h3>
             </div>
-            <a href="<?= url('/crewing/team') ?>" class="view-all-link">Manage <i class="fas fa-arrow-right"></i></a>
+            <a href="<?= url('/crewing/team') ?>" class="view-all-link"><?= getCurrentLanguage() === 'en' ? 'Manage' : 'Kelola' ?> <i class="fas fa-arrow-right"></i></a>
         </div>
         <div class="card-body-modern">
             <div class="team-workload-list">

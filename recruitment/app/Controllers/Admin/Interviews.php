@@ -169,7 +169,9 @@ class Interviews extends BaseController {
         $question = $stmt->get_result()->fetch_assoc();
         
         if ($question) {
-            $this->db->query("DELETE FROM interview_questions WHERE id = $questionId");
+            $delStmt = $this->db->prepare("DELETE FROM interview_questions WHERE id = ?");
+            $delStmt->bind_param('i', $questionId);
+            $delStmt->execute();
             flash('success', 'Question deleted');
             $this->redirect(url('/admin/interviews/questions/' . $question['question_bank_id']));
         } else {
@@ -218,9 +220,12 @@ class Interviews extends BaseController {
             $maxScore = $this->input('max_score') ?: 100;
             
             // Get next sort order
-            $sortOrder = $this->db->query("
-                SELECT MAX(sort_order) + 1 as next FROM interview_questions WHERE question_bank_id = $bankId
-            ")->fetch_assoc()['next'] ?: 1;
+            $sortStmt = $this->db->prepare("
+                SELECT MAX(sort_order) + 1 as next FROM interview_questions WHERE question_bank_id = ?
+            ");
+            $sortStmt->bind_param('i', $bankId);
+            $sortStmt->execute();
+            $sortOrder = $sortStmt->get_result()->fetch_assoc()['next'] ?: 1;
             
             $optionsJson = $options ? json_encode(array_filter(explode("\n", $options))) : null;
             $keywordsJson = $expectedKeywords ? json_encode(array_filter(explode(",", $expectedKeywords))) : null;
@@ -350,10 +355,15 @@ class Interviews extends BaseController {
         }
         
         // Delete all answers for this session
-        $this->db->query("DELETE FROM interview_answers WHERE session_id = $sessionId");
+        $delStmt = $this->db->prepare("DELETE FROM interview_answers WHERE session_id = ?");
+        $delStmt->bind_param('i', $sessionId);
+        $delStmt->execute();
         
         // Get current retry count
-        $currentRetry = $this->db->query("SELECT retry_count FROM interview_sessions WHERE id = $sessionId")->fetch_assoc();
+        $retryStmt = $this->db->prepare("SELECT retry_count FROM interview_sessions WHERE id = ?");
+        $retryStmt->bind_param('i', $sessionId);
+        $retryStmt->execute();
+        $currentRetry = $retryStmt->get_result()->fetch_assoc();
         $newRetryCount = ($currentRetry['retry_count'] ?? 0) + 1;
         
         // Reset session to pending with new expiry and increment retry count
@@ -410,10 +420,15 @@ class Interviews extends BaseController {
         
         if ($stmt->execute()) {
             // Update application status to Interview
-            $this->db->query("UPDATE applications SET status_id = 3, status_updated_at = NOW() WHERE id = $applicationId");
+            $statusStmt = $this->db->prepare("UPDATE applications SET status_id = 3, status_updated_at = NOW() WHERE id = ?");
+            $statusStmt->bind_param('i', $applicationId);
+            $statusStmt->execute();
             
             // Notify applicant
-            $app = $this->db->query("SELECT user_id FROM applications WHERE id = $applicationId")->fetch_assoc();
+            $appStmt = $this->db->prepare("SELECT user_id FROM applications WHERE id = ?");
+            $appStmt->bind_param('i', $applicationId);
+            $appStmt->execute();
+            $app = $appStmt->get_result()->fetch_assoc();
             $notifStmt = $this->db->prepare("
                 INSERT INTO notifications (user_id, title, message, type, action_url, created_at)
                 VALUES (?, 'Interview Assigned', 'You have been assigned an AI interview. Please complete it within $expiryDays days.', 'info', ?, NOW())

@@ -60,12 +60,23 @@ class Users extends BaseController {
         ");
         $crewingStaff = $crewingResult ? $crewingResult->fetch_all(MYSQLI_ASSOC) : [];
         
+        // Get applicants
+        $applicantsResult = $this->db->query("
+            SELECT u.*, r.name as role_name
+            FROM users u
+            JOIN roles r ON u.role_id = r.id
+            WHERE u.role_id = " . ROLE_APPLICANT . "
+            ORDER BY u.created_at DESC
+        ");
+        $applicants = $applicantsResult ? $applicantsResult->fetch_all(MYSQLI_ASSOC) : [];
+        
         $this->view('master_admin/users/index', [
             'pageTitle' => 'User Management',
             'masterAdmins' => $masterAdmins,
             'admins' => $admins,
             'leaders' => $leaders,
-            'crewingStaff' => $crewingStaff
+            'crewingStaff' => $crewingStaff,
+            'applicants' => $applicants
         ]);
     }
     
@@ -89,9 +100,9 @@ class Users extends BaseController {
         $department = trim($this->input('department'));
         $employeeId = trim($this->input('employee_id'));
         
-        // Validation
-        if (!in_array($roleId, [1, 4])) {
-            flash('error', 'Invalid role. Only Admin and Leader can be created here.');
+        // Validation - Allow Master Admin (11), Admin (1), Leader (4), Crewing Staff (5)
+        if (!in_array($roleId, [1, 4, 5, 11])) {
+            flash('error', 'Invalid role selected.');
             redirect('/master-admin/users/create');
         }
         
@@ -128,6 +139,31 @@ class Users extends BaseController {
                 ");
                 $profileStmt->bind_param('iss', $userId, $department, $employeeId);
                 $profileStmt->execute();
+            }
+            
+            // Create crewing profile if role is Crewing Staff
+            if ($roleId == 5) {
+                $profileStmt = $this->db->prepare("
+                    INSERT INTO crewing_profiles (user_id, employee_id) 
+                    VALUES (?, ?)
+                ");
+                $profileStmt->bind_param('is', $userId, $employeeId);
+                $profileStmt->execute();
+                
+                // Auto-create default SMTP config for new crewing user
+                $emailDomain = substr($email, strpos($email, '@') + 1);
+                $smtpHost = 'mail.' . $emailDomain;
+                $smtpPort = 465;
+                $smtpEncryption = 'ssl';
+                $fromName = 'PT Indo Ocean Crew Services';
+                
+                $smtpStmt = $this->db->prepare("
+                    INSERT INTO user_smtp_configs 
+                    (user_id, smtp_host, smtp_port, smtp_username, smtp_password, smtp_encryption, smtp_from_email, smtp_from_name, is_active)
+                    VALUES (?, ?, ?, ?, '', ?, ?, ?, 1)
+                ");
+                $smtpStmt->bind_param('isissss', $userId, $smtpHost, $smtpPort, $email, $smtpEncryption, $email, $fromName);
+                $smtpStmt->execute();
             }
             
             flash('success', 'User created successfully.');
@@ -259,8 +295,8 @@ class Users extends BaseController {
             redirect(url('/master-admin/users'));
         }
         
-        // Check if user exists and is deletable (Admin, Leader, or Crewing)
-        $checkStmt = $this->db->prepare("SELECT id, role_id FROM users WHERE id = ? AND role_id IN (1, 4, 5)");
+        // Check if user exists and is deletable
+        $checkStmt = $this->db->prepare("SELECT id, role_id FROM users WHERE id = ?");
         $checkStmt->bind_param('i', $id);
         $checkStmt->execute();
         $user = $checkStmt->get_result()->fetch_assoc();
@@ -277,28 +313,63 @@ class Users extends BaseController {
             // Delete or update related records - use @ to suppress errors for non-existent tables
             
             // 1. application_assignments
-            @$this->db->query("DELETE FROM application_assignments WHERE assigned_to = $id OR assigned_by = $id");
+            $delStmt = $this->db->prepare("DELETE FROM application_assignments WHERE assigned_to = ? OR assigned_by = ?");
+            $delStmt->bind_param('ii', $id, $id);
+            @$delStmt->execute();
             
             // 2. email_logs
-            @$this->db->query("DELETE FROM email_logs WHERE user_id = $id");
+            $delStmt = $this->db->prepare("DELETE FROM email_logs WHERE user_id = ?");
+            $delStmt->bind_param('i', $id);
+            @$delStmt->execute();
             
             // 3. notifications
-            @$this->db->query("DELETE FROM notifications WHERE user_id = $id");
+            $delStmt = $this->db->prepare("DELETE FROM notifications WHERE user_id = ?");
+            $delStmt->bind_param('i', $id);
+            @$delStmt->execute();
             
-            // 4. leader_profiles
-            @$this->db->query("DELETE FROM leader_profiles WHERE user_id = $id");
+            // 4. user_smtp_configs
+            $delStmt = $this->db->prepare("DELETE FROM user_smtp_configs WHERE user_id = ?");
+            $delStmt->bind_param('i', $id);
+            @$delStmt->execute();
             
-            // 5. crewing_profiles
-            @$this->db->query("DELETE FROM crewing_profiles WHERE user_id = $id");
+            // 5. leader_profiles
+            $delStmt = $this->db->prepare("DELETE FROM leader_profiles WHERE user_id = ?");
+            $delStmt->bind_param('i', $id);
+            @$delStmt->execute();
             
-            // 6. Set NULL for optional references
-            @$this->db->query("UPDATE applications SET reviewed_by = NULL WHERE reviewed_by = $id");
-            @$this->db->query("UPDATE job_vacancies SET created_by = NULL WHERE created_by = $id");
-            @$this->db->query("UPDATE application_status_history SET changed_by = NULL WHERE changed_by = $id");
-            @$this->db->query("UPDATE documents SET verified_by = NULL WHERE verified_by = $id");
-            @$this->db->query("UPDATE interview_question_banks SET created_by = NULL WHERE created_by = $id");
-            @$this->db->query("UPDATE contract_requests SET processed_by = NULL WHERE processed_by = $id");
-            @$this->db->query("UPDATE email_archive SET archived_by = NULL WHERE archived_by = $id");
+            // 6. crewing_profiles
+            $delStmt = $this->db->prepare("DELETE FROM crewing_profiles WHERE user_id = ?");
+            $delStmt->bind_param('i', $id);
+            @$delStmt->execute();
+            
+            // 7. Set NULL for optional references
+            $nullStmt = $this->db->prepare("UPDATE applications SET reviewed_by = NULL WHERE reviewed_by = ?");
+            $nullStmt->bind_param('i', $id);
+            @$nullStmt->execute();
+            
+            $nullStmt = $this->db->prepare("UPDATE job_vacancies SET created_by = NULL WHERE created_by = ?");
+            $nullStmt->bind_param('i', $id);
+            @$nullStmt->execute();
+            
+            $nullStmt = $this->db->prepare("UPDATE application_status_history SET changed_by = NULL WHERE changed_by = ?");
+            $nullStmt->bind_param('i', $id);
+            @$nullStmt->execute();
+            
+            $nullStmt = $this->db->prepare("UPDATE documents SET verified_by = NULL WHERE verified_by = ?");
+            $nullStmt->bind_param('i', $id);
+            @$nullStmt->execute();
+            
+            $nullStmt = $this->db->prepare("UPDATE interview_question_banks SET created_by = NULL WHERE created_by = ?");
+            $nullStmt->bind_param('i', $id);
+            @$nullStmt->execute();
+            
+            $nullStmt = $this->db->prepare("UPDATE contract_requests SET processed_by = NULL WHERE processed_by = ?");
+            $nullStmt->bind_param('i', $id);
+            @$nullStmt->execute();
+            
+            $nullStmt = $this->db->prepare("UPDATE email_archive SET archived_by = NULL WHERE archived_by = ?");
+            $nullStmt->bind_param('i', $id);
+            @$nullStmt->execute();
             
             // 7. Now delete the user
             $stmt = $this->db->prepare("DELETE FROM users WHERE id = ?");

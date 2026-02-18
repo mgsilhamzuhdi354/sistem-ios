@@ -18,10 +18,17 @@ ob_start();
         <span class="badge badge-<?= $statusColors[$period['status']] ?? 'secondary' ?>" style="font-size: 14px; padding: 8px 16px;">
             <?= ucfirst($period['status']) ?>
         </span>
-        <a href="<?= BASE_URL ?>payroll/export/<?= $period['id'] ?>" class="btn btn-secondary">
-            <i class="fas fa-download"></i> Export CSV
+        <a href="<?= BASE_URL ?>payroll/export/<?= $period['id'] ?>" class="btn btn-success">
+            <i class="fas fa-file-excel"></i> Export CSV
         </a>
-        <a href="<?= BASE_URL ?>payroll" class="btn btn-secondary">
+        
+        <?php if ($period['status'] == 'completed'): ?>
+        <a href="<?= BASE_URL ?>payroll/send-emails?period_id=<?= $period['id'] ?>" class="btn btn-primary ml-2" onclick="return confirm('Kirim slip gaji ke <?= $period['total_crew'] ?> email crew? Proses ini akan memakan waktu.')">
+            <i class="fas fa-envelope"></i> Kirim Email Slip Gaji
+        </a>
+        <?php endif; ?>
+        
+        <a href="<?= BASE_URL ?>payroll" class="btn btn-secondary ml-2">
             <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>

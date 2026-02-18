@@ -22,33 +22,37 @@ use App\Models\FlagStateModel;
 use App\Models\RankModel;
 use App\Models\CurrencyModel;
 use App\Models\ClientModel;
+use App\Models\CrewModel;
 
 class Contract extends BaseController
 {
     private $contractModel;
-    
+
     public function __construct()
     {
         parent::__construct();
         $this->contractModel = new ContractModel($this->db);
     }
-    
+
     /**
-     * Feature 1: Contract List with filters
+     * Feature 1: Contract List with filters (with dual-mode support)
      */
     public function index()
     {
-        $page = (int)$this->input('page', 1);
+        // Check UI mode from session (classic or modern)
+        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+
+        $page = (int) $this->input('page', 1);
         $filters = [
             'status' => $this->input('status'),
             'vessel_id' => $this->input('vessel_id'),
             'client_id' => $this->input('client_id'),
             'search' => $this->input('search'),
         ];
-        
+
         $vesselModel = new VesselModel($this->db);
         $clientModel = new ClientModel($this->db);
-        
+
         $data = [
             'title' => 'Contract Management',
             'contracts' => $this->contractModel->getList($filters, $page),
@@ -59,14 +63,17 @@ class Contract extends BaseController
             'vessels' => $vesselModel->getForDropdown(),
             'clients' => $clientModel->getForDropdown(),
             'statuses' => CONTRACT_STATUSES,
-            'flash' => $this->getFlash()
+            'flash' => $this->getFlash(),
+            'uiMode' => $uiMode
         ];
-        
-        return $this->view('contracts/index', $data);
+
+        // Route to appropriate view based on UI mode
+        $view = $uiMode === 'modern' ? 'contracts/modern' : 'contracts/index';
+        return $this->view($view, $data);
     }
-    
+
     /**
-     * Feature 1-7: Create Contract Form
+     * Feature 1-7: Create Contract Form (with recruitment crew integration)
      */
     public function create()
     {
@@ -74,22 +81,79 @@ class Contract extends BaseController
         $clientModel = new ClientModel($this->db);
         $rankModel = new RankModel($this->db);
         $currencyModel = new CurrencyModel($this->db);
-        
+        $crewModel = new CrewModel($this->db);
+
+        // Check UI mode from session
+        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+
+        // Get all crews for dropdown
+        $allCrews = $crewModel->getForDropdown();
+
+        // Get recruitment crews separately (newly approved from recruitment)
+        $recruitmentCrews = $this->getRecruitmentCrews();
+
         $data = [
             'title' => 'Create New Contract',
             'contractNo' => $this->contractModel->generateContractNumber(),
             'vessels' => $vesselModel->getForDropdown(),
             'clients' => $clientModel->getForDropdown(),
+            'crews' => $allCrews,
+            'recruitmentCrews' => $recruitmentCrews,
             'ranks' => $rankModel->getForDropdown(),
             'currencies' => $currencyModel->getForDropdown(),
             'contractTypes' => CONTRACT_TYPES,
             'taxTypes' => TAX_TYPES,
             'deductionTypes' => DEDUCTION_TYPES,
         ];
-        
-        return $this->view('contracts/form', $data);
+
+        // Route to appropriate view based on UI mode
+        $view = $uiMode === 'modern' ? 'contracts/create_modern' : 'contracts/form';
+        return $this->view($view, $data);
     }
-    
+
+    /**
+     * Helper: Get recruitment crews ready for contract
+     */
+    private function getRecruitmentCrews()
+    {
+        // Get crews from recruitment source that are ready for contract
+        // (standby/available status, no active contract)
+        $query = "
+            SELECT 
+                c.id, 
+                c.employee_id,
+                c.full_name, 
+                c.email, 
+                c.phone,
+                c.current_rank_id,
+                c.approved_at,
+                c.source,
+                r.name as rank_name,
+                DATEDIFF(NOW(), c.approved_at) as days_since_approval
+            FROM crews c
+            LEFT JOIN ranks r ON c.current_rank_id = r.id
+            WHERE c.source = 'recruitment'
+            AND c.status IN ('standby', 'available')
+            AND c.id NOT IN (
+                SELECT crew_id FROM contracts 
+                WHERE status IN ('active', 'pending')
+            )
+            ORDER BY c.approved_at DESC
+            LIMIT 50
+        ";
+
+        $result = $this->db->query($query);
+        $crews = [];
+
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $crews[] = $row;
+            }
+        }
+
+        return $crews;
+    }
+
     /**
      * Store new contract with salary, tax, deductions
      */
@@ -98,7 +162,7 @@ class Contract extends BaseController
         if (!$this->isPost()) {
             $this->redirect('contracts');
         }
-        
+
         // Contract data
         $contractData = [
             'contract_no' => $this->input('contract_no'),
@@ -117,7 +181,7 @@ class Contract extends BaseController
             'notes' => $this->input('notes'),
             'created_by' => $this->getCurrentUser()['id'] ?? null,
         ];
-        
+
         // Salary data (Feature 4)
         $exchangeRate = str_replace([',', '.'], '', $this->input('exchange_rate', ''));
         $clientRate = str_replace([',', '.'], '', $this->input('client_rate', ''));
@@ -131,7 +195,7 @@ class Contract extends BaseController
             'bonus' => floatval(str_replace(',', '', $this->input('bonus', 0))),
             'other_allowance' => floatval(str_replace(',', '', $this->input('other_allowance', 0))),
         ];
-        
+
         // Tax data (Feature 5)
         $taxData = [
             'tax_type' => $this->input('tax_type', TAX_TYPE_PPH21),
@@ -139,10 +203,10 @@ class Contract extends BaseController
             'tax_rate' => TAX_RATES[$this->input('tax_type', TAX_TYPE_PPH21)] ?? 5,
             'effective_from' => $this->input('sign_on_date'),
         ];
-        
+
         try {
             $contractId = $this->contractModel->createWithDetails($contractData, $salaryData, $taxData);
-            
+
             // Save deductions (Feature 6)
             if (!empty($_POST['deduction_type'])) {
                 $deductionModel = new ContractDeductionModel($this->db);
@@ -151,7 +215,7 @@ class Contract extends BaseController
                     // Clean amount - remove commas and dots that are thousand separators
                     $amount = str_replace([',', '.'], '', $amount);
                     $amount = floatval($amount);
-                    
+
                     if (!empty($type) && $amount > 0) {
                         $deductionModel->insert([
                             'contract_id' => $contractId,
@@ -163,7 +227,7 @@ class Contract extends BaseController
                     }
                 }
             }
-            
+
             // Create approval workflow (Feature 9)
             if ($contractData['status'] === CONTRACT_STATUS_PENDING) {
                 $approvalModel = new ContractApprovalModel($this->db);
@@ -173,38 +237,41 @@ class Contract extends BaseController
                     'status' => 'pending'
                 ]);
             }
-            
+
             // Log creation (Feature 15)
             $logModel = new ContractLogModel($this->db);
-            $logModel->log($contractId, 'created', [], 
+            $logModel->log(
+                $contractId,
+                'created',
+                [],
                 $this->getCurrentUser()['id'] ?? null,
                 $this->getCurrentUser()['name'] ?? 'System'
             );
-            
+
             $this->setFlash('success', 'Contract created successfully');
             $this->redirect('contracts/' . $contractId);
-            
+
         } catch (\Exception $e) {
             $this->setFlash('error', 'Failed to create contract: ' . $e->getMessage());
             $this->redirect('contracts/create');
         }
     }
-    
+
     /**
-     * View contract detail
+     * View contract detail (accessed via /contracts/view/{id})
      */
-    public function show($id)
+    public function viewContract($id)
     {
         $contract = $this->contractModel->getWithDetails($id);
         if (!$contract) {
             $this->setFlash('error', 'Contract not found');
             $this->redirect('contracts');
         }
-        
+
         $deductionModel = new ContractDeductionModel($this->db);
         $approvalModel = new ContractApprovalModel($this->db);
         $logModel = new ContractLogModel($this->db);
-        
+
         // Get documents
         $documents = $this->db->query("SELECT * FROM contract_documents WHERE contract_id = $id ORDER BY created_at DESC");
         $docList = [];
@@ -213,7 +280,7 @@ class Contract extends BaseController
                 $docList[] = $row;
             }
         }
-        
+
         $data = [
             'title' => 'Contract Detail - ' . $contract['contract_no'],
             'contract' => $contract,
@@ -224,10 +291,18 @@ class Contract extends BaseController
             'daysRemaining' => $this->calculateDaysRemaining($contract['sign_off_date']),
             'flash' => $this->getFlash()
         ];
-        
+
         return $this->view('contracts/view', $data);
     }
-    
+
+    /**
+     * Alias: /contracts/{id} also shows the contract
+     */
+    public function show($id)
+    {
+        return $this->viewContract($id);
+    }
+
     /**
      * Edit contract form
      */
@@ -238,13 +313,13 @@ class Contract extends BaseController
             $this->setFlash('error', 'Contract not found');
             $this->redirect('contracts');
         }
-        
+
         $vesselModel = new VesselModel($this->db);
         $clientModel = new ClientModel($this->db);
         $rankModel = new RankModel($this->db);
         $currencyModel = new CurrencyModel($this->db);
         $deductionModel = new ContractDeductionModel($this->db);
-        
+
         $data = [
             'title' => 'Edit Contract - ' . $contract['contract_no'],
             'contract' => $contract,
@@ -257,10 +332,10 @@ class Contract extends BaseController
             'taxTypes' => TAX_TYPES,
             'deductionTypes' => DEDUCTION_TYPES,
         ];
-        
+
         return $this->view('contracts/form', $data);
     }
-    
+
     /**
      * Update contract
      */
@@ -269,9 +344,9 @@ class Contract extends BaseController
         if (!$this->isPost()) {
             $this->redirect('contracts/' . $id);
         }
-        
+
         $oldContract = $this->contractModel->find($id);
-        
+
         // Update contract
         $contractData = [
             'vessel_id' => $this->input('vessel_id'),
@@ -284,9 +359,9 @@ class Contract extends BaseController
             'notes' => $this->input('notes'),
             'updated_by' => $this->getCurrentUser()['id'] ?? null,
         ];
-        
+
         $this->contractModel->update($id, $contractData);
-        
+
         // Update salary
         $salaryModel = new ContractSalaryModel($this->db);
         $existingSalary = $salaryModel->getByContract($id);
@@ -302,18 +377,18 @@ class Contract extends BaseController
             'leave_pay' => floatval(str_replace(',', '', $this->input('leave_pay', 0))),
             'bonus' => floatval(str_replace(',', '', $this->input('bonus', 0))),
         ];
-        
+
         if ($existingSalary) {
             $salaryModel->update($existingSalary['id'], $salaryData);
         } else {
             $salaryModel->insert($salaryData);
         }
-        
+
         // Update deductions (Feature 6) - delete old and insert new
         $deductionModel = new ContractDeductionModel($this->db);
         // Delete existing deductions for this contract
         $this->db->query("DELETE FROM contract_deductions WHERE contract_id = " . intval($id));
-        
+
         // Insert new deductions from form
         if (!empty($_POST['deduction_type'])) {
             foreach ($_POST['deduction_type'] as $i => $type) {
@@ -321,7 +396,7 @@ class Contract extends BaseController
                 // Clean amount - remove commas and dots that are thousand separators
                 $amount = str_replace([',', '.'], '', $amount);
                 $amount = floatval($amount);
-                
+
                 if (!empty($type) && $amount > 0) {
                     $deductionModel->insert([
                         'contract_id' => $id,
@@ -333,18 +408,21 @@ class Contract extends BaseController
                 }
             }
         }
-        
+
         // Log update (Feature 15)
         $logModel = new ContractLogModel($this->db);
-        $logModel->log($id, 'updated', [],
+        $logModel->log(
+            $id,
+            'updated',
+            [],
             $this->getCurrentUser()['id'] ?? null,
             $this->getCurrentUser()['name'] ?? 'System'
         );
-        
+
         $this->setFlash('success', 'Contract updated successfully');
         $this->redirect('contracts/' . $id);
     }
-    
+
     /**
      * Feature 9: Approve contract
      */
@@ -353,10 +431,10 @@ class Contract extends BaseController
         if (!$this->isPost()) {
             $this->redirect('contracts/' . $id);
         }
-        
+
         $approvalModel = new ContractApprovalModel($this->db);
         $pending = $approvalModel->getPending($id);
-        
+
         if ($pending) {
             $approvalModel->update($pending['id'], [
                 'status' => 'approved',
@@ -365,7 +443,7 @@ class Contract extends BaseController
                 'approved_at' => date('Y-m-d H:i:s'),
                 'notes' => $this->input('notes')
             ]);
-            
+
             // Check if all approvals done, then activate contract
             $allApprovals = $approvalModel->getByContract($id);
             $allApproved = true;
@@ -375,7 +453,7 @@ class Contract extends BaseController
                     break;
                 }
             }
-            
+
             if ($allApproved) {
                 $this->contractModel->update($id, ['status' => CONTRACT_STATUS_ACTIVE]);
             } else {
@@ -387,7 +465,7 @@ class Contract extends BaseController
                     'status' => 'pending'
                 ]);
             }
-            
+
             // Log (Feature 15)
             $logModel = new ContractLogModel($this->db);
             $logModel->log($id, 'approved', [
@@ -395,11 +473,11 @@ class Contract extends BaseController
                 'new' => $pending['approval_level']
             ]);
         }
-        
+
         $this->setFlash('success', 'Contract approved');
         $this->redirect('contracts/' . $id);
     }
-    
+
     /**
      * Feature 9: Reject contract
      */
@@ -408,10 +486,10 @@ class Contract extends BaseController
         if (!$this->isPost()) {
             $this->redirect('contracts/' . $id);
         }
-        
+
         $approvalModel = new ContractApprovalModel($this->db);
         $pending = $approvalModel->getPending($id);
-        
+
         if ($pending) {
             $approvalModel->update($pending['id'], [
                 'status' => 'rejected',
@@ -420,9 +498,9 @@ class Contract extends BaseController
                 'approved_at' => date('Y-m-d H:i:s'),
                 'rejection_reason' => $this->input('reason')
             ]);
-            
+
             $this->contractModel->update($id, ['status' => CONTRACT_STATUS_DRAFT]);
-            
+
             // Log
             $logModel = new ContractLogModel($this->db);
             $logModel->log($id, 'rejected', [
@@ -430,11 +508,11 @@ class Contract extends BaseController
                 'new' => $this->input('reason')
             ]);
         }
-        
+
         $this->setFlash('warning', 'Contract rejected');
         $this->redirect('contracts/' . $id);
     }
-    
+
     /**
      * Feature 11: Renew contract
      */
@@ -445,7 +523,7 @@ class Contract extends BaseController
             $this->setFlash('error', 'Contract not found');
             $this->redirect('contracts');
         }
-        
+
         if ($this->isPost()) {
             // Create new contract based on old one
             $newContractData = [
@@ -464,7 +542,7 @@ class Contract extends BaseController
                 'previous_contract_id' => $id,
                 'created_by' => $this->getCurrentUser()['id'] ?? null,
             ];
-            
+
             // Copy salary
             $salaryData = [
                 'currency_id' => 1,
@@ -473,33 +551,33 @@ class Contract extends BaseController
                 'leave_pay' => $oldContract['leave_pay'] ?? 0,
                 'bonus' => $oldContract['bonus'] ?? 0,
             ];
-            
+
             // Copy tax
             $taxData = [
                 'tax_type' => $oldContract['tax_type'] ?? TAX_TYPE_PPH21,
                 'npwp_number' => $oldContract['npwp_number'],
                 'tax_rate' => $oldContract['tax_rate'] ?? 5,
             ];
-            
+
             $newContractId = $this->contractModel->createWithDetails($newContractData, $salaryData, $taxData);
-            
+
             // Mark old contract as completed
             $this->contractModel->update($id, ['status' => CONTRACT_STATUS_COMPLETED]);
-            
+
             // Log
             $logModel = new ContractLogModel($this->db);
             $logModel->log($id, 'renewed', ['field' => 'new_contract_id', 'new' => $newContractId]);
             $logModel->log($newContractId, 'created_from_renewal', ['field' => 'previous_contract_id', 'new' => $id]);
-            
+
             $this->setFlash('success', 'Contract renewed successfully');
             $this->redirect('contracts/' . $newContractId);
         }
-        
+
         // Show renewal form
         $vesselModel = new VesselModel($this->db);
         $clientModel = new ClientModel($this->db);
         $rankModel = new RankModel($this->db);
-        
+
         $data = [
             'title' => 'Renew Contract - ' . $oldContract['contract_no'],
             'contract' => $oldContract,
@@ -508,10 +586,10 @@ class Contract extends BaseController
             'clients' => $clientModel->getForDropdown(),
             'ranks' => $rankModel->getForDropdown(),
         ];
-        
+
         return $this->view('contracts/renew', $data);
     }
-    
+
     /**
      * Feature 12: Terminate contract
      */
@@ -522,7 +600,7 @@ class Contract extends BaseController
             $this->setFlash('error', 'Contract not found');
             $this->redirect('contracts');
         }
-        
+
         if ($this->isPost()) {
             $this->contractModel->update($id, [
                 'status' => CONTRACT_STATUS_TERMINATED,
@@ -530,68 +608,104 @@ class Contract extends BaseController
                 'termination_reason' => $this->input('termination_reason'),
                 'updated_by' => $this->getCurrentUser()['id'] ?? null,
             ]);
-            
+
             // Log
             $logModel = new ContractLogModel($this->db);
             $logModel->log($id, 'terminated', [
                 'field' => 'termination_reason',
                 'new' => $this->input('termination_reason')
             ]);
-            
+
             $this->setFlash('warning', 'Contract terminated');
             $this->redirect('contracts/' . $id);
         }
-        
+
         $data = [
             'title' => 'Terminate Contract - ' . $contract['contract_no'],
             'contract' => $contract,
         ];
-        
+
         return $this->view('contracts/terminate', $data);
     }
-    
+
     /**
      * Feature 10: Get expiring contracts for alerts
      */
-    public function expiring()
+    public function expiring($days = null)
     {
-        $days = (int)$this->input('days', 60);
+        // Check UI mode from session
+        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+
+        $days = $days ?? (int) $this->input('days', 60);
         $contracts = $this->contractModel->getExpiring($days);
-        
+
+        // Categorize by urgency
+        $critical = [];
+        $warning = [];
+        $upcoming = [];
+
+        foreach ($contracts as $contract) {
+            $daysLeft = $contract['days_remaining'] ?? 999;
+
+            if ($daysLeft <= 7) {
+                $critical[] = $contract;
+            } elseif ($daysLeft <= 30) {
+                $warning[] = $contract;
+            } else {
+                $upcoming[] = $contract;
+            }
+        }
+
         $data = [
             'title' => 'Expiring Contracts',
             'contracts' => $contracts,
+            'critical_count' => count($critical),
+            'warning_count' => count($warning),
+            'upcoming_count' => count($upcoming),
             'days' => $days,
         ];
-        
-        return $this->view('contracts/expiring', $data);
+
+        // Route to appropriate view based on UI mode
+        $view = $uiMode === 'modern' ? 'contracts/expiring_modern' : 'contracts/expiring';
+        return $this->view($view, $data);
     }
-    
+
     /**
      * Delete contract (soft delete or hard delete for draft only)
      */
     public function delete($id)
     {
         $contract = $this->contractModel->find($id);
-        
+
         if ($contract && $contract['status'] === CONTRACT_STATUS_DRAFT) {
             $this->contractModel->delete($id);
             $this->setFlash('success', 'Contract deleted');
         } else {
             $this->setFlash('error', 'Only draft contracts can be deleted');
         }
-        
+
         $this->redirect('contracts');
     }
-    
+
     // Helper methods
     private function calculateDaysRemaining($signOffDate)
     {
-        if (!$signOffDate) return null;
+        if (!$signOffDate)
+            return null;
         $diff = strtotime($signOffDate) - time();
         return floor($diff / 86400);
     }
-    
+
+    /**
+     * Toggle UI Mode between classic and modern
+     */
+    public function toggleMode()
+    {
+        $mode = $this->input('mode', 'classic');
+        $_SESSION['ui_mode'] = in_array($mode, ['classic', 'modern']) ? $mode : 'classic';
+        return $this->redirect('contracts');
+    }
+
     /**
      * Feature 8: Export contract as PDF
      */
@@ -602,10 +716,10 @@ class Contract extends BaseController
             $this->setFlash('error', 'Contract not found');
             $this->redirect('contracts');
         }
-        
+
         $deductionModel = new ContractDeductionModel($this->db);
         $deductions = $deductionModel->getByContract($id);
-        
+
         require_once APPPATH . 'Libraries/PDFGenerator.php';
         $pdf = new \App\Libraries\PDFGenerator();
         $pdf->generateContract($contract, $deductions);

@@ -28,11 +28,29 @@ class EmailSettings extends BaseController {
         // Get stats
         $stats = $this->getStats();
         
+        // Get current SMTP settings
+        $smtpSettings = [
+            'smtp_host' => '',
+            'smtp_port' => '465',
+            'smtp_username' => '',
+            'smtp_password' => '',
+            'smtp_encryption' => 'ssl',
+            'smtp_from_email' => '',
+            'smtp_from_name' => 'PT Indo Ocean Crew Services'
+        ];
+        $result = $this->db->query("SELECT setting_key, setting_value FROM settings WHERE setting_key LIKE 'smtp_%'");
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $smtpSettings[$row['setting_key']] = $row['setting_value'];
+            }
+        }
+        
         $this->view('master_admin/email_settings/index', [
             'pageTitle' => 'Email Settings',
             'templates' => $templates,
             'logs' => $logs,
-            'stats' => $stats
+            'stats' => $stats,
+            'smtpSettings' => $smtpSettings
         ]);
     }
     
@@ -174,10 +192,16 @@ class EmailSettings extends BaseController {
             'smtp_host' => trim($this->input('smtp_host')),
             'smtp_port' => trim($this->input('smtp_port')),
             'smtp_username' => trim($this->input('smtp_username')),
-            'smtp_password' => trim($this->input('smtp_password')),
+            'smtp_encryption' => trim($this->input('smtp_encryption')),
             'smtp_from_email' => trim($this->input('smtp_from_email')),
             'smtp_from_name' => trim($this->input('smtp_from_name'))
         ];
+        
+        // Only update password if provided (don't overwrite with empty)
+        $password = trim($this->input('smtp_password'));
+        if (!empty($password)) {
+            $settings['smtp_password'] = $password;
+        }
         
         foreach ($settings as $key => $value) {
             $stmt = $this->db->prepare("
@@ -188,7 +212,7 @@ class EmailSettings extends BaseController {
             $stmt->execute();
         }
         
-        flash('success', 'SMTP settings saved successfully');
+        flash('success', 'Pengaturan SMTP berhasil disimpan!');
         redirect(url('/master-admin/email-settings'));
     }
     

@@ -108,15 +108,18 @@ class Archive extends BaseController {
             'this_month' => 0
         ];
         
-        $result = $this->db->query("
+        $stmt = $this->db->prepare("
             SELECT 
                 COUNT(*) as total,
                 SUM(CASE WHEN final_status = 'approved' THEN 1 ELSE 0 END) as approved,
                 SUM(CASE WHEN final_status = 'rejected' THEN 1 ELSE 0 END) as rejected,
                 SUM(CASE WHEN MONTH(archived_at) = MONTH(CURRENT_DATE()) AND YEAR(archived_at) = YEAR(CURRENT_DATE()) THEN 1 ELSE 0 END) as this_month
             FROM archived_applications
-            WHERE YEAR(archived_at) = $year
+            WHERE YEAR(archived_at) = ?
         ");
+        $stmt->bind_param('i', $year);
+        $stmt->execute();
+        $result = $stmt->get_result();
         
         if ($result) {
             $stats = $result->fetch_assoc();
@@ -216,7 +219,9 @@ class Archive extends BaseController {
         
         if ($stmt->execute()) {
             // Delete from active applications
-            $this->db->query("DELETE FROM applications WHERE id = $appId");
+            $delStmt = $this->db->prepare("DELETE FROM applications WHERE id = ?");
+            $delStmt->bind_param('i', $appId);
+            $delStmt->execute();
             
             return $this->json(['success' => true, 'message' => 'Application archived successfully']);
         }
@@ -238,7 +243,10 @@ class Archive extends BaseController {
         }
         
         // Check if original user still exists
-        $userCheck = $this->db->query("SELECT id FROM users WHERE id = {$archive['user_id']}")->fetch_assoc();
+        $userCheckStmt = $this->db->prepare("SELECT id FROM users WHERE id = ?");
+        $userCheckStmt->bind_param('i', $archive['user_id']);
+        $userCheckStmt->execute();
+        $userCheck = $userCheckStmt->get_result()->fetch_assoc();
         if (!$userCheck) {
             return $this->json(['success' => false, 'message' => 'Original user no longer exists']);
         }
@@ -269,7 +277,9 @@ class Archive extends BaseController {
         
         if ($stmt->execute()) {
             // Delete from archive
-            $this->db->query("DELETE FROM archived_applications WHERE id = $id");
+            $delStmt = $this->db->prepare("DELETE FROM archived_applications WHERE id = ?");
+            $delStmt->bind_param('i', $id);
+            $delStmt->execute();
             
             return $this->json(['success' => true, 'message' => 'Application restored successfully']);
         }
@@ -308,12 +318,16 @@ class Archive extends BaseController {
         $year = $_GET['year'] ?? date('Y');
         $status = $_GET['status'] ?? 'all';
         
-        $where = "WHERE YEAR(archived_at) = $year";
+        $where = "WHERE YEAR(archived_at) = ?";
+        $params = [$year];
+        $types = 'i';
         if ($status !== 'all') {
-            $where .= " AND final_status = '$status'";
+            $where .= " AND final_status = ?";
+            $params[] = $status;
+            $types .= 's';
         }
         
-        $result = $this->db->query("
+        $stmt = $this->db->prepare("
             SELECT 
                 applicant_name as 'Name',
                 applicant_email as 'Email',
@@ -331,6 +345,9 @@ class Archive extends BaseController {
             $where
             ORDER BY archived_at DESC
         ");
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
         
         $data = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
         

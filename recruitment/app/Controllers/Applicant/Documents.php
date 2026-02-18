@@ -113,7 +113,9 @@ class Documents extends BaseController {
             }
             
             // Delete old record
-            $this->db->query("DELETE FROM documents WHERE user_id = $userId AND document_type_id = $documentTypeId");
+            $delStmt = $this->db->prepare("DELETE FROM documents WHERE user_id = ? AND document_type_id = ?");
+            $delStmt->bind_param('ii', $userId, $documentTypeId);
+            $delStmt->execute();
             
             // Insert new document
             $relPath = 'uploads/documents/' . $userId . '/' . $fileName;
@@ -167,7 +169,9 @@ class Documents extends BaseController {
         }
         
         // Delete record
-        $this->db->query("DELETE FROM documents WHERE id = $id");
+        $delStmt = $this->db->prepare("DELETE FROM documents WHERE id = ?");
+        $delStmt->bind_param('i', $id);
+        $delStmt->execute();
         
         // Update profile completion
         $this->updateProfileCompletion($userId);
@@ -181,14 +185,19 @@ class Documents extends BaseController {
         $requiredCount = $this->db->query("SELECT COUNT(*) as c FROM document_types WHERE is_required = 1")->fetch_assoc()['c'];
         
         // Count uploaded required documents
-        $uploadedCount = $this->db->query("
+        $uploadedStmt = $this->db->prepare("
             SELECT COUNT(*) as c FROM documents d
             JOIN document_types dt ON d.document_type_id = dt.id
-            WHERE d.user_id = $userId AND dt.is_required = 1
-        ")->fetch_assoc()['c'];
+            WHERE d.user_id = ? AND dt.is_required = 1
+        ");
+        $uploadedStmt->bind_param('i', $userId);
+        $uploadedStmt->execute();
+        $uploadedCount = $uploadedStmt->get_result()->fetch_assoc()['c'];
         
         $completion = $requiredCount > 0 ? round(($uploadedCount / $requiredCount) * 100) : 0;
         
-        $this->db->query("UPDATE applicant_profiles SET profile_completion = $completion WHERE user_id = $userId");
+        $updateStmt = $this->db->prepare("UPDATE applicant_profiles SET profile_completion = ? WHERE user_id = ?");
+        $updateStmt->bind_param('ii', $completion, $userId);
+        $updateStmt->execute();
     }
 }

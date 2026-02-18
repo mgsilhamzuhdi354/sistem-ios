@@ -76,8 +76,10 @@
                         <span class="badge bg-primary"><?= $v['application_count'] ?></span>
                     </td>
                     <td>
-                        <?php if ($v['status'] === 'active'): ?>
+                        <?php if ($v['status'] === 'published'): ?>
                         <span class="status-badge active"><i class="fas fa-circle"></i> Active</span>
+                        <?php elseif ($v['status'] === 'draft'): ?>
+                        <span class="status-badge draft"><i class="fas fa-circle"></i> Draft</span>
                         <?php else: ?>
                         <span class="status-badge closed"><i class="fas fa-circle"></i> Closed</span>
                         <?php endif; ?>
@@ -85,12 +87,15 @@
                     <td><?= date('d M Y', strtotime($v['created_at'])) ?></td>
                     <td>
                         <div class="action-buttons">
-                            <form action="<?= url('/master-admin/vacancies/toggle/' . $v['id']) ?>" method="post" style="display:inline;">
-                                <?= csrf_field() ?>
-                                <button type="submit" class="btn-action <?= $v['status'] === 'active' ? 'warning' : 'success' ?>" title="<?= $v['status'] === 'active' ? 'Close' : 'Activate' ?>">
-                                    <i class="fas fa-<?= $v['status'] === 'active' ? 'pause' : 'play' ?>"></i>
-                                </button>
-                            </form>
+                            <?php if ($v['status'] === 'published'): ?>
+                            <a href="javascript:void(0)" class="btn-action-text deactivate" title="Deactivate" onclick="toggleVacancy(<?= $v['id'] ?>, 'Nonaktifkan lowongan ini?')">
+                                <i class="fas fa-pause"></i> Deactivate
+                            </a>
+                            <?php else: ?>
+                            <a href="javascript:void(0)" class="btn-action-text activate" title="Activate" onclick="toggleVacancy(<?= $v['id'] ?>, 'Aktifkan lowongan ini?')">
+                                <i class="fas fa-play"></i> Activate
+                            </a>
+                            <?php endif; ?>
                             <a href="<?= url('/admin/vacancies/edit/' . $v['id']) ?>" class="btn-action primary" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </a>
@@ -204,6 +209,7 @@
 .action-buttons {
     display: flex;
     gap: 0.5rem;
+    align-items: center;
 }
 .btn-action {
     width: 32px;
@@ -217,6 +223,7 @@
     transition: transform 0.2s;
     font-size: 0.8rem;
     color: white;
+    text-decoration: none;
 }
 .btn-action:hover {
     transform: scale(1.1);
@@ -225,4 +232,48 @@
 .btn-action.success { background: linear-gradient(135deg, #22c55e, #16a34a); }
 .btn-action.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
 .btn-action.danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+/* Status Toggle Buttons */
+.btn-action-text {
+    border: none;
+    border-radius: 8px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: white;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+.btn-action-text:hover { transform: scale(1.05); color: white; }
+.btn-action-text.activate { background: linear-gradient(135deg, #22c55e, #16a34a); }
+.btn-action-text.deactivate { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+/* Draft status badge */
+.status-badge.draft {
+    background: #fef3c7;
+    color: #92400e;
+}
 </style>
+
+<script>
+function toggleVacancy(id, message) {
+    if (!confirm(message)) return;
+    
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '<?= url('/master-admin/vacancies/toggle/') ?>' + id;
+    
+    var csrf = document.createElement('input');
+    csrf.type = 'hidden';
+    csrf.name = 'csrf_token';
+    csrf.value = '<?= csrf_token() ?>';
+    form.appendChild(csrf);
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>

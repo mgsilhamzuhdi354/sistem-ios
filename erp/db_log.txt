@@ -1,0 +1,8 @@
+Starting fixer at 2026-01-25 21:31:29
+Connecting to erp_db at localhost...
+Connected successfully.
+Existing columns: id, payroll_period_id, contract_id, crew_name, rank_name, vessel_name, basic_salary, overtime, leave_pay, bonus, other_allowance, gross_salary, insurance, medical, advance, other_deductions, total_deductions, tax_type, tax_amount, net_salary, currency_code, original_currency, original_gross, exchange_rate, status, payment_date, payment_reference, notes, created_at
+Column 'original_currency' already exists.
+Column 'original_gross' already exists.
+Column 'exchange_rate' already exists.
+Done.

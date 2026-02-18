@@ -5,16 +5,16 @@
             <i class="fas fa-users-cog"></i>
         </div>
         <div>
-            <h1>Team Workload</h1>
-            <p>Monitor and manage team assignments</p>
+            <h1><?= t('nav.team_workload') ?></h1>
+            <p><?= getCurrentLanguage() === 'en' ? 'Monitor and manage team assignments' : 'Pantau dan kelola penugasan tim' ?></p>
         </div>
     </div>
     <div class="header-actions">
         <?php if ($unassignedCount > 0): ?>
         <form method="POST" action="<?= url('/crewing/team/auto-assign-all') ?>" style="display: inline;">
             <?= csrf_field() ?>
-            <button type="submit" class="btn-action-gradient" onclick="return confirm('Auto-assign all unassigned applications?')">
-                <i class="fas fa-magic"></i> Auto-Assign All
+            <button type="submit" class="btn-action-gradient" onclick="return confirm('<?= getCurrentLanguage() === 'en' ? 'Auto-assign all unassigned applications?' : 'Tugaskan otomatis semua lamaran yang belum ditugaskan?' ?>')">
+                <i class="fas fa-magic"></i> <?= getCurrentLanguage() === 'en' ? 'Auto-Assign All' : 'Tugaskan Semua' ?>
                 <span class="count-badge"><?= $unassignedCount ?></span>
             </button>
         </form>
@@ -46,7 +46,7 @@
                 <span class="email-badge"><?= htmlspecialchars($crew['email']) ?></span>
             </div>
             <?php if (!$crew['is_active']): ?>
-            <span class="inactive-ribbon">Inactive</span>
+            <span class="inactive-ribbon"><?= getCurrentLanguage() === 'en' ? 'Inactive' : 'Tidak Aktif' ?></span>
             <?php endif; ?>
         </div>
         
@@ -68,7 +68,7 @@
                     <div class="progress-fill <?= $barClass ?>" style="width: <?= $percentage ?>%"></div>
                 </div>
                 <div class="workload-count">
-                    <span><?= $crew['active_assignments'] ?></span> / <span><?= $max ?></span> slots
+                    <span><?= $crew['active_assignments'] ?></span> / <span><?= $max ?></span> <?= getCurrentLanguage() === 'en' ? 'slots' : 'slot' ?>
                 </div>
             </div>
             
@@ -112,9 +112,9 @@
                             $deptNames[] = $departmentsMap[$id];
                         }
                     }
-                    echo implode(', ', $deptNames) ?: 'All Departments';
+                    echo implode(', ', $deptNames) ?: (getCurrentLanguage() === 'en' ? 'All Departments' : 'Semua Departemen');
                 } else {
-                    echo 'All Departments';
+                    echo getCurrentLanguage() === 'en' ? 'All Departments' : 'Semua Departemen';
                 }
                 ?>
             </div>
@@ -143,8 +143,8 @@
             <i class="fas fa-exclamation-triangle"></i>
         </div>
         <div>
-            <h2>Unassigned Applications</h2>
-            <p><?= $unassignedCount ?> applications need to be assigned</p>
+            <h2><?= getCurrentLanguage() === 'en' ? 'Unassigned Applications' : 'Lamaran Belum Ditugaskan' ?></h2>
+            <p><?= $unassignedCount ?> <?= getCurrentLanguage() === 'en' ? 'applications need to be assigned' : 'lamaran perlu ditugaskan' ?></p>
         </div>
     </div>
     
@@ -154,21 +154,21 @@
         <div class="bulk-actions-modern">
             <div class="select-control">
                 <input type="checkbox" id="selectAll" class="checkbox-modern">
-                <label for="selectAll">Select All</label>
+                <label for="selectAll"><?= getCurrentLanguage() === 'en' ? 'Select All' : 'Pilih Semua' ?></label>
             </div>
             
             <div class="assign-controls">
                 <select name="assign_to" class="select-modern" required>
-                    <option value="">Assign to...</option>
+                    <option value=""><?= getCurrentLanguage() === 'en' ? 'Assign to...' : 'Tugaskan ke...' ?></option>
                     <?php foreach ($crewingStaff as $crew): ?>
                     <?php if ($crew['is_active']): ?>
                     <option value="<?= $crew['id'] ?>">
-                        <?= htmlspecialchars($crew['full_name']) ?> (<?= $crew['active_assignments'] ?> active)
+                        <?= htmlspecialchars($crew['full_name']) ?> (<?= $crew['active_assignments'] ?> <?= getCurrentLanguage() === 'en' ? 'active' : 'aktif' ?>)
                     </option>
                     <?php endif; ?>
                     <?php endforeach; ?>
                 </select>
-                <input type="text" name="notes" class="input-modern" placeholder="Notes (optional)">
+                <input type="text" name="notes" class="input-modern" placeholder="<?= getCurrentLanguage() === 'en' ? 'Notes (optional)' : 'Catatan (opsional)' ?>">
                 <button type="submit" class="btn-assign-modern" id="bulkAssignBtn" disabled>
                     <i class="fas fa-user-plus"></i> 
                     <span>Assign</span>
@@ -182,11 +182,11 @@
                 <thead>
                     <tr>
                         <th width="40"><input type="checkbox" id="selectAllHeader" class="checkbox-modern"></th>
-                        <th>Applicant</th>
-                        <th>Vacancy</th>
+                        <th><?= getCurrentLanguage() === 'en' ? 'Applicant' : 'Pelamar' ?></th>
+                        <th><?= getCurrentLanguage() === 'en' ? 'Vacancy' : 'Lowongan' ?></th>
                         <th>Status</th>
-                        <th>Submitted</th>
-                        <th>Action</th>
+                        <th><?= getCurrentLanguage() === 'en' ? 'Submitted' : 'Dikirim' ?></th>
+                        <th><?= getCurrentLanguage() === 'en' ? 'Action' : 'Aksi' ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -237,7 +237,7 @@
     align-items: center;
     margin-bottom: 2rem;
     padding: 1.5rem 2rem;
-    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #3b82f6 100%);
     border-radius: 16px;
     color: white;
 }
@@ -709,6 +709,42 @@ document.addEventListener('DOMContentLoaded', function() {
             checkboxes.forEach(cb => cb.checked = this.checked);
             if (selectAll) selectAll.checked = this.checked;
             updateBulkBtn();
+        });
+    }
+    
+    // Handle "Assign" button clicks on team member cards
+    const assignToBtns = document.querySelectorAll('.assign-to-btn');
+    const assignToDropdown = document.querySelector('select[name="assign_to"]');
+    const bulkAssignForm = document.getElementById('bulkAssignForm');
+    
+    if (assignToBtns.length > 0) {
+        assignToBtns.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Check if any applications are selected
+                const checkedApps = document.querySelectorAll('.app-checkbox:checked');
+                if (checkedApps.length === 0) {
+                    alert('Please select at least one application to assign.');
+                    return;
+                }
+                
+                // Get the crewing ID from the button's data attribute
+                const crewingId = this.getAttribute('data-crewing-id');
+                const crewingName = this.getAttribute('data-crewing-name');
+                
+                // Auto-select the team member in the dropdown
+                if (assignToDropdown) {
+                    assignToDropdown.value = crewingId;
+                }
+                
+                // Confirm and submit
+                if (confirm(`Assign ${checkedApps.length} application(s) to ${crewingName}?`)) {
+                    if (bulkAssignForm) {
+                        bulkAssignForm.submit();
+                    }
+                }
+            });
         });
     }
 });

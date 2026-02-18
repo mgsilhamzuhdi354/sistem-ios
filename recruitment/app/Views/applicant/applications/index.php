@@ -66,6 +66,12 @@
                         <span data-translate="nav.interview">Interview</span>
                     </a>
                 </li>
+                <li>
+                    <a href="<?= url('/applicant/profile') ?>" class="nav-link">
+                        <i class="fas fa-user"></i>
+                        <span data-translate="nav.profile">Profile</span>
+                    </a>
+                </li>
             </ul>
         </nav>
         

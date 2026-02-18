@@ -61,6 +61,7 @@ body.applicant-body {
     color: var(--primary);
     font-size: 14px;
     font-weight: 700;
+    text-decoration: none;
 }
 
 .sidebar-header .logo img {
@@ -96,6 +97,7 @@ body.applicant-body {
     font-weight: 500;
     transition: var(--transition);
     border-left: 3px solid transparent;
+    text-decoration: none;
 }
 
 .sidebar-nav .nav-link:hover {
@@ -130,6 +132,7 @@ body.applicant-body {
     font-size: 14px;
     width: 100%;
     transition: var(--transition);
+    text-decoration: none;
 }
 
 .logout-btn:hover {

@@ -13,8 +13,10 @@
                         <label class="form-label">Role <span class="text-danger">*</span></label>
                         <select name="role_id" class="form-select" required onchange="toggleLeaderFields(this.value)">
                             <option value="">Select Role...</option>
-                            <option value="1">Admin (Vacancy On/Off only)</option>
+                            <option value="11">Master Admin (Full System Access)</option>
+                            <option value="1">Admin (Vacancy Management)</option>
                             <option value="4">Leader (Team & Pipeline Management)</option>
+                            <option value="5">Crewing Staff (Application Handler)</option>
                         </select>
                     </div>
                     
@@ -61,6 +63,7 @@
 
 <script>
 function toggleLeaderFields(roleId) {
-    document.getElementById('leaderFields').style.display = roleId == 4 ? 'block' : 'none';
+    // Show additional fields for Leader (4) and Crewing Staff (5)
+    document.getElementById('leaderFields').style.display = (roleId == 4 || roleId == 5) ? 'block' : 'none';
 }
 </script>

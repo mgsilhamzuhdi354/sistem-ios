@@ -9,7 +9,7 @@ class Applicants extends BaseController {
     public function __construct() {
         parent::__construct();
         
-        if (!isLoggedIn() || !isAdmin()) {
+        if (!isLoggedIn() || (!isAdmin() && !isMasterAdmin())) {
             flash('error', 'Access denied');
             redirect(url('/login'));
         }

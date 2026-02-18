@@ -132,7 +132,22 @@ class CrewingManagement extends BaseController {
             $profileStmt->bind_param('isiiss', $userId, $employeeId, $isPic, $maxApplications, $specialization, $deptIdsJson);
             $profileStmt->execute();
             
-            flash('success', 'Crewing staff added successfully');
+            // Auto-create default SMTP config for new crewing user
+            $emailDomain = substr($email, strpos($email, '@') + 1);
+            $smtpHost = 'mail.' . $emailDomain;
+            $smtpPort = 465;
+            $smtpEncryption = 'ssl';
+            $fromName = 'PT Indo Ocean Crew Services';
+            
+            $smtpStmt = $this->db->prepare("
+                INSERT INTO user_smtp_configs 
+                (user_id, smtp_host, smtp_port, smtp_username, smtp_password, smtp_encryption, smtp_from_email, smtp_from_name, is_active)
+                VALUES (?, ?, ?, ?, '', ?, ?, ?, 1)
+            ");
+            $smtpStmt->bind_param('isissss', $userId, $smtpHost, $smtpPort, $email, $smtpEncryption, $email, $fromName);
+            $smtpStmt->execute();
+            
+            flash('success', 'Crewing staff added successfully. SMTP email auto-configured - password needs to be set in Settings.');
             $this->redirect(url('/admin/crewing'));
         } else {
             flash('error', 'Failed to add crewing staff');
@@ -289,7 +304,14 @@ class CrewingManagement extends BaseController {
         }
         
         // Delete crewing profile first
-        $this->db->query("DELETE FROM crewing_profiles WHERE user_id = $id");
+        $delProfile = $this->db->prepare("DELETE FROM crewing_profiles WHERE user_id = ?");
+        $delProfile->bind_param('i', $id);
+        $delProfile->execute();
+        
+        // Delete SMTP config
+        $delSmtp = $this->db->prepare("DELETE FROM user_smtp_configs WHERE user_id = ?");
+        $delSmtp->bind_param('i', $id);
+        $delSmtp->execute();
         
         // Delete user
         $stmt = $this->db->prepare("DELETE FROM users WHERE id = ?");

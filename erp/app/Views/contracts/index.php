@@ -8,50 +8,52 @@ ob_start();
 
 <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
     <div>
-        <h1>Contract Management</h1>
-        <p>Manage crew contracts, renewals, and terminations</p>
+        <h1 data-translate="contract_management">Manajemen Kontrak</h1>
+        <p data-translate="contract_management_subtitle">Kelola kontrak crew, perpanjangan, dan pemutusan</p>
     </div>
-    <a href="<?= BASE_URL ?>contracts/create" class="btn btn-primary">
-        <i class="fas fa-plus"></i> New Contract
-    </a>
+    <div style="display: flex; gap: 12px; align-items: center;">
+        <a href="<?= BASE_URL ?>contracts/create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> <span data-translate="btn_new_contract">Kontrak Baru</span>
+        </a>
+    </div>
 </div>
 
 <!-- Filters -->
 <div class="card" style="margin-bottom: 24px;">
     <form method="GET" action="<?= BASE_URL ?>contracts" style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end;">
         <div class="form-group" style="margin: 0; flex: 1; min-width: 200px;">
-            <label class="form-label">Search</label>
-            <input type="text" name="search" class="form-control" placeholder="Contract No or Crew Name" 
+            <label class="form-label" data-translate="btn_search">Cari</label>
+            <input type="text" name="search" class="form-control" data-translate-placeholder="search_contract_crew" placeholder="No Kontrak atau Nama Crew" 
                    value="<?= htmlspecialchars($filters['search'] ?? '') ?>">
         </div>
         <div class="form-group" style="margin: 0;">
-            <label class="form-label">Status</label>
+            <label class="form-label" data-translate="label_status">Status</label>
             <select name="status" class="form-control" style="min-width: 150px;">
-                <option value="">All Status</option>
+                <option value="" data-translate="filter_all_status">Semua Status</option>
                 <?php foreach ($statuses as $key => $label): ?>
                     <option value="<?= $key ?>" <?= ($filters['status'] ?? '') === $key ? 'selected' : '' ?>><?= $label ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
         <div class="form-group" style="margin: 0;">
-            <label class="form-label">Vessel</label>
+            <label class="form-label" data-translate="th_vessel">Kapal</label>
             <select name="vessel_id" class="form-control" style="min-width: 150px;">
-                <option value="">All Vessels</option>
+                <option value="" data-translate="filter_all_vessels">Semua Kapal</option>
                 <?php foreach ($vessels as $v): ?>
                     <option value="<?= $v['id'] ?>" <?= ($filters['vessel_id'] ?? '') == $v['id'] ? 'selected' : '' ?>><?= htmlspecialchars($v['name']) ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
         <div class="form-group" style="margin: 0;">
-            <label class="form-label">Client</label>
+            <label class="form-label" data-translate="client">Klien</label>
             <select name="client_id" class="form-control" style="min-width: 150px;">
-                <option value="">All Clients</option>
+                <option value="" data-translate="filter_all_clients">Semua Klien</option>
                 <?php foreach ($clients as $c): ?>
                     <option value="<?= $c['id'] ?>" <?= ($filters['client_id'] ?? '') == $c['id'] ? 'selected' : '' ?>><?= htmlspecialchars($c['name']) ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
-        <button type="submit" class="btn btn-secondary"><i class="fas fa-filter"></i> Filter</button>
+        <button type="submit" class="btn btn-secondary"><i class="fas fa-filter"></i> <span data-translate="btn_filter">Filter</span></button>
         <a href="<?= BASE_URL ?>contracts" class="btn btn-secondary"><i class="fas fa-times"></i></a>
     </form>
 </div>
@@ -61,23 +63,23 @@ ob_start();
     <table class="data-table">
         <thead>
             <tr>
-                <th>Contract No</th>
-                <th>Crew Name</th>
-                <th>Rank</th>
-                <th>Vessel</th>
-                <th>Client</th>
-                <th>Sign On</th>
-                <th>Sign Off</th>
-                <th>Remaining</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th data-translate="th_contract_no">No Kontrak</th>
+                <th data-translate="th_crew_name">Nama Crew</th>
+                <th data-translate="th_rank">Jabatan</th>
+                <th data-translate="th_vessel">Kapal</th>
+                <th data-translate="client">Klien</th>
+                <th data-translate="th_sign_on">Naik Kapal</th>
+                <th data-translate="th_sign_off">Turun Kapal</th>
+                <th data-translate="th_remaining">Sisa</th>
+                <th data-translate="th_status">Status</th>
+                <th data-translate="th_actions">Aksi</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($contracts)): ?>
                 <tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 40px;">
                     <i class="fas fa-file-contract" style="font-size: 40px; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
-                    No contracts found
+                    <span data-translate="no_contracts_found">Tidak ada kontrak</span>
                 </td></tr>
             <?php else: ?>
                 <?php foreach ($contracts as $contract): ?>
@@ -99,7 +101,7 @@ ob_start();
                         <td><?= $contract['sign_off_date'] ? date('d M Y', strtotime($contract['sign_off_date'])) : '-' ?></td>
                         <td>
                             <?php if ($days !== null && in_array($contract['status'], ['active', 'onboard'])): ?>
-                                <span class="badge badge-<?= $daysClass ?>"><?= $days ?> days</span>
+                                <span class="badge badge-<?= $daysClass ?>"><?= $days ?> <span data-translate="days">hari</span></span>
                             <?php else: ?>
                                 -
                             <?php endif; ?>
@@ -121,7 +123,7 @@ ob_start();
     <!-- Pagination -->
     <?php if ($total > $perPage): ?>
     <div class="pagination">
-        <span class="pagination-info">Showing <?= (($page - 1) * $perPage) + 1 ?> - <?= min($page * $perPage, $total) ?> of <?= $total ?> contracts</span>
+        <span class="pagination-info"><span data-translate="showing">Menampilkan</span> <?= (($page - 1) * $perPage) + 1 ?> - <?= min($page * $perPage, $total) ?> <span data-translate="of">dari</span> <?= $total ?> <span data-translate="contracts">kontrak</span></span>
         <div class="pagination-buttons">
             <?php $totalPages = ceil($total / $perPage); ?>
             <?php if ($page > 1): ?>

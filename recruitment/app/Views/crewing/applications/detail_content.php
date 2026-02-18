@@ -20,7 +20,7 @@
         </div>
         <div class="card-body">
             <div class="applicant-profile">
-                <img src="<?= $application['avatar'] ? asset('uploads/avatars/' . $application['avatar']) : asset('images/avatar-default.png') ?>" 
+                <img src="<?= $application['avatar'] ? asset('uploads/avatars/' . $application['avatar']) : asset('images/avatar-default.svg') ?>" 
                      alt="Avatar" class="avatar-large">
                 <div class="profile-info">
                     <h3><?= htmlspecialchars($application['full_name']) ?></h3>
