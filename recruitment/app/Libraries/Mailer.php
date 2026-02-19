@@ -10,6 +10,16 @@ $autoloadPath = dirname(APPPATH) . '/vendor/autoload.php';
 if (file_exists($autoloadPath)) {
     require_once $autoloadPath;
 }
+
+// Fallback: directly load PHPMailer if autoload didn't register it
+if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+    $phpmailerSrc = dirname(APPPATH) . '/vendor/phpmailer/phpmailer/src/';
+    if (is_dir($phpmailerSrc)) {
+        require_once $phpmailerSrc . 'Exception.php';
+        require_once $phpmailerSrc . 'PHPMailer.php';
+        require_once $phpmailerSrc . 'SMTP.php';
+    }
+}
 class Mailer {
     
     private $db;
@@ -155,12 +165,19 @@ class Mailer {
             ];
         }
         
+        // Log SMTP config for debugging
+        error_log("[Mailer] Sending to: $toEmail, Host: {$this->smtpHost}:{$this->smtpPort}, User: {$this->smtpUsername}, Encryption: {$this->smtpEncryption}");
+        error_log("[Mailer] PHPMailer available: " . (class_exists('PHPMailer\PHPMailer\PHPMailer') ? 'YES' : 'NO'));
+        
         // Real SMTP sending using PHPMailer or mail()
         try {
             // Try using PHPMailer if available
             if (class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+                error_log("[Mailer] Using PHPMailer");
                 return $this->sendWithPHPMailer($toEmail, $toName, $subject, $body, $logId, $attachments);
             }
+            
+            error_log("[Mailer] PHPMailer not available, falling back to mail()");
             
             // Fallback to PHP mail() with MIME for attachments
             $fullBody = $this->wrapInTemplate($body);
@@ -210,10 +227,13 @@ class Mailer {
                 $this->updateEmailLog($logId, 'sent', null);
                 return ['success' => true, 'message' => 'Email sent successfully', 'log_id' => $logId];
             } else {
-                $this->updateEmailLog($logId, 'failed', 'PHP mail() failed');
-                return ['success' => false, 'message' => 'Failed to send email'];
+                $errorMsg = 'PHP mail() gagal - sendmail tidak tersedia di server ini. Pastikan PHPMailer terinstall.';
+                error_log("[Mailer] mail() failed");
+                $this->updateEmailLog($logId, 'failed', $errorMsg);
+                return ['success' => false, 'message' => $errorMsg];
             }
         } catch (Exception $e) {
+            error_log("[Mailer] Exception: " . $e->getMessage());
             $this->updateEmailLog($logId, 'failed', $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage()];
         }
@@ -272,14 +292,15 @@ private function sendWithPHPMailer($toEmail, $toName, $subject, $body, $logId, $
         
     } catch (Exception $e) {
         $errorMsg = $mail->ErrorInfo;
+        error_log("[Mailer] PHPMailer error: " . $errorMsg);
         
         // Make error messages more user-friendly
         if (strpos($errorMsg, 'Could not connect') !== false) {
-            $errorMsg = 'Cannot connect to SMTP server. Please check host and port settings.';
+            $errorMsg = 'Tidak bisa konek ke SMTP server (' . $this->smtpHost . ':' . $this->smtpPort . '). Cek host dan port.';
         } elseif (strpos($errorMsg, 'SMTP Error: Could not authenticate') !== false) {
-            $errorMsg = 'SMTP authentication failed. Please check username and password.';
+            $errorMsg = 'SMTP autentikasi gagal. Cek username dan password.';
         } elseif (strpos($errorMsg, 'timed out') !== false || strpos($errorMsg, 'Timeout') !== false) {
-            $errorMsg = 'Connection timeout. SMTP server not responding.';
+            $errorMsg = 'Connection timeout. SMTP server (' . $this->smtpHost . ') tidak merespon.';
         }
         
         $this->updateEmailLog($logId, 'failed', $errorMsg);

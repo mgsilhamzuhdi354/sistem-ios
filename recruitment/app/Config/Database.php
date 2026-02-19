@@ -5,16 +5,18 @@
  */
 
 // Helper function to get env var from multiple sources
-function getRecruitmentEnvVar($keys, $default = '') {
-    if (!is_array($keys)) $keys = [$keys];
-    
-    foreach ($keys as $key) {
-        if (isset($_ENV[$key]) && $_ENV[$key] !== '') return $_ENV[$key];
-        $val = getenv($key);
-        if ($val !== false && $val !== '') return $val;
-        if (isset($_SERVER[$key]) && $_SERVER[$key] !== '') return $_SERVER[$key];
+if (!function_exists('getRecruitmentEnvVar')) {
+    function getRecruitmentEnvVar($keys, $default = '') {
+        if (!is_array($keys)) $keys = [$keys];
+        
+        foreach ($keys as $key) {
+            if (isset($_ENV[$key]) && $_ENV[$key] !== '') return $_ENV[$key];
+            $val = getenv($key);
+            if ($val !== false && $val !== '') return $val;
+            if (isset($_SERVER[$key]) && $_SERVER[$key] !== '') return $_SERVER[$key];
+        }
+        return $default;
     }
-    return $default;
 }
 
 // Auto-detect: Windows = Laragon, Linux = Docker NAS

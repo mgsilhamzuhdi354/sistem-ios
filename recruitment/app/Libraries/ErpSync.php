@@ -455,8 +455,79 @@ class ErpSync {
      * @return array
      */
     public function getRanks() {
-        $result = $this->erpDb->query("SELECT id, name, department as category FROM ranks WHERE is_active = 1 ORDER BY department, name");
+        // Check if ranks table exists
+        $tableCheck = $this->erpDb->query("SHOW TABLES LIKE 'ranks'");
+        if (!$tableCheck || $tableCheck->num_rows === 0) {
+            // Create ranks table with default data
+            $this->createDefaultRanksTable();
+        }
+        
+        // Try with is_active column first
+        $result = @$this->erpDb->query("SELECT id, name, department as category FROM ranks WHERE is_active = 1 ORDER BY department, name");
+        
+        if (!$result) {
+            // Fallback: try without is_active column
+            $result = @$this->erpDb->query("SELECT id, name, department as category FROM ranks ORDER BY department, name");
+        }
+        
+        if (!$result) {
+            // Last fallback: try minimal query
+            $result = @$this->erpDb->query("SELECT id, name, '' as category FROM ranks ORDER BY name");
+        }
+        
+        if (!$result) {
+            throw new Exception('Cannot read ranks table: ' . $this->erpDb->error);
+        }
+        
         return $result->fetch_all(MYSQLI_ASSOC);
+    }
+    
+    /**
+     * Create default ranks table if it doesn't exist
+     */
+    private function createDefaultRanksTable() {
+        $this->erpDb->query("
+            CREATE TABLE IF NOT EXISTS `ranks` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `name` VARCHAR(100) NOT NULL,
+                `department` VARCHAR(50) DEFAULT 'Deck',
+                `is_active` TINYINT(1) DEFAULT 1,
+                `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        ");
+        
+        // Insert default maritime ranks
+        $ranks = [
+            ['Master', 'Deck'],
+            ['Chief Officer', 'Deck'],
+            ['2nd Officer', 'Deck'],
+            ['3rd Officer', 'Deck'],
+            ['Deck Cadet', 'Deck'],
+            ['Bosun', 'Deck'],
+            ['AB Seaman', 'Deck'],
+            ['OS Seaman', 'Deck'],
+            ['Chief Engineer', 'Engine'],
+            ['2nd Engineer', 'Engine'],
+            ['3rd Engineer', 'Engine'],
+            ['4th Engineer', 'Engine'],
+            ['Engine Cadet', 'Engine'],
+            ['Fitter', 'Engine'],
+            ['Oiler', 'Engine'],
+            ['Wiper', 'Engine'],
+            ['Electrician', 'Engine'],
+            ['Chief Cook', 'Catering'],
+            ['Cook', 'Catering'],
+            ['Messman', 'Catering'],
+            ['Steward', 'Catering'],
+            ['Pumpman', 'Deck'],
+        ];
+        
+        $stmt = $this->erpDb->prepare("INSERT IGNORE INTO ranks (name, department) VALUES (?, ?)");
+        foreach ($ranks as $rank) {
+            $stmt->bind_param('ss', $rank[0], $rank[1]);
+            $stmt->execute();
+        }
+        $stmt->close();
     }
     
     /**

@@ -223,6 +223,7 @@ class ErpIntegration extends BaseController {
                 'ranks' => $ranks
             ]);
         } catch (Exception $e) {
+            error_log("ERP getRanks error: " . $e->getMessage());
             return $this->json([
                 'success' => false,
                 'message' => $e->getMessage()
