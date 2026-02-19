@@ -149,7 +149,7 @@ ob_start();
             <h3 style="margin-bottom: 16px;"><i class="fas fa-file-pdf" style="color: var(--accent-gold);"></i> Documents</h3>
             
             <!-- Upload Form -->
-            <form method="POST" action="<?= BASE_URL ?>documents/upload/<?= $contract['id'] ?>" enctype="multipart/form-data" style="margin-bottom: 16px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+            <form method="POST" action="<?= BASE_URL ?>contracts/upload-doc/<?= $contract['id'] ?>" enctype="multipart/form-data" style="margin-bottom: 16px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
                     <div style="flex: 1; min-width: 150px;">
                         <label class="form-label" style="font-size: 11px;">Document Type</label>

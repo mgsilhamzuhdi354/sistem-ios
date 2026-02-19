@@ -294,7 +294,9 @@ class Contract extends BaseController
             'flash' => $this->getFlash()
         ];
 
-        return $this->view('contracts/view', $data);
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
+        $view = $uiMode === 'modern' ? 'contracts/view_modern' : 'contracts/view';
+        return $this->view($view, $data);
     }
 
     /**
@@ -726,5 +728,88 @@ class Contract extends BaseController
         $pdf = new \App\Libraries\PDFGenerator();
         $pdf->generateContract($contract, $deductions);
         $pdf->output('Contract_' . $contract['contract_no'] . '.pdf', 'I');
+    }
+
+    /**
+     * Upload document for contract
+     */
+    public function uploadDoc($contractId)
+    {
+        if (!$this->isPost()) {
+            $this->redirect('contracts/' . $contractId);
+        }
+
+        if (empty($_FILES['document']) || $_FILES['document']['error'] !== UPLOAD_ERR_OK) {
+            $this->setFlash('error', 'Please select a file to upload');
+            $this->redirect('contracts/' . $contractId);
+        }
+
+        $file = $_FILES['document'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+        // Validate extension
+        $allowed = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'xls', 'xlsx'];
+        if (!in_array($ext, $allowed)) {
+            $this->setFlash('error', 'Invalid file type. Allowed: ' . implode(', ', $allowed));
+            $this->redirect('contracts/' . $contractId);
+        }
+
+        // Validate size (max 10MB)
+        if ($file['size'] > 10 * 1024 * 1024) {
+            $this->setFlash('error', 'File too large. Max size: 10MB');
+            $this->redirect('contracts/' . $contractId);
+        }
+
+        $uploadPath = FCPATH . 'uploads/contracts/';
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0755, true);
+        }
+
+        $newFilename = 'contract_' . $contractId . '_' . time() . '.' . $ext;
+        $filePath = $uploadPath . $newFilename;
+
+        if (move_uploaded_file($file['tmp_name'], $filePath)) {
+            $stmt = $this->db->prepare("
+                INSERT INTO contract_documents (contract_id, document_type, language, file_name, file_path, file_size, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, NOW())
+            ");
+            $docType = $_POST['document_type'] ?? 'contract';
+            $language = $_POST['language'] ?? 'id';
+            $relPath = 'uploads/contracts/' . $newFilename;
+            $stmt->bind_param('issssi', $contractId, $docType, $language, $file['name'], $relPath, $file['size']);
+            $stmt->execute();
+
+            $this->setFlash('success', 'Document uploaded successfully');
+        } else {
+            $this->setFlash('error', 'Failed to upload file');
+        }
+
+        $this->redirect('contracts/' . $contractId);
+    }
+
+    /**
+     * Download contract document
+     */
+    public function downloadDoc($docId)
+    {
+        $result = $this->db->query("SELECT * FROM contract_documents WHERE id = " . intval($docId));
+        $doc = $result ? $result->fetch_assoc() : null;
+
+        if (!$doc) {
+            $this->setFlash('error', 'Document not found');
+            $this->redirect('contracts');
+        }
+
+        $filePath = FCPATH . $doc['file_path'];
+        if (!file_exists($filePath)) {
+            $this->setFlash('error', 'File not found on server');
+            $this->redirect('contracts/' . $doc['contract_id']);
+        }
+
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . $doc['file_name'] . '"');
+        header('Content-Length: ' . filesize($filePath));
+        readfile($filePath);
+        exit;
     }
 }
