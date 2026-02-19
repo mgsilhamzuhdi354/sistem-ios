@@ -10,18 +10,14 @@ $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 
 // Detect environment: Linux/Docker = production, Windows = local
 $isWindows = (PHP_OS_FAMILY === 'Windows' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
+$isLaragonPrettyUrl = (strpos($host, '.test') !== false || strpos($host, '.local') !== false);
 
-if (!$isWindows) {
-    // Production/Docker: direct domain
+if (!$isWindows || $isLaragonPrettyUrl) {
+    // Production/Docker OR Laragon .test: direct domain
     $baseURL = $protocol . '://' . $host . '/recruitment/public/';
 } else {
-    // Windows: check Laragon (.test) or localhost
-    $isLaragonPrettyUrl = (strpos($host, '.test') !== false || strpos($host, '.local') !== false);
-    if ($isLaragonPrettyUrl) {
-        $baseURL = $protocol . '://' . $host . '/recruitment/public/';
-    } else {
-        $baseURL = $protocol . '://' . $host . '/indoocean/recruitment/public/';
-    }
+    // Windows localhost only
+    $baseURL = $protocol . '://' . $host . '/indoocean/recruitment/public/';
 }
 
 

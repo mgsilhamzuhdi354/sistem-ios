@@ -44,9 +44,11 @@ $dbConfig = require APPPATH . 'Config/Database.php';
 $routes = require APPPATH . 'Config/Routes.php';
 
 // Detect environment for URL generation
-// Linux/Docker = production, Windows = local development
 $isWindows = (PHP_OS_FAMILY === 'Windows' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
-$isDirectDomain = !$isWindows; // Production (Linux/Docker) uses direct paths
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$isLaragonPrettyUrl = (strpos($host, '.test') !== false || strpos($host, '.local') !== false);
+// Direct domain: Linux/Docker OR Windows Laragon (.test) — NOT Windows localhost
+$isDirectDomain = (!$isWindows || $isLaragonPrettyUrl);
 
 // Database connection
 function getDB() {

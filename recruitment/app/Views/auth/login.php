@@ -124,7 +124,9 @@
                 <div class="back-link">
                     <?php 
                     $isWindowsBack = (PHP_OS_FAMILY === 'Windows' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
-                    $backUrl = !$isWindowsBack ? '/' : '/indoocean/';
+                    $hostBack = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                    $isLaragonBack = (strpos($hostBack, '.test') !== false || strpos($hostBack, '.local') !== false);
+                    $backUrl = (!$isWindowsBack || $isLaragonBack) ? '/' : '/indoocean/';
                     ?>
                     <a href="<?= $backUrl ?>"><i class="fas fa-arrow-left"></i> <span data-translate="common.back">Back to Main Website</span></a>
                 </div>
