@@ -79,6 +79,37 @@
 
     <!-- STEP 2: Informasi Pribadi -->
     <div class="form-step-content" id="step-2">
+        <!-- KTP Number Lookup Card -->
+        <div class="form-card" style="border: 2px solid #3b82f6; background: linear-gradient(135deg, #eff6ff, #dbeafe);">
+            <div class="form-card-header" style="border-bottom-color: #bfdbfe;">
+                <div class="form-card-icon blue"><i class="fas fa-id-card"></i></div>
+                <h3><?= getCurrentLanguage() === 'en' ? 'KTP Number (NIK) - Quick Lookup' : 'Nomor KTP (NIK) - Pencarian Cepat' ?></h3>
+            </div>
+            <div class="form-card-body">
+                <p style="font-size: 0.85rem; color: #1e40af; margin: 0 0 0.75rem 0;">
+                    <i class="fas fa-magic" style="margin-right: 0.3rem;"></i>
+                    <?= getCurrentLanguage() === 'en' ? 'Enter KTP number to auto-fill all fields from existing data' : 'Masukkan nomor KTP untuk mengisi otomatis dari data yang sudah ada' ?>
+                </p>
+                <div class="form-row">
+                    <div class="form-group" style="flex: 2;">
+                        <label class="form-label"><?= getCurrentLanguage() === 'en' ? 'KTP Number (NIK)' : 'Nomor KTP (NIK)' ?></label>
+                        <input type="text" name="ktp_number" id="ktpNumberInput" class="form-input" 
+                               placeholder="<?= getCurrentLanguage() === 'en' ? '16-digit NIK number' : 'Masukkan 16 digit NIK' ?>" 
+                               maxlength="16" pattern="[0-9]*" inputmode="numeric"
+                               value="<?= htmlspecialchars($e['ktp_number'] ?? '') ?>"
+                               style="font-size: 1.1rem; letter-spacing: 1px; font-weight: 600;">
+                    </div>
+                    <div class="form-group" style="flex: 1; display: flex; align-items: flex-end;">
+                        <button type="button" id="btnSearchKtp" onclick="searchByKtp()" class="btn-search-ktp" style="width: 100%; margin-bottom: 0.75rem;">
+                            <i class="fas fa-search"></i> <?= getCurrentLanguage() === 'en' ? 'Search Data' : 'Cari Data' ?>
+                        </button>
+                    </div>
+                </div>
+                <!-- Search Result Notification -->
+                <div id="ktpSearchResult" style="display: none;"></div>
+            </div>
+        </div>
+
         <!-- Photo Upload Card (Prominent) -->
         <div class="form-card">
             <div class="form-card-header"><div class="form-card-icon purple"><i class="fas fa-camera"></i></div><h3><?= getCurrentLanguage() === 'en' ? 'Seafarer Photo' : 'Foto Pelaut' ?></h3></div>
@@ -372,6 +403,24 @@
 .photo-upload-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(139,92,246,0.3); }
 .photo-upload-btn i { font-size: 1.1rem; }
 
+/* KTP Search Button */
+.btn-search-ktp { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; }
+.btn-search-ktp:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(59,130,246,0.3); }
+.btn-search-ktp:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.btn-search-ktp.loading i { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* KTP Result Toast */
+.ktp-result { padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.88rem; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; animation: slideIn 0.3s ease; }
+.ktp-result.success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.ktp-result.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.ktp-result.info { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Auto-fill highlight */
+.field-filled { animation: highlightFill 1.5s ease; }
+@keyframes highlightFill { 0% { background-color: #dcfce7; box-shadow: 0 0 0 3px rgba(34,197,94,0.2); } 100% { background-color: #f9fafb; box-shadow: none; } }
+
 @media (max-width: 768px) {
     .form-row, .form-row.four-cols { grid-template-columns: 1fr; }
     .form-steps { flex-wrap: wrap; gap: 0.25rem; }
@@ -435,6 +484,106 @@ document.getElementById('manualEntryForm').addEventListener('submit', function(e
     const btn = this.querySelector('.btn-submit');
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
     btn.disabled = true;
+});
+
+// ===== KTP AUTO-FILL FUNCTION =====
+function searchByKtp() {
+    const ktpInput = document.getElementById('ktpNumberInput');
+    const btn = document.getElementById('btnSearchKtp');
+    const resultDiv = document.getElementById('ktpSearchResult');
+    const ktp = ktpInput.value.replace(/\D/g, '');
+    
+    if (ktp.length < 10) {
+        resultDiv.innerHTML = '<div class="ktp-result info"><i class="fas fa-info-circle"></i> Masukkan minimal 10 digit nomor KTP</div>';
+        resultDiv.style.display = 'block';
+        return;
+    }
+    
+    // Show loading state
+    btn.disabled = true;
+    btn.classList.add('loading');
+    btn.innerHTML = '<i class="fas fa-spinner"></i> Mencari...';
+    resultDiv.style.display = 'none';
+    
+    fetch(`<?= url('/crewing/manual-entry/search-ktp') ?>?ktp=${encodeURIComponent(ktp)}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.found && data.data) {
+                resultDiv.innerHTML = '<div class="ktp-result success"><i class="fas fa-check-circle"></i> ' + data.message + ' - Data berhasil diisi otomatis!</div>';
+                
+                // Map API response fields to form field names
+                const fieldMap = {
+                    'full_name': 'full_name',
+                    'email': 'email',
+                    'phone': 'phone',
+                    'date_of_birth': 'date_of_birth',
+                    'gender': 'gender',
+                    'place_of_birth': 'place_of_birth',
+                    'nationality': 'nationality',
+                    'blood_type': 'blood_type',
+                    'address': 'address',
+                    'city': 'city',
+                    'country': 'country',
+                    'postal_code': 'postal_code',
+                    'seaman_book_no': 'seaman_book_no',
+                    'seaman_book_expiry': 'seaman_book_expiry',
+                    'passport_no': 'passport_no',
+                    'passport_expiry': 'passport_expiry',
+                    'height_cm': 'height_cm',
+                    'weight_kg': 'weight_kg',
+                    'shoe_size': 'shoe_size',
+                    'overall_size': 'overall_size',
+                    'emergency_name': 'emergency_name',
+                    'emergency_phone': 'emergency_phone',
+                    'emergency_relation': 'emergency_relation',
+                    'total_sea_service_months': 'total_sea_service_months',
+                    'last_rank': 'last_rank',
+                    'last_vessel_name': 'last_vessel_name',
+                    'last_vessel_type': 'last_vessel_type',
+                    'last_sign_off': 'last_sign_off'
+                };
+                
+                let filledCount = 0;
+                for (const [apiKey, formName] of Object.entries(fieldMap)) {
+                    const value = data.data[apiKey];
+                    if (value !== null && value !== '' && value !== undefined) {
+                        const input = document.querySelector(`[name="${formName}"]`);
+                        if (input) {
+                            input.value = value;
+                            input.classList.add('field-filled');
+                            filledCount++;
+                            // Remove highlight class after animation
+                            setTimeout(() => input.classList.remove('field-filled'), 1500);
+                        }
+                    }
+                }
+                
+                resultDiv.innerHTML = `<div class="ktp-result success"><i class="fas fa-check-circle"></i> ${data.message} — <strong>${filledCount} kolom</strong> terisi otomatis!</div>`;
+            } else {
+                resultDiv.innerHTML = '<div class="ktp-result error"><i class="fas fa-times-circle"></i> ' + data.message + '</div>';
+            }
+            resultDiv.style.display = 'block';
+        })
+        .catch(err => {
+            console.error('KTP search error:', err);
+            resultDiv.innerHTML = '<div class="ktp-result error"><i class="fas fa-exclamation-triangle"></i> Terjadi kesalahan saat mencari data</div>';
+            resultDiv.style.display = 'block';
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            btn.innerHTML = '<i class="fas fa-search"></i> <?= getCurrentLanguage() === 'en' ? 'Search Data' : 'Cari Data' ?>';
+        });
+}
+
+// Auto-search when 16 digits entered
+document.getElementById('ktpNumberInput').addEventListener('input', function(e) {
+    // Only allow digits
+    this.value = this.value.replace(/\D/g, '');
+    // Auto-search when 16 digits complete
+    if (this.value.length === 16) {
+        searchByKtp();
+    }
 });
 
 const phoneInput = document.querySelector('input[name="phone"]');

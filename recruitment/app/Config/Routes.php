@@ -169,6 +169,7 @@ $routes['GET']['/crewing/manual-entries/edit/(:num)'] = 'Crewing/ManualEntry::ed
 $routes['POST']['/crewing/manual-entries/update/(:num)'] = 'Crewing/ManualEntry::update/$1';
 $routes['POST']['/crewing/manual-entries/delete/(:num)'] = 'Crewing/ManualEntry::deleteEntry/$1';
 $routes['POST']['/crewing/manual-entries/push-erp/(:num)'] = 'Crewing/ManualEntry::pushToErp/$1';
+$routes['GET']['/crewing/manual-entry/search-ktp'] = 'Crewing/ManualEntry::searchByKtp';
 
 // Crewing - Email Center
 $routes['GET']['/crewing/email'] = 'Crewing/Email::index';

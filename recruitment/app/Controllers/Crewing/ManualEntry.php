@@ -20,6 +20,52 @@ class ManualEntry extends BaseController {
     }
     
     /**
+     * Search applicant data by KTP number (NIK) - AJAX endpoint
+     */
+    public function searchByKtp() {
+        header('Content-Type: application/json');
+        
+        $ktp = trim($_GET['ktp'] ?? '');
+        
+        if (strlen($ktp) < 10) {
+            echo json_encode(['found' => false, 'message' => 'Nomor KTP terlalu pendek']);
+            return;
+        }
+        
+        // Search in applicant_profiles by ktp_number
+        $stmt = $this->db->prepare("
+            SELECT 
+                u.full_name, u.email, u.phone,
+                ap.date_of_birth, ap.gender, ap.place_of_birth, ap.nationality, ap.blood_type,
+                ap.address, ap.city, ap.country, ap.postal_code,
+                ap.seaman_book_no, ap.seaman_book_expiry, ap.passport_no, ap.passport_expiry,
+                ap.height_cm, ap.weight_kg, ap.shoe_size, ap.overall_size,
+                ap.emergency_name, ap.emergency_phone, ap.emergency_relation,
+                ap.total_sea_service_months, ap.last_rank, ap.last_vessel_name, ap.last_vessel_type, ap.last_sign_off
+            FROM applicant_profiles ap
+            JOIN users u ON ap.user_id = u.id
+            WHERE ap.ktp_number = ?
+            LIMIT 1
+        ");
+        $stmt->bind_param('s', $ktp);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+        
+        if ($result) {
+            echo json_encode([
+                'found' => true,
+                'message' => 'Data ditemukan!',
+                'data' => $result
+            ]);
+        } else {
+            echo json_encode([
+                'found' => false,
+                'message' => 'Data dengan NIK tersebut tidak ditemukan di database'
+            ]);
+        }
+    }
+    
+    /**
      * Display manual entry form
      */
     public function form($vacancyId = null) {
@@ -58,6 +104,7 @@ class ManualEntry extends BaseController {
         $fullName    = trim($_POST['full_name'] ?? '');
         $email       = trim($_POST['email'] ?? '');
         $phone       = trim($_POST['phone'] ?? '');
+        $ktpNumber   = trim($_POST['ktp_number'] ?? '');
         
         // Optional personal info
         $dob          = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
@@ -132,17 +179,17 @@ class ManualEntry extends BaseController {
             // 2. Create full applicant profile
             $stmt = $this->db->prepare("
                 INSERT INTO applicant_profiles (
-                    user_id, date_of_birth, gender, nationality, place_of_birth,
+                    user_id, ktp_number, date_of_birth, gender, nationality, place_of_birth,
                     address, city, country, postal_code, blood_type,
                     seaman_book_no, seaman_book_expiry, passport_no, passport_expiry,
                     height_cm, weight_kg, shoe_size, overall_size,
                     emergency_name, emergency_phone, emergency_relation,
                     total_sea_service_months, last_rank, last_vessel_name, last_vessel_type, last_sign_off,
                     created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
             ");
-            $stmt->bind_param('isssssssssssssiisisssissss',
-                $userId, $dob, $gender, $nationality, $placeOfBirth,
+            $stmt->bind_param('issssssssssssssiisisssissss',
+                $userId, $ktpNumber, $dob, $gender, $nationality, $placeOfBirth,
                 $address, $city, $country, $postalCode, $bloodType,
                 $seamanBookNo, $seamanBookExpiry, $passportNo, $passportExpiry,
                 $heightCm, $weightKg, $shoeSize, $overallSize,
@@ -412,6 +459,7 @@ class ManualEntry extends BaseController {
         $fullName    = trim($_POST['full_name'] ?? '');
         $email       = trim($_POST['email'] ?? '');
         $phone       = trim($_POST['phone'] ?? '');
+        $ktpNumber   = trim($_POST['ktp_number'] ?? '');
         $vacancyId   = $_POST['vacancy_id'] ?? $app['vacancy_id'];
         
         $dob          = !empty($_POST['date_of_birth']) ? $_POST['date_of_birth'] : null;
@@ -473,7 +521,7 @@ class ManualEntry extends BaseController {
             // Update profile
             $stmt = $this->db->prepare("
                 UPDATE applicant_profiles SET
-                    date_of_birth = ?, gender = ?, nationality = ?, place_of_birth = ?,
+                    ktp_number = ?, date_of_birth = ?, gender = ?, nationality = ?, place_of_birth = ?,
                     address = ?, city = ?, country = ?, postal_code = ?, blood_type = ?,
                     seaman_book_no = ?, seaman_book_expiry = ?, passport_no = ?, passport_expiry = ?,
                     height_cm = ?, weight_kg = ?, shoe_size = ?, overall_size = ?,
@@ -481,8 +529,8 @@ class ManualEntry extends BaseController {
                     total_sea_service_months = ?, last_rank = ?, last_vessel_name = ?, last_vessel_type = ?, last_sign_off = ?
                 WHERE user_id = ?
             ");
-            $stmt->bind_param('sssssssssssssiisssissssssi',
-                $dob, $gender, $nationality, $placeOfBirth,
+            $stmt->bind_param('ssssssssssssssiisssissssssi',
+                $ktpNumber, $dob, $gender, $nationality, $placeOfBirth,
                 $address, $city, $country, $postalCode, $bloodType,
                 $seamanBookNo, $seamanBookExpiry, $passportNo, $passportExpiry,
                 $heightCm, $weightKg, $shoeSize, $overallSize,
