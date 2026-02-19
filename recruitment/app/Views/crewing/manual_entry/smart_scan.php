@@ -1,7 +1,12 @@
-<!-- PDF.js & Mammoth.js for file parsing -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- PDF.js & Mammoth.js CDN (verified working versions) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-<script>if(typeof pdfjsLib!=='undefined') pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+<script>
+// Configure PDF.js worker
+if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+}
+</script>
 
 <!-- ===================== SMART SCAN PRO ===================== -->
 <!-- Button -->
@@ -13,7 +18,7 @@
         </div>
         <div style="flex:1;">
             <h4 style="margin: 0; color: #6d28d9; font-size: 1.05rem; font-weight: 700;">⚡ Smart Scan Pro — Auto-Fill Canggih</h4>
-            <p style="margin: 0.3rem 0 0 0; font-size: 0.8rem; color: #7c3aed; line-height: 1.4;">Upload <b>PDF, Word, Teks</b> atau paste data → langsung otomatis terisi di semua form!</p>
+            <p style="margin: 0.3rem 0 0 0; font-size: 0.8rem; color: #7c3aed; line-height: 1.4;">Upload <b>PDF, Word (.docx), Teks</b> atau paste data → langsung otomatis terisi di semua form!</p>
         </div>
         <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
             <div style="background:linear-gradient(135deg,#8b5cf6,#6d28d9); color:white; font-size:0.65rem; font-weight:700; padding:3px 8px; border-radius:6px; text-transform:uppercase; letter-spacing:0.5px;">PRO</div>
@@ -50,8 +55,8 @@
                         <i class="fas fa-cloud-upload-alt" style="color:white; font-size:1.5rem;"></i>
                     </div>
                     <p style="margin:0; font-weight:700; color:#6d28d9; font-size:0.9rem;">Klik atau seret file ke sini</p>
-                    <p style="margin:0.3rem 0 0; font-size:0.75rem; color:#8b5cf6;">PDF, Word (.doc/.docx), Teks (.txt/.csv) — Maks 10MB</p>
-                    <input type="file" id="scanFileInput" accept=".pdf,.doc,.docx,.txt,.csv" style="display:none;" onchange="handleFileUpload(this)">
+                    <p style="margin:0.3rem 0 0; font-size:0.75rem; color:#8b5cf6;">PDF, Word (.docx), Teks (.txt/.csv) — Maks 10MB</p>
+                    <input type="file" id="scanFileInput" accept=".pdf,.docx,.txt,.csv" style="display:none;" onchange="handleFileUpload(this)">
                 </div>
                 <!-- File status -->
                 <div id="fileStatus" style="display:none; margin-top:0.5rem;"></div>
@@ -97,7 +102,7 @@
 
 <!-- Processing Overlay -->
 <div id="scanProcessing" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); justify-content:center; align-items:center;">
-    <div style="background:white; border-radius:20px; padding:2.5rem; text-align:center; max-width:360px; width:90%; box-shadow:0 25px 60px rgba(0,0,0,0.3);">
+    <div style="background:white; border-radius:20px; padding:2.5rem; text-align:center; max-width:400px; width:90%; box-shadow:0 25px 60px rgba(0,0,0,0.3);">
         <div style="width:64px; height:64px; border:4px solid #e2e8f0; border-top-color:#7c3aed; border-radius:50%; animation:scanSpin 0.8s linear infinite; margin:0 auto 1.25rem;"></div>
         <h4 id="processingTitle" style="margin:0 0 0.5rem; color:#1e293b; font-size:1rem;">Memproses dokumen...</h4>
         <p id="processingText" style="margin:0; color:#94a3b8; font-size:0.82rem;">Mengekstrak teks dari file</p>
@@ -196,6 +201,7 @@ function openSmartScan() {
     document.getElementById('smartScanInput').value = '';
     document.getElementById('liveCounter').style.display = 'none';
     document.getElementById('fileStatus').style.display = 'none';
+    document.getElementById('scanFileInput').value = '';
     setTimeout(() => document.getElementById('smartScanInput').focus(), 200);
 }
 function closeSmartScan() { document.getElementById('smartScanModal').style.display = 'none'; }
@@ -215,65 +221,121 @@ async function pasteFromClipboard() {
 async function handleFileUpload(input) {
     const file = input.files[0];
     if (!file) return;
-    input.value = '';
 
     const ext = file.name.split('.').pop().toLowerCase();
     const maxSize = 10 * 1024 * 1024;
-    if (file.size > maxSize) { alert('File terlalu besar! Maksimal 10MB.'); return; }
+    if (file.size > maxSize) { alert('File terlalu besar! Maksimal 10MB.'); input.value = ''; return; }
 
-    showProcessing('Membaca ' + file.name + '...', 'Mengekstrak teks dari dokumen');
+    showProcessing('Membaca ' + file.name + '...', 'Mengekstrak teks dari dokumen ' + ext.toUpperCase());
 
     try {
         let text = '';
+
         if (ext === 'pdf') {
+            // Check if PDF.js loaded
+            if (typeof pdfjsLib === 'undefined') {
+                throw new Error('Library PDF.js belum termuat. Refresh halaman dan coba lagi.');
+            }
             text = await extractPDF(file);
-        } else if (ext === 'doc' || ext === 'docx') {
+        } else if (ext === 'docx') {
+            // Check if Mammoth loaded
+            if (typeof mammoth === 'undefined') {
+                throw new Error('Library Mammoth.js belum termuat. Refresh halaman dan coba lagi.');
+            }
             text = await extractWord(file);
+        } else if (ext === 'doc') {
+            hideProcessing();
+            showFileStatus('error', 'Format .doc tidak didukung. Silakan konversi ke .docx terlebih dahulu, atau copy-paste isi dokumen secara manual.');
+            input.value = '';
+            return;
         } else {
-            text = await file.text();
+            // Plain text files (.txt, .csv)
+            text = await readFileAsText(file);
         }
 
         hideProcessing();
 
-        if (!text || text.trim().length < 5) {
-            showFileStatus('error', 'Tidak bisa mengekstrak teks dari file ini. Coba paste manual.');
+        if (!text || text.trim().length < 3) {
+            showFileStatus('error', 'File tidak mengandung teks yang bisa diekstrak. PDF mungkin berupa gambar/scan — coba copy-paste manual.');
+            input.value = '';
             return;
         }
 
         // Show extracted text in textarea
         document.getElementById('smartScanInput').value = text.trim();
-        showFileStatus('success', '✓ ' + file.name + ' — teks berhasil diekstrak');
+        showFileStatus('success', '✓ ' + file.name + ' — ' + text.trim().length + ' karakter berhasil diekstrak');
         liveDetect();
 
-        // Auto-apply immediately
-        setTimeout(() => quickApply(), 500);
+        // Auto-apply immediately after short delay
+        setTimeout(() => quickApply(), 600);
 
     } catch(err) {
         hideProcessing();
-        console.error('File parse error:', err);
-        showFileStatus('error', 'Gagal membaca file: ' + err.message);
+        console.error('Smart Scan file error:', err);
+        showFileStatus('error', 'Gagal: ' + (err.message || 'Error tidak diketahui'));
     }
+
+    input.value = '';
+}
+
+// ====== READ TEXT FILE ======
+function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = () => reject(new Error('Gagal membaca file'));
+        reader.readAsText(file);
+    });
 }
 
 // ====== PDF EXTRACTION ======
 async function extractPDF(file) {
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    let fullText = '';
-    for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        const pageText = content.items.map(item => item.str).join(' ');
-        fullText += pageText + '\n';
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+        
+        let fullText = '';
+        const totalPages = pdf.numPages;
+        
+        for (let i = 1; i <= totalPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            // Join items with proper spacing
+            let lastY = null;
+            let pageText = '';
+            content.items.forEach(item => {
+                if (lastY !== null && Math.abs(item.transform[5] - lastY) > 5) {
+                    pageText += '\n'; // New line when Y position changes
+                } else if (pageText.length > 0) {
+                    pageText += ' ';
+                }
+                pageText += item.str;
+                lastY = item.transform[5];
+            });
+            fullText += pageText + '\n';
+        }
+        
+        return fullText;
+    } catch(err) {
+        console.error('PDF extraction error:', err);
+        throw new Error('Gagal membaca PDF: ' + (err.message || 'Format tidak didukung'));
     }
-    return fullText;
 }
 
-// ====== WORD EXTRACTION ======
+// ====== WORD (.docx) EXTRACTION ======
 async function extractWord(file) {
-    const arrayBuffer = await file.arrayBuffer();
-    const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
-    return result.value;
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+        if (result.messages && result.messages.length > 0) {
+            console.warn('Mammoth warnings:', result.messages);
+        }
+        return result.value;
+    } catch(err) {
+        console.error('Word extraction error:', err);
+        throw new Error('Gagal membaca Word: ' + (err.message || 'Format tidak didukung'));
+    }
 }
 
 // ====== PROCESSING UI ======
@@ -287,7 +349,7 @@ function hideProcessing() { document.getElementById('scanProcessing').style.disp
 function showFileStatus(type, msg) {
     const el = document.getElementById('fileStatus');
     const isErr = type === 'error';
-    el.innerHTML = '<div style="padding:0.5rem 0.75rem; border-radius:8px; font-size:0.8rem; font-weight:600; ' +
+    el.innerHTML = '<div style="padding:0.6rem 0.85rem; border-radius:8px; font-size:0.8rem; font-weight:600; ' +
         (isErr ? 'background:#fef2f2; color:#dc2626; border:1px solid #fecaca;' : 'background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0;') +
         '"><i class="fas fa-' + (isErr ? 'exclamation-circle' : 'check-circle') + '" style="margin-right:4px;"></i>' + msg + '</div>';
     el.style.display = 'block';
@@ -342,15 +404,17 @@ function quickApply() {
         }
 
         // Apply all fields directly
+        let applied = 0;
         fields.forEach(f => {
             const el = document.querySelector('[name="' + f.key + '"]');
             if (!el) return;
             if (f.type === 'select') {
                 for (let i = 0; i < el.options.length; i++) {
-                    if (el.options[i].value === f.value) { el.selectedIndex = i; break; }
+                    if (el.options[i].value === f.value) { el.selectedIndex = i; applied++; break; }
                 }
             } else {
                 el.value = f.value;
+                applied++;
             }
             // Purple glow highlight
             el.style.transition = 'all 0.5s';
@@ -364,8 +428,7 @@ function quickApply() {
 
         // Show success overlay
         const steps = [...new Set(fields.map(f => f.step))].sort();
-        const stepNames = {1:'Posisi', 2:'Pribadi', 3:'Dokumen', 4:'Fisik', 5:'Pengalaman'};
-        document.getElementById('successDetail').textContent = fields.length + ' field berhasil diisi di ' + steps.length + ' step form';
+        document.getElementById('successDetail').textContent = applied + ' field berhasil diisi di ' + steps.length + ' step form';
         document.getElementById('successFields').innerHTML = fields.map(f => 
             '<span style="background:#dcfce7; color:#15803d; font-size:0.7rem; padding:3px 8px; border-radius:6px; font-weight:600;">' + f.label + '</span>'
         ).join('');
@@ -386,18 +449,26 @@ function smartParseDate(str) {
 // ====== DRAG & DROP ======
 const dz = document.getElementById('scanDropZone');
 if (dz) {
-    dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor='#7c3aed'; dz.style.background='#ede9fe'; });
-    dz.addEventListener('dragleave', () => { dz.style.borderColor='#c4b5fd'; dz.style.background='linear-gradient(135deg,#f5f3ff,#ede9fe)'; });
+    ['dragenter','dragover'].forEach(evt => {
+        dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.style.borderColor='#7c3aed'; dz.style.background='#ede9fe'; });
+    });
+    dz.addEventListener('dragleave', e => { e.preventDefault(); dz.style.borderColor='#c4b5fd'; dz.style.background='linear-gradient(135deg,#f5f3ff,#ede9fe)'; });
     dz.addEventListener('drop', e => {
-        e.preventDefault();
+        e.preventDefault(); e.stopPropagation();
         dz.style.borderColor='#c4b5fd'; dz.style.background='linear-gradient(135deg,#f5f3ff,#ede9fe)';
         const file = e.dataTransfer.files[0];
         if (file) {
-            // Create a fake input to reuse handleFileUpload
-            const fakeInput = { files: [file], value: 'x' };
-            fakeInput.value = ''; // reset
-            handleFileUpload({ files: [file], value: 'x', set value(v){} });
+            // Use DataTransfer to set files on the real input
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            const input = document.getElementById('scanFileInput');
+            input.files = dt.files;
+            handleFileUpload(input);
         }
     });
 }
+
+// Log library status on load
+console.log('[Smart Scan] PDF.js loaded:', typeof pdfjsLib !== 'undefined');
+console.log('[Smart Scan] Mammoth.js loaded:', typeof mammoth !== 'undefined');
 </script>
