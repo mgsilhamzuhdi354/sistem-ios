@@ -550,72 +550,71 @@ class ManualEntry extends BaseController {
         try {
             $this->db->begin_transaction();
             
-            // Delete in order: assignments, documents (files + records), applications, profile, user
-            $delStmt = $this->db->prepare("DELETE FROM application_assignments WHERE application_id = ?");
+            // Temporarily disable FK checks for clean cascade delete
+            $this->db->query("SET FOREIGN_KEY_CHECKS = 0");
+            
+            // Delete all related records for this application
+            $tables = [
+                'application_assignments' => 'application_id',
+                'pipeline_requests' => 'application_id',
+                'medical_checkups' => 'application_id',
+                'status_change_requests' => 'application_id',
+                'application_status_history' => 'application_id',
+                'archived_applications' => 'application_id',
+            ];
+            
+            foreach ($tables as $table => $col) {
+                $delStmt = $this->db->prepare("DELETE FROM `$table` WHERE `$col` = ?");
+                $delStmt->bind_param('i', $applicationId);
+                $delStmt->execute();
+            }
+            
+            // Delete interview data
+            $this->db->query("DELETE ia FROM interview_answers ia JOIN interview_sessions s ON ia.session_id = s.id WHERE s.application_id = $applicationId");
+            $delStmt = $this->db->prepare("DELETE FROM interview_sessions WHERE application_id = ?");
             $delStmt->bind_param('i', $applicationId);
             $delStmt->execute();
             
-            $delStmt = $this->db->prepare("DELETE FROM pipeline_requests WHERE application_id = ?");
-            $delStmt->bind_param('i', $applicationId);
-            $delStmt->execute();
-            
+            // Delete notifications for user
             $delStmt = $this->db->prepare("DELETE FROM notifications WHERE user_id = ?");
             $delStmt->bind_param('i', $userId);
             $delStmt->execute();
             
-            $delStmt = $this->db->prepare("DELETE FROM medical_checkups WHERE application_id = ?");
-            $delStmt->bind_param('i', $applicationId);
-            $delStmt->execute();
-            
-            // Delete document files
+            // Delete document files from disk
             $docStmt = $this->db->prepare("SELECT file_path FROM documents WHERE user_id = ?");
             $docStmt->bind_param('i', $userId);
             $docStmt->execute();
             $docs = $docStmt->get_result()->fetch_all(MYSQLI_ASSOC);
             foreach ($docs as $doc) {
                 $filePath = FCPATH . $doc['file_path'];
-                if (file_exists($filePath)) {
-                    unlink($filePath);
-                }
+                if (file_exists($filePath)) unlink($filePath);
             }
             $delStmt = $this->db->prepare("DELETE FROM documents WHERE user_id = ?");
             $delStmt->bind_param('i', $userId);
             $delStmt->execute();
             
-            // Delete application
-        $delStmt = $this->db->prepare("DELETE FROM status_change_requests WHERE application_id = ?");
-        $delStmt->bind_param('i', $applicationId);
-        $delStmt->execute();
-        
-        $delStmt = $this->db->prepare("DELETE FROM application_status_history WHERE application_id = ?");
-        $delStmt->bind_param('i', $applicationId);
-        $delStmt->execute();
-        
-        $delStmt = $this->db->prepare("DELETE FROM archived_applications WHERE application_id = ?");
-        $delStmt->bind_param('i', $applicationId);
-        $delStmt->execute();
-        
-        // Delete interview data
-        $delStmt = $this->db->prepare("DELETE ia FROM interview_answers ia JOIN interview_sessions s ON ia.session_id = s.id WHERE s.application_id = ?");
-        $delStmt->bind_param('i', $applicationId);
-        $delStmt->execute();
-        
-        $delStmt = $this->db->prepare("DELETE FROM interview_sessions WHERE application_id = ?");
-        $delStmt->bind_param('i', $applicationId);
-        $delStmt->execute();
-        
-        $delStmt = $this->db->prepare("DELETE FROM applications WHERE id = ?");
-        $delStmt->bind_param('i', $applicationId);
-        $delStmt->execute();
+            // Delete ALL applications for this user (handles multiple apps)
+            $delStmt = $this->db->prepare("DELETE FROM applications WHERE user_id = ?");
+            $delStmt->bind_param('i', $userId);
+            $delStmt->execute();
             
             // Delete profile & user
             $delStmt = $this->db->prepare("DELETE FROM applicant_profiles WHERE user_id = ?");
             $delStmt->bind_param('i', $userId);
             $delStmt->execute();
             
+            // Delete any remaining references
+            $this->db->query("DELETE FROM crewing_ratings WHERE user_id = $userId OR rated_by = $userId");
+            $this->db->query("DELETE FROM password_resets WHERE user_id = $userId");
+            $this->db->query("DELETE FROM audit_logs WHERE user_id = $userId");
+            
             $delStmt = $this->db->prepare("DELETE FROM users WHERE id = ?");
             $delStmt->bind_param('i', $userId);
             $delStmt->execute();
+            
+            // Re-enable FK checks
+            $this->db->query("SET FOREIGN_KEY_CHECKS = 1");
+
             
             $this->db->commit();
             
