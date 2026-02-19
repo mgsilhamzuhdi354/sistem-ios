@@ -26,6 +26,9 @@ $routes['POST']['/register'] = 'Auth/Register::store';
 $routes['GET']['/logout'] = 'Auth/Login::logout';
 $routes['GET']['/forgot-password'] = 'Auth/ForgotPassword::index';
 $routes['POST']['/forgot-password'] = 'Auth/ForgotPassword::send';
+$routes['GET']['/verify-reset-code'] = 'Auth/ForgotPassword::verifyCodeForm';
+$routes['POST']['/verify-reset-code'] = 'Auth/ForgotPassword::verifyCode';
+$routes['GET']['/resend-reset-code'] = 'Auth/ForgotPassword::resendCode';
 $routes['GET']['/reset-password/(:any)'] = 'Auth/ForgotPassword::reset/$1';
 $routes['POST']['/reset-password'] = 'Auth/ForgotPassword::update';
 
