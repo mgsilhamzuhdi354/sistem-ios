@@ -222,13 +222,13 @@
             margin-bottom: 1.25rem;
         }
         .recruiter-avatar {
-            width: 80px; height: 80px;
+            width: 100px; height: 100px;
             border-radius: 50%;
             background: linear-gradient(135deg, #667eea, #764ba2);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.8rem;
+            font-size: 2.2rem;
             font-weight: 800;
             color: white;
             flex-shrink: 0;
@@ -236,6 +236,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.12);
             transition: all 0.3s ease;
             overflow: hidden;
+            cursor: pointer;
         }
         .recruiter-card-modern:hover .recruiter-avatar {
             transform: scale(1.08);
@@ -438,6 +439,69 @@
             .card-top { flex-direction: column; text-align: center; }
             .btn-random { padding: 14px 30px; font-size: 1rem; }
         }
+
+        /* ── Photo Lightbox ── */
+        .photo-lightbox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1.5rem;
+            animation: lbFadeIn 0.3s ease;
+        }
+        .photo-lightbox.active { display: flex; }
+        @keyframes lbFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .photo-lightbox-img {
+            max-width: 400px;
+            max-height: 400px;
+            border-radius: 24px;
+            object-fit: cover;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 4px solid white;
+            animation: lbZoomIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes lbZoomIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .photo-lightbox-name {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        .photo-lightbox-close {
+            position: absolute;
+            top: 1.5rem; right: 1.5rem;
+            width: 48px; height: 48px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            color: white;
+            font-size: 1.3rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .photo-lightbox-close:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
+        .photo-lightbox-initial {
+            width: 200px; height: 200px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            font-weight: 800;
+            color: white;
+            border: 4px solid white;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: lbZoomIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
     </style>
 </head>
 <body class="applicant-body">
@@ -579,12 +643,17 @@
                         <div class="card-accent"></div>
                         <div class="card-body-modern">
                             <div class="card-top">
-                                <div class="recruiter-avatar" style="background: <?= $gradient ?>;">
+                                <div class="recruiter-avatar" style="background: <?= $gradient ?>;" 
+                                     onclick="showPhoto(this)" 
+                                     data-name="<?= htmlspecialchars($recruiter['full_name']) ?>"
+                                     data-photo="<?= $hasPhoto ? url('/uploads/recruiters/' . $recruiter['photo']) : ($hasAvatar ? url('/uploads/avatars/' . $recruiter['avatar']) : '') ?>"
+                                     data-initial="<?= $initial ?>"
+                                     data-gradient="<?= $gradient ?>">
                                     <?php if ($hasPhoto): ?>
-                                        <img src="<?= asset('uploads/recruiters/' . $recruiter['photo']) ?>" 
+                                        <img src="<?= url('/uploads/recruiters/' . $recruiter['photo']) ?>" 
                                              alt="<?= htmlspecialchars($recruiter['full_name']) ?>">
                                     <?php elseif ($hasAvatar): ?>
-                                        <img src="<?= asset($recruiter['avatar']) ?>" 
+                                        <img src="<?= url('/uploads/avatars/' . $recruiter['avatar']) ?>" 
                                              alt="<?= htmlspecialchars($recruiter['full_name']) ?>">
                                     <?php else: ?>
                                         <?= $initial ?>
@@ -649,6 +718,13 @@
         </div>
     </main>
 
+    <!-- Photo Lightbox -->
+    <div class="photo-lightbox" id="photoLightbox" onclick="if(event.target===this)closeLightbox()">
+        <button class="photo-lightbox-close" onclick="closeLightbox()"><i class="fas fa-times"></i></button>
+        <div id="lightboxContent"></div>
+        <div class="photo-lightbox-name" id="lightboxName"></div>
+    </div>
+
     <script>
         // Animate workload bars on load
         window.addEventListener('load', () => {
@@ -668,6 +744,37 @@
                 card.style.opacity = '1';
                 card.style.transform = 'translateY(0)';
             }, 200 + (i * 120));
+        });
+
+        // Photo Lightbox
+        function showPhoto(el) {
+            const name = el.dataset.name;
+            const photo = el.dataset.photo;
+            const initial = el.dataset.initial;
+            const gradient = el.dataset.gradient;
+            const content = document.getElementById('lightboxContent');
+            const nameEl = document.getElementById('lightboxName');
+            
+            nameEl.textContent = name;
+            
+            if (photo) {
+                content.innerHTML = '<img src="' + photo + '" class="photo-lightbox-img" alt="' + name + '">';
+            } else {
+                content.innerHTML = '<div class="photo-lightbox-initial" style="background:' + gradient + '">' + initial + '</div>';
+            }
+            
+            document.getElementById('photoLightbox').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeLightbox() {
+            document.getElementById('photoLightbox').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // Close with Escape key
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeLightbox();
         });
     </script>
 </body>
