@@ -91,10 +91,9 @@ if (strpos($requestUri, $basePath) !== 0) {
     }
 }
 
-// Ensure base path is correctly set
-$isLaragonPrettyUrl = (strpos($host, '.test') !== false || strpos($host, '.local') !== false);
-if (!$isLaragonPrettyUrl && strpos($basePath, '/PT_indoocean') === false && strpos($_SERVER['REQUEST_URI'], '/PT_indoocean') !== false) {
-    // Verify if we are actually in a subfolder locally that isn't detected by script_name
+// Ensure base path is correctly set for Windows local dev
+if ($isWindows && strpos($basePath, '/PT_indoocean') === false && strpos($_SERVER['REQUEST_URI'], '/PT_indoocean') !== false) {
+    // Windows localhost subfolder
     $basePath = '/PT_indoocean/recruitment/public';
 }
 
@@ -130,8 +129,8 @@ function view($template, $data = []) {
 
 function redirect($url) {
     // Auto-prepend base path if URL starts with / and doesn't already include it
-    global $isLaragonPrettyUrl;
-    $base = $isLaragonPrettyUrl ? '/recruitment/public' : '/PT_indoocean/recruitment/public';
+    global $isDirectDomain;
+    $base = $isDirectDomain ? '/recruitment/public' : '/PT_indoocean/recruitment/public';
     if (strpos($url, '/') === 0 && strpos($url, $base) !== 0) {
         $url = $base . $url;
     }
