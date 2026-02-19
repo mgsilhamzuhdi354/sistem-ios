@@ -8,20 +8,22 @@
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 
-// Detect environment
-$isLaragonPrettyUrl = (strpos($host, '.test') !== false || strpos($host, '.local') !== false);
-$isProduction = (strpos($host, 'indooceancrewservice.com') !== false);
+// Detect environment: Linux/Docker = production, Windows = local
+$isWindows = (PHP_OS_FAMILY === 'Windows' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
 
-if ($isProduction) {
-    // Production: indooceancrewservice.com/recruitment/public/
-    $baseURL = $protocol . '://' . $host . '/recruitment/public/';
-} elseif ($isLaragonPrettyUrl) {
-    // Laragon: domain.test/recruitment/public/
+if (!$isWindows) {
+    // Production/Docker: direct domain
     $baseURL = $protocol . '://' . $host . '/recruitment/public/';
 } else {
-    // Localhost: localhost/indoocean/recruitment/public/
-    $baseURL = $protocol . '://' . $host . '/indoocean/recruitment/public/';
+    // Windows: check Laragon (.test) or localhost
+    $isLaragonPrettyUrl = (strpos($host, '.test') !== false || strpos($host, '.local') !== false);
+    if ($isLaragonPrettyUrl) {
+        $baseURL = $protocol . '://' . $host . '/recruitment/public/';
+    } else {
+        $baseURL = $protocol . '://' . $host . '/indoocean/recruitment/public/';
+    }
 }
+
 
 
 return [
