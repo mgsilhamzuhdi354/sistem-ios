@@ -65,6 +65,11 @@ $inactiveIcon = 'text-slate-400';
 $activeSub = 'text-blue-700 font-semibold bg-blue-50/80';
 $inactiveSub = 'text-slate-500 hover:text-slate-700 hover:bg-slate-50';
 ?>
+<style>
+    [x-cloak] { display: none !important; }
+    #sidebarNav { scrollbar-width: none; -ms-overflow-style: none; }
+    #sidebarNav::-webkit-scrollbar { width: 0; display: none; }
+</style>
 <aside class="w-64 h-screen bg-white border-r border-slate-200/60 flex-shrink-0 fixed left-0 top-0 flex flex-col z-40">
     <!-- Logo -->
     <div class="px-4 py-4 border-b border-slate-100 flex-shrink-0">
@@ -80,7 +85,7 @@ $inactiveSub = 'text-slate-500 hover:text-slate-700 hover:bg-slate-50';
     </div>
 
     <!-- Navigation (scrollable) -->
-    <nav class="flex-1 overflow-y-auto py-3 px-3 space-y-0.5 text-[13px]" id="sidebarNav">
+    <nav class="flex-1 overflow-y-scroll py-3 px-3 space-y-0.5 text-[13px]" id="sidebarNav">
 
         <!-- OVERVIEW -->
         <div class="px-3 pt-1 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Overview</div>
@@ -94,15 +99,15 @@ $inactiveSub = 'text-slate-500 hover:text-slate-700 hover:bg-slate-50';
         <div class="px-3 pt-4 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Management</div>
 
         <!-- Contracts -->
-        <div x-data="{ open: <?= $act['contracts'] ? 'true' : 'false' ?> }">
-            <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['contracts'] ? $activeClass : $inactiveClass ?>">
+        <div x-data="{ open: <?= $act['contracts'] ? 'true' : 'false' ?> }" x-cloak>
+            <button @click.prevent="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['contracts'] ? $activeClass : $inactiveClass ?>">
                 <span class="flex items-center gap-3">
                     <span class="material-icons text-[18px] <?= $act['contracts'] ? $activeIcon : $inactiveIcon ?>">description</span>
                     Contracts
                 </span>
                 <span class="material-icons text-[16px] transition-transform duration-200" :class="open && 'rotate-180'">expand_more</span>
             </button>
-            <div x-show="open" style="display: none;" class="ml-9 mt-1 space-y-0.5">
+            <div x-show="open" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-1" class="ml-9 mt-1 space-y-0.5">
                 <a href="<?= BASE_URL ?>contracts" class="block px-3 py-1.5 rounded-md text-xs <?= $act['contracts-list'] ? $activeSub : $inactiveSub ?>">All Contracts</a>
                 <a href="<?= BASE_URL ?>contracts/create" class="block px-3 py-1.5 rounded-md text-xs <?= $act['contracts-create'] ? $activeSub : $inactiveSub ?>">Create Contract</a>
                 <a href="<?= BASE_URL ?>contracts/expiring" class="block px-3 py-1.5 rounded-md text-xs <?= $act['contracts-expiring'] ? $activeSub : $inactiveSub ?>">Expiring Soon</a>
@@ -110,30 +115,30 @@ $inactiveSub = 'text-slate-500 hover:text-slate-700 hover:bg-slate-50';
         </div>
 
         <!-- Vessels -->
-        <div x-data="{ open: <?= $act['vessels'] ? 'true' : 'false' ?> }">
-            <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['vessels'] ? $activeClass : $inactiveClass ?>">
+        <div x-data="{ open: <?= $act['vessels'] ? 'true' : 'false' ?> }" x-cloak>
+            <button @click.prevent="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['vessels'] ? $activeClass : $inactiveClass ?>">
                 <span class="flex items-center gap-3">
                     <span class="material-icons text-[18px] <?= $act['vessels'] ? $activeIcon : $inactiveIcon ?>">directions_boat</span>
                     Vessels
                 </span>
                 <span class="material-icons text-[16px] transition-transform duration-200" :class="open && 'rotate-180'">expand_more</span>
             </button>
-            <div x-show="open" style="display: none;" class="ml-9 mt-1 space-y-0.5">
+            <div x-show="open" x-collapse class="ml-9 mt-1 space-y-0.5">
                 <a href="<?= BASE_URL ?>vessels" class="block px-3 py-1.5 rounded-md text-xs <?= $act['vessels-list'] ? $activeSub : $inactiveSub ?>">Vessel List</a>
                 <a href="<?= BASE_URL ?>vessels/profit" class="block px-3 py-1.5 rounded-md text-xs <?= $act['vessels-profit'] ? $activeSub : $inactiveSub ?>">Profit per Vessel</a>
             </div>
         </div>
 
         <!-- Clients -->
-        <div x-data="{ open: <?= $act['clients'] ? 'true' : 'false' ?> }">
-            <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['clients'] ? $activeClass : $inactiveClass ?>">
+        <div x-data="{ open: <?= $act['clients'] ? 'true' : 'false' ?> }" x-cloak>
+            <button @click.prevent="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['clients'] ? $activeClass : $inactiveClass ?>">
                 <span class="flex items-center gap-3">
                     <span class="material-icons text-[18px] <?= $act['clients'] ? $activeIcon : $inactiveIcon ?>">business</span>
                     Clients
                 </span>
                 <span class="material-icons text-[16px] transition-transform duration-200" :class="open && 'rotate-180'">expand_more</span>
             </button>
-            <div x-show="open" style="display: none;" class="ml-9 mt-1 space-y-0.5">
+            <div x-show="open" x-collapse class="ml-9 mt-1 space-y-0.5">
                 <a href="<?= BASE_URL ?>clients" class="block px-3 py-1.5 rounded-md text-xs <?= $act['clients'] ? $activeSub : $inactiveSub ?>">Client Management</a>
             </div>
         </div>
@@ -148,30 +153,30 @@ $inactiveSub = 'text-slate-500 hover:text-slate-700 hover:bg-slate-50';
         <div class="px-3 pt-4 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Crew</div>
 
         <!-- Data Crew -->
-        <div x-data="{ open: <?= $act['crews'] ? 'true' : 'false' ?> }">
-            <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['crews'] ? $activeClass : $inactiveClass ?>">
+        <div x-data="{ open: <?= $act['crews'] ? 'true' : 'false' ?> }" x-cloak>
+            <button @click.prevent="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['crews'] ? $activeClass : $inactiveClass ?>">
                 <span class="flex items-center gap-3">
                     <span class="material-icons text-[18px] <?= $act['crews'] ? $activeIcon : $inactiveIcon ?>">badge</span>
                     Data Crew
                 </span>
                 <span class="material-icons text-[16px] transition-transform duration-200" :class="open && 'rotate-180'">expand_more</span>
             </button>
-            <div x-show="open" style="display: none;" class="ml-9 mt-1 space-y-0.5">
+            <div x-show="open" x-collapse class="ml-9 mt-1 space-y-0.5">
                 <a href="<?= BASE_URL ?>crews" class="block px-3 py-1.5 rounded-md text-xs <?= $act['crews-list'] ? $activeSub : $inactiveSub ?>">All Crew</a>
                 <a href="<?= BASE_URL ?>crews/skill-matrix" class="block px-3 py-1.5 rounded-md text-xs <?= $act['skill-matrix'] ? $activeSub : $inactiveSub ?>">Skill Matrix</a>
             </div>
         </div>
 
         <!-- Crew Payroll -->
-        <div x-data="{ open: <?= $act['crew-payroll'] ? 'true' : 'false' ?> }">
-            <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['crew-payroll'] ? $activeClass : $inactiveClass ?>">
+        <div x-data="{ open: <?= $act['crew-payroll'] ? 'true' : 'false' ?> }" x-cloak>
+            <button @click.prevent="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['crew-payroll'] ? $activeClass : $inactiveClass ?>">
                 <span class="flex items-center gap-3">
                     <span class="material-icons text-[18px] <?= $act['crew-payroll'] ? $activeIcon : $inactiveIcon ?>">account_balance_wallet</span>
                     Crew Payroll
                 </span>
                 <span class="material-icons text-[16px] transition-transform duration-200" :class="open && 'rotate-180'">expand_more</span>
             </button>
-            <div x-show="open" style="display: none;" class="ml-9 mt-1 space-y-0.5">
+            <div x-show="open" x-collapse class="ml-9 mt-1 space-y-0.5">
                 <a href="<?= BASE_URL ?>payroll" class="block px-3 py-1.5 rounded-md text-xs <?= $act['crew-payroll-mgmt'] ? $activeSub : $inactiveSub ?>">Manajemen</a>
                 <a href="<?= BASE_URL ?>payroll/history" class="block px-3 py-1.5 rounded-md text-xs <?= $act['crew-payroll-history'] ? $activeSub : $inactiveSub ?>">Riwayat</a>
             </div>
@@ -259,15 +264,15 @@ $inactiveSub = 'text-slate-500 hover:text-slate-700 hover:bg-slate-50';
         <!-- REPORTS -->
         <div class="px-3 pt-4 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Reports</div>
 
-        <div x-data="{ open: <?= $act['reports'] ? 'true' : 'false' ?> }">
-            <button @click="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['reports'] ? $activeClass : $inactiveClass ?>">
+        <div x-data="{ open: <?= $act['reports'] ? 'true' : 'false' ?> }" x-cloak>
+            <button @click.prevent="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['reports'] ? $activeClass : $inactiveClass ?>">
                 <span class="flex items-center gap-3">
                     <span class="material-icons text-[18px] <?= $act['reports'] ? $activeIcon : $inactiveIcon ?>">assessment</span>
                     Reports
                 </span>
                 <span class="material-icons text-[16px] transition-transform duration-200" :class="open && 'rotate-180'">expand_more</span>
             </button>
-            <div x-show="open" style="display: none;" class="ml-9 mt-1 space-y-0.5">
+            <div x-show="open" x-collapse class="ml-9 mt-1 space-y-0.5">
                 <a href="<?= BASE_URL ?>reports" class="block px-3 py-1.5 rounded-md text-xs <?= $act['reports-overview'] ? $activeSub : $inactiveSub ?>">Overview</a>
                 <a href="<?= BASE_URL ?>reports/by-vessel" class="block px-3 py-1.5 rounded-md text-xs <?= $act['reports-vessel'] ? $activeSub : $inactiveSub ?>">Crew Report</a>
                 <a href="<?= BASE_URL ?>reports/employees" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs <?= $act['reports-emp'] ? $activeSub : $inactiveSub ?>">
@@ -324,6 +329,7 @@ $inactiveSub = 'text-slate-500 hover:text-slate-700 hover:bg-slate-50';
     </div>
 </aside>
 
+
 <script>
 // Save & restore sidebar scroll position so it doesn't jump on navigation
 (function() {
@@ -331,15 +337,19 @@ $inactiveSub = 'text-slate-500 hover:text-slate-700 hover:bg-slate-50';
     var nav = document.getElementById('sidebarNav');
     if (!nav) return;
 
-    // Restore scroll position immediately (before DOMContentLoaded to avoid flash)
+    // Restore scroll position immediately
     var saved = sessionStorage.getItem(STORAGE_KEY);
     if (saved !== null) {
         nav.scrollTop = parseInt(saved, 10);
     }
 
-    // Save scroll position whenever user scrolls the sidebar
+    // Save scroll position on any scroll
+    var debounce;
     nav.addEventListener('scroll', function() {
-        sessionStorage.setItem(STORAGE_KEY, nav.scrollTop);
+        clearTimeout(debounce);
+        debounce = setTimeout(function() {
+            sessionStorage.setItem(STORAGE_KEY, nav.scrollTop);
+        }, 50);
     });
 
     // Also save before navigating away
