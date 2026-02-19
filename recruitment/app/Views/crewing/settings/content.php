@@ -507,8 +507,17 @@
                     </div>
                     <div class="form-group">
                         <label><i class="fas fa-key"></i> Password</label>
-                        <input type="password" name="smtp_password" placeholder="<?= !empty($smtpSettings['smtp_password']) ? '••••••••• (tersimpan)' : 'Masukkan password' ?>">
+                        <div style="position:relative;">
+                            <input type="password" name="smtp_password" id="smtpPasswordField"
+                                   value="<?= htmlspecialchars($smtpSettings['smtp_password'] ?? '') ?>"
+                                   placeholder="<?= !empty($smtpSettings['smtp_password']) ? '••••••••• (tersimpan)' : 'Masukkan password' ?>">
+                            <button type="button" onclick="toggleSmtpPassword()" 
+                                    style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#6b7280;padding:4px;">
+                                <i class="fas fa-eye" id="smtpPasswordIcon"></i>
+                            </button>
+                        </div>
                     </div>
+
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -899,5 +908,19 @@ function saveLanguage(lang) {
     .catch(err => {
         console.error('Error saving language:', err);
     });
+}
+
+function toggleSmtpPassword() {
+    const input = document.getElementById('smtpPasswordField');
+    const icon = document.getElementById('smtpPasswordIcon');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
 }
 </script>

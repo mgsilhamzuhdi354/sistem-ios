@@ -213,7 +213,8 @@ class Email extends BaseController
                 if ($attachCount > 0) $msg .= " ($attachCount lampiran)";
                 return $this->json(['success' => true, 'message' => $msg]);
             } else {
-                return $this->json(['success' => true, 'message' => 'Email diantrekan (' . ($result['message'] ?? 'simulation mode') . ')']);
+                error_log("Email send failed: " . ($result['message'] ?? 'unknown error'));
+                return $this->json(['success' => false, 'message' => 'Gagal mengirim email: ' . ($result['message'] ?? 'Unknown error')]);
             }
         } catch (Exception $e) {
             ob_end_clean();
