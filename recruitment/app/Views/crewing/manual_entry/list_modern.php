@@ -209,6 +209,10 @@
             <button onclick="filterBySource('online')" id="tabOnline" class="px-4 py-2 rounded-md text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
                 Online <span class="ml-1 opacity-60 text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-full"><?= $stats['online'] ?></span>
             </button>
+            <a href="<?= url('/crewing/manual-entries/archived') ?>" class="px-4 py-2 rounded-md text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-1">
+                <span class="material-icons text-[16px]">inventory_2</span>
+                Arsip <span class="ml-1 opacity-60 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full"><?= $stats['archived'] ?? 0 ?></span>
+            </a>
         </div>
         <div class="relative w-full sm:w-80">
             <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -321,6 +325,9 @@
                                     <button onclick="confirmDelete(<?= $entry['id'] ?>, '<?= htmlspecialchars(addslashes($entry['candidate_name'])) ?>')" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/30" title="Delete">
                                         <span class="material-icons text-[20px]">delete</span>
                                     </button>
+                                    <button onclick="openArchiveModal(<?= $entry['id'] ?>, '<?= htmlspecialchars(addslashes($entry['candidate_name'])) ?>', '<?= htmlspecialchars($entry['status_name_id'] ?? $entry['status_name']) ?>', '<?= htmlspecialchars($entry['vacancy_title']) ?>', '<?= $entry['status_color'] ?>')" class="text-amber-600 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 p-1.5 rounded-full hover:bg-amber-50 dark:hover:bg-amber-900/30" title="Arsipkan">
+                                        <span class="material-icons text-[20px]">inventory_2</span>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -374,6 +381,103 @@
         </form>
     </div>
 </div>
+
+<!-- Archive Confirmation Modal -->
+<div id="archiveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" style="backdrop-filter:blur(4px);">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-0 max-w-lg w-full mx-4 overflow-hidden" style="animation: modalSlideUp 0.3s ease;">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur">
+                    <span class="material-icons text-white text-[22px]">inventory_2</span>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Arsipkan Pelamar</h3>
+                    <p class="text-sm text-amber-100">Pindahkan data ke arsip</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="px-6 py-5">
+            <!-- Applicant Info Card -->
+            <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-4 mb-4">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                        <span class="material-icons text-blue-600 text-[20px]">person</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-semibold text-slate-900 dark:text-white text-sm" id="archiveName"></div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" id="archivePosition"></div>
+                        <div class="mt-2">
+                            <span class="px-2.5 py-0.5 inline-flex text-xs font-semibold rounded-full" id="archiveStatusBadge"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Date/Time Info -->
+            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="material-icons text-blue-600 text-[18px]">schedule</span>
+                    <span class="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase">Waktu Arsip</span>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400">Hari</div>
+                        <div class="text-sm font-semibold text-slate-900 dark:text-white" id="archiveDay"></div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400">Tanggal</div>
+                        <div class="text-sm font-semibold text-slate-900 dark:text-white" id="archiveDate"></div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400">Jam</div>
+                        <div class="text-sm font-semibold text-slate-900 dark:text-white" id="archiveTime"></div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-slate-500 dark:text-slate-400">Zona Waktu</div>
+                        <div class="text-sm font-semibold text-slate-900 dark:text-white">WIB (UTC+7)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Archive Notes -->
+            <div class="mb-2">
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Catatan Arsip (opsional)</label>
+                <textarea id="archiveNotesInput" rows="3" class="block w-full px-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent text-sm transition-shadow" placeholder="Tulis alasan arsip, contoh: Sudah diterima dan diproses..."></textarea>
+            </div>
+
+            <!-- Warning -->
+            <div class="flex items-start gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg px-3 py-2">
+                <span class="material-icons text-[16px] mt-0.5">info</span>
+                <span>Data yang diarsip tidak akan tampil di daftar utama. Anda bisa memulihkan dari halaman Arsip kapan saja.</span>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 flex gap-3">
+            <button type="button" onclick="closeArchiveModal()" class="flex-1 px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-sm">
+                Batal
+            </button>
+            <form id="archiveForm" method="POST" class="flex-1">
+                <?= csrf_field() ?>
+                <input type="hidden" name="archive_notes" id="archiveNotesHidden">
+                <button type="submit" class="w-full px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm shadow-lg shadow-amber-500/25">
+                    <span class="material-icons text-[18px]">inventory_2</span>
+                    Arsipkan Sekarang
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
 
 <script>
 // Filter by source (tabs)
@@ -444,6 +548,48 @@ function closeDeleteModal() {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeDeleteModal();
+        closeArchiveModal();
     }
+});
+
+// === Archive Modal ===
+function openArchiveModal(id, name, status, position, statusColor) {
+    document.getElementById('archiveName').textContent = name;
+    document.getElementById('archivePosition').textContent = position;
+    
+    const badge = document.getElementById('archiveStatusBadge');
+    badge.textContent = status;
+    badge.style.backgroundColor = statusColor + '20';
+    badge.style.color = statusColor;
+    badge.style.border = '1px solid ' + statusColor + '50';
+    
+    // Set current date/time in Indonesian
+    const now = new Date();
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    
+    document.getElementById('archiveDay').textContent = days[now.getDay()];
+    document.getElementById('archiveDate').textContent = now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+    document.getElementById('archiveTime').textContent = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0') + ' WIB';
+    
+    document.getElementById('archiveForm').action = '<?= url('/crewing/manual-entries/archive/') ?>' + id;
+    document.getElementById('archiveNotesInput').value = '';
+    
+    document.getElementById('archiveModal').classList.remove('hidden');
+    document.getElementById('archiveModal').classList.add('flex');
+}
+
+function closeArchiveModal() {
+    document.getElementById('archiveModal').classList.add('hidden');
+    document.getElementById('archiveModal').classList.remove('flex');
+}
+
+document.getElementById('archiveModal').addEventListener('click', function(e) {
+    if (e.target === this) closeArchiveModal();
+});
+
+// Sync notes textarea to hidden field on submit
+document.getElementById('archiveForm').addEventListener('submit', function() {
+    document.getElementById('archiveNotesHidden').value = document.getElementById('archiveNotesInput').value;
 });
 </script>

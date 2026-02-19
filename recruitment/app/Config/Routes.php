@@ -170,6 +170,9 @@ $routes['POST']['/crewing/manual-entries/update/(:num)'] = 'Crewing/ManualEntry:
 $routes['POST']['/crewing/manual-entries/delete/(:num)'] = 'Crewing/ManualEntry::deleteEntry/$1';
 $routes['POST']['/crewing/manual-entries/push-erp/(:num)'] = 'Crewing/ManualEntry::pushToErp/$1';
 $routes['GET']['/crewing/manual-entry/search-ktp'] = 'Crewing/ManualEntry::searchByKtp';
+$routes['POST']['/crewing/manual-entries/archive/(:num)'] = 'Crewing/ManualEntry::archive/$1';
+$routes['POST']['/crewing/manual-entries/unarchive/(:num)'] = 'Crewing/ManualEntry::unarchive/$1';
+$routes['GET']['/crewing/manual-entries/archived'] = 'Crewing/ManualEntry::archivedList';
 
 // Crewing - AI Interviews
 $routes['GET']['/crewing/interviews'] = 'Crewing/Interviews::index';

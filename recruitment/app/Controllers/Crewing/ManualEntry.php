@@ -296,6 +296,7 @@ class ManualEntry extends BaseController {
             LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
             WHERE (a.entered_by = ? OR a.current_crewing_id = ? 
                    OR a.id IN (SELECT application_id FROM application_assignments WHERE assigned_to = ? AND status = 'active'))
+            AND COALESCE(a.is_archived, 0) = 0
             GROUP BY a.id
             ORDER BY a.created_at DESC
         ";
@@ -311,6 +312,12 @@ class ManualEntry extends BaseController {
         $totalApproved = count(array_filter($entries, fn($e) => strtolower($e['status_name']) === 'approved'));
         $totalInProgress = count(array_filter($entries, fn($e) => !in_array(strtolower($e['status_name']), ['approved', 'rejected'])));
         $totalSynced = count(array_filter($entries, fn($e) => !empty($e['is_synced_to_erp'])));
+    
+    // Count archived
+    $archivedStmt = $this->db->prepare("SELECT COUNT(*) as cnt FROM applications WHERE (entered_by = ? OR current_crewing_id = ?) AND is_archived = 1");
+    $archivedStmt->bind_param('ii', $crewingId, $crewingId);
+    $archivedStmt->execute();
+    $totalArchived = $archivedStmt->get_result()->fetch_assoc()['cnt'] ?? 0;
         
         // Choose content view based on UI mode
         $contentView = $uiMode === 'modern' ? 'crewing/manual_entry/list_modern' : 'crewing/manual_entry/list_content';
@@ -325,7 +332,8 @@ class ManualEntry extends BaseController {
                 'online' => $totalOnline,
                 'approved' => $totalApproved,
                 'in_progress' => $totalInProgress,
-                'synced' => $totalSynced
+                'synced' => $totalSynced,
+                'archived' => $totalArchived
             ],
             'uiMode' => $uiMode
         ];
@@ -875,5 +883,113 @@ class ManualEntry extends BaseController {
                 }
             }
         }
+    }
+
+    /**
+     * Archive an applicant
+     */
+    public function archive($applicationId) {
+        validate_csrf();
+        $crewingId = $_SESSION['user_id'];
+        
+        // Verify ownership
+        $stmt = $this->db->prepare("SELECT a.id, u.full_name, s.name as status_name FROM applications a INNER JOIN users u ON a.user_id = u.id INNER JOIN application_statuses s ON a.status_id = s.id WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ?)");
+        $stmt->bind_param('iii', $applicationId, $crewingId, $crewingId);
+        $stmt->execute();
+        $app = $stmt->get_result()->fetch_assoc();
+        
+        if (!$app) {
+            flash('error', 'Tidak memiliki akses untuk mengarsipkan data ini.');
+            redirect(url('/crewing/manual-entries'));
+        }
+        
+        $archiveNotes = trim($_POST['archive_notes'] ?? '');
+        $archivedAt = date('Y-m-d H:i:s');
+        
+        $stmt = $this->db->prepare("UPDATE applications SET is_archived = 1, archived_at = ?, archive_notes = ? WHERE id = ?");
+        $stmt->bind_param('ssi', $archivedAt, $archiveNotes, $applicationId);
+        $stmt->execute();
+        
+        flash('success', 'Data pelamar "' . htmlspecialchars($app['full_name']) . '" berhasil diarsipkan.');
+        redirect(url('/crewing/manual-entries'));
+    }
+
+    /**
+     * Unarchive / restore an applicant
+     */
+    public function unarchive($applicationId) {
+        validate_csrf();
+        $crewingId = $_SESSION['user_id'];
+        
+        $stmt = $this->db->prepare("SELECT a.id FROM applications a WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ?)");
+        $stmt->bind_param('iii', $applicationId, $crewingId, $crewingId);
+        $stmt->execute();
+        $app = $stmt->get_result()->fetch_assoc();
+        
+        if (!$app) {
+            flash('error', 'Tidak memiliki akses.');
+            redirect(url('/crewing/manual-entries/archived'));
+        }
+        
+        $stmt = $this->db->prepare("UPDATE applications SET is_archived = 0, archived_at = NULL, archive_notes = NULL WHERE id = ?");
+        $stmt->bind_param('i', $applicationId);
+        $stmt->execute();
+        
+        flash('success', 'Data pelamar berhasil dipulihkan dari arsip.');
+        redirect(url('/crewing/manual-entries/archived'));
+    }
+
+    /**
+     * Show archived applicants list
+     */
+    public function archivedList() {
+        $crewingId = $_SESSION['user_id'];
+        
+        $query = "
+            SELECT 
+                a.id,
+                a.user_id,
+                a.created_at,
+                a.entry_source,
+                a.is_archived,
+                a.archived_at,
+                a.archive_notes,
+                a.status_id,
+                u.full_name as candidate_name,
+                u.email,
+                u.phone,
+                u.avatar,
+                v.title as vacancy_title,
+                d.name as department_name,
+                s.name as status_name,
+                s.name_id as status_name_id,
+                s.color as status_color,
+                ap.gender,
+                ap.date_of_birth,
+                ap.last_rank
+            FROM applications a
+            INNER JOIN users u ON a.user_id = u.id
+            INNER JOIN job_vacancies v ON a.vacancy_id = v.id
+            LEFT JOIN departments d ON v.department_id = d.id
+            INNER JOIN application_statuses s ON a.status_id = s.id
+            LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
+            WHERE (a.entered_by = ? OR a.current_crewing_id = ?)
+            AND a.is_archived = 1
+            ORDER BY a.archived_at DESC
+        ";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param('ii', $crewingId, $crewingId);
+        $stmt->execute();
+        $entries = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        
+        $data = [
+            'pageTitle' => 'Arsip Pelamar',
+            'entries' => $entries,
+            'content' => 'crewing/manual_entry/list_archived'
+        ];
+        
+        extract($data);
+        include APPPATH . 'Views/layouts/crewing.php';
     }
 }
