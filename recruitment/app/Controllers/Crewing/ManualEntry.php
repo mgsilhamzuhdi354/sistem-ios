@@ -603,28 +603,24 @@ class ManualEntry extends BaseController {
             $delStmt->bind_param('i', $userId);
             $delStmt->execute();
             
-            // Delete any remaining references
-            $this->db->query("DELETE FROM crewing_ratings WHERE user_id = $userId OR rated_by = $userId");
-            $this->db->query("DELETE FROM password_resets WHERE user_id = $userId");
-            $this->db->query("DELETE FROM audit_logs WHERE user_id = $userId");
-            
             $delStmt = $this->db->prepare("DELETE FROM users WHERE id = ?");
             $delStmt->bind_param('i', $userId);
             $delStmt->execute();
             
             // Re-enable FK checks
             $this->db->query("SET FOREIGN_KEY_CHECKS = 1");
-
             
             $this->db->commit();
             
             flash('success', "✓ Data pelamar <strong>{$name}</strong> berhasil dihapus.");
             
         } catch (Exception $e) {
+            $this->db->query("SET FOREIGN_KEY_CHECKS = 1");
             $this->db->rollback();
             error_log("Delete entry error: " . $e->getMessage());
             flash('error', 'Gagal menghapus: ' . $e->getMessage());
         }
+
         
         redirect(url('/crewing/manual-entries'));
     }
