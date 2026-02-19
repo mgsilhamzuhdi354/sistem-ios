@@ -74,8 +74,302 @@
                 </div>
             </div>
         </div>
+
+        <!-- Smart Scan Button -->
+        <div class="form-card" style="border: 2px dashed #8b5cf6; background: linear-gradient(135deg, #f5f3ff, #ede9fe); cursor: pointer;" onclick="openSmartScan()">
+            <div class="form-card-body" style="display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 1.25rem;">
+                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #8b5cf6, #6d28d9); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fas fa-magic" style="color: white; font-size: 1.2rem;"></i>
+                </div>
+                <div>
+                    <h4 style="margin: 0; color: #6d28d9; font-size: 1rem; font-weight: 700;">⚡ Smart Scan — Isi Otomatis</h4>
+                    <p style="margin: 0.25rem 0 0 0; font-size: 0.82rem; color: #7c3aed;">Tempel/paste data pelamar (dari WhatsApp, CV, email, dll) — sistem akan mengisi semua field yang cocok secara otomatis!</p>
+                </div>
+                <i class="fas fa-chevron-right" style="color: #8b5cf6; font-size: 1.2rem;"></i>
+            </div>
+        </div>
+
         <div class="step-nav"><button type="button" class="btn-next" onclick="goStep(2)"><?= getCurrentLanguage() === 'en' ? 'Next' : 'Selanjutnya' ?> <i class="fas fa-arrow-right"></i></button></div>
     </div>
+
+<!-- Smart Scan Modal -->
+<div id="smartScanModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); justify-content:center; align-items:center;">
+    <div style="background:white; border-radius:16px; max-width:640px; width:95%; max-height:90vh; overflow:auto; box-shadow: 0 25px 60px rgba(0,0,0,0.3); animation: smartScanSlide 0.3s ease;">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); padding: 1.25rem 1.5rem; border-radius: 16px 16px 0 0;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:40px; height:40px; background:rgba(255,255,255,0.2); border-radius:10px; display:flex; align-items:center; justify-content:center;">
+                    <i class="fas fa-magic" style="color:white; font-size:1.1rem;"></i>
+                </div>
+                <div>
+                    <h3 style="margin:0; color:white; font-size:1.1rem; font-weight:700;">Smart Scan — Auto-Fill</h3>
+                    <p style="margin:0; color:rgba(255,255,255,0.8); font-size:0.8rem;">Paste data pelamar dan sistem akan mengisi form otomatis</p>
+                </div>
+                <button type="button" onclick="closeSmartScan()" style="margin-left:auto; background:rgba(255,255,255,0.2); border:none; color:white; width:32px; height:32px; border-radius:8px; cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center;">&times;</button>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 1.5rem;">
+            <!-- Hint -->
+            <div style="background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:0.75rem 1rem; margin-bottom:1rem;">
+                <p style="margin:0 0 0.5rem 0; font-size:0.8rem; font-weight:600; color:#6d28d9;"><i class="fas fa-lightbulb" style="margin-right:4px;"></i> Contoh data yang bisa di-paste:</p>
+                <p style="margin:0; font-size:0.75rem; color:#7c3aed; line-height:1.6;">
+                    Nama: Ahmad Fauzi<br>
+                    Email: ahmad@email.com<br>
+                    HP: 081234567890<br>
+                    NIK: 3201234567890001<br>
+                    L/P: Laki-laki<br>
+                    TTL: Surabaya, 15-03-1990<br>
+                    Alamat: Jl. Merdeka No.10, dll...
+                </p>
+            </div>
+
+            <!-- Textarea -->
+            <textarea id="smartScanInput" rows="10" placeholder="Paste / tempel data pelamar di sini...&#10;&#10;Bisa dari WhatsApp, email, CV, atau format apapun.&#10;Sistem akan mendeteksi otomatis: nama, email, HP, NIK, alamat, passport, dll." style="width:100%; padding:0.75rem 1rem; border:2px solid #e2e8f0; border-radius:10px; font-family:monospace; font-size:0.85rem; resize:vertical; outline:none; transition:border-color 0.2s; line-height:1.6;" onfocus="this.style.borderColor='#8b5cf6'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
+
+            <!-- Result preview area -->
+            <div id="smartScanResult" style="display:none; margin-top:0.75rem;"></div>
+        </div>
+
+        <!-- Footer -->
+        <div style="padding: 1rem 1.5rem; background:#f8fafc; border-top:1px solid #e2e8f0; border-radius: 0 0 16px 16px; display:flex; gap:0.75rem;">
+            <button type="button" onclick="closeSmartScan()" style="flex:1; padding:0.65rem; border:1px solid #e2e8f0; border-radius:10px; background:white; color:#64748b; font-weight:600; font-size:0.85rem; cursor:pointer;">Batal</button>
+            <button type="button" onclick="runSmartScan()" style="flex:1; padding:0.65rem; border:none; border-radius:10px; background:linear-gradient(135deg, #8b5cf6, #6d28d9); color:white; font-weight:700; font-size:0.85rem; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 12px rgba(109,40,217,0.3);">
+                <i class="fas fa-magic"></i> Proses & Isi Otomatis
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes smartScanSlide {
+    from { opacity:0; transform:translateY(20px); }
+    to { opacity:1; transform:translateY(0); }
+}
+</style>
+
+<script>
+function openSmartScan() {
+    document.getElementById('smartScanModal').style.display = 'flex';
+    document.getElementById('smartScanInput').value = '';
+    document.getElementById('smartScanResult').style.display = 'none';
+    setTimeout(() => document.getElementById('smartScanInput').focus(), 200);
+}
+function closeSmartScan() {
+    document.getElementById('smartScanModal').style.display = 'none';
+}
+document.getElementById('smartScanModal').addEventListener('click', function(e) {
+    if (e.target === this) closeSmartScan();
+});
+
+function runSmartScan() {
+    const raw = document.getElementById('smartScanInput').value.trim();
+    if (!raw) { alert('Silakan tempel/paste data terlebih dahulu!'); return; }
+
+    const found = {};
+    const text = raw;
+
+    // === EMAIL ===
+    const emailRe = /[\w.+-]+@[\w-]+\.[\w.]+/i;
+    const emailMatch = text.match(emailRe);
+    if (emailMatch) { found['Email'] = emailMatch[0]; setField('email', emailMatch[0]); }
+
+    // === PHONE ===
+    const phonePatterns = [
+        /(?:hp|phone|telp|telepon|no\.?\s*hp|whatsapp|wa|mobile|contact)\s*[:=\-]?\s*([\+]?[0-9\s\-\(\)]{9,15})/i,
+        /(?:^|\s)((?:\+62|62|08)\d[\d\s\-]{7,13})/m
+    ];
+    for (const re of phonePatterns) {
+        const m = text.match(re);
+        if (m) { const ph = m[1].replace(/[\s\-\(\)]/g, ''); found['Telepon'] = ph; setField('phone', ph); break; }
+    }
+
+    // === KTP / NIK ===
+    const ktpRe = /(?:nik|ktp|no\.?\s*ktp|no\.?\s*nik)\s*[:=\-]?\s*(\d{16})/i;
+    const ktpMatch = text.match(ktpRe);
+    if (ktpMatch) { found['NIK/KTP'] = ktpMatch[1]; setField('ktp_number', ktpMatch[1]); }
+    else {
+        // standalone 16-digit number
+        const standalone16 = text.match(/(?:^|\s)(\d{16})(?:\s|$)/m);
+        if (standalone16) { found['NIK/KTP'] = standalone16[1]; setField('ktp_number', standalone16[1]); }
+    }
+
+    // === NAME ===
+    const namePatterns = [
+        /(?:nama\s*(?:lengkap)?|name|full\s*name)\s*[:=\-]\s*(.+)/i
+    ];
+    for (const re of namePatterns) {
+        const m = text.match(re);
+        if (m) { const n = m[1].trim().replace(/[,;].*/, '').trim(); found['Nama'] = n; setField('full_name', n); break; }
+    }
+
+    // === GENDER ===
+    const genderRe = /(?:jenis\s*kelamin|gender|j\.?k\.?|l\/?p)\s*[:=\-]?\s*(laki[\s\-]*laki|perempuan|pria|wanita|male|female|lk|pr)/i;
+    const genderMatch = text.match(genderRe);
+    if (genderMatch) {
+        const g = genderMatch[1].toLowerCase();
+        const isMale = /laki|pria|male|^lk$/i.test(g);
+        found['Gender'] = isMale ? 'Male' : 'Female';
+        setSelect('gender', isMale ? 'Male' : 'Female');
+    }
+
+    // === DATE OF BIRTH ===
+    const dobPatterns = [
+        /(?:ttl|tanggal\s*lahir|tgl\s*lahir|dob|born|lahir)\s*[:=\-]?\s*(?:([a-zA-Z\s]+),?\s*)?(\d{1,2}[\s\-\/\.]\d{1,2}[\s\-\/\.]\d{2,4})/i,
+        /(?:ttl|tanggal\s*lahir|tgl\s*lahir|dob|born|lahir)\s*[:=\-]?\s*(?:([a-zA-Z\s]+),?\s*)?(\d{1,2}\s+(?:jan(?:uari)?|feb(?:ruari)?|mar(?:et)?|apr(?:il)?|mei|jun(?:i)?|jul(?:i)?|agu(?:stus)?|sep(?:tember)?|okt(?:ober)?|nov(?:ember)?|des(?:ember)?)\s+\d{2,4})/i
+    ];
+    for (const re of dobPatterns) {
+        const m = text.match(re);
+        if (m) {
+            if (m[1]) { found['Tempat Lahir'] = m[1].trim(); setField('place_of_birth', m[1].trim()); }
+            if (m[2]) {
+                const parsed = parseDate(m[2]);
+                if (parsed) { found['Tanggal Lahir'] = parsed; setField('date_of_birth', parsed); }
+            }
+            break;
+        }
+    }
+
+    // === ADDRESS ===
+    const addrRe = /(?:alamat|address)\s*[:=\-]\s*(.+)/i;
+    const addrMatch = text.match(addrRe);
+    if (addrMatch) { found['Alamat'] = addrMatch[1].trim(); setField('address', addrMatch[1].trim()); }
+
+    // === CITY ===
+    const cityRe = /(?:kota|city)\s*[:=\-]\s*(.+)/i;
+    const cityMatch = text.match(cityRe);
+    if (cityMatch) { found['Kota'] = cityMatch[1].trim(); setField('city', cityMatch[1].trim()); }
+
+    // === NATIONALITY ===
+    const natRe = /(?:kewarganegaraan|nationality|wni|wna)\s*[:=\-]\s*(.+)/i;
+    const natMatch = text.match(natRe);
+    if (natMatch) { found['Kewarganegaraan'] = natMatch[1].trim(); setField('nationality', natMatch[1].trim()); }
+
+    // === BLOOD TYPE ===
+    const bloodRe = /(?:gol(?:ongan)?\s*darah|blood\s*(?:type)?)\s*[:=\-]?\s*(A|B|AB|O)/i;
+    const bloodMatch = text.match(bloodRe);
+    if (bloodMatch) { found['Gol. Darah'] = bloodMatch[1].toUpperCase(); setSelect('blood_type', bloodMatch[1].toUpperCase()); }
+
+    // === SEAMAN BOOK ===
+    const seamanRe = /(?:buku\s*pelaut|seaman\s*book|seamanbook|no\.?\s*buku\s*pelaut)\s*[:=\-]?\s*([A-Z0-9\-\/\s]+)/i;
+    const seamanMatch = text.match(seamanRe);
+    if (seamanMatch) { found['No. Buku Pelaut'] = seamanMatch[1].trim(); setField('seaman_book_no', seamanMatch[1].trim()); }
+
+    // === PASSPORT ===
+    const passRe = /(?:passport|paspor|no\.?\s*paspor|no\.?\s*passport)\s*[:=\-]?\s*([A-Z0-9\-]+)/i;
+    const passMatch = text.match(passRe);
+    if (passMatch) { found['No. Paspor'] = passMatch[1].trim(); setField('passport_no', passMatch[1].trim()); }
+
+    // === HEIGHT ===
+    const hRe = /(?:tinggi\s*(?:badan)?|height)\s*[:=\-]?\s*(\d{2,3})\s*(?:cm)?/i;
+    const hMatch = text.match(hRe);
+    if (hMatch) { found['Tinggi'] = hMatch[1] + ' cm'; setField('height_cm', hMatch[1]); }
+
+    // === WEIGHT ===
+    const wRe = /(?:berat\s*(?:badan)?|weight)\s*[:=\-]?\s*(\d{2,3})\s*(?:kg)?/i;
+    const wMatch = text.match(wRe);
+    if (wMatch) { found['Berat'] = wMatch[1] + ' kg'; setField('weight_kg', wMatch[1]); }
+
+    // === RANK ===
+    const rankRe = /(?:rank|jabatan|posisi\s*terakhir|last\s*rank)\s*[:=\-]?\s*(.+)/i;
+    const rankMatch = text.match(rankRe);
+    if (rankMatch) { found['Rank'] = rankMatch[1].trim(); setField('last_rank', rankMatch[1].trim()); }
+
+    // === VESSEL NAME ===
+    const vesselRe = /(?:kapal\s*terakhir|vessel\s*(?:name)?|nama\s*kapal|ship\s*name|last\s*vessel)\s*[:=\-]?\s*(.+)/i;
+    const vesselMatch = text.match(vesselRe);
+    if (vesselMatch) { found['Kapal'] = vesselMatch[1].trim(); setField('last_vessel_name', vesselMatch[1].trim()); }
+
+    // === VESSEL TYPE ===
+    const vtRe = /(?:jenis\s*kapal|vessel\s*type|ship\s*type|type\s*kapal)\s*[:=\-]?\s*(.+)/i;
+    const vtMatch = text.match(vtRe);
+    if (vtMatch) { found['Jenis Kapal'] = vtMatch[1].trim(); setField('last_vessel_type', vtMatch[1].trim()); }
+
+    // === SEA SERVICE ===
+    const ssRe = /(?:pengalaman\s*laut|sea\s*service|total\s*sea|pengalaman\s*berlayar)\s*[:=\-]?\s*(\d+)\s*(?:bulan|months|bln)?/i;
+    const ssMatch = text.match(ssRe);
+    if (ssMatch) { found['Pengalaman Laut'] = ssMatch[1] + ' bulan'; setField('total_sea_service_months', ssMatch[1]); }
+
+    // === SHOE SIZE ===
+    const shoeRe = /(?:ukuran\s*sepatu|shoe\s*size)\s*[:=\-]?\s*(\d{2})/i;
+    const shoeMatch = text.match(shoeRe);
+    if (shoeMatch) { found['Ukuran Sepatu'] = shoeMatch[1]; setField('shoe_size', shoeMatch[1]); }
+
+    // === OVERALL SIZE ===
+    const overallRe = /(?:ukuran\s*overall|overall\s*size|coverall)\s*[:=\-]?\s*([XSML0-9]+)/i;
+    const overallMatch = text.match(overallRe);
+    if (overallMatch) { found['Ukuran Overall'] = overallMatch[1]; setField('overall_size', overallMatch[1]); }
+
+    // === EMERGENCY ===
+    const emergNameRe = /(?:kontak\s*darurat|emergency\s*(?:contact)?(?:\s*name)?)\s*[:=\-]?\s*(.+)/i;
+    const emergNameMatch = text.match(emergNameRe);
+    if (emergNameMatch) { found['Kontak Darurat'] = emergNameMatch[1].trim(); setField('emergency_name', emergNameMatch[1].trim()); }
+
+    // === POSTAL CODE ===
+    const postalRe = /(?:kode\s*pos|postal\s*code|zip)\s*[:=\-]?\s*(\d{5})/i;
+    const postalMatch = text.match(postalRe);
+    if (postalMatch) { found['Kode Pos'] = postalMatch[1]; setField('postal_code', postalMatch[1]); }
+
+    // === SHOW RESULTS ===
+    const keys = Object.keys(found);
+    if (keys.length === 0) {
+        document.getElementById('smartScanResult').innerHTML = '<div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:0.75rem; text-align:center; font-size:0.85rem; color:#dc2626;"><i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>Tidak ada data yang terdeteksi. Pastikan format data memiliki label seperti "Nama:", "Email:", "HP:", dll.</div>';
+        document.getElementById('smartScanResult').style.display = 'block';
+        return;
+    }
+
+    let html = '<div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:0.75rem 1rem;">';
+    html += '<p style="margin:0 0 0.5rem 0; font-size:0.82rem; font-weight:700; color:#16a34a;"><i class="fas fa-check-circle" style="margin-right:4px;"></i> ' + keys.length + ' field berhasil terdeteksi & diisi:</p>';
+    html += '<div style="display:flex; flex-wrap:wrap; gap:6px;">';
+    for (const k of keys) {
+        html += '<span style="background:#dcfce7; color:#15803d; font-size:0.72rem; padding:3px 8px; border-radius:6px; font-weight:600;">' + k + '</span>';
+    }
+    html += '</div></div>';
+    document.getElementById('smartScanResult').innerHTML = html;
+    document.getElementById('smartScanResult').style.display = 'block';
+
+    // Close after 1.5s
+    setTimeout(() => {
+        closeSmartScan();
+        alert('✅ Smart Scan selesai!\n\n' + keys.length + ' field berhasil diisi otomatis:\n• ' + keys.join('\n• ') + '\n\nSilakan cek dan lengkapi data di setiap step.');
+    }, 800);
+}
+
+function setField(name, value) {
+    const el = document.querySelector('[name="' + name + '"]');
+    if (el) { el.value = value; el.style.borderColor = '#8b5cf6'; setTimeout(() => el.style.borderColor = '', 3000); }
+}
+function setSelect(name, value) {
+    const el = document.querySelector('[name="' + name + '"]');
+    if (el) {
+        for (let i = 0; i < el.options.length; i++) {
+            if (el.options[i].value === value) { el.selectedIndex = i; el.style.borderColor = '#8b5cf6'; setTimeout(() => el.style.borderColor = '', 3000); break; }
+        }
+    }
+}
+
+function parseDate(str) {
+    const months = {jan:1,januari:1,feb:2,februari:2,mar:3,maret:3,apr:4,april:4,mei:5,may:5,jun:6,juni:6,jul:7,juli:7,agu:8,agustus:8,aug:8,sep:9,september:9,okt:10,oktober:10,oct:10,nov:11,november:11,des:12,desember:12,dec:12};
+    // Try dd-mm-yyyy or dd/mm/yyyy
+    let m = str.match(/(\d{1,2})[\s\-\/\.](\d{1,2})[\s\-\/\.](\d{2,4})/);
+    if (m) {
+        let d = parseInt(m[1]), mo = parseInt(m[2]), y = parseInt(m[3]);
+        if (y < 100) y += 2000; if (y < 1950) y = y - 2000 + 1900 + 100;
+        return y + '-' + String(mo).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    }
+    // Try dd month yyyy
+    m = str.match(/(\d{1,2})\s+([a-zA-Z]+)\s+(\d{2,4})/);
+    if (m) {
+        const mo = months[m[2].toLowerCase().substring(0,3)];
+        if (mo) {
+            let y = parseInt(m[3]); if (y < 100) y += 1900;
+            return y + '-' + String(mo).padStart(2,'0') + '-' + String(parseInt(m[1])).padStart(2,'0');
+        }
+    }
+    return null;
+}
+</script>
 
     <!-- STEP 2: Informasi Pribadi -->
     <div class="form-step-content" id="step-2">
