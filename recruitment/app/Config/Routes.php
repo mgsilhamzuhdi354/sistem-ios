@@ -171,6 +171,17 @@ $routes['POST']['/crewing/manual-entries/delete/(:num)'] = 'Crewing/ManualEntry:
 $routes['POST']['/crewing/manual-entries/push-erp/(:num)'] = 'Crewing/ManualEntry::pushToErp/$1';
 $routes['GET']['/crewing/manual-entry/search-ktp'] = 'Crewing/ManualEntry::searchByKtp';
 
+// Crewing - AI Interviews
+$routes['GET']['/crewing/interviews'] = 'Crewing/Interviews::index';
+$routes['POST']['/crewing/interviews/assign'] = 'Crewing/Interviews::assignInterview';
+$routes['GET']['/crewing/interviews/review/(:num)'] = 'Crewing/Interviews::review/$1';
+$routes['POST']['/crewing/interviews/score/(:num)'] = 'Crewing/Interviews::score/$1';
+$routes['POST']['/crewing/interviews/reset/(:num)'] = 'Crewing/Interviews::resetInterview/$1';
+$routes['GET']['/crewing/interviews/questions'] = 'Crewing/Interviews::questions';
+$routes['POST']['/crewing/interviews/storeQuestion'] = 'Crewing/Interviews::storeQuestion';
+$routes['POST']['/crewing/interviews/deleteQuestion/(:num)'] = 'Crewing/Interviews::deleteQuestion/$1';
+$routes['POST']['/crewing/interviews/deleteBank/(:num)'] = 'Crewing/Interviews::deleteBank/$1';
+
 // Crewing - Email Center
 $routes['GET']['/crewing/email'] = 'Crewing/Email::index';
 $routes['POST']['/crewing/email/send'] = 'Crewing/Email::send';
