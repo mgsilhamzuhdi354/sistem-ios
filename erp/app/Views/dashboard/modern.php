@@ -31,6 +31,7 @@ function formatNumber($num)
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -376,7 +377,24 @@ function formatNumber($num)
                         </a>
                     </div>
 
-                    <!-- Profit per Vessel Section -->
+                    <!-- Profit per Vessel Section - Charts -->
+                    <?php
+                    $totalRevenue = 0; $totalCost = 0; $totalProfit = 0;
+                    $vpNames = []; $vpRevenues = []; $vpCosts = []; $vpProfits = []; $vpMargins = [];
+                    if (!empty($vesselsProfitData)) {
+                        foreach ($vesselsProfitData as $vp) {
+                            $totalRevenue += $vp['revenue_usd'];
+                            $totalCost += $vp['cost_usd'];
+                            $totalProfit += $vp['profit_usd'];
+                            $vpNames[] = $vp['name'];
+                            $vpRevenues[] = round($vp['revenue_usd'], 2);
+                            $vpCosts[] = round($vp['cost_usd'], 2);
+                            $vpProfits[] = round($vp['profit_usd'], 2);
+                            $vpMargins[] = $vp['margin_percent'];
+                        }
+                    }
+                    $totalMargin = $totalRevenue > 0 ? round(($totalProfit / $totalRevenue) * 100, 1) : 0;
+                    ?>
                     <div class="bg-white rounded-xl border border-slate-100 shadow-soft overflow-hidden opacity-0 animate-fade-in animate-d2">
                         <div class="p-5 flex items-center justify-between border-b border-slate-100">
                             <div>
@@ -390,79 +408,66 @@ function formatNumber($num)
                                 Detail <span class="material-icons-round text-xs">arrow_forward</span>
                             </a>
                         </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left">
-                                <thead>
-                                    <tr class="bg-slate-50 border-b border-slate-100 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
-                                        <th class="px-5 py-3">Kapal</th>
-                                        <th class="px-5 py-3">Klien</th>
-                                        <th class="px-5 py-3 text-center">Kru</th>
-                                        <th class="px-5 py-3 text-right">Revenue</th>
-                                        <th class="px-5 py-3 text-right">Cost</th>
-                                        <th class="px-5 py-3 text-right">Profit</th>
-                                        <th class="px-5 py-3 text-right">Margin</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100">
-                                    <?php if (!empty($vesselsProfitData)):
-                                        $totalRevenue = 0; $totalCost = 0; $totalProfit = 0;
-                                        foreach ($vesselsProfitData as $vp):
-                                            $totalRevenue += $vp['revenue_usd'];
-                                            $totalCost += $vp['cost_usd'];
-                                            $totalProfit += $vp['profit_usd'];
-                                    ?>
-                                    <tr class="hover:bg-blue-50/30 transition-colors">
-                                        <td class="px-5 py-3">
-                                            <div class="flex items-center gap-2">
-                                                <div class="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-700">
-                                                    <?= strtoupper(substr($vp['name'], 0, 2)) ?>
-                                                </div>
-                                                <span class="text-sm font-semibold text-slate-700"><?= htmlspecialchars($vp['name']) ?></span>
-                                            </div>
-                                        </td>
-                                        <td class="px-5 py-3 text-sm text-slate-600"><?= htmlspecialchars($vp['client'] ?? '-') ?></td>
-                                        <td class="px-5 py-3 text-sm text-slate-600 text-center"><?= $vp['crew_count'] ?? 0 ?></td>
-                                        <td class="px-5 py-3 text-sm text-right font-medium text-slate-700"><?= formatNumber($vp['revenue_usd']) ?></td>
-                                        <td class="px-5 py-3 text-sm text-right text-slate-500"><?= formatNumber($vp['cost_usd']) ?></td>
-                                        <td class="px-5 py-3 text-sm text-right font-bold <?= $vp['is_profitable'] ? 'text-emerald-600' : 'text-red-600' ?>">
-                                            <?= $vp['is_profitable'] ? '+' : '' ?><?= formatNumber($vp['profit_usd']) ?>
-                                        </td>
-                                        <td class="px-5 py-3 text-right">
-                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?= $vp['margin_percent'] >= 20 ? 'bg-emerald-100 text-emerald-700' : ($vp['margin_percent'] >= 0 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700') ?>">
-                                                <?= $vp['margin_percent'] ?>%
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                    <!-- Totals Row -->
-                                    <tr class="bg-slate-50 font-bold">
-                                        <td class="px-5 py-3 text-sm text-slate-800" colspan="3">Total</td>
-                                        <td class="px-5 py-3 text-sm text-right text-slate-800"><?= formatNumber($totalRevenue) ?></td>
-                                        <td class="px-5 py-3 text-sm text-right text-slate-600"><?= formatNumber($totalCost) ?></td>
-                                        <td class="px-5 py-3 text-sm text-right <?= $totalProfit >= 0 ? 'text-emerald-600' : 'text-red-600' ?>">
-                                            <?= $totalProfit >= 0 ? '+' : '' ?><?= formatNumber($totalProfit) ?>
-                                        </td>
-                                        <td class="px-5 py-3 text-right">
-                                            <?php $totalMargin = $totalRevenue > 0 ? round(($totalProfit / $totalRevenue) * 100, 1) : 0; ?>
-                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <?= $totalMargin >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' ?>">
-                                                <?= $totalMargin ?>%
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <?php else: ?>
-                                    <tr>
-                                        <td colspan="7" class="px-5 py-8 text-center text-slate-400">
-                                            <span class="material-icons-round text-3xl mb-2 block">sailing</span>
-                                            Belum ada data profit kapal
-                                        </td>
-                                    </tr>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
+
+                        <!-- Summary Cards -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-5">
+                            <div class="bg-blue-50 rounded-xl p-4 text-center">
+                                <p class="text-[10px] uppercase tracking-wider text-blue-500 font-bold mb-1">Total Revenue</p>
+                                <p class="text-xl font-bold text-blue-700"><?= formatNumber($totalRevenue) ?></p>
+                            </div>
+                            <div class="bg-rose-50 rounded-xl p-4 text-center">
+                                <p class="text-[10px] uppercase tracking-wider text-rose-500 font-bold mb-1">Total Cost</p>
+                                <p class="text-xl font-bold text-rose-700"><?= formatNumber($totalCost) ?></p>
+                            </div>
+                            <div class="<?= $totalProfit >= 0 ? 'bg-emerald-50' : 'bg-red-50' ?> rounded-xl p-4 text-center">
+                                <p class="text-[10px] uppercase tracking-wider <?= $totalProfit >= 0 ? 'text-emerald-500' : 'text-red-500' ?> font-bold mb-1">Total Profit</p>
+                                <p class="text-xl font-bold <?= $totalProfit >= 0 ? 'text-emerald-700' : 'text-red-700' ?>"><?= $totalProfit >= 0 ? '+' : '' ?><?= formatNumber($totalProfit) ?></p>
+                            </div>
+                            <div class="bg-amber-50 rounded-xl p-4 text-center">
+                                <p class="text-[10px] uppercase tracking-wider text-amber-500 font-bold mb-1">Avg Margin</p>
+                                <p class="text-xl font-bold text-amber-700"><?= $totalMargin ?>%</p>
+                            </div>
                         </div>
+
+                        <!-- Charts -->
+                        <?php if (!empty($vesselsProfitData)): ?>
+                        <div class="grid grid-cols-1 xl:grid-cols-2 gap-0 border-t border-slate-100">
+                            <!-- Revenue vs Cost Bar Chart -->
+                            <div class="p-5 border-r border-slate-100">
+                                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Revenue vs Cost per Kapal</h5>
+                                <div class="relative" style="height: 280px;">
+                                    <canvas id="vesselRevenueCostChart"></canvas>
+                                </div>
+                            </div>
+                            <!-- Profit Bar Chart -->
+                            <div class="p-5">
+                                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Profit & Margin per Kapal</h5>
+                                <div class="relative" style="height: 280px;">
+                                    <canvas id="vesselProfitChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <?php else: ?>
+                        <div class="p-8 text-center text-slate-400">
+                            <span class="material-icons-round text-3xl mb-2 block">sailing</span>
+                            Belum ada data profit kapal
+                        </div>
+                        <?php endif; ?>
                     </div>
 
-                    <!-- Client Overview Section -->
+                    <!-- Client Management Section - Charts -->
+                    <?php
+                    $clientNames = []; $clientVessels = []; $clientCrews = []; $clientCosts = [];
+                    $clientColors = ['#6366f1','#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#14b8a6','#f97316'];
+                    if (!empty($clientsData)) {
+                        foreach ($clientsData as $ci => $client) {
+                            $clientNames[] = $client['name'];
+                            $clientVessels[] = $client['vessel_count'] ?? 0;
+                            $clientCrews[] = $client['active_crew_count'] ?? 0;
+                            $clientCosts[] = round($client['monthly_cost'] ?? 0, 2);
+                        }
+                    }
+                    ?>
                     <div class="opacity-0 animate-fade-in animate-d3">
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="font-bold text-slate-800 flex items-center gap-2">
@@ -473,62 +478,29 @@ function formatNumber($num)
                                 Lihat Semua <span class="material-icons-round text-xs">arrow_forward</span>
                             </a>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                            <?php if (!empty($clientsData)):
-                                foreach ($clientsData as $client):
-                                    $costDisplay = '';
-                                    if (!empty($client['monthly_cost_by_currency'])) {
-                                        $parts = [];
-                                        foreach ($client['monthly_cost_by_currency'] as $cur => $amt) {
-                                            $sym = $client['currency_symbols'][$cur] ?? $cur;
-                                            $parts[] = $sym . ' ' . number_format($amt, 0, ',', '.');
-                                        }
-                                        $costDisplay = implode(' + ', $parts);
-                                    }
-                            ?>
-                            <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-soft hover:shadow-lg transition-all group">
-                                <div class="flex items-start justify-between mb-3">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-sm font-bold text-indigo-700">
-                                            <?= strtoupper(substr($client['name'], 0, 2)) ?>
-                                        </div>
-                                        <div>
-                                            <h5 class="font-bold text-sm text-slate-800"><?= htmlspecialchars($client['name']) ?></h5>
-                                            <p class="text-[11px] text-slate-400"><?= htmlspecialchars($client['country'] ?? 'N/A') ?></p>
-                                        </div>
-                                    </div>
-                                    <a href="<?= BASE_URL ?>clients/<?= $client['id'] ?>" class="p-1.5 text-slate-300 hover:text-brand-blue rounded-lg hover:bg-blue-50 transition-all opacity-0 group-hover:opacity-100">
-                                        <span class="material-icons-round text-lg">arrow_forward</span>
-                                    </a>
+                        <?php if (!empty($clientsData)): ?>
+                        <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                            <!-- Client Vessels & Crew Bar Chart -->
+                            <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-soft">
+                                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Kapal & Kru per Klien</h5>
+                                <div class="relative" style="height: 280px;">
+                                    <canvas id="clientOverviewChart"></canvas>
                                 </div>
-                                <div class="grid grid-cols-3 gap-3 pt-3 border-t border-slate-100">
-                                    <div class="text-center">
-                                        <p class="text-lg font-bold text-slate-800"><?= $client['vessel_count'] ?? 0 ?></p>
-                                        <p class="text-[10px] text-slate-400 font-medium uppercase">Kapal</p>
-                                    </div>
-                                    <div class="text-center">
-                                        <p class="text-lg font-bold text-slate-800"><?= $client['active_crew_count'] ?? 0 ?></p>
-                                        <p class="text-[10px] text-slate-400 font-medium uppercase">Kru</p>
-                                    </div>
-                                    <div class="text-center">
-                                        <p class="text-lg font-bold text-emerald-600"><?= formatNumber($client['monthly_cost'] ?? 0) ?></p>
-                                        <p class="text-[10px] text-slate-400 font-medium uppercase">Cost/Bln</p>
-                                    </div>
-                                </div>
-                                <?php if ($costDisplay): ?>
-                                <div class="mt-2 px-2 py-1 bg-slate-50 rounded-lg">
-                                    <p class="text-[10px] text-slate-500 truncate" title="<?= htmlspecialchars($costDisplay) ?>"><?= $costDisplay ?></p>
-                                </div>
-                                <?php endif; ?>
                             </div>
-                            <?php endforeach;
-                            else: ?>
-                            <div class="col-span-3 text-center py-8 text-slate-400">
-                                <span class="material-icons-round text-3xl mb-2 block">business</span>
-                                Belum ada data klien
+                            <!-- Client Cost Doughnut Chart -->
+                            <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-soft">
+                                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Monthly Cost per Klien (USD)</h5>
+                                <div class="relative flex items-center justify-center" style="height: 280px;">
+                                    <canvas id="clientCostChart"></canvas>
+                                </div>
                             </div>
-                            <?php endif; ?>
                         </div>
+                        <?php else: ?>
+                        <div class="bg-white rounded-xl border border-slate-100 shadow-soft p-8 text-center text-slate-400">
+                            <span class="material-icons-round text-3xl mb-2 block">business</span>
+                            Belum ada data klien
+                        </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Charts Section -->
@@ -827,6 +799,206 @@ function formatNumber($num)
             </div>
         </div>
     </div>
+
+    <!-- Dashboard Charts JavaScript -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chartFont = { family: "'Inter', sans-serif", size: 11 };
+        const gridColor = 'rgba(148, 163, 184, 0.12)';
+
+        // ===== 1. Revenue vs Cost Bar Chart =====
+        const rcCtx = document.getElementById('vesselRevenueCostChart');
+        if (rcCtx) {
+            new Chart(rcCtx, {
+                type: 'bar',
+                data: {
+                    labels: <?= json_encode($vpNames) ?>,
+                    datasets: [
+                        {
+                            label: 'Revenue',
+                            data: <?= json_encode($vpRevenues) ?>,
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                            borderColor: '#3b82f6',
+                            borderWidth: 1,
+                            borderRadius: 6,
+                            borderSkipped: false
+                        },
+                        {
+                            label: 'Cost',
+                            data: <?= json_encode($vpCosts) ?>,
+                            backgroundColor: 'rgba(244, 63, 94, 0.7)',
+                            borderColor: '#f43f5e',
+                            borderWidth: 1,
+                            borderRadius: 6,
+                            borderSkipped: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: chartFont, usePointStyle: true, pointStyle: 'rectRounded', padding: 16 } },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleFont: { ...chartFont, weight: 'bold' },
+                            bodyFont: chartFont,
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: { label: ctx => ctx.dataset.label + ': $' + ctx.raw.toLocaleString() }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: chartFont } },
+                        y: { grid: { color: gridColor }, ticks: { font: chartFont, callback: v => '$' + (v >= 1000 ? (v/1000).toFixed(0) + 'K' : v) }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // ===== 2. Profit Bar Chart =====
+        const profitCtx = document.getElementById('vesselProfitChart');
+        if (profitCtx) {
+            const profitData = <?= json_encode($vpProfits) ?>;
+            const marginData = <?= json_encode($vpMargins) ?>;
+            new Chart(profitCtx, {
+                type: 'bar',
+                data: {
+                    labels: <?= json_encode($vpNames) ?>,
+                    datasets: [
+                        {
+                            label: 'Profit (USD)',
+                            data: profitData,
+                            backgroundColor: profitData.map(v => v >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
+                            borderColor: profitData.map(v => v >= 0 ? '#10b981' : '#ef4444'),
+                            borderWidth: 1,
+                            borderRadius: 6,
+                            borderSkipped: false,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Margin (%)',
+                            data: marginData,
+                            type: 'line',
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                            borderWidth: 2.5,
+                            pointBackgroundColor: '#f59e0b',
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            fill: true,
+                            tension: 0.3,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: chartFont, usePointStyle: true, pointStyle: 'rectRounded', padding: 16 } },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleFont: { ...chartFont, weight: 'bold' },
+                            bodyFont: chartFont,
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: ctx => {
+                                    if (ctx.dataset.yAxisID === 'y1') return 'Margin: ' + ctx.raw + '%';
+                                    return 'Profit: $' + ctx.raw.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: chartFont } },
+                        y: { position: 'left', grid: { color: gridColor }, ticks: { font: chartFont, callback: v => '$' + (v >= 1000 ? (v/1000).toFixed(0) + 'K' : v) } },
+                        y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { font: chartFont, callback: v => v + '%' }, min: -100, max: 100 }
+                    }
+                }
+            });
+        }
+
+        // ===== 3. Client Overview Bar Chart =====
+        const coCtx = document.getElementById('clientOverviewChart');
+        if (coCtx) {
+            new Chart(coCtx, {
+                type: 'bar',
+                data: {
+                    labels: <?= json_encode($clientNames) ?>,
+                    datasets: [
+                        {
+                            label: 'Kapal',
+                            data: <?= json_encode($clientVessels) ?>,
+                            backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                            borderColor: '#6366f1',
+                            borderWidth: 1,
+                            borderRadius: 6,
+                            borderSkipped: false
+                        },
+                        {
+                            label: 'Kru',
+                            data: <?= json_encode($clientCrews) ?>,
+                            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                            borderColor: '#10b981',
+                            borderWidth: 1,
+                            borderRadius: 6,
+                            borderSkipped: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { font: chartFont, usePointStyle: true, pointStyle: 'rectRounded', padding: 16 } },
+                        tooltip: { backgroundColor: '#1e293b', titleFont: { ...chartFont, weight: 'bold' }, bodyFont: chartFont, padding: 12, cornerRadius: 8 }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: chartFont } },
+                        y: { grid: { color: gridColor }, ticks: { font: chartFont, stepSize: 1 }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // ===== 4. Client Cost Doughnut Chart =====
+        const ccCtx = document.getElementById('clientCostChart');
+        if (ccCtx) {
+            const clientColors = <?= json_encode($clientColors) ?>;
+            new Chart(ccCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: <?= json_encode($clientNames) ?>,
+                    datasets: [{
+                        data: <?= json_encode($clientCosts) ?>,
+                        backgroundColor: clientColors.slice(0, <?= count($clientNames) ?>),
+                        borderColor: '#ffffff',
+                        borderWidth: 3,
+                        hoverOffset: 12
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '55%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: chartFont, usePointStyle: true, pointStyle: 'circle', padding: 16 } },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleFont: { ...chartFont, weight: 'bold' },
+                            bodyFont: chartFont,
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: { label: ctx => ctx.label + ': $' + ctx.raw.toLocaleString() }
+                        }
+                    }
+                }
+            });
+        }
+    });
+    </script>
 
     <!-- Notification System JavaScript -->
     <script>
