@@ -43,6 +43,12 @@ $appConfig = require APPPATH . 'Config/App.php';
 $dbConfig = require APPPATH . 'Config/Database.php';
 $routes = require APPPATH . 'Config/Routes.php';
 
+// Detect environment for URL generation
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$isLaragonPrettyUrl = (strpos($host, '.test') !== false || strpos($host, '.local') !== false);
+$isProduction = (strpos($host, 'indooceancrewservice.com') !== false);
+$isDirectDomain = ($isLaragonPrettyUrl || $isProduction);
+
 // Database connection
 function getDB() {
     global $dbConfig;
@@ -648,14 +654,14 @@ function old($key, $default = '') {
 }
 
 function asset($path) {
-    global $isLaragonPrettyUrl;
-    $base = $isLaragonPrettyUrl ? '/recruitment/public/assets/' : '/PT_indoocean/recruitment/public/assets/';
+    global $isDirectDomain;
+    $base = $isDirectDomain ? '/recruitment/public/assets/' : '/PT_indoocean/recruitment/public/assets/';
     return $base . ltrim($path, '/');
 }
 
 function url($path = '') {
-    global $isLaragonPrettyUrl;
-    $base = $isLaragonPrettyUrl ? '/recruitment/public' : '/PT_indoocean/recruitment/public';
+    global $isDirectDomain;
+    $base = $isDirectDomain ? '/recruitment/public' : '/PT_indoocean/recruitment/public';
     return $base . $path;
 }
 
