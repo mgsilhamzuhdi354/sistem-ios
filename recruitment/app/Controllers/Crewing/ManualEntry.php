@@ -583,9 +583,30 @@ class ManualEntry extends BaseController {
             $delStmt->execute();
             
             // Delete application
-            $delStmt = $this->db->prepare("DELETE FROM applications WHERE id = ?");
-            $delStmt->bind_param('i', $applicationId);
-            $delStmt->execute();
+        $delStmt = $this->db->prepare("DELETE FROM status_change_requests WHERE application_id = ?");
+        $delStmt->bind_param('i', $applicationId);
+        $delStmt->execute();
+        
+        $delStmt = $this->db->prepare("DELETE FROM application_status_history WHERE application_id = ?");
+        $delStmt->bind_param('i', $applicationId);
+        $delStmt->execute();
+        
+        $delStmt = $this->db->prepare("DELETE FROM archived_applications WHERE application_id = ?");
+        $delStmt->bind_param('i', $applicationId);
+        $delStmt->execute();
+        
+        // Delete interview data
+        $delStmt = $this->db->prepare("DELETE ia FROM interview_answers ia JOIN interview_sessions s ON ia.session_id = s.id WHERE s.application_id = ?");
+        $delStmt->bind_param('i', $applicationId);
+        $delStmt->execute();
+        
+        $delStmt = $this->db->prepare("DELETE FROM interview_sessions WHERE application_id = ?");
+        $delStmt->bind_param('i', $applicationId);
+        $delStmt->execute();
+        
+        $delStmt = $this->db->prepare("DELETE FROM applications WHERE id = ?");
+        $delStmt->bind_param('i', $applicationId);
+        $delStmt->execute();
             
             // Delete profile & user
             $delStmt = $this->db->prepare("DELETE FROM applicant_profiles WHERE user_id = ?");
