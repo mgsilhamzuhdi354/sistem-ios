@@ -59,7 +59,11 @@ class Applications extends BaseController {
             $query .= " AND v.department_id = " . intval($department);
         }
         if ($priority) {
-            $query .= " AND a.priority = '" . $this->db->real_escape_string($priority) . "'";
+            // Only filter by priority if column exists
+            @$this->db->query("SELECT priority FROM applications LIMIT 0");
+            if (!$this->db->error) {
+                $query .= " AND a.priority = '" . $this->db->real_escape_string($priority) . "'";
+            }
         }
         if ($search) {
             $searchEsc = $this->db->real_escape_string($search);
@@ -299,9 +303,13 @@ class Applications extends BaseController {
         $types = 'ii';
         
         if ($priority) {
-            $updateQuery .= ", priority = ?";
-            $params[] = $priority;
-            $types .= 's';
+            // Check if priority column exists before updating
+            $colCheck = @$this->db->query("SHOW COLUMNS FROM applications LIKE 'priority'");
+            if ($colCheck && $colCheck->num_rows > 0) {
+                $updateQuery .= ", priority = ?";
+                $params[] = $priority;
+                $types .= 's';
+            }
         }
         
         if ($notes) {

@@ -390,7 +390,7 @@
         <i class="fas fa-plus"></i> Assign Interview
     </button>
     <a href="<?= url('/crewing/interviews/questions') ?>" class="btn-assign" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);text-decoration:none;">
-        <i class="fas fa-database"></i> Manage Questions
+        <i class="fas fa-database"></i> Kelola Pertanyaan
     </a>
 
 </div>
@@ -477,9 +477,9 @@
         <form action="<?= url('/crewing/interviews/assign') ?>" method="POST">
             <?= csrf_field() ?>
             <div class="form-group">
-                <label>Select Applicant</label>
+                <label>Pilih Pelamar</label>
                 <select name="application_id" required>
-                    <option value="">— Choose Applicant —</option>
+                    <option value="">— Pilih Pelamar —</option>
                     <?php foreach ($assignableApplicants as $app): ?>
                         <option value="<?= $app['application_id'] ?>">
                             <?= htmlspecialchars($app['full_name']) ?> — <?= htmlspecialchars($app['vacancy_title']) ?>
@@ -488,21 +488,21 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Question Bank</label>
+                <label>Pertanyaan Soal</label>
                 <select name="question_bank_id" required>
-                    <option value="">— Choose Question Bank —</option>
+                    <option value="">— Pilih Pertanyaan Soal —</option>
                     <?php foreach ($questionBanks as $qb): ?>
                         <option value="<?= $qb['id'] ?>"><?= htmlspecialchars($qb['name']) ?> (<?= $qb['question_count'] ?> questions)</option>
                     <?php endforeach; ?>
                 </select>
             </div>
             <div class="form-group">
-                <label>Expires In (days)</label>
+                <label>Kadaluarsa Dalam (hari)</label>
                 <input type="number" name="expiry_days" value="7" min="1" max="30">
             </div>
             <div class="modal-actions">
-                <button type="button" class="btn-modal-cancel" onclick="document.getElementById('assignModal').classList.remove('active')">Cancel</button>
-                <button type="submit" class="btn-modal-submit"><i class="fas fa-paper-plane"></i> Assign</button>
+                <button type="button" class="btn-modal-cancel" onclick="document.getElementById('assignModal').classList.remove('active')">Batal</button>
+                <button type="submit" class="btn-modal-submit"><i class="fas fa-paper-plane"></i> Kirim</button>
             </div>
         </form>
     </div>

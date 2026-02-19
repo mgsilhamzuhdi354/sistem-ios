@@ -197,7 +197,7 @@
                 </span>
             </div>
             <div class="doc-actions">
-                <a href="<?= asset('uploads/documents/' . $doc['file_name']) ?>" target="_blank" class="btn btn-sm btn-outline">
+                <a href="<?= !empty($doc['file_path']) ? asset($doc['file_path']) : asset('uploads/documents/' . ($application['user_id'] ?? '') . '/' . $doc['file_name']) ?>" target="_blank" class="btn btn-sm btn-outline">
                     <i class="fas fa-eye"></i> View
                 </a>
             </div>

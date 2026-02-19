@@ -130,31 +130,93 @@ class Settings extends BaseController {
     }
 
     /**
-     * Test SMTP connection
-     */
-    public function testSmtp() {
-        try {
-            require_once APPPATH . 'Libraries/Mailer.php';
-            $mailer = new Mailer($this->db);
-
-            $testEmail = trim($this->input('test_email'));
-            if (empty($testEmail) || !filter_var($testEmail, FILTER_VALIDATE_EMAIL)) {
-                return $this->json(['success' => false, 'message' => 'Masukkan email yang valid untuk test']);
-            }
-
-            $result = $mailer->send(
-                $testEmail,
-                'Test User',
-                'Test Email dari PT Indo Ocean Crew Services',
-                '<h2>✅ Email Test Berhasil!</h2><p>Jika Anda menerima email ini, berarti konfigurasi SMTP sudah benar.</p><p>Dikirim pada: ' . date('d M Y H:i:s') . '</p>',
-                null, null, null, []
-            );
-
-            return $this->json($result);
-        } catch (Exception $e) {
-            return $this->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+ * Test SMTP connection (AJAX)
+ */
+public function testSmtp() {
+    try {
+        $userId = $_SESSION['user_id'];
+        
+        // Get stored SMTP config for this user
+        $stmt = $this->db->prepare("SELECT * FROM user_smtp_configs WHERE user_id = ? AND is_active = 1 LIMIT 1");
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $config = $stmt->get_result()->fetch_assoc();
+        
+        if (!$config) {
+            return $this->json(['success' => false, 'message' => 'Tidak ada konfigurasi SMTP. Simpan dulu pengaturan SMTP.']);
         }
+        
+        $host = $config['smtp_host'];
+        $port = intval($config['smtp_port']);
+        $username = $config['smtp_username'];
+        $password = $config['smtp_password'];
+        $encryption = $config['smtp_encryption'] ?? 'ssl';
+        
+        // Show diagnostic info (mask password)
+        $maskedPass = substr($password, 0, 2) . str_repeat('*', max(0, strlen($password) - 4)) . substr($password, -2);
+        $diag = "Host: {$host}:{$port}, User: {$username}, Pass: {$maskedPass} (" . strlen($password) . " chars), Enc: {$encryption}";
+        error_log("[SMTP Test] " . $diag);
+        
+        // Direct PHPMailer connection test
+        require_once APPPATH . 'Libraries/Mailer.php';
+        
+        if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+            return $this->json(['success' => false, 'message' => 'PHPMailer tidak terinstall!']);
+        }
+        
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        $mail->isSMTP();
+        $mail->Host = $host;
+        $mail->SMTPAuth = true;
+        $mail->Username = $username;
+        $mail->Password = $password;
+        $mail->Timeout = 15;
+        
+        if ($encryption === 'ssl') {
+            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+        } else {
+            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        }
+        $mail->Port = $port;
+        
+        $mail->SMTPOptions = [
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            ]
+        ];
+        
+        // Try to connect and authenticate
+        $mail->SMTPDebug = 0; // No debug output
+        
+        if ($mail->smtpConnect()) {
+            $mail->smtpClose();
+            return $this->json([
+                'success' => true, 
+                'message' => "✅ Koneksi SMTP berhasil! ({$diag})"
+            ]);
+        } else {
+            return $this->json([
+                'success' => false, 
+                'message' => "Koneksi gagal: " . $mail->ErrorInfo . " | Config: {$diag}"
+            ]);
+        }
+        
+    } catch (\Exception $e) {
+        $errorMsg = $e->getMessage();
+        error_log("[SMTP Test] Error: " . $errorMsg);
+        
+        if (strpos($errorMsg, 'Could not authenticate') !== false) {
+            return $this->json(['success' => false, 'message' => 'Autentikasi gagal! Password salah. Coba simpan ulang password SMTP di Settings.']);
+        }
+        if (strpos($errorMsg, 'Could not connect') !== false) {
+            return $this->json(['success' => false, 'message' => 'Tidak bisa konek ke server SMTP. Cek host dan port.']);
+        }
+        
+        return $this->json(['success' => false, 'message' => 'Error: ' . $errorMsg]);
     }
+}
     
     /**
      * Update profile
