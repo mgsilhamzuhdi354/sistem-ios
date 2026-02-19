@@ -22,7 +22,7 @@ class ForgotPassword extends BaseController {
             $this->redirect(url('/forgot-password'));
         }
         
-        $stmt = $this->db->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt = $this->db->prepare("SELECT id, full_name FROM users WHERE email = ?");
         $stmt->bind_param('s', $email);
         $stmt->execute();
         $user = $stmt->get_result()->fetch_assoc();
@@ -39,13 +39,51 @@ class ForgotPassword extends BaseController {
             $stmt->bind_param('ss', $email, $token);
             $stmt->execute();
             
-            // In production, send email here
-            // For now, just show the reset link
+            // Build reset link
             $resetLink = url('/reset-password/' . $token);
-            flash('success', 'Password reset link has been sent to your email. (Dev mode: ' . $resetLink . ')');
+            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $fullResetLink = $protocol . '://' . $host . $resetLink;
+            
+            // Build email body
+            $userName = $user['full_name'] ?? 'User';
+            $emailBody = "
+                <h2>Reset Password</h2>
+                <p>Halo <strong>{$userName}</strong>,</p>
+                <p>Kami menerima permintaan untuk mereset password akun Anda di PT Indo Ocean Crew Services.</p>
+                <p>Klik tombol di bawah ini untuk mereset password Anda:</p>
+                <p style='text-align: center; margin: 30px 0;'>
+                    <a href='{$fullResetLink}' style='background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block;'>Reset Password</a>
+                </p>
+                <p>Atau copy link ini ke browser Anda:</p>
+                <p style='word-break: break-all; background: #f5f5f5; padding: 10px; border-radius: 5px; font-size: 13px;'>{$fullResetLink}</p>
+                <p><strong>Link ini berlaku selama 1 jam.</strong></p>
+                <p>Jika Anda tidak meminta reset password, abaikan email ini.</p>
+                <hr style='border: none; border-top: 1px solid #eee; margin: 20px 0;'>
+                <p style='font-size: 12px; color: #999;'>Email ini dikirim otomatis oleh sistem PT Indo Ocean Crew Services.</p>
+            ";
+            
+            // Try sending via Mailer
+            $emailSent = false;
+            try {
+                require_once APPPATH . 'Libraries/Mailer.php';
+                $mailer = new \Mailer($this->db);
+                $result = $mailer->send($email, $userName, 'Reset Password - PT Indo Ocean', $emailBody);
+                $emailSent = $result['success'] ?? false;
+            } catch (\Exception $e) {
+                error_log("[ForgotPassword] Mailer error: " . $e->getMessage());
+                $emailSent = false;
+            }
+            
+            if ($emailSent) {
+                flash('success', 'Link reset password telah dikirim ke email Anda. Silakan cek inbox atau folder spam.');
+            } else {
+                // Fallback: show link directly (for environments without SMTP)
+                flash('success', 'Link reset password: <a href="' . $fullResetLink . '" target="_blank">Klik di sini untuk reset</a>');
+            }
         } else {
             // Don't reveal if email exists
-            flash('success', 'If that email exists in our system, you will receive a password reset link.');
+            flash('success', 'Jika email tersebut terdaftar di sistem kami, Anda akan menerima link reset password.');
         }
         
         $this->redirect(url('/forgot-password'));

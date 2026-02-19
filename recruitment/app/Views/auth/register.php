@@ -145,12 +145,7 @@
                 </div>
                 
                 <div class="back-link">
-                    <?php 
-                    $hostReg = $_SERVER['HTTP_HOST'] ?? 'localhost';
-                    $isLaragonReg = (strpos($hostReg, '.test') !== false || strpos($hostReg, '.local') !== false);
-                    $backUrlReg = $isLaragonReg ? '/' : '/indoocean/';
-                    ?>
-                    <a href="<?= $backUrlReg ?>"><i class="fas fa-arrow-left"></i> <span data-translate="common.back">Back to Main Website</span></a>
+                    <a href="/"><i class="fas fa-arrow-left"></i> <span data-translate="common.back">Back</span></a>
                 </div>
             </div>
         </div>

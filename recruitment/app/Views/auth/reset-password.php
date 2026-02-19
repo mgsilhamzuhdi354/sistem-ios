@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lupa Password - PT Indo Ocean</title>
+    <title>Reset Password - PT Indo Ocean</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -16,7 +16,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        .forgot-container {
+        .reset-container {
             background: white;
             border-radius: 20px;
             padding: 3rem;
@@ -88,14 +88,20 @@
         .back-link a:hover {
             text-decoration: underline;
         }
+
+        .password-requirements {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
-    <div class="forgot-container">
+    <div class="reset-container">
         <div class="logo">
-            <i class="fas fa-key"></i>
-            <h2>Lupa Password?</h2>
-            <p class="text-muted">Masukkan email Anda untuk reset password</p>
+            <i class="fas fa-lock-open"></i>
+            <h2>Reset Password</h2>
+            <p class="text-muted">Masukkan password baru Anda</p>
         </div>
 
         <?php $flashError = flash('error'); if ($flashError): ?>
@@ -106,31 +112,64 @@
             </div>
         <?php endif; ?>
 
-        <?php $flashSuccess = flash('success'); if ($flashSuccess): ?>
-            <div class="alert alert-success alert-dismissible fade show">
-                <i class="fas fa-check-circle"></i>
-                <?= $flashSuccess ?>
+        <?php if (!empty($_SESSION['errors'])): ?>
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="fas fa-exclamation-circle"></i>
+                <ul class="mb-0 ps-3">
+                    <?php foreach ($_SESSION['errors'] as $error): ?>
+                        <li><?= $error ?></li>
+                    <?php endforeach; ?>
+                </ul>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
+            <?php unset($_SESSION['errors']); ?>
         <?php endif; ?>
 
-        <form method="POST" action="<?= url('/forgot-password') ?>">
+        <form method="POST" action="<?= url('/reset-password') ?>">
             <?= csrf_field() ?>
+            <input type="hidden" name="token" value="<?= htmlspecialchars($token ?? '') ?>">
             
-            <div class="mb-4">
+            <div class="mb-3">
                 <label class="form-label">
-                    <i class="fas fa-envelope"></i> Email Address
+                    <i class="fas fa-envelope"></i> Email
                 </label>
                 <input type="email" 
-                       name="email" 
                        class="form-control" 
-                       placeholder="Masukkan email Anda"
+                       value="<?= htmlspecialchars($email ?? '') ?>"
+                       readonly
+                       disabled>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    <i class="fas fa-lock"></i> Password Baru
+                </label>
+                <input type="password" 
+                       name="password" 
+                       class="form-control" 
+                       placeholder="Masukkan password baru"
                        required
+                       minlength="6"
                        autofocus>
+                <div class="password-requirements">
+                    <i class="fas fa-info-circle"></i> Minimal 6 karakter
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">
+                    <i class="fas fa-lock"></i> Konfirmasi Password
+                </label>
+                <input type="password" 
+                       name="password_confirm" 
+                       class="form-control" 
+                       placeholder="Ulangi password baru"
+                       required
+                       minlength="6">
             </div>
 
             <button type="submit" class="btn btn-primary w-100">
-                <i class="fas fa-paper-plane"></i> Kirim Link Reset Password
+                <i class="fas fa-save"></i> Simpan Password Baru
             </button>
         </form>
 
@@ -138,13 +177,6 @@
             <a href="<?= url('/login') ?>">
                 <i class="fas fa-arrow-left"></i> Kembali ke Login
             </a>
-        </div>
-
-        <div class="text-center mt-4">
-            <small class="text-muted">
-                <i class="fas fa-info-circle"></i> 
-                Link reset password akan dikirim ke email Anda
-            </small>
         </div>
     </div>
 
