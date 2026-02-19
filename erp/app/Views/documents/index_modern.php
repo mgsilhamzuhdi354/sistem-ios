@@ -91,7 +91,8 @@ $currentPage = 'documents';
                             <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">Manajemen Dokumen</h1>
                             <p class="text-gray-500 dark:text-gray-400">Kelola dokumen kru dan tracking masa berlaku</p>
                         </div>
-                        <button class="bg-primary hover:bg-yellow-600 text-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all flex items-center font-medium transform active:scale-95">
+                        <button onclick="document.getElementById('uploadAlertModal').classList.remove('hidden')" 
+                                class="bg-primary hover:bg-yellow-600 text-white px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all flex items-center font-medium transform active:scale-95">
                             <span class="material-icons mr-2">add</span>
                             Upload Dokumen
                         </button>
@@ -280,5 +281,57 @@ $currentPage = 'documents';
             </div>
         </main>
     </div>
+    <!-- Upload Alert Modal -->
+    <div id="uploadAlertModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onclick="if(event.target===this) this.classList.add('hidden')">
+        <div class="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-xl mx-4 overflow-hidden transform transition-all">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-amber-50 to-yellow-50 px-8 py-6 border-b border-amber-100">
+                <div class="flex items-center gap-4">
+                    <div class="h-14 w-14 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                        <span class="material-icons text-amber-600 text-3xl">info</span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Upload Dokumen Crew</h3>
+                        <p class="text-sm text-amber-700 mt-1">Informasi penting sebelum upload</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="px-8 py-6">
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-5">
+                    <div class="flex gap-3">
+                        <span class="material-icons text-blue-500 mt-0.5 flex-shrink-0">lightbulb</span>
+                        <div>
+                            <p class="text-sm font-semibold text-blue-800 mb-1">Cara Upload Dokumen:</p>
+                            <p class="text-sm text-blue-700 leading-relaxed">
+                                Untuk mengupload dokumen, Anda harus memilih <strong>crew</strong> terlebih dahulu dari halaman <strong>Data Crew</strong>. 
+                                Setiap dokumen harus dikaitkan dengan crew yang bersangkutan.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-start gap-3 text-sm text-gray-600">
+                    <span class="material-icons text-gray-400 text-lg mt-0.5">arrow_forward</span>
+                    <p>Buka <strong>Data Crew</strong> → Pilih crew → klik <strong>Documents</strong> → Upload dokumen baru</p>
+                </div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="px-8 py-5 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
+                <button onclick="document.getElementById('uploadAlertModal').classList.add('hidden')" 
+                        class="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-white transition-colors text-sm">
+                    Tutup
+                </button>
+                <a href="<?= BASE_URL ?>crews" 
+                   class="px-5 py-2.5 rounded-lg bg-primary hover:bg-blue-800 text-white font-medium transition-colors text-sm flex items-center gap-2 shadow-sm">
+                    <span class="material-icons text-base">badge</span>
+                    Buka Data Crew
+                </a>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

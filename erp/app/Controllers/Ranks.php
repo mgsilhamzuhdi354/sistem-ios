@@ -6,6 +6,8 @@
 
 namespace App\Controllers;
 
+require_once APPPATH . 'Models/RankModel.php';
+
 use App\Models\RankModel;
 
 class Ranks extends BaseController

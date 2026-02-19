@@ -410,16 +410,16 @@ class RecruitmentHub extends BaseController
                 u.full_name,
                 u.email,
                 u.phone,
-                u.date_of_birth,
-                u.address,
-                u.city,
-                u.country,
-                u.passport_no,
-                u.gender,
-                u.nationality,
+                ap.date_of_birth,
+                ap.address,
+                ap.city,
+                ap.nationality as country,
+                ap.passport_no,
+                ap.gender,
+                ap.nationality,
                 u.avatar,
-                u.emergency_contact_name as emergency_name,
-                u.emergency_contact_phone as emergency_phone,
+                ap.emergency_name,
+                ap.emergency_phone,
                 u.is_synced_to_erp,
                 v.title as vacancy_title,
                 d.name as department_name,
@@ -427,6 +427,7 @@ class RecruitmentHub extends BaseController
                 s.color as status_color
             FROM applications a
             JOIN users u ON a.user_id = u.id
+            LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
             JOIN job_vacancies v ON a.vacancy_id = v.id
             LEFT JOIN departments d ON v.department_id = d.id
             JOIN application_statuses s ON a.status_id = s.id
@@ -712,18 +713,19 @@ class RecruitmentHub extends BaseController
                 u.full_name, 
                 u.email, 
                 u.phone, 
-                u.date_of_birth,
-                u.address,
-                u.city,
-                u.country,
-                u.passport_no,
-                u.gender,
-                u.nationality,
-                u.emergency_contact_name,
-                u.emergency_contact_phone,
+                ap.date_of_birth,
+                ap.address,
+                ap.city,
+                ap.nationality as country,
+                ap.passport_no,
+                ap.gender,
+                ap.nationality,
+                ap.emergency_name as emergency_contact_name,
+                ap.emergency_phone as emergency_contact_phone,
                 v.title as position_applied
             FROM applications a
             JOIN users u ON a.user_id = u.id
+            LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
             JOIN job_vacancies v ON a.vacancy_id = v.id
             WHERE a.id = ?
         ");

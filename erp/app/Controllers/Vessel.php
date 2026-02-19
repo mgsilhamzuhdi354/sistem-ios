@@ -81,6 +81,9 @@ class Vessel extends BaseController
 
     public function create()
     {
+        // Check UI mode from session
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
+
         $vesselTypeModel = new VesselTypeModel($this->db);
         $flagStateModel = new FlagStateModel($this->db);
         $clientModel = new ClientModel($this->db);
@@ -92,7 +95,9 @@ class Vessel extends BaseController
             'clients' => $clientModel->getForDropdown(),
         ];
 
-        return $this->view('vessels/form', $data);
+        // Route to appropriate view based on UI mode
+        $view = $uiMode === 'modern' ? 'vessels/form_modern' : 'vessels/form';
+        return $this->view($view, $data);
     }
 
     public function store()

@@ -9,6 +9,8 @@ namespace App\Controllers;
 require_once APPPATH . 'Models/ContractModel.php';
 require_once APPPATH . 'Models/VesselModel.php';
 require_once APPPATH . 'Models/ClientModel.php';
+require_once APPPATH . 'Models/RankModel.php';
+require_once APPPATH . 'Models/CrewModel.php';
 
 use App\Models\ContractModel;
 use App\Models\ContractSalaryModel;
