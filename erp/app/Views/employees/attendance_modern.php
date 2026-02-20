@@ -23,7 +23,7 @@ $absent = count(array_filter($records, fn($r) => empty($r['jam_masuk'])));
 $onLeave = 0; // Would need additional API data
 ?>
 <!DOCTYPE html>
-<html lang="<?= session()->get('lang') ?? 'en' ?>">
+<html lang="<?= getLanguage() ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

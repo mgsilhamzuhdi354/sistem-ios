@@ -7,7 +7,7 @@ $monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July
 $taxLabels = ['pph21' => 'PPh 21 (NPWP)', 'pph21_non_npwp' => 'PPh 21 (Non-NPWP)', 'exempt' => 'Exempt', 'foreign' => 'Foreign'];
 ?>
 <!DOCTYPE html>
-<html lang="<?= session()->get('lang') ?? 'en' ?>">
+<html lang="<?= getLanguage() ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

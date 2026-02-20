@@ -14,7 +14,7 @@ $excellentCount = count(array_filter($performanceData, fn($d) => $d['score'] >= 
 $needImprovementCount = count(array_filter($performanceData, fn($d) => $d['score'] < 60));
 ?>
 <!DOCTYPE html>
-<html lang="<?= session()->get('lang') ?? 'en' ?>">
+<html lang="<?= getLanguage() ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

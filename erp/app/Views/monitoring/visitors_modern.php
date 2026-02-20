@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Modern Visitor Monitoring Dashboard
  * PT Indo Ocean - ERP System
@@ -18,7 +18,7 @@ $uniquePages = count($stats['top_pages'] ?? []);
 $growthPercentage = 0;
 ?>
 <!DOCTYPE html>
-<html lang="<?= session()->get('lang') ?? 'en' ?>">
+<html lang="<?= getLanguage() ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

@@ -5,7 +5,7 @@
  */
 ?>
 <!DOCTYPE html>
-<html lang="<?= session()->get('lang') ?? 'en' ?>">
+<html lang="<?= getLanguage() ?>">
 
 <head>
     <meta charset="UTF-8">
