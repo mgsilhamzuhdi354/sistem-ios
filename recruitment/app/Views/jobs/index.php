@@ -145,9 +145,14 @@
                             <?php foreach ($jobs as $job): ?>
                                 <div class="job-card">
                                     <div class="job-header">
-                                        <div class="job-icon" style="background-color: <?= $job['department_color'] ?? '#0A2463' ?>">
-                                            <i class="fas <?= $job['department_icon'] ?? 'fa-ship' ?>"></i>
-                                        </div>
+                                        <?php if (!empty($job['ship_photo'])): ?>
+                                            <img src="<?= url('/' . $job['ship_photo']) ?>" alt="<?= htmlspecialchars($job['title']) ?>" 
+                                                 style="width: 56px; height: 56px; object-fit: cover; border-radius: 12px; border: 2px solid #e5e7eb;">
+                                        <?php else: ?>
+                                            <div class="job-icon" style="background-color: <?= $job['department_color'] ?? '#0A2463' ?>">
+                                                <i class="fas <?= $job['department_icon'] ?? 'fa-ship' ?>"></i>
+                                            </div>
+                                        <?php endif; ?>
                                         <div class="job-meta">
                                             <span class="department"><?= htmlspecialchars($job['department_name'] ?? 'General') ?></span>
                                             <?php if ($job['is_featured']): ?>
