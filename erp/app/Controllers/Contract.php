@@ -137,8 +137,8 @@ class Contract extends BaseController
             WHERE c.source = 'recruitment'
             AND c.status IN ('standby', 'available')
             AND c.id NOT IN (
-                SELECT crew_id FROM contracts 
-                WHERE status IN ('active', 'pending')
+                SELECT crew_id FROM contracts
+                WHERE status IN ('active', 'pending_approval', 'draft', 'onboard')
             )
             ORDER BY c.approved_at DESC
             LIMIT 50
@@ -163,6 +163,24 @@ class Contract extends BaseController
     {
         if (!$this->isPost()) {
             $this->redirect('contracts');
+        }
+
+        $crewId = $this->input('crew_id');
+
+        // Prevent duplicate: check if crew already has an active/pending/draft contract
+        if (!empty($crewId)) {
+            $stmt = $this->db->prepare(
+                "SELECT id, contract_no, status FROM contracts WHERE crew_id = ? AND status IN ('active', 'pending_approval', 'draft', 'onboard') LIMIT 1"
+            );
+            $stmt->bind_param('i', $crewId);
+            $stmt->execute();
+            $dupCheck = $stmt->get_result();
+            if ($dupCheck && $dupCheck->num_rows > 0) {
+                $existing = $dupCheck->fetch_assoc();
+                $this->setFlash('error', 'Crew sudah memiliki kontrak aktif: ' . $existing['contract_no'] . ' (Status: ' . ucfirst(str_replace('_', ' ', $existing['status'])) . ')');
+                $this->redirect('contracts/create');
+                return;
+            }
         }
 
         // Contract data
