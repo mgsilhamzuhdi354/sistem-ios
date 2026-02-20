@@ -680,13 +680,12 @@
                 formatNPWP(input) {
                     let value = input.value.replace(/[^0-9]/g, '');
                     if (value.length > 0) {
-                        let formatted = '';
-                        if (value.length >= 2) formatted = value.substr(0, 2);
-                        if (value.length >= 3) formatted += '.' + value.substr(2, 3);
-                        if (value.length >= 6) formatted += '.' + value.substr(5, 3);
-                        if (value.length >= 9) formatted += '.' + value.substr(8, 1);
-                        if (value.length >= 10) formatted += '-' + value.substr(9, 3);
-                        if (value.length >= 13) formatted += '.' + value.substr(12, 3);
+                        let formatted = value.substr(0, 2);
+                        if (value.length > 2) formatted += '.' + value.substr(2, 3);
+                        if (value.length > 5) formatted += '.' + value.substr(5, 3);
+                        if (value.length > 8) formatted += '.' + value.substr(8, 1);
+                        if (value.length > 9) formatted += '-' + value.substr(9, 3);
+                        if (value.length > 12) formatted += '.' + value.substr(12, 3);
                         input.value = formatted;
                     }
                 },
