@@ -6,12 +6,12 @@
 $currentPage = 'crews';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crew Profile Dashboard - IndoOcean ERP</title>
+    <title><?= __('crews.crew_profile') ?> - IndoOcean ERP</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
@@ -62,7 +62,7 @@ $currentPage = 'crews';
             <header
                 class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-8 sticky top-0 z-10">
                 <div class="flex items-center space-x-4">
-                    <h1 class="text-lg font-bold text-primary">Crew Profile Details</h1>
+                    <h1 class="text-lg font-bold text-primary"><?= __('crews.crew_profile') ?></h1>
                 </div>
                 <div class="flex items-center space-x-6">
                     <button class="relative text-slate-500 hover:text-primary transition-colors">
@@ -137,7 +137,7 @@ $currentPage = 'crews';
                         <a href="<?= BASE_URL ?>crews/<?= $crew['id'] ?>/edit"
                             class="flex items-center space-x-2 px-5 py-2.5 bg-accent-gold text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-all shadow-lg shadow-yellow-600/10">
                             <span class="material-icons text-lg">edit</span>
-                            <span>Edit Profile</span>
+                            <span><?= __('crews.edit_profile') ?></span>
                         </a>
                     </div>
                 </div>
@@ -148,41 +148,41 @@ $currentPage = 'crews';
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                         <div class="flex items-center space-x-2 mb-6">
                             <span class="material-icons text-slate-400 text-xl">person</span>
-                            <h3 class="font-bold text-sm text-slate-500 uppercase tracking-wider">Informasi Pribadi</h3>
+                            <h3 class="font-bold text-sm text-slate-500 uppercase tracking-wider"><?= __('crews.personal_info') ?></h3>
                         </div>
                         <div class="space-y-4">
                             <div class="flex justify-between border-b border-slate-50 pb-2">
-                                <span class="text-sm text-slate-400">Jenis Kelamin</span>
+                                <span class="text-sm text-slate-400"><?= __('crews.gender') ?></span>
                                 <span class="text-sm font-semibold">
-                                    <?= $crew['gender'] === 'M' ? 'Laki-laki' : 'Perempuan' ?>
+                                    <?= $crew['gender'] === 'M' ? __('crews.male') : __('crews.female') ?>
                                 </span>
                             </div>
                             <div class="flex justify-between border-b border-slate-50 pb-2">
-                                <span class="text-sm text-slate-400">Tanggal Lahir</span>
+                                <span class="text-sm text-slate-400"><?= __('crews.date_of_birth') ?></span>
                                 <span class="text-sm font-semibold">
                                     <?= !empty($crew['date_of_birth']) ? date('d M Y', strtotime($crew['date_of_birth'])) : '-' ?>
                                 </span>
                             </div>
                             <div class="flex justify-between border-b border-slate-50 pb-2">
-                                <span class="text-sm text-slate-400">Tempat Lahir</span>
+                                <span class="text-sm text-slate-400"><?= __('crews.place_of_birth') ?></span>
                                 <span class="text-sm font-semibold">
                                     <?= htmlspecialchars($crew['place_of_birth'] ?? '-') ?>
                                 </span>
                             </div>
                             <div class="flex justify-between border-b border-slate-50 pb-2">
-                                <span class="text-sm text-slate-400">Kewarganegaraan</span>
+                                <span class="text-sm text-slate-400"><?= __('crews.nationality_label') ?></span>
                                 <span class="text-sm font-semibold">
                                     <?= htmlspecialchars($crew['nationality'] ?? 'Indonesia') ?>
                                 </span>
                             </div>
                             <div class="flex justify-between border-b border-slate-50 pb-2">
-                                <span class="text-sm text-slate-400">Agama</span>
+                                <span class="text-sm text-slate-400"><?= __('crews.religion') ?></span>
                                 <span class="text-sm font-semibold">
                                     <?= htmlspecialchars($crew['religion'] ?? '-') ?>
                                 </span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-sm text-slate-400">Status</span>
+                                <span class="text-sm text-slate-400"><?= __('common.status') ?></span>
                                 <span class="text-sm font-semibold">
                                     <?= ucfirst($crew['marital_status'] ?? '-') ?>
                                 </span>
@@ -196,7 +196,7 @@ $currentPage = 'crews';
                         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                             <div class="flex items-center space-x-2 mb-6">
                                 <span class="material-icons text-slate-400 text-xl">contact_phone</span>
-                                <h3 class="font-bold text-sm text-slate-500 uppercase tracking-wider">Kontak</h3>
+                                <h3 class="font-bold text-sm text-slate-500 uppercase tracking-wider"><?= __('crews.contact_info') ?></h3>
                             </div>
                             <div class="space-y-4">
                                 <div class="flex justify-between border-b border-slate-50 pb-2">
@@ -206,13 +206,13 @@ $currentPage = 'crews';
                                     </span>
                                 </div>
                                 <div class="flex justify-between border-b border-slate-50 pb-2">
-                                    <span class="text-sm text-slate-400">Telepon</span>
+                                    <span class="text-sm text-slate-400"><?= __('crews.phone') ?></span>
                                     <span class="text-sm font-semibold">
                                         <?= htmlspecialchars($crew['phone'] ?? '-') ?>
                                     </span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-sm text-slate-400">Kota</span>
+                                    <span class="text-sm text-slate-400"><?= __('crews.city') ?></span>
                                     <span class="text-sm font-semibold">
                                         <?= htmlspecialchars($crew['city'] ?? '-') ?>
                                     </span>
@@ -225,14 +225,14 @@ $currentPage = 'crews';
                             class="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl shadow-sm border border-blue-100">
                             <div class="flex items-center space-x-2 mb-4">
                                 <span class="material-icons text-blue-600 text-xl">sailing</span>
-                                <h3 class="font-bold text-sm text-slate-600 uppercase tracking-wider">Pengalaman</h3>
+                                <h3 class="font-bold text-sm text-slate-600 uppercase tracking-wider"><?= __('crews.experience') ?></h3>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <p class="text-3xl font-bold text-blue-600">
                                         <?= count($experiences) ?>
                                     </p>
-                                    <p class="text-[10px] text-slate-500 uppercase font-semibold">Tahun Pengalaman</p>
+                                    <p class="text-[10px] text-slate-500 uppercase font-semibold"><?= __('crews.years_experience') ?></p>
                                 </div>
                                 <div>
                                     <?php
@@ -248,7 +248,7 @@ $currentPage = 'crews';
                                     <p class="text-3xl font-bold text-blue-600">
                                         <?= $totalMonths ?>
                                     </p>
-                                    <p class="text-[10px] text-slate-500 uppercase font-semibold">Bulan Sea Time</p>
+                                    <p class="text-[10px] text-slate-500 uppercase font-semibold"><?= __('crews.months_sea_time') ?></p>
                                 </div>
                             </div>
                         </div>
@@ -258,7 +258,7 @@ $currentPage = 'crews';
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                         <div class="flex items-center space-x-2 mb-6">
                             <span class="material-icons text-slate-400 text-xl">account_balance</span>
-                            <h3 class="font-bold text-sm text-slate-500 uppercase tracking-wider">Bank Information</h3>
+                            <h3 class="font-bold text-sm text-slate-500 uppercase tracking-wider"><?= __('crews.bank_info') ?></h3>
                         </div>
                         <div class="space-y-4">
                             <div class="flex justify-between border-b border-slate-50 pb-2">
@@ -268,13 +268,13 @@ $currentPage = 'crews';
                                 </span>
                             </div>
                             <div class="flex justify-between border-b border-slate-50 pb-2">
-                                <span class="text-sm text-slate-400">No. Rekening</span>
+                                <span class="text-sm text-slate-400"><?= __('crews.account_no') ?></span>
                                 <span class="text-sm font-semibold">
                                     <?= htmlspecialchars($crew['bank_account'] ?? '-') ?>
                                 </span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-sm text-slate-400">Atas Nama</span>
+                                <span class="text-sm text-slate-400"><?= __('crews.account_holder') ?></span>
                                 <span class="text-sm font-semibold">
                                     <?= htmlspecialchars($crew['account_holder'] ?? '-') ?>
                                 </span>
@@ -325,7 +325,7 @@ $currentPage = 'crews';
                         <button @click="showUploadModal = true"
                             class="text-xs font-bold text-primary flex items-center space-x-1 hover:underline">
                             <span class="material-icons text-sm">upload</span>
-                            <span>Upload Document</span>
+                            <span><?= __('documents.upload_new') ?></span>
                         </button>
                     </div>
                     <?php if (empty($documents)): ?>
@@ -333,7 +333,7 @@ $currentPage = 'crews';
                             <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
                                 <span class="material-icons text-3xl opacity-20">cloud_off</span>
                             </div>
-                            <p class="text-sm">Belum ada dokumen yang diunggah</p>
+                            <p class="text-sm"><?= __('contracts.no_documents') ?></p>
                         </div>
                     <?php else: ?>
                         <div class="overflow-x-auto">
@@ -392,7 +392,7 @@ $currentPage = 'crews';
                         <button @click="showSkillModal = true"
                             class="bg-primary text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center space-x-1 hover:bg-slate-800 transition-colors uppercase tracking-tight">
                             <span class="material-icons text-xs">add</span>
-                            <span>Add Skill</span>
+                            <span><?= __('crews.add_skill') ?></span>
                         </button>
                     </div>
                     <div class="overflow-x-auto">
@@ -421,7 +421,7 @@ $currentPage = 'crews';
                                     <tr>
                                         <td colspan="5" class="px-6 py-12 text-center text-slate-400">
                                             <span class="material-icons text-4xl opacity-20">workspace_premium</span>
-                                            <p class="text-sm mt-2">Belum ada skill yang ditambahkan</p>
+                                            <p class="text-sm mt-2"><?= __('crews.no_skills_added') ?></p>
                                         </td>
                                     </tr>
                                 <?php else: ?>
@@ -555,12 +555,12 @@ $currentPage = 'crews';
                     <div class="bg-slate-50 px-6 py-4 flex items-center justify-end gap-3">
                         <button type="button" @click="showSkillModal = false"
                                 class="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors">
-                            Cancel
+                            <?= __('common.cancel') ?>
                         </button>
                         <button type="submit"
                                 class="px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-slate-800 transition-colors flex items-center gap-2">
                             <span class="material-icons text-sm">add</span>
-                            Add Skill
+                            <?= __('crews.add_skill') ?>
                         </button>
                     </div>
                 </form>
@@ -659,12 +659,12 @@ $currentPage = 'crews';
                     <div class="bg-slate-50 px-6 py-4 flex items-center justify-end gap-3">
                         <button type="button" @click="showUploadModal = false"
                                 class="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors">
-                            Cancel
+                            <?= __('common.cancel') ?>
                         </button>
                         <button type="submit"
                                 class="px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-slate-800 transition-colors flex items-center gap-2">
                             <span class="material-icons text-sm">upload</span>
-                            Upload Document
+                            <?= __('documents.upload_new') ?>
                         </button>
                     </div>
                 </form>

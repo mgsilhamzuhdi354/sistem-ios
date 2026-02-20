@@ -26,7 +26,7 @@ $statusMap = [
 $statusInfo = $statusMap[$period['status'] ?? 'draft'] ?? $statusMap['draft'];
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -77,7 +77,7 @@ $statusInfo = $statusMap[$period['status'] ?? 'draft'] ?? $statusMap['draft'];
                     <span class="material-icons text-lg">arrow_back</span>
                 </a>
                 <div>
-                    <h1 class="text-base font-bold text-slate-800 tracking-tight">Payroll Detail</h1>
+                    <h1 class="text-base font-bold text-slate-800 tracking-tight"><?= __('payroll.detail_title') ?></h1>
                     <p class="text-[11px] text-slate-400">
                         <?= date('d M Y', strtotime($period['start_date'])) ?> — <?= date('d M Y', strtotime($period['end_date'])) ?>
                     </p>
@@ -103,7 +103,7 @@ $statusInfo = $statusMap[$period['status'] ?? 'draft'] ?? $statusMap['draft'];
                    onclick="return confirm('Kirim slip gaji ke semua crew? Proses ini akan memakan waktu.')"
                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm">
                     <span class="material-icons text-sm">email</span>
-                    Kirim Email
+                    <?= __('payroll.send_email') ?>
                 </a>
                 <?php endif; ?>
             </div>
@@ -142,7 +142,7 @@ $statusInfo = $statusMap[$period['status'] ?? 'draft'] ?? $statusMap['draft'];
                 <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm opacity-0 animate-fade-in">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wide">Total Crew</p>
+                            <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wide"><?= __('payroll.total_crew') ?></p>
                             <h3 class="text-2xl font-bold text-slate-800 mt-1"><?= count($items) ?></h3>
                         </div>
                         <div class="p-2 bg-blue-50 rounded-lg">
@@ -151,7 +151,7 @@ $statusInfo = $statusMap[$period['status'] ?? 'draft'] ?? $statusMap['draft'];
                     </div>
                     <div class="mt-3 flex items-center text-xs text-slate-400">
                         <span class="material-icons text-sm mr-0.5">badge</span>
-                        <span>Active payroll items</span>
+                        <span><?= __('payroll.active_payroll_items') ?></span>
                     </div>
                 </div>
 
@@ -159,7 +159,7 @@ $statusInfo = $statusMap[$period['status'] ?? 'draft'] ?? $statusMap['draft'];
                 <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm opacity-0 animate-fade-in animate-d1">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wide">Total Gross</p>
+                            <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wide"><?= __('payroll.total_gross') ?></p>
                             <h3 class="text-xl font-bold text-slate-800 mt-1">$<?= number_format($totalGross, 0) ?></h3>
                         </div>
                         <div class="p-2 bg-emerald-50 rounded-lg">
@@ -210,7 +210,7 @@ $statusInfo = $statusMap[$period['status'] ?? 'draft'] ?? $statusMap['draft'];
                 <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm opacity-0 animate-fade-in animate-d4">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wide">Net Salary</p>
+                            <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wide"><?= __('payroll.net_salary') ?></p>
                             <h3 class="text-xl font-bold text-blue-700 mt-1">$<?= number_format($totalNet, 0) ?></h3>
                         </div>
                         <div class="p-2 bg-blue-50 rounded-lg">
@@ -230,7 +230,7 @@ $statusInfo = $statusMap[$period['status'] ?? 'draft'] ?? $statusMap['draft'];
                 <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <span class="material-icons text-blue-600 text-lg">directions_boat</span>
-                        <h3 class="text-sm font-bold text-slate-800">Summary by Vessel</h3>
+                        <h3 class="text-sm font-bold text-slate-800"><?= __('payroll.summary_by_vessel') ?></h3>
                     </div>
                     <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
                         <?= count($summary) ?> vessels
@@ -292,7 +292,7 @@ $statusInfo = $statusMap[$period['status'] ?? 'draft'] ?? $statusMap['draft'];
                 <div class="px-5 py-3 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3">
                     <div class="flex items-center gap-2">
                         <span class="material-icons text-blue-600 text-lg">list_alt</span>
-                        <h3 class="text-sm font-bold text-slate-800">Payroll Details</h3>
+                        <h3 class="text-sm font-bold text-slate-800"><?= __('payroll.detail_title') ?></h3>
                     </div>
                     <div class="flex gap-2">
                         <div class="relative w-full sm:w-64">

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? 'Create New Contract' ?> - IndoOcean ERP</title>
+    <title><?= $title ?? __('contracts.create_title') ?> - IndoOcean ERP</title>
 
     <!-- TailwindCSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -91,8 +91,8 @@
                         <span class="material-icons">arrow_back</span>
                     </a>
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900">Create New Contract</h1>
-                        <p class="text-sm text-gray-500 mt-1">Isi detail kontrak di bawah ini</p>
+                        <h1 class="text-2xl font-bold text-gray-900"><?= __('contracts.create_title') ?></h1>
+                        <p class="text-sm text-gray-500 mt-1"><?= __('contracts.create_subtitle') ?></p>
                     </div>
                 </div>
             </div>
@@ -129,25 +129,25 @@
                                 <span class="material-icons">description</span>
                             </div>
                             <div>
-                                <h2 class="text-lg font-bold text-gray-900">Informasi Kontrak</h2>
-                                <p class="text-sm text-gray-500">Informasi dasar kontrak yang akan dibuat</p>
+                                <h2 class="text-lg font-bold text-gray-900"><?= __('contracts.contract_info') ?></h2>
+                                <p class="text-sm text-gray-500"><?= __('contracts.contract_info_desc') ?></p>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                    Nomor Kontrak <span class="text-red-500">*</span>
+                                    <?= __('contracts.contract_no') ?> <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" name="contract_no" readonly
                                     class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm cursor-not-allowed"
                                     value="<?= htmlspecialchars($contractNo ?? 'CTR-2026-0000') ?>">
-                                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> Nomor otomatis dari sistem</p>
+                                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> <?= __('contracts.auto_number') ?></p>
                             </div>
 
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                    Tipe Kontrak <span class="text-red-500">*</span>
+                                    <?= __('contracts.contract_type') ?> <span class="text-red-500">*</span>
                                 </label>
                                 <select name="contract_type" required
                                     class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none">
@@ -155,7 +155,7 @@
                                         <option value="<?= $key ?>"><?= $label ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> Temporary untuk kontrak sementara, Voyage untuk per pelayaran</p>
+                                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> <?= __('contracts.contract_type_hint') ?></p>
                             </div>
                         </div>
                     </div>
@@ -167,8 +167,8 @@
                                 <span class="material-icons">person_add</span>
                             </div>
                             <div>
-                                <h2 class="text-lg font-bold text-gray-900">Crew Assignment</h2>
-                                <p class="text-sm text-gray-500">Pilih crew dari recruitment atau masukkan manual</p>
+                                <h2 class="text-lg font-bold text-gray-900"><?= __('contracts.crew_assignment') ?></h2>
+                                <p class="text-sm text-gray-500"><?= __('contracts.crew_assignment_desc') ?></p>
                             </div>
                         </div>
 
@@ -177,9 +177,9 @@
                             <div class="mb-6 p-6 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl">
                                 <div class="flex items-center gap-2 mb-4">
                                     <i class="fas fa-star text-yellow-400 text-xl"></i>
-                                    <h4 class="text-white font-bold text-base">🎯 Newly Approved from Recruitment (<?= count($recruitmentCrews) ?>)</h4>
+                                    <h4 class="text-white font-bold text-base">🎯 <?= __('contracts.newly_approved') ?> (<?= count($recruitmentCrews) ?>)</h4>
                                 </div>
-                                <p class="text-white/90 text-sm mb-4">Select a crew member from recruitment pipeline. Their information will auto-populate.</p>
+                                <p class="text-white/90 text-sm mb-4"><?= __('contracts.select_crew_desc') ?></p>
                                 
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto custom-scrollbar">
                                     <?php foreach ($recruitmentCrews as $rc): ?>
@@ -204,7 +204,7 @@
                                             </div>
                                             <div class="text-xs text-gray-400">
                                                 <i class="fas fa-calendar-check"></i>
-                                                <?= $rc['days_since_approval'] ?> days ago
+                                                <?= $rc['days_since_approval'] ?> <?= __('contracts.days_ago') ?>
                                             </div>
                                         </div>
                                     <?php endforeach; ?>
@@ -215,7 +215,7 @@
                         <!-- Manual Crew Input -->
                         <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
                             <h5 class="text-sm font-bold text-gray-700 mb-4">
-                                <i class="fas fa-keyboard"></i> Or Enter Crew Details Manually
+                                <i class="fas fa-keyboard"></i> <?= __('contracts.manual_entry') ?>
                             </h5>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
@@ -224,7 +224,7 @@
                                     </label>
                                     <input type="number" name="crew_id" x-model="formData.crewId" required
                                         class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none"
-                                        placeholder="Masukkan ID crew">
+                                        placeholder="<?= __('contracts.enter_crew_id') ?>">
                                 </div>
 
                                 <div>
@@ -233,7 +233,7 @@
                                     </label>
                                     <input type="text" name="crew_name" x-model="formData.crewName" required
                                         class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none"
-                                        placeholder="Nama lengkap crew">
+                                        placeholder="<?= __('contracts.crew_full_name') ?>">
                                 </div>
                             </div>
                         </div>
@@ -246,7 +246,7 @@
                                 </label>
                                 <select name="vessel_id" required
                                     class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none">
-                                    <option value="">-- Pilih Kapal --</option>
+                                    <option value="">-- <?= __('contracts.select_vessel') ?> --</option>
                                     <?php foreach ($vessels as $v): ?>
                                         <option value="<?= $v['id'] ?>"><?= htmlspecialchars($v['name']) ?></option>
                                     <?php endforeach; ?>
@@ -259,7 +259,7 @@
                                 </label>
                                 <select name="client_id" required
                                     class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none">
-                                    <option value="">-- Pilih Client --</option>
+                                    <option value="">-- <?= __('contracts.select_client') ?> --</option>
                                     <?php foreach ($clients as $c): ?>
                                         <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['name']) ?></option>
                                     <?php endforeach; ?>
@@ -272,7 +272,7 @@
                                 </label>
                                 <select name="rank_id" x-model="formData.rankId" required
                                     class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none">
-                                    <option value="">-- Pilih Posisi --</option>
+                                    <option value="">-- <?= __('contracts.select_position') ?> --</option>
                                     <?php foreach ($ranks as $r): ?>
                                         <option value="<?= $r['id'] ?>"><?= htmlspecialchars($r['name']) ?> (<?= ucfirst($r['department']) ?>)</option>
                                     <?php endforeach; ?>
@@ -291,8 +291,8 @@
                                 <span class="material-icons">event</span>
                             </div>
                             <div>
-                                <h2 class="text-lg font-bold text-gray-900">Periode Kontrak</h2>
-                                <p class="text-sm text-gray-500">Tentukan periode waktu kontrak</p>
+                                <h2 class="text-lg font-bold text-gray-900"><?= __('contracts.contract_period') ?></h2>
+                                <p class="text-sm text-gray-500"><?= __('contracts.contract_period_desc') ?></p>
                             </div>
                         </div>
 
@@ -303,7 +303,7 @@
                                 </label>
                                 <input type="date" name="sign_on_date" x-model="formData.signOnDate" required @change="calculateDuration()"
                                     class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none">
-                                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> Tanggal mulai bekerja</p>
+                                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> <?= __('contracts.sign_on_hint') ?></p>
                             </div>
 
                             <div>
@@ -312,7 +312,7 @@
                                 </label>
                                 <input type="date" name="sign_off_date" x-model="formData.signOffDate" required @change="calculateDuration()"
                                     class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none">
-                                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> Tanggal akhir kontrak</p>
+                                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> <?= __('contracts.sign_off_hint') ?></p>
                             </div>
 
                             <div>
@@ -322,7 +322,7 @@
                                 <input type="number" name="duration_months" x-model="formData.duration" required min="1" max="36"
                                     class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none"
                                     placeholder="9">
-                                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> Otomatis terisi dari tanggal</p>
+                                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> <?= __('contracts.auto_from_dates') ?></p>
                             </div>
 
                             <div>
@@ -332,7 +332,7 @@
                                 <input type="text" name="embarkation_port"
                                     class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none"
                                     placeholder="e.g. Jakarta, Indonesia">
-                                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> Pelabuhan keberangkatan</p>
+                                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle"></i> <?= __('contracts.embarkation_hint') ?></p>
                             </div>
                         </div>
                     </div>
@@ -344,8 +344,8 @@
                                 <span class="material-icons">payments</span>
                             </div>
                             <div>
-                                <h2 class="text-lg font-bold text-gray-900">Struktur Gaji</h2>
-                                <p class="text-sm text-gray-500">Rincian gaji dan kompensasi crew</p>
+                                <h2 class="text-lg font-bold text-gray-900"><?= __('contracts.salary_structure') ?></h2>
+                                <p class="text-sm text-gray-500"><?= __('contracts.salary_structure_desc') ?></p>
                             </div>
                         </div>
 
@@ -368,7 +368,7 @@
                                 <input type="text" name="exchange_rate"
                                     class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none"
                                     placeholder="Contoh: 15800 (1 USD = Rp15.800)">
-                                <p class="text-xs text-gray-400 mt-2">Diatur oleh Owner Kapal. Kosongkan untuk rate default.</p>
+                                <p class="text-xs text-gray-400 mt-2"><?= __('contracts.exchange_rate_hint') ?></p>
                             </div>
                         </div>
 
@@ -380,7 +380,7 @@
                             <input type="text" name="client_rate" @input="formatCurrency($event.target); calculateTotals()"
                                 class="w-full bg-transparent border-none p-0 text-3xl font-bold text-emerald-900 focus:ring-0 outline-none"
                                 placeholder="0">
-                            <p class="text-xs text-emerald-600 mt-2">Harga yang dibayar client ke perusahaan. Profit = Client Rate - Total Salary</p>
+                            <p class="text-xs text-emerald-600 mt-2"><?= __('contracts.client_rate_hint') ?></p>
                         </div>
 
                         <!-- All Salary Components -->
@@ -390,7 +390,7 @@
                                 <input type="text" name="basic_salary" @input="formatCurrency($event.target); calculateTotals()"
                                     class="w-full bg-transparent border-none p-0 text-2xl font-bold text-gray-900 focus:ring-0 outline-none"
                                     placeholder="0">
-                                <p class="text-xs text-gray-400 mt-2">Gaji pokok bulanan</p>
+                                <p class="text-xs text-gray-400 mt-2"><?= __('contracts.basic_salary_hint') ?></p>
                             </div>
 
                             <div class="p-5 bg-gray-50 rounded-xl border border-gray-100">
@@ -398,7 +398,7 @@
                                 <input type="text" name="overtime_allowance" @input="formatCurrency($event.target); calculateTotals()"
                                     class="w-full bg-transparent border-none p-0 text-2xl font-bold text-gray-900 focus:ring-0 outline-none"
                                     placeholder="0">
-                                <p class="text-xs text-gray-400 mt-2">Masukkan 0 jika tidak ada overtime</p>
+                                <p class="text-xs text-gray-400 mt-2"><?= __('contracts.overtime_hint') ?></p>
                             </div>
 
                             <div class="p-5 bg-gray-50 rounded-xl border border-gray-100">
@@ -420,7 +420,7 @@
                                 <input type="text" name="other_allowance" @input="formatCurrency($event.target); calculateTotals()"
                                     class="w-full bg-transparent border-none p-0 text-2xl font-bold text-gray-900 focus:ring-0 outline-none"
                                     placeholder="0">
-                                <p class="text-xs text-gray-400 mt-2">Tunjangan lainnya seperti food allowance, etc.</p>
+                                <p class="text-xs text-gray-400 mt-2"><?= __('contracts.other_allowance_hint') ?></p>
                             </div>
                         </div>
 
@@ -435,7 +435,7 @@
                                 <div>
                                     <div class="text-xs opacity-90 mb-2"><i class="fas fa-money-bill-wave"></i> Client Rate</div>
                                     <div class="text-3xl font-bold" x-text="formatMoney(clientRate)">$0</div>
-                                    <div class="text-xs opacity-80 mt-1">Harga dari client</div>
+                                    <div class="text-xs opacity-80 mt-1"><?= __('contracts.from_client') ?></div>
                                 </div>
                                 <div :class="profit > 0 ? 'bg-emerald-500/20 p-4 rounded-xl' : profit < 0 ? 'bg-red-500/20 p-4 rounded-xl' : ''">
                                     <div class="text-xs opacity-90 mb-2"><i class="fas fa-chart-line"></i> Profit/Loss</div>
@@ -456,8 +456,8 @@
                                 <span class="material-icons">percent</span>
                             </div>
                             <div>
-                                <h2 class="text-lg font-bold text-gray-900">Pengaturan Pajak (PPh 21)</h2>
-                                <p class="text-sm text-gray-500">Pengaturan pajak penghasilan crew</p>
+                                <h2 class="text-lg font-bold text-gray-900"><?= __('contracts.tax_settings') ?></h2>
+                                <p class="text-sm text-gray-500"><?= __('contracts.tax_settings_desc') ?></p>
                             </div>
                         </div>
 
@@ -490,14 +490,14 @@
                                     <span class="material-icons">remove_circle</span>
                                 </div>
                                 <div>
-                                    <h2 class="text-lg font-bold text-gray-900">Potongan</h2>
-                                    <p class="text-sm text-gray-500">Potongan gaji seperti pinjaman, asuransi, dll</p>
+                                    <h2 class="text-lg font-bold text-gray-900"><?= __('contracts.deductions') ?></h2>
+                                    <p class="text-sm text-gray-500"><?= __('contracts.deductions_desc') ?></p>
                                 </div>
                             </div>
                             <button type="button" @click="addDeduction()"
                                 class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-all flex items-center gap-2">
                                 <span class="material-icons text-sm">add</span>
-                                Tambah Potongan
+                                <?= __('contracts.add_deduction') ?>
                             </button>
                         </div>
 
@@ -509,7 +509,7 @@
                         <div x-show="totalDeductions > 0" class="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg">
                             <div class="flex justify-between items-center">
                                 <span class="text-sm font-semibold text-yellow-900">
-                                    <i class="fas fa-calculator"></i> Total Potongan:
+                                    <i class="fas fa-calculator"></i> <?= __('contracts.total_deductions') ?>:
                                 </span>
                                 <span class="text-xl font-bold text-yellow-900" x-text="formatMoney(totalDeductions)">$0</span>
                             </div>
@@ -523,8 +523,8 @@
                                 <span class="material-icons">note</span>
                             </div>
                             <div>
-                                <h2 class="text-lg font-bold text-gray-900">Notes</h2>
-                                <p class="text-sm text-gray-500">Catatan tambahan untuk kontrak ini</p>
+                                <h2 class="text-lg font-bold text-gray-900"><?= __('common.notes') ?></h2>
+                                <p class="text-sm text-gray-500"><?= __('contracts.notes_desc') ?></p>
                             </div>
                         </div>
 
@@ -563,26 +563,26 @@
                 class="px-6 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-800 transition-colors uppercase tracking-wide"
                 :class="currentStep === 1 ? 'invisible' : ''">
                 <span class="material-icons text-sm">arrow_back</span>
-                Previous
+                <?= __('common.previous') ?>
             </button>
 
             <div class="flex items-center gap-4">
                 <a href="<?= BASE_URL ?>contracts"
                     class="px-6 py-2.5 text-sm font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all">
-                    Cancel
+                    <?= __('common.cancel') ?>
                 </a>
 
                 <button type="button" @click="nextStep()"
                     x-show="currentStep < totalSteps"
                     class="px-8 py-3 text-sm font-bold text-white bg-blue-700 hover:bg-blue-800 rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2">
-                    Next Step
+                    <?= __('contracts.next_step') ?>
                     <span class="material-icons text-lg">arrow_forward</span>
                 </button>
 
                 <button type="button" x-show="currentStep === totalSteps" @click="submitContract()"
                     class="px-8 py-3 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2">
                     <span class="material-icons text-lg">send</span>
-                    Submit Contract
+                    <?= __('contracts.submit_contract') ?>
                 </button>
             </div>
         </footer>

@@ -51,6 +51,7 @@ session_start();
 // Load constants and helpers
 require_once APPPATH . 'Config/Constants.php';
 require_once APPPATH . 'Helpers/common.php';
+require_once APPPATH . 'Helpers/lang_helper.php';
 
 // Simple Router with numeric ID support
 $uri = $_GET['url'] ?? '';

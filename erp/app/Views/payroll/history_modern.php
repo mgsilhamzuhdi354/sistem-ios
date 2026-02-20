@@ -16,12 +16,12 @@ foreach ($periods as $period) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Riwayat Payroll | IndoOcean ERP</title>
+    <title><?= __('payroll.history_title') ?> | IndoOcean ERP</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -81,7 +81,7 @@ foreach ($periods as $period) {
                 <div class="flex items-center gap-2 text-sm">
                     <span class="text-gray-400 font-medium">Crew</span>
                     <span class="material-icons-outlined text-gray-400 text-sm">chevron_right</span>
-                    <span class="text-gray-800 dark:text-white font-semibold">Riwayat Penggajian</span>
+                    <span class="text-gray-800 dark:text-white font-semibold"><?= __('payroll.history_title') ?></span>
                 </div>
 
                 <div class="flex items-center space-x-4">
@@ -109,11 +109,11 @@ foreach ($periods as $period) {
 
                 <!-- Page Header -->
                 <div class="mb-6">
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Riwayat Penggajian</h1>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2"><?= __('payroll.history_title') ?></h1>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Lihat semua periode payroll yang telah diproses</p>
                     <a href="<?= BASE_URL ?>payroll" class="inline-flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 transition-colors">
                         <span class="material-icons text-sm mr-1">arrow_back</span>
-                        Kembali ke Manajemen Penggajian
+                        <?= __('payroll.back_to_payroll') ?>
                     </a>
                 </div>
 
@@ -123,7 +123,7 @@ foreach ($periods as $period) {
                     <div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-soft hover:shadow-md transition-shadow">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Terbayar (YTD)</p>
+                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400"><?= __('payroll.total_disbursed_ytd') ?></p>
                                 <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1">$<?= number_format($ytdTotal, 2) ?></h3>
                                 <p class="text-xs text-green-600 mt-2 flex items-center">
                                     <span class="material-icons text-xs mr-1">trending_up</span>
@@ -140,7 +140,7 @@ foreach ($periods as $period) {
                     <div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-soft hover:shadow-md transition-shadow">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Menunggu Persetujuan</p>
+                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400"><?= __('payroll.pending_approvals') ?></p>
                                 <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><?= $pendingCount ?> Periode</h3>
                                 <p class="text-xs text-yellow-600 mt-2 flex items-center">
                                     <span class="material-icons text-xs mr-1">schedule</span>
@@ -157,7 +157,7 @@ foreach ($periods as $period) {
                     <div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-soft hover:shadow-md transition-shadow">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Periode</p>
+                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400"><?= __('payroll.total_periods') ?></p>
                                 <h3 class="text-2xl font-bold text-gray-900 dark:text-white mt-1"><?= count($periods) ?></h3>
                                 <p class="text-xs text-green-600 mt-2 flex items-center">
                                     <span class="material-icons text-xs mr-1">check_circle</span>
@@ -189,7 +189,7 @@ foreach ($periods as $period) {
                     <div class="flex items-center gap-3">
                         <button class="flex items-center px-4 py-2 bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
                             <span class="material-icons text-sm mr-2">download</span>
-                            Export Laporan
+                            <?= __('payroll.export_report') ?>
                         </button>
                     </div>
                 </div>
@@ -202,8 +202,8 @@ foreach ($periods as $period) {
                             <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mb-4">
                                 <span class="material-icons-outlined text-3xl text-gray-300 dark:text-gray-600">history</span>
                             </div>
-                            <h3 class="text-lg font-bold text-gray-800 dark:text-white">No Payroll History</h3>
-                            <p class="text-slate-500 text-sm mt-1">Start processing payroll to see history here</p>
+                            <h3 class="text-lg font-bold text-gray-800 dark:text-white"><?= __('payroll.no_history') ?></h3>
+                            <p class="text-slate-500 text-sm mt-1"><?= __('payroll.no_history_msg') ?></p>
                         </div>
                     <?php else: ?>
                         <div class="overflow-x-auto">

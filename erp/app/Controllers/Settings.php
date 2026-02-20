@@ -216,6 +216,31 @@ class Settings extends BaseController
     /**
      * Import data from JSON file
      */
+    /**
+     * Change language via AJAX
+     */
+    public function changeLanguage()
+    {
+        $lang = $_POST['language'] ?? $_GET['language'] ?? 'en';
+        
+        if (!in_array($lang, ['en', 'id'])) {
+            $lang = 'en';
+        }
+        
+        // Set in session
+        setLanguage($lang);
+        
+        // Persist to settings table
+        $this->settingsModel->set('app_language', $lang);
+        
+        if ($this->isAjax()) {
+            $this->json(['success' => true, 'language' => $lang, 'message' => __('settings.language_saved')]);
+        } else {
+            $this->setFlash('success', __('settings.language_saved'));
+            $this->redirect('settings');
+        }
+    }
+    
     public function import()
     {
         if (!$this->isPost()) {

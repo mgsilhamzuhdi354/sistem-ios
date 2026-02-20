@@ -44,7 +44,7 @@ function getStatusBadge($status)
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= getLanguage() ?>">
 
 <head>
     <meta charset="utf-8" />
@@ -103,8 +103,8 @@ function getStatusBadge($status)
             <header
                 class="h-20 flex items-center justify-between px-8 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 z-10">
                 <div class="flex flex-col justify-center">
-                    <h2 class="text-lg font-bold text-slate-800">Crew Database</h2>
-                    <span class="text-xs text-slate-500">Manage ship crew data</span>
+                    <h2 class="text-lg font-bold text-slate-800"><?= __('crews.title') ?></h2>
+                    <span class="text-xs text-slate-500"><?= __('crews.subtitle') ?></span>
                 </div>
                 <div class="flex items-center gap-4">
                     <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
@@ -117,7 +117,7 @@ function getStatusBadge($status)
                     <a href="<?= BASE_URL ?>crews/create"
                         class="bg-brand-gold hover:bg-yellow-400 text-slate-900 pl-4 pr-5 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-yellow-500/20">
                         <span class="material-icons-round text-lg">add</span>
-                        Add Crew
+                        <?= __('common.add_new') ?>
                     </a>
                 </div>
             </header>
@@ -136,8 +136,8 @@ function getStatusBadge($status)
                 <!-- Page Header -->
                 <div class="flex items-end justify-between">
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-800">Crew Overview</h2>
-                        <p class="text-slate-500 mt-1">View and manage all maritime personnel.</p>
+                        <h2 class="text-2xl font-bold text-slate-800"><?= __('crews.list_title') ?></h2>
+                        <p class="text-slate-500 mt-1"><?= __('crews.subtitle') ?></p>
                     </div>
                 </div>
 
@@ -147,7 +147,7 @@ function getStatusBadge($status)
                         class="bg-white p-6 rounded-xl border border-slate-100 shadow-soft hover:shadow-lg transition-shadow duration-300">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="text-slate-500 text-sm font-medium mb-1">Available</p>
+                                <p class="text-slate-500 text-sm font-medium mb-1"><?= __('crews.available') ?></p>
                                 <h3 class="text-3xl font-bold text-slate-800"><?= $stats['available'] ?></h3>
                             </div>
                             <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
@@ -160,7 +160,7 @@ function getStatusBadge($status)
                         class="bg-white p-6 rounded-xl border border-slate-100 shadow-soft hover:shadow-lg transition-shadow duration-300">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="text-slate-500 text-sm font-medium mb-1">On Board</p>
+                                <p class="text-slate-500 text-sm font-medium mb-1"><?= __('crews.onboard') ?></p>
                                 <h3 class="text-3xl font-bold text-slate-800"><?= $stats['onboard'] ?></h3>
                             </div>
                             <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
@@ -173,7 +173,7 @@ function getStatusBadge($status)
                         class="bg-white p-6 rounded-xl border border-slate-100 shadow-soft hover:shadow-lg transition-shadow duration-300">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="text-slate-500 text-sm font-medium mb-1">Standby</p>
+                                <p class="text-slate-500 text-sm font-medium mb-1"><?= __('crews.on_leave') ?></p>
                                 <h3 class="text-3xl font-bold text-slate-800"><?= $stats['standby'] ?></h3>
                             </div>
                             <div class="p-3 bg-orange-50 text-orange-600 rounded-xl">
@@ -186,7 +186,7 @@ function getStatusBadge($status)
                         class="bg-white p-6 rounded-xl border border-slate-100 shadow-soft hover:shadow-lg transition-shadow duration-300">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="text-slate-500 text-sm font-medium mb-1">Total Crew</p>
+                                <p class="text-slate-500 text-sm font-medium mb-1"><?= __('crews.total_crew') ?></p>
                                 <h3 class="text-3xl font-bold text-slate-800"><?= $stats['total'] ?></h3>
                             </div>
                             <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
@@ -204,19 +204,19 @@ function getStatusBadge($status)
                                 class="material-icons-round absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">search</span>
                             <input name="search" value="<?= htmlspecialchars($filters['search'] ?? '') ?>"
                                 class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none text-sm text-slate-700 placeholder-slate-400 transition-shadow"
-                                placeholder="Search by name, ID, email, phone..." type="text" />
+                                placeholder="<?= __('common.search') ?>..." type="text" />
                         </div>
 
                         <div class="w-full md:w-48 relative">
                             <select name="status"
                                 class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue outline-none text-sm text-slate-700 appearance-none cursor-pointer">
-                                <option value="">All Status</option>
-                                <option value="available" <?= ($filters['status'] ?? '') === 'available' ? 'selected' : '' ?>>Available</option>
+                                <option value=""><?= __('common.all') ?> <?= __('common.status') ?></option>
+                                <option value="available" <?= ($filters['status'] ?? '') === 'available' ? 'selected' : '' ?>><?= __('crews.available') ?></option>
                                 <option value="onboard" <?= ($filters['status'] ?? '') === 'onboard' ? 'selected' : '' ?>>
-                                    On Board</option>
+                                    <?= __('crews.onboard') ?></option>
                                 <option value="standby" <?= ($filters['status'] ?? '') === 'standby' ? 'selected' : '' ?>>
-                                    Standby</option>
-                                <option value="terminated" <?= ($filters['status'] ?? '') === 'terminated' ? 'selected' : '' ?>>Terminated</option>
+                                    <?= __('crews.on_leave') ?></option>
+                                <option value="terminated" <?= ($filters['status'] ?? '') === 'terminated' ? 'selected' : '' ?>><?= __('crews.terminated') ?></option>
                             </select>
                             <span
                                 class="material-icons-round absolute right-2 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none text-lg">expand_more</span>
@@ -226,12 +226,12 @@ function getStatusBadge($status)
                             <button type="submit"
                                 class="px-4 py-2 bg-brand-blue text-white font-semibold rounded-lg flex items-center text-sm shadow-sm hover:bg-blue-800 transition-all">
                                 <span class="material-icons-round mr-1 text-lg">filter_list</span>
-                                Filter
+                                <?= __('common.filter') ?>
                             </button>
                             <a href="<?= BASE_URL ?>crews"
                                 class="px-4 py-2 bg-white border border-slate-200 text-slate-600 font-medium rounded-lg flex items-center text-sm hover:bg-slate-50 transition-all">
                                 <span class="material-icons-round mr-1 text-lg">restart_alt</span>
-                                Reset
+                                <?= __('common.reset') ?>
                             </a>
                         </div>
                     </form>
@@ -247,18 +247,18 @@ function getStatusBadge($status)
                                         class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 w-16">
                                         #</th>
                                     <th class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                        Crew Member</th>
+                                        <?= __('crews.crew_name') ?></th>
                                     <th class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                        Employee ID</th>
+                                        <?= __('employees.employee_id') ?></th>
                                     <th class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                        Contact</th>
+                                        <?= __('crews.contact') ?></th>
                                     <th class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                        Rank</th>
+                                        <?= __('crews.rank') ?></th>
                                     <th class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                        Status</th>
+                                        <?= __('common.status') ?></th>
                                     <th
                                         class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 text-right">
-                                        Actions</th>
+                                        <?= __('common.actions') ?></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
@@ -268,8 +268,8 @@ function getStatusBadge($status)
                                             <div class="flex flex-col items-center">
                                                 <span
                                                     class="material-icons-round text-6xl mb-2 text-slate-300">group_off</span>
-                                                <p class="text-lg font-medium">No crew members found</p>
-                                                <p class="text-sm">Try adjusting your search or filter criteria</p>
+                                                <p class="text-lg font-medium"><?= __('crews.no_crew') ?></p>
+                                                <p class="text-sm"><?= __('common.no_data') ?></p>
                                             </div>
                                         </td>
                                     </tr>
@@ -321,7 +321,7 @@ function getStatusBadge($status)
                                                     class="flex items-center justify-end space-x-2 opacity-80 group-hover:opacity-100 transition-opacity">
                                                     <a href="<?= BASE_URL ?>crews/<?= $crew['id'] ?>"
                                                         class="p-1.5 rounded-md text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                                        title="View Details">
+                                                        title="<?= __('common.view') ?>">
                                                         <span class="material-icons-round text-lg">visibility</span>
                                                     </a>
                                                 </div>
@@ -343,20 +343,20 @@ function getStatusBadge($status)
                         ?>
                         <div class="bg-white px-6 py-4 border-t border-slate-100 flex items-center justify-between">
                             <span class="text-sm text-slate-500">
-                                Showing <span class="font-medium text-slate-900"><?= $start ?></span> to
-                                <span class="font-medium text-slate-900"><?= $end ?></span> of
-                                <span class="font-medium text-slate-900"><?= $total ?? 0 ?></span> results
+                                <?= __('common.showing') ?> <span class="font-medium text-slate-900"><?= $start ?></span> -
+                                <span class="font-medium text-slate-900"><?= $end ?></span> <?= __('common.of') ?>
+                                <span class="font-medium text-slate-900"><?= $total ?? 0 ?></span> <?= __('common.entries') ?>
                             </span>
                             <div class="flex space-x-2">
                                 <?php if ($currentPage > 1): ?>
                                     <a href="?page=<?= $currentPage - 1 ?><?= !empty($filters['search']) ? '&search=' . urlencode($filters['search']) : '' ?><?= !empty($filters['status']) ? '&status=' . urlencode($filters['status']) : '' ?>"
                                         class="px-3 py-1 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 text-sm">
-                                        Previous
+                                        <?= __('common.previous') ?>
                                     </a>
                                 <?php else: ?>
                                     <button disabled
                                         class="px-3 py-1 rounded-md border border-slate-200 text-slate-500 opacity-50 text-sm cursor-not-allowed">
-                                        Previous
+                                        <?= __('common.previous') ?>
                                     </button>
                                 <?php endif; ?>
 
@@ -376,12 +376,12 @@ function getStatusBadge($status)
                                 <?php if ($currentPage < $totalPages): ?>
                                     <a href="?page=<?= $currentPage + 1 ?><?= !empty($filters['search']) ? '&search=' . urlencode($filters['search']) : '' ?><?= !empty($filters['status']) ? '&status=' . urlencode($filters['status']) : '' ?>"
                                         class="px-3 py-1 rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 text-sm">
-                                        Next
+                                        <?= __('common.next') ?>
                                     </a>
                                 <?php else: ?>
                                     <button disabled
                                         class="px-3 py-1 rounded-md border border-slate-200 text-slate-500 opacity-50 text-sm cursor-not-allowed">
-                                        Next
+                                        <?= __('common.next') ?>
                                     </button>
                                 <?php endif; ?>
                             </div>

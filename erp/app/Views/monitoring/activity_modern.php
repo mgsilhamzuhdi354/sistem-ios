@@ -32,7 +32,7 @@ $actionIcons = [
 ];
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -122,18 +122,18 @@ $actionIcons = [
                         <span class="material-icons-round text-primary text-3xl">history_edu</span>
                         Activity Log
                     </h1>
-                    <p class="mt-2 text-slate-500 dark:text-slate-400">Monitor centralized system events and integrations in real-time.</p>
+                    <p class="mt-2 text-slate-500 dark:text-slate-400"><?= __('monitoring.activity_log_subtitle') ?></p>
                 </div>
                 <div class="mt-4 md:mt-0 flex gap-3">
                     <a href="<?= BASE_URL ?>monitoring/activity?<?= http_build_query(array_merge($_GET, ['export' => 'csv'])) ?>"
                        class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-600 rounded-xl text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
                         <span class="material-icons-round text-base">file_download</span>
-                        Export
+                        <?= __('common.export') ?>
                     </a>
                     <a href="<?= BASE_URL ?>monitoring/activity"
                        class="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-medium hover:bg-blue-900 transition-colors shadow-md">
                         <span class="material-icons-round text-base text-secondary">refresh</span>
-                        Refresh Data
+                        <?= __('monitoring.refresh_data') ?>
                     </a>
                 </div>
             </div>
@@ -156,7 +156,7 @@ $actionIcons = [
                         <div class="relative w-full sm:w-48">
                             <select name="system" onchange="this.form.submit()"
                                     class="block w-full pl-3 pr-10 py-2.5 border border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm">
-                                <option value="all" <?= $system === 'all' ? 'selected' : '' ?>>All Systems</option>
+                                <option value="all" <?= $system === 'all' ? 'selected' : '' ?>><?= __('monitoring.all_systems') ?></option>
                                 <option value="erp" <?= $system === 'erp' ? 'selected' : '' ?>>ERP</option>
                                 <option value="hris" <?= $system === 'hris' ? 'selected' : '' ?>>HRIS</option>
                                 <option value="recruitment" <?= $system === 'recruitment' ? 'selected' : '' ?>>Recruitment</option>

@@ -37,11 +37,11 @@ $avatarColors = [
 ];
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Performance | IndoOcean ERP</title>
+    <title><?= __('employees.performance_title') ?> | IndoOcean ERP</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -89,7 +89,7 @@ $avatarColors = [
                         <span class="material-icons text-primary text-2xl">analytics</span>
                     </div>
                     <div>
-                        <h1 class="text-xl font-bold text-gray-900 dark:text-white">Performa Karyawan</h1>
+                        <h1 class="text-xl font-bold text-gray-900 dark:text-white"><?= __('employees.performance_title') ?></h1>
                         <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
                             Tracking KPI & performa <?= date('F Y', mktime(0, 0, 0, $month, 1, $year)) ?>
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
@@ -184,8 +184,8 @@ $avatarColors = [
                     <div class="lg:col-span-4 bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
                         <div class="flex justify-between items-start mb-2">
                             <div>
-                                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Performance Trends</h3>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Avg. score over last 6 months</p>
+                                <h3 class="text-sm font-semibold text-gray-900 dark:text-white"><?= __('employees.performance_trends') ?></h3>
+                                <p class="text-xs text-gray-500 dark:text-gray-400"><?= __('employees.avg_score_6months') ?></p>
                             </div>
                             <span class="text-xs font-bold text-green-500 flex items-center bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full">
                                 <span class="material-icons text-xs mr-1">trending_up</span> +2.4%
@@ -200,19 +200,19 @@ $avatarColors = [
                 <!-- Performance Table -->
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
                     <div class="grid grid-cols-12 gap-4 px-6 py-4 bg-primary text-white text-xs font-semibold uppercase tracking-wider items-center">
-                        <div class="col-span-3">Karyawan</div>
-                        <div class="col-span-2 hidden md:block">Jabatan</div>
-                        <div class="col-span-2 text-center hidden sm:block">Total Penilaian</div>
-                        <div class="col-span-2 text-center hidden sm:block">Skor Berjalan</div>
-                        <div class="col-span-2 text-center">Nilai Bulan Ini</div>
-                        <div class="col-span-1 text-center">Status</div>
+                        <div class="col-span-3"><?= __('employees.employee_col') ?></div>
+                        <div class="col-span-2 hidden md:block"><?= __('employees.position_col') ?></div>
+                        <div class="col-span-2 text-center hidden sm:block"><?= __('employees.total_assessments') ?></div>
+                        <div class="col-span-2 text-center hidden sm:block"><?= __('employees.running_score') ?></div>
+                        <div class="col-span-2 text-center"><?= __('employees.monthly_score') ?></div>
+                        <div class="col-span-1 text-center"><?= __('common.status') ?></div>
                     </div>
                     <?php if (!$success || empty($performanceData)): ?>
                         <div class="p-12 text-center">
                             <div class="inline-block p-4 bg-gray-50 dark:bg-gray-700 rounded-full mb-4">
                                 <span class="material-icons text-5xl text-gray-400">analytics</span>
                             </div>
-                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">No Performance Data</h3>
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2"><?= __('employees.no_performance') ?></h3>
                             <p class="text-gray-500 dark:text-gray-400">Belum ada data performa untuk periode ini.</p>
                         </div>
                     <?php else: ?>

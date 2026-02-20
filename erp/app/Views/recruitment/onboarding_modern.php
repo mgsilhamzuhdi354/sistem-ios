@@ -12,7 +12,7 @@ $readyToImport = count(array_filter($approvedCrew, fn($c) => empty($c['is_synced
 $totalProcessed = $totalApproved - $readyToImport;
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -60,12 +60,12 @@ $totalProcessed = $totalApproved - $readyToImport;
 <main class="flex-1 flex flex-col h-full overflow-hidden bg-background-light ml-64">
     <!-- Header -->
     <header class="h-16 bg-surface-light border-b border-border-light flex items-center justify-between px-8 flex-shrink-0 z-10 shadow-sm">
-        <h1 class="text-lg font-semibold text-secondary">Auto-Onboarding</h1>
+        <h1 class="text-lg font-semibold text-secondary"><?= __('recruitment.onboarding_title') ?></h1>
         <div class="flex items-center gap-4">
             <button onclick="window.location.reload()"
                     class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
                 <span class="material-icons text-sm">refresh</span>
-                Refresh
+                <?= __('common.refresh') ?>
             </button>
         </div>
     </header>
@@ -95,7 +95,7 @@ $totalProcessed = $totalApproved - $readyToImport;
                         <span class="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
                             <span class="material-icons text-2xl">person_add_alt</span>
                         </span>
-                        <h2 class="text-2xl font-bold text-secondary tracking-tight">Onboarding Kandidat</h2>
+                        <h2 class="text-2xl font-bold text-secondary tracking-tight"><?= __('recruitment.onboarding_candidates') ?></h2>
                     </div>
                     <p class="text-slate-500 text-sm pl-14">
                         Kandidat yang disetujui siap untuk import ke ERP. Kelola proses rekrutmen Anda di sini.
@@ -105,7 +105,7 @@ $totalProcessed = $totalApproved - $readyToImport;
                     <a href="<?= BASE_URL ?>recruitment/pipeline"
                        class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-border-light rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
                         <span class="material-icons text-base">arrow_back</span>
-                        Kembali ke Pipeline
+                        <?= __('recruitment.back_to_pipeline') ?>
                     </a>
                 </div>
             </div>
@@ -118,7 +118,7 @@ $totalProcessed = $totalApproved - $readyToImport;
                         <span class="material-icons text-6xl text-emerald-500">check_circle</span>
                     </div>
                     <div>
-                        <p class="text-sm font-medium text-slate-500 mb-1">Kandidat Disetujui</p>
+                        <p class="text-sm font-medium text-slate-500 mb-1"><?= __('recruitment.approved_candidates') ?></p>
                         <h3 class="text-3xl font-bold text-secondary"><?= $totalApproved ?></h3>
                     </div>
                     <div class="flex items-center gap-1 text-xs text-emerald-600">
@@ -133,7 +133,7 @@ $totalProcessed = $totalApproved - $readyToImport;
                         <span class="material-icons text-6xl text-blue-500">cloud_download</span>
                     </div>
                     <div>
-                        <p class="text-sm font-medium text-slate-500 mb-1">Siap Import</p>
+                        <p class="text-sm font-medium text-slate-500 mb-1"><?= __('recruitment.ready_to_import') ?></p>
                         <h3 class="text-3xl font-bold text-secondary"><?= $readyToImport ?></h3>
                     </div>
                     <div class="flex items-center gap-1 text-xs text-blue-600">
@@ -148,7 +148,7 @@ $totalProcessed = $totalApproved - $readyToImport;
                         <span class="material-icons text-6xl text-primary">analytics</span>
                     </div>
                     <div>
-                        <p class="text-sm font-medium text-slate-500 mb-1">Total Diproses</p>
+                        <p class="text-sm font-medium text-slate-500 mb-1"><?= __('recruitment.total_processed') ?></p>
                         <h3 class="text-3xl font-bold text-secondary"><?= $totalProcessed ?></h3>
                     </div>
                     <div class="flex items-center gap-1 text-xs text-slate-500">
@@ -164,7 +164,7 @@ $totalProcessed = $totalApproved - $readyToImport;
                 <div class="p-6 border-b border-border-light flex flex-col sm:flex-row justify-between items-center gap-4">
                     <h3 class="font-semibold text-lg text-secondary flex items-center gap-2">
                         <span class="material-icons text-emerald-500">task_alt</span>
-                        Kandidat Siap Import
+                        <?= __('recruitment.candidates_ready') ?>
                     </h3>
                     <div class="flex items-center gap-3 w-full sm:w-auto">
                         <div class="relative w-full sm:w-64">
@@ -173,7 +173,7 @@ $totalProcessed = $totalApproved - $readyToImport;
                             </span>
                             <input type="text" x-model="search" @input="filterCandidates()"
                                    class="block w-full pl-10 pr-3 py-2 border border-border-light rounded-lg leading-5 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm transition"
-                                   placeholder="Cari kandidat..."/>
+                                   placeholder="<?= __('common.search') ?>..."/>
                         </div>
                         <button @click="bulkImport()" :disabled="selectedCount === 0"
                                 class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
@@ -278,14 +278,14 @@ $totalProcessed = $totalApproved - $readyToImport;
                             </div>
                         </div>
                     </div>
-                    <h3 class="text-xl font-bold text-secondary mb-2">Tidak ada kandidat yang disetujui</h3>
+                    <h3 class="text-xl font-bold text-secondary mb-2"><?= __('recruitment.no_approved_candidates') ?></h3>
                     <p class="text-slate-500 max-w-sm mb-8">
                         Kandidat akan muncul di sini setelah mereka disetujui di sistem recruitment dan siap untuk proses onboarding.
                     </p>
                     <a href="<?= BASE_URL ?>recruitment/pipeline"
                        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-primary hover:bg-yellow-600 transition-all transform hover:scale-105">
                         <span class="material-icons mr-2">visibility</span>
-                        Lihat Semua Kandidat
+                        <?= __('recruitment.view_all_candidates') ?>
                     </a>
                 </div>
                 <?php endif; ?>

@@ -24,11 +24,11 @@ $avatarColors = [
 ];
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Karyawan | IndoOcean ERP</title>
+    <title><?= __('employees.title') ?> | IndoOcean ERP</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -110,9 +110,9 @@ $avatarColors = [
             <!-- Header -->
             <header class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center animate-fade-in">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-900">Data Karyawan</h2>
+                    <h2 class="text-2xl font-bold text-gray-900"><?= __('employees.title') ?></h2>
                     <div class="flex items-center gap-2 mt-1 text-sm text-gray-500">
-                        <span>Manage employee data in real-time</span>
+                        <span><?= __('employees.subtitle') ?></span>
                         <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
                             <span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
                             LIVE
@@ -123,10 +123,10 @@ $avatarColors = [
                     <div class="relative">
                         <select id="statusFilter" onchange="filterByStatus(this.value)"
                             class="appearance-none cursor-pointer rounded-lg border border-gray-300 bg-white px-4 py-2.5 pr-10 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
-                            <option value="">All Status</option>
-                            <option value="Aktif" <?= ($statusFilter ?? '') === 'Aktif' ? 'selected' : '' ?>>Active</option>
-                            <option value="Probation" <?= ($statusFilter ?? '') === 'Probation' ? 'selected' : '' ?>>Probation</option>
-                            <option value="Resign" <?= ($statusFilter ?? '') === 'Resign' ? 'selected' : '' ?>>Resign</option>
+                            <option value=""><?= __('common.all') ?> <?= __('common.status') ?></option>
+                            <option value="Aktif" <?= ($statusFilter ?? '') === 'Aktif' ? 'selected' : '' ?>><?= __('common.active') ?></option>
+                            <option value="Probation" <?= ($statusFilter ?? '') === 'Probation' ? 'selected' : '' ?>><?= __('employees.probation') ?></option>
+                            <option value="Resign" <?= ($statusFilter ?? '') === 'Resign' ? 'selected' : '' ?>><?= __('employees.resign') ?></option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                             <span class="material-icons-outlined text-sm">expand_more</span>
@@ -142,8 +142,8 @@ $avatarColors = [
                         <span class="material-icons-outlined">error</span>
                     </div>
                     <div>
-                        <h3 class="text-base font-semibold text-red-800">Connection Error</h3>
-                        <p class="text-sm text-red-600 mt-1">Tidak dapat terhubung ke sistem HRIS. <?= htmlspecialchars($error ?? 'Unknown error') ?></p>
+                        <h3 class="text-base font-semibold text-red-800"><?= __('employees.connection_error') ?></h3>
+                        <p class="text-sm text-red-600 mt-1"><?= __('employees.cannot_connect_hris') ?> <?= htmlspecialchars($error ?? 'Unknown error') ?></p>
                     </div>
                 </div>
             <?php else: ?>
@@ -154,7 +154,7 @@ $avatarColors = [
                 <div class="relative overflow-hidden rounded-xl bg-white p-6 shadow-md transition-shadow hover:shadow-lg border border-gray-100">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-500">Total Karyawan</p>
+                            <p class="text-sm font-medium text-gray-500"><?= __('employees.total_employees') ?></p>
                             <h3 class="mt-2 text-3xl font-bold text-gray-900"><?= $totalEmployees ?></h3>
                         </div>
                         <div class="rounded-lg bg-indigo-50 p-3 text-indigo-600">
@@ -169,7 +169,7 @@ $avatarColors = [
                 <div class="relative overflow-hidden rounded-xl bg-white p-6 shadow-md transition-shadow hover:shadow-lg border border-gray-100">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-500">Karyawan Aktif</p>
+                            <p class="text-sm font-medium text-gray-500"><?= __('employees.active_employees') ?></p>
                             <h3 class="mt-2 text-3xl font-bold text-gray-900"><?= $aktif ?></h3>
                         </div>
                         <div class="rounded-lg bg-green-50 p-3 text-green-600">
@@ -184,7 +184,7 @@ $avatarColors = [
                 <div class="relative overflow-hidden rounded-xl bg-white p-6 shadow-md transition-shadow hover:shadow-lg border border-gray-100">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-500">Probation</p>
+                            <p class="text-sm font-medium text-gray-500"><?= __('employees.probation') ?></p>
                             <h3 class="mt-2 text-3xl font-bold text-gray-900"><?= $probation ?></h3>
                         </div>
                         <div class="rounded-lg bg-yellow-50 p-3 text-yellow-600">
@@ -199,7 +199,7 @@ $avatarColors = [
                 <div class="relative overflow-hidden rounded-xl bg-white p-6 shadow-md transition-shadow hover:shadow-lg border border-gray-100">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-500">Resign / Nonaktif</p>
+                            <p class="text-sm font-medium text-gray-500"><?= __('employees.resign') ?> / <?= __('common.inactive') ?></p>
                             <h3 class="mt-2 text-3xl font-bold text-gray-900"><?= $resign ?></h3>
                         </div>
                         <div class="rounded-lg bg-red-50 p-3 text-red-600">
@@ -218,11 +218,11 @@ $avatarColors = [
                     <table class="w-full text-left text-sm">
                         <thead class="bg-gray-50 uppercase text-gray-500">
                             <tr>
-                                <th class="px-6 py-4 font-semibold tracking-wider" scope="col">Karyawan</th>
-                                <th class="px-6 py-4 font-semibold tracking-wider" scope="col">Jabatan</th>
-                                <th class="px-6 py-4 font-semibold tracking-wider" scope="col">Departemen</th>
-                                <th class="px-6 py-4 font-semibold tracking-wider" scope="col">Status</th>
-                                <th class="px-6 py-4 text-right font-semibold tracking-wider" scope="col">Actions</th>
+                                <th class="px-6 py-4 font-semibold tracking-wider" scope="col"><?= __('employees.employee') ?></th>
+                                <th class="px-6 py-4 font-semibold tracking-wider" scope="col"><?= __('employees.position') ?></th>
+                                <th class="px-6 py-4 font-semibold tracking-wider" scope="col"><?= __('employees.department') ?></th>
+                                <th class="px-6 py-4 font-semibold tracking-wider" scope="col"><?= __('common.status') ?></th>
+                                <th class="px-6 py-4 text-right font-semibold tracking-wider" scope="col"><?= __('common.actions') ?></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
@@ -230,7 +230,7 @@ $avatarColors = [
                                 <tr>
                                     <td colspan="5" class="text-center py-16">
                                         <span class="material-icons-outlined text-5xl text-gray-300 block mb-4">people_outline</span>
-                                        <span class="text-gray-400">Tidak ada data karyawan</span>
+                                        <span class="text-gray-400"><?= __('employees.no_employees') ?></span>
                                     </td>
                                 </tr>
                             <?php else: ?>
@@ -300,19 +300,19 @@ $avatarColors = [
                                         <td class="whitespace-nowrap px-6 py-4 text-right">
                                             <div class="flex items-center justify-end gap-1">
                                                 <button onclick="showAttendance(<?= $empId ?>, '<?= htmlspecialchars(addslashes($empName)) ?>')"
-                                                    class="rounded p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="Absensi">
+                                                    class="rounded p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors" title="<?= __('employees.attendance_title') ?>">
                                                     <span class="material-icons-outlined text-xl">schedule</span>
                                                 </button>
                                                 <button onclick="showKPI(<?= $empId ?>, '<?= htmlspecialchars(addslashes($empName)) ?>')"
-                                                    class="rounded p-1.5 text-gray-400 hover:bg-green-50 hover:text-green-600 transition-colors" title="KPI Score">
+                                                    class="rounded p-1.5 text-gray-400 hover:bg-green-50 hover:text-green-600 transition-colors" title="<?= __('employees.kpi_score') ?>">
                                                     <span class="material-icons-outlined text-xl">pie_chart</span>
                                                 </button>
                                                 <button onclick="showPerformance(<?= $empId ?>, '<?= htmlspecialchars(addslashes($empName)) ?>')"
-                                                    class="rounded p-1.5 text-gray-400 hover:bg-purple-50 hover:text-purple-600 transition-colors" title="Kinerja">
+                                                    class="rounded p-1.5 text-gray-400 hover:bg-purple-50 hover:text-purple-600 transition-colors" title="<?= __('employees.performance') ?>">
                                                     <span class="material-icons-outlined text-xl">trending_up</span>
                                                 </button>
                                                 <a href="<?= BASE_URL ?>employees/<?= $empId ?>"
-                                                    class="rounded p-1.5 text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors" title="Detail">
+                                                    class="rounded p-1.5 text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors" title="<?= __('common.details') ?>">
                                                     <span class="material-icons-outlined text-xl">visibility</span>
                                                 </a>
                                             </div>
@@ -326,7 +326,7 @@ $avatarColors = [
                 <!-- Pagination -->
                 <div class="flex items-center justify-between border-t border-gray-200 px-6 py-4">
                     <p class="text-sm text-gray-500">
-                        Showing <span class="font-medium">1</span> to <span class="font-medium"><?= min($totalEmployees, 20) ?></span> of <span class="font-medium"><?= $totalEmployees ?></span> results
+                        <?= __('common.showing') ?> <span class="font-medium">1</span> <?= __('common.to') ?> <span class="font-medium"><?= min($totalEmployees, 20) ?></span> <?= __('common.of') ?> <span class="font-medium"><?= $totalEmployees ?></span> <?= __('common.results') ?>
                     </p>
                 </div>
             </div>

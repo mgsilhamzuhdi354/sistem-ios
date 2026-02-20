@@ -23,7 +23,7 @@ $deptStyles = [
 ];
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= getLanguage() ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -74,9 +74,9 @@ $deptStyles = [
         <!-- Top Bar -->
         <header class="h-16 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark flex items-center justify-between px-8 flex-shrink-0 shadow-sm z-10">
             <div class="flex items-center text-sm text-slate-500 dark:text-slate-400">
-                <span>Master Data</span>
+                <span><?= __('sidebar.management') ?></span>
                 <span class="material-icons-round text-sm mx-2">chevron_right</span>
-                <span class="font-medium text-secondary dark:text-primary">Master Pangkat</span>
+                <span class="font-medium text-secondary dark:text-primary"><?= __('ranks.title') ?></span>
             </div>
             <div class="flex items-center gap-3">
                 <button onclick="document.documentElement.classList.toggle('dark')" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Toggle Theme">
@@ -111,13 +111,13 @@ $deptStyles = [
                         <span class="material-icons-round text-primary text-3xl">military_tech</span>
                     </div>
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Master Pangkat (Ranks)</h2>
-                        <p class="text-slate-500 dark:text-slate-400 mt-0.5 text-sm">Manajemen daftar pangkat, departemen, dan urutan.</p>
+                        <h2 class="text-2xl font-bold text-slate-800 dark:text-white"><?= __('ranks.title') ?></h2>
+                        <p class="text-slate-500 dark:text-slate-400 mt-0.5 text-sm"><?= __('ranks.subtitle') ?></p>
                     </div>
                 </div>
                 <a href="<?= BASE_URL ?>ranks/create" class="bg-primary hover:bg-amber-600 text-slate-900 font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-primary/30 flex items-center gap-2 transition-all transform hover:-translate-y-0.5 w-fit">
                     <span class="material-icons-round text-lg">add</span>
-                    Tambah Pangkat
+                    <?= __('ranks.create_title') ?>
                 </a>
             </div>
 
@@ -126,18 +126,18 @@ $deptStyles = [
                 <form action="" method="GET">
                     <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                         <div class="md:col-span-8">
-                            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Cari Pangkat</label>
+                            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2"><?= __('common.search') ?></label>
                             <div class="relative group">
                                 <span class="material-icons-round absolute left-3 top-2.5 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
                                 <input type="text" name="search" value="<?= htmlspecialchars($filters['search'] ?? '') ?>"
                                        class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                                       placeholder="Nama pangkat...">
+                                       placeholder="<?= __('ranks.rank_name') ?>...">
                             </div>
                         </div>
                         <div class="md:col-span-3">
-                            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Department</label>
+                            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2"><?= __('ranks.department') ?></label>
                             <select name="department" class="w-full pl-3 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
-                                <option value="">Semua Dept</option>
+                                <option value=""><?= __('common.all') ?></option>
                                 <?php foreach ($departments as $dept): ?>
                                     <option value="<?= $dept ?>" <?= ($filters['department'] ?? '') === $dept ? 'selected' : '' ?>><?= $dept ?></option>
                                 <?php endforeach; ?>
@@ -145,13 +145,13 @@ $deptStyles = [
                         </div>
                         <div class="md:col-span-1 flex gap-2">
                             <button type="submit" class="w-full bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white font-medium py-2.5 rounded-xl transition-colors shadow-sm">
-                                Filter
+                                <?= __('common.filter') ?>
                             </button>
                         </div>
                     </div>
                     <?php if (!empty($filters['search']) || !empty($filters['department'])): ?>
                         <div class="mt-3 flex items-center gap-2">
-                            <span class="text-xs text-slate-500">Active filters:</span>
+                             <span class="text-xs text-slate-500"><?= __('common.filter') ?>:</span>
                             <?php if (!empty($filters['search'])): ?>
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
                                     "<?= htmlspecialchars($filters['search']) ?>"
@@ -162,7 +162,7 @@ $deptStyles = [
                                     <?= $filters['department'] ?>
                                 </span>
                             <?php endif; ?>
-                            <a href="<?= BASE_URL ?>ranks" class="text-xs text-red-500 hover:text-red-700 font-medium ml-1">&times; Reset</a>
+                            <a href="<?= BASE_URL ?>ranks" class="text-xs text-red-500 hover:text-red-700 font-medium ml-1">&times; <?= __('common.reset') ?></a>
                         </div>
                     <?php endif; ?>
                 </form>
@@ -174,13 +174,13 @@ $deptStyles = [
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">
-                                <th class="px-6 py-4 w-20 text-center">Level</th>
-                                <th class="px-6 py-4">Nama Pangkat</th>
-                                <th class="px-6 py-4">Code</th>
-                                <th class="px-6 py-4">Department</th>
+                                <th class="px-6 py-4 w-20 text-center"><?= __('ranks.level') ?></th>
+                                <th class="px-6 py-4"><?= __('ranks.rank_name') ?></th>
+                                <th class="px-6 py-4"><?= __('ranks.rank_code') ?></th>
+                                <th class="px-6 py-4"><?= __('ranks.department') ?></th>
                                 <th class="px-6 py-4 text-center">Officer?</th>
-                                <th class="px-6 py-4 text-center">Status</th>
-                                <th class="px-6 py-4 text-center">Aksi</th>
+                                <th class="px-6 py-4 text-center"><?= __('common.status') ?></th>
+                                <th class="px-6 py-4 text-center"><?= __('common.actions') ?></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -191,11 +191,11 @@ $deptStyles = [
                                             <div class="h-20 w-20 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
                                                 <span class="material-icons-round text-4xl text-slate-300 dark:text-slate-600">military_tech</span>
                                             </div>
-                                            <h3 class="text-base font-semibold text-slate-800 dark:text-white mb-1">Tidak ada data pangkat</h3>
-                                            <p class="text-slate-500 dark:text-slate-400 text-sm mb-4">Tidak ada data yang sesuai dengan filter.</p>
+                                            <h3 class="text-base font-semibold text-slate-800 dark:text-white mb-1"><?= __('ranks.no_ranks') ?></h3>
+                                            <p class="text-slate-500 dark:text-slate-400 text-sm mb-4"><?= __('common.no_data') ?></p>
                                             <?php if (!empty($filters['search']) || !empty($filters['department'])): ?>
                                                 <a href="<?= BASE_URL ?>ranks" class="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                                    Reset Filter
+                                                    <?= __('common.reset') ?> <?= __('common.filter') ?>
                                                 </a>
                                             <?php endif; ?>
                                         </div>
@@ -232,20 +232,20 @@ $deptStyles = [
                                         <td class="px-6 py-4 text-center">
                                             <?php if ($rank['is_active']): ?>
                                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
-                                                    ACTIVE
+                                                    <?= __('common.active') ?>
                                                 </span>
                                             <?php else: ?>
                                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400 border border-red-200 dark:border-red-500/20">
-                                                    INACTIVE
+                                                    <?= __('common.inactive') ?>
                                                 </span>
                                             <?php endif; ?>
                                         </td>
                                         <td class="px-6 py-4 text-center">
                                             <div class="flex items-center justify-center gap-1">
-                                                <a href="<?= BASE_URL ?>ranks/edit/<?= $rank['id'] ?>" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Edit">
+                                                <a href="<?= BASE_URL ?>ranks/edit/<?= $rank['id'] ?>" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="<?= __('common.edit') ?>">
                                                     <span class="material-icons-round text-lg">edit</span>
                                                 </a>
-                                                <a href="<?= BASE_URL ?>ranks/delete/<?= $rank['id'] ?>" onclick="return confirm('Yakin hapus pangkat ini?')" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Hapus">
+                                                <a href="<?= BASE_URL ?>ranks/delete/<?= $rank['id'] ?>" onclick="return confirm('<?= __('common.confirm') ?>?')" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="<?= __('common.delete') ?>">
                                                     <span class="material-icons-round text-lg">delete</span>
                                                 </a>
                                             </div>
@@ -260,9 +260,9 @@ $deptStyles = [
                 <!-- Pagination Footer -->
                 <div class="px-6 py-4 bg-white dark:bg-surface-dark border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
                     <span class="text-xs text-slate-500 dark:text-slate-400">
-                        Showing <span class="font-semibold text-slate-700 dark:text-slate-300"><?= min(($page - 1) * $perPage + 1, $total) ?></span>
-                        to <span class="font-semibold text-slate-700 dark:text-slate-300"><?= min($page * $perPage, $total) ?></span>
-                        of <span class="font-semibold text-slate-700 dark:text-slate-300"><?= $total ?></span> results
+                        <?= __('common.showing') ?> <span class="font-semibold text-slate-700 dark:text-slate-300"><?= min(($page - 1) * $perPage + 1, $total) ?></span>
+                        - <span class="font-semibold text-slate-700 dark:text-slate-300"><?= min($page * $perPage, $total) ?></span>
+                        <?= __('common.of') ?> <span class="font-semibold text-slate-700 dark:text-slate-300"><?= $total ?></span> <?= __('common.entries') ?>
                     </span>
                     <?php if ($totalPages > 1): ?>
                         <div class="flex items-center gap-1">

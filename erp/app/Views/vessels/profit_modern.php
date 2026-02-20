@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profit per Vessel | IndoOcean ERP</title>
+    <title><?= __('vessels.profit_analysis') ?> | IndoOcean ERP</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap"
         rel="stylesheet">
@@ -104,16 +104,16 @@
                 <header class="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div class="flex flex-col gap-2">
                         <nav class="flex items-center gap-2 text-sm text-slate-400 font-medium">
-                            <a href="<?= BASE_URL ?>" class="hover:text-primary transition-colors">Home</a>
+                            <a href="<?= BASE_URL ?>" class="hover:text-primary transition-colors"><?= __('common.home') ?></a>
                             <span class="material-icons-round text-[10px]">chevron_right</span>
-                            <a href="<?= BASE_URL ?>vessels" class="hover:text-primary transition-colors">Vessels</a>
+                            <a href="<?= BASE_URL ?>vessels" class="hover:text-primary transition-colors"><?= __('vessels.title') ?></a>
                             <span class="material-icons-round text-[10px]">chevron_right</span>
-                            <span class="text-slate-600">Profit Analysis</span>
+                            <span class="text-slate-600"><?= __('vessels.profit_analysis') ?></span>
                         </nav>
                         <h2 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-none">
-                            Profit Analysis
+                            <?= __('vessels.profit_analysis') ?>
                         </h2>
-                        <p class="text-slate-500 font-medium">Real-time financial performance command center</p>
+                        <p class="text-slate-500 font-medium"><?= __('vessels.profit_subtitle') ?></p>
                     </div>
 
                     <div class="flex items-center gap-4">
@@ -158,8 +158,7 @@
                             </span>
                         </div>
                         <div class="flex flex-col">
-                            <p class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Total Revenue
-                            </p>
+                            <p class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1"><?= __('vessels.total_revenue') ?></p>
                             <h3 class="text-3xl font-black text-slate-900 tracking-tight">
                                 $
                                 <?= number_format($totalRevenue / 1000, 1) ?>k
@@ -185,7 +184,7 @@
                             </span>
                         </div>
                         <div class="flex flex-col">
-                            <p class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Total Cost</p>
+                            <p class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1"><?= __('vessels.total_cost') ?></p>
                             <h3 class="text-3xl font-black text-slate-900 tracking-tight">
                                 $
                                 <?= number_format($totalCost / 1000, 1) ?>k
@@ -214,7 +213,7 @@
                             </span>
                         </div>
                         <div class="flex flex-col relative z-10">
-                            <p class="text-blue-100 text-sm font-semibold uppercase tracking-wider mb-1">Net Profit</p>
+                            <p class="text-blue-100 text-sm font-semibold uppercase tracking-wider mb-1"><?= __('vessels.net_profit') ?></p>
                             <h3 class="text-3xl font-black text-white tracking-tight">
                                 $
                                 <?= number_format($totalProfit / 1000, 1) ?>k
@@ -240,7 +239,7 @@
                             </span>
                         </div>
                         <div class="flex flex-col">
-                            <p class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">Avg Margin</p>
+                            <p class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1"><?= __('vessels.avg_margin') ?></p>
                             <h3 class="text-3xl font-black text-slate-900 tracking-tight">
                                 <?= number_format($avgMargin, 1) ?>%
                             </h3>
@@ -257,7 +256,7 @@
                     <div
                         class="lg:col-span-2 bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-glass flex flex-col overflow-hidden">
                         <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                            <h3 class="text-lg font-bold text-slate-900">Vessel Performance</h3>
+                            <h3 class="text-lg font-bold text-slate-900"><?= __('vessels.vessel_performance') ?></h3>
                             <button
                                 class="p-2 text-slate-400 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors">
                                 <span class="material-icons-round">filter_list</span>
@@ -269,7 +268,7 @@
                                 <thead class="bg-slate-50/50 sticky top-0 z-10 backdrop-blur-sm">
                                     <tr>
                                         <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                            Vessel Name</th>
+                                            <?= __('vessels.vessel_name') ?></th>
                                         <th
                                             class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">
                                             Revenue</th>
@@ -348,8 +347,8 @@
                         class="lg:col-span-1 bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-glass p-6 flex flex-col">
                         <div class="mb-6 flex justify-between items-center">
                             <div>
-                                <h3 class="text-lg font-bold text-slate-900">Profit Comparison</h3>
-                                <p class="text-xs text-slate-500 font-medium mt-1">Top performers & lowest</p>
+                                <h3 class="text-lg font-bold text-slate-900"><?= __('vessels.profit_comparison') ?></h3>
+                                <p class="text-xs text-slate-500 font-medium mt-1"><?= __('vessels.profit_comparison_subtitle') ?></p>
                             </div>
                         </div>
 

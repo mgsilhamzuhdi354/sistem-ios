@@ -33,7 +33,7 @@ function getStatusBadgeClasses($status) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -75,19 +75,19 @@ function getStatusBadgeClasses($status) {
         <!-- Header -->
         <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0 z-10">
             <div class="flex items-center gap-3">
-                <h1 class="text-base font-bold text-slate-800 tracking-tight">Recruitment Pipeline</h1>
+                <h1 class="text-base font-bold text-slate-800 tracking-tight"><?= __('recruitment.pipeline_title') ?></h1>
                 <span class="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-600 rounded-full uppercase tracking-wide">Live</span>
             </div>
             <div class="flex items-center gap-3">
                 <a href="<?= BASE_URL ?>recruitment/onboarding"
                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm">
                     <span class="material-icons text-sm">person_add</span>
-                    Onboarding
+                    <?= __('recruitment.onboarding_title') ?>
                 </a>
                 <a href="<?= BASE_URL ?>recruitment/approval"
                    class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-medium rounded-lg transition-all">
                     <span class="material-icons text-sm">check_circle</span>
-                    Approval
+                    <?= __('recruitment.approval_title') ?>
                 </a>
             </div>
         </header>
@@ -111,9 +111,9 @@ function getStatusBadgeClasses($status) {
                 <div>
                     <div class="flex items-center gap-2 mb-0.5">
                         <span class="material-icons text-blue-600 text-2xl">diversity_3</span>
-                        <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Pipeline Rekrutmen</h2>
+                        <h2 class="text-2xl font-bold text-slate-800 tracking-tight"><?= __('recruitment.pipeline_title') ?></h2>
                     </div>
-                    <p class="text-slate-500 text-sm">Manajemen kandidat dari sistem recruitment secara efisien.</p>
+                    <p class="text-slate-500 text-sm"><?= __('recruitment.pipeline_subtitle') ?></p>
                 </div>
             </div>
 
@@ -123,7 +123,7 @@ function getStatusBadgeClasses($status) {
                 <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm opacity-0 animate-fade-in">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Total Kandidat</p>
+                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide"><?= __('recruitment.candidate') ?></p>
                             <h3 class="text-2xl font-bold text-slate-800 mt-1"><?= $total ?></h3>
                         </div>
                         <div class="p-2 bg-blue-50 rounded-lg">
@@ -132,7 +132,7 @@ function getStatusBadgeClasses($status) {
                     </div>
                     <div class="mt-3 flex items-center text-xs text-slate-400">
                         <span class="material-icons text-sm mr-0.5">database</span>
-                        <span>From recruitment system</span>
+                        <span><?= __('recruitment.total_source') ?></span>
                     </div>
                 </div>
 
@@ -140,7 +140,7 @@ function getStatusBadgeClasses($status) {
                 <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm opacity-0 animate-fade-in animate-fade-in-d1">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Lamaran Baru</p>
+                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide"><?= __('recruitment.new_applications') ?></p>
                             <h3 class="text-2xl font-bold text-slate-800 mt-1"><?= $newApps ?></h3>
                         </div>
                         <div class="p-2 bg-orange-50 rounded-lg">
@@ -148,7 +148,7 @@ function getStatusBadgeClasses($status) {
                         </div>
                     </div>
                     <div class="mt-3 flex items-center text-xs text-slate-400">
-                        <span>Applied / Screening</span>
+                        <span><?= __('recruitment.applied_screening') ?></span>
                     </div>
                 </div>
 
@@ -156,7 +156,7 @@ function getStatusBadgeClasses($status) {
                 <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm opacity-0 animate-fade-in animate-fade-in-d2">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Tahap Interview</p>
+                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide"><?= __('recruitment.interview_stage') ?></p>
                             <h3 class="text-2xl font-bold text-slate-800 mt-1"><?= $interview ?></h3>
                         </div>
                         <div class="p-2 bg-purple-50 rounded-lg">
@@ -164,7 +164,7 @@ function getStatusBadgeClasses($status) {
                         </div>
                     </div>
                     <div class="mt-3 flex items-center text-xs text-slate-400">
-                        <span>Interview aktif</span>
+                        <span><?= __('recruitment.active_interview') ?></span>
                     </div>
                 </div>
 
@@ -172,7 +172,7 @@ function getStatusBadgeClasses($status) {
                 <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm opacity-0 animate-fade-in animate-fade-in-d3">
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Disetujui</p>
+                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide"><?= __('recruitment.approve') ?></p>
                             <h3 class="text-2xl font-bold text-slate-800 mt-1"><?= $approved ?></h3>
                         </div>
                         <div class="p-2 bg-emerald-50 rounded-lg">
@@ -180,7 +180,7 @@ function getStatusBadgeClasses($status) {
                         </div>
                     </div>
                     <div class="mt-3 flex items-center text-xs text-slate-400">
-                        <span>Siap onboarding</span>
+                        <span><?= __('recruitment.ready_to_deploy') ?></span>
                     </div>
                 </div>
             </div>
@@ -195,12 +195,12 @@ function getStatusBadgeClasses($status) {
                         </div>
                         <input type="text" x-model="search" @input="filterCandidates()"
                                class="block w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-colors"
-                               placeholder="Cari nama atau posisi...">
+                               placeholder="<?= __('common.search') ?>...">
                     </div>
                     <div class="flex gap-2">
                         <select x-model="statusFilter" @change="filterCandidates()"
                                 class="px-3 py-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400">
-                            <option value="">Semua Status</option>
+                            <option value=""><?= __('common.all') ?></option>
                             <option value="Applied">Applied</option>
                             <option value="Screening">Screening</option>
                             <option value="Interview">Interview</option>
@@ -309,7 +309,7 @@ function getStatusBadgeClasses($status) {
                             <div class="bg-slate-100 p-5 rounded-full mb-4">
                                 <span class="material-icons text-4xl text-slate-300">inbox</span>
                             </div>
-                            <h3 class="text-base font-semibold text-slate-700 mb-1">Tidak ada kandidat ditemukan</h3>
+                            <h3 class="text-base font-semibold text-slate-700 mb-1"><?= __('recruitment.no_candidates') ?></h3>
                             <p class="text-slate-400 max-w-sm text-sm mb-6">
                                 Belum ada data kandidat yang masuk ke dalam pipeline rekrutmen saat ini. 
                                 Pastikan sistem recruitment terhubung dengan benar.

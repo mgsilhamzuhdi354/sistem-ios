@@ -8,7 +8,7 @@ $pendingApprovals = $pendingApprovals ?? [];
 $stats = $stats ?? [];
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -65,23 +65,23 @@ $stats = $stats ?? [];
         <a href="<?= BASE_URL ?>recruitment/pipeline"
            class="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors text-sm font-medium w-fit">
             <span class="material-symbols-outlined text-[18px]">arrow_back</span>
-            Back to Pipeline
+            <?= __('recruitment.back_to_pipeline') ?>
         </a>
         <div class="flex items-end justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Approval Center</h1>
-                <p class="text-slate-500 mt-1">Kelola persetujuan kru dari sistem recruitment.</p>
+                <h1 class="text-3xl font-bold text-slate-900 tracking-tight"><?= __('recruitment.approval_title') ?></h1>
+                <p class="text-slate-500 mt-1"><?= __('recruitment.approval_subtitle') ?></p>
             </div>
             <div class="flex gap-3">
                 <a href="<?= BASE_URL ?>contracts/create"
                    class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:translate-y-[-1px] transition-all flex items-center gap-2">
                     <span class="material-symbols-outlined text-[18px]">description</span>
-                    Buat Kontrak
+                    <?= __('contracts.create_contract') ?>
                 </a>
                 <button onclick="window.location.reload()"
                         class="bg-slate-900 text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-lg shadow-slate-200 hover:translate-y-[-1px] transition-transform flex items-center gap-2">
                     <span class="material-symbols-outlined text-[18px]">refresh</span>
-                    Refresh
+                    <?= __('common.refresh') ?>
                 </button>
             </div>
         </div>
@@ -110,7 +110,7 @@ $stats = $stats ?? [];
                 <!-- Pending -->
                 <div class="bg-paper-light rounded-2xl p-6 shadow-soft border border-slate-100 flex items-center justify-between group hover:border-blue-100 transition-colors opacity-0 animate-fade-in">
                     <div class="flex flex-col gap-1">
-                        <span class="text-slate-500 text-sm font-medium">Menunggu Approval</span>
+                        <span class="text-slate-500 text-sm font-medium"><?= __('recruitment.pending_approvals') ?></span>
                         <span class="text-3xl font-bold text-slate-900"><?= $stats['pending_count'] ?? 0 ?></span>
                     </div>
                     <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
@@ -121,7 +121,7 @@ $stats = $stats ?? [];
                 <!-- Approved -->
                 <div class="bg-paper-light rounded-2xl p-6 shadow-soft border border-slate-100 flex items-center justify-between group hover:border-emerald-100 transition-colors opacity-0 animate-fade-in animate-fade-in-d1">
                     <div class="flex flex-col gap-1">
-                        <span class="text-slate-500 text-sm font-medium">Disetujui (30 hari)</span>
+                        <span class="text-slate-500 text-sm font-medium"><?= __('recruitment.approved_30d') ?></span>
                         <span class="text-3xl font-bold text-emerald-600"><?= $stats['approved_count'] ?? 0 ?></span>
                     </div>
                     <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
@@ -132,7 +132,7 @@ $stats = $stats ?? [];
                 <!-- Rejected -->
                 <div class="bg-paper-light rounded-2xl p-6 shadow-soft border border-slate-100 flex items-center justify-between group hover:border-red-100 transition-colors opacity-0 animate-fade-in animate-fade-in-d2">
                     <div class="flex flex-col gap-1">
-                        <span class="text-slate-500 text-sm font-medium">Ditolak (30 hari)</span>
+                        <span class="text-slate-500 text-sm font-medium"><?= __('recruitment.rejected_30d') ?></span>
                         <span class="text-3xl font-bold text-red-500"><?= $stats['rejected_count'] ?? 0 ?></span>
                     </div>
                     <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
@@ -143,7 +143,7 @@ $stats = $stats ?? [];
                 <!-- Total Processed -->
                 <div class="bg-paper-light rounded-2xl p-6 shadow-soft border border-slate-100 flex items-center justify-between group hover:border-amber-100 transition-colors opacity-0 animate-fade-in animate-fade-in-d3">
                     <div class="flex flex-col gap-1">
-                        <span class="text-slate-500 text-sm font-medium">Total Diproses</span>
+                        <span class="text-slate-500 text-sm font-medium"><?= __('recruitment.total_processed') ?></span>
                         <span class="text-3xl font-bold text-slate-900"><?= $stats['total_processed'] ?? 0 ?></span>
                     </div>
                     <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
@@ -170,7 +170,7 @@ $stats = $stats ?? [];
                 </div>
 
                 <div class="lg:col-span-1 flex flex-col gap-6">
-                    <h3 class="text-lg font-bold text-slate-900">Quick Actions</h3>
+                    <h3 class="text-lg font-bold text-slate-900"><?= __('common.quick_actions') ?></h3>
                     <a href="<?= BASE_URL ?>recruitment/pipeline"
                        class="bg-paper-light p-5 rounded-xl shadow-sm border border-slate-100 hover:shadow-md hover:border-indigo-200 transition-all group block">
                         <div class="flex items-start gap-4">
@@ -218,7 +218,7 @@ $stats = $stats ?? [];
             <div class="opacity-0 animate-fade-in animate-fade-in-d3">
                 <div class="flex items-center justify-between mb-5">
                     <div class="flex items-center gap-3">
-                        <h3 class="text-lg font-bold text-slate-900">Pending Approvals</h3>
+                        <h3 class="text-lg font-bold text-slate-900"><?= __('recruitment.pending_approvals') ?></h3>
                         <span class="px-2.5 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded-full"><?= count($pendingApprovals) ?></span>
                     </div>
                 </div>

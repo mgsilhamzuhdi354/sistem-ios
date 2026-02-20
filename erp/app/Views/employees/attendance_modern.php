@@ -23,11 +23,11 @@ $absent = count(array_filter($records, fn($r) => empty($r['jam_masuk'])));
 $onLeave = 0; // Would need additional API data
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Records | IndoOcean ERP</title>
+    <title><?= __('employees.attendance_title') ?> | IndoOcean ERP</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -86,14 +86,14 @@ $onLeave = 0; // Would need additional API data
                         <ol class="flex items-center space-x-2">
                             <li><a class="hover:text-slate-800 dark:hover:text-slate-200" href="<?= BASE_URL ?>">ERP</a></li>
                             <li><span class="text-slate-300">/</span></li>
-                            <li><a class="hover:text-slate-800 dark:hover:text-slate-200" href="<?= BASE_URL ?>employees">Employees</a></li>
+                            <li><a class="hover:text-slate-800 dark:hover:text-slate-200" href="<?= BASE_URL ?>employees"><?= __('employees.title') ?></a></li>
                             <li><span class="text-slate-300">/</span></li>
-                            <li class="text-slate-800 dark:text-white font-medium">Attendance</li>
+                            <li class="text-slate-800 dark:text-white font-medium"><?= __('employees.attendance') ?></li>
                         </ol>
                     </nav>
-                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Attendance Records</h1>
+                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white"><?= __('employees.attendance_title') ?></h1>
                     <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2">
-                        Today: <span class="font-medium text-slate-700 dark:text-slate-300"><?= date('M d, Y') ?></span>
+                        <?= __('employees.today_label') ?>: <span class="font-medium text-slate-700 dark:text-slate-300"><?= date('M d, Y') ?></span>
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
                             <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
                             Live
@@ -108,6 +108,7 @@ $onLeave = 0; // Would need additional API data
                     <button onclick="exportData()" class="flex items-center gap-2 px-4 py-2 bg-gold hover:bg-yellow-600 text-white text-sm font-medium rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold">
                         <span class="material-icons-outlined text-[18px]">download</span>
                         Export Data
+                        <?= __('employees.export_data') ?>
                     </button>
                 </div>
             </header>
@@ -118,7 +119,7 @@ $onLeave = 0; // Would need additional API data
                     <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <span class="material-icons-outlined text-6xl text-emerald-500">check_circle</span>
                     </div>
-                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Total Present</p>
+                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide"><?= __('employees.total_present') ?></p>
                     <div class="flex items-end gap-2">
                         <span class="text-3xl font-bold text-slate-900 dark:text-white"><?= $totalPresent ?></span>
                         <span class="text-sm font-medium text-emerald-500 mb-1">Today</span>
@@ -128,7 +129,7 @@ $onLeave = 0; // Would need additional API data
                     <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <span class="material-icons-outlined text-6xl text-orange-500">schedule</span>
                     </div>
-                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Late Arrivals</p>
+                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide"><?= __('employees.late_arrivals') ?></p>
                     <div class="flex items-end gap-2">
                         <span class="text-3xl font-bold text-slate-900 dark:text-white"><?= $lateArrivals ?></span>
                         <span class="text-sm font-medium text-orange-500 mb-1">Alert</span>
@@ -138,7 +139,7 @@ $onLeave = 0; // Would need additional API data
                     <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <span class="material-icons-outlined text-6xl text-rose-500">person_off</span>
                     </div>
-                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">Absent</p>
+                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide"><?= __('employees.absent') ?></p>
                     <div class="flex items-end gap-2">
                         <span class="text-3xl font-bold text-slate-900 dark:text-white"><?= $absent ?></span>
                         <span class="text-sm font-medium text-rose-500 mb-1">Alert</span>
@@ -148,7 +149,7 @@ $onLeave = 0; // Would need additional API data
                     <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <span class="material-icons-outlined text-6xl text-blue-500">flight_takeoff</span>
                     </div>
-                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide">On Leave</p>
+                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide"><?= __('employees.on_leave') ?></p>
                     <div class="flex items-end gap-2">
                         <span class="text-3xl font-bold text-slate-900 dark:text-white"><?= $onLeave ?></span>
                         <span class="text-sm font-medium text-slate-400 mb-1">Planned</span>
@@ -168,7 +169,7 @@ $onLeave = 0; // Would need additional API data
                     </div>
                     <div class="relative w-full md:w-56">
                         <select id="employeeFilter" onchange="applyFilter()" class="w-full pl-4 pr-10 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-900 text-sm focus:ring-2 focus:ring-primary focus:border-transparent dark:text-white appearance-none cursor-pointer">
-                            <option value="">All Employees</option>
+                            <option value=""><?= __('employees.all_employees') ?></option>
                             <?php if (isset($employees) && !empty($employees)): ?>
                                 <?php foreach ($employees as $emp): ?>
                                     <option value="<?= $emp['id'] ?>" <?= (isset($selectedEmployee) && $selectedEmployee == $emp['id']) ? 'selected' : '' ?>>
@@ -202,14 +203,14 @@ $onLeave = 0; // Would need additional API data
             <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col min-h-[400px]">
                 <div class="grid grid-cols-12 gap-4 bg-navy-header p-4 text-xs font-semibold text-white uppercase tracking-wider items-center">
                     <div class="col-span-1 text-center">No.</div>
-                    <div class="col-span-2">Employee Name</div>
-                    <div class="col-span-1">Shift</div>
-                    <div class="col-span-2">Date</div>
-                    <div class="col-span-1">Check In</div>
-                    <div class="col-span-1">Late</div>
-                    <div class="col-span-2">Location</div>
-                    <div class="col-span-1">Status</div>
-                    <div class="col-span-1 text-right">Action</div>
+                    <div class="col-span-2"><?= __('employees.emp_name') ?></div>
+                    <div class="col-span-1"><?= __('employees.shift') ?></div>
+                    <div class="col-span-2"><?= __('common.date') ?></div>
+                    <div class="col-span-1"><?= __('employees.check_in') ?></div>
+                    <div class="col-span-1"><?= __('employees.late') ?></div>
+                    <div class="col-span-2"><?= __('employees.location') ?></div>
+                    <div class="col-span-1"><?= __('common.status') ?></div>
+                    <div class="col-span-1 text-right"><?= __('common.action') ?></div>
                 </div>
                 <div class="flex-1 overflow-x-auto">
                     <?php if (!$success || empty($records)): ?>
@@ -218,7 +219,7 @@ $onLeave = 0; // Would need additional API data
                             <div class="bg-indigo-50 dark:bg-indigo-900/30 p-6 rounded-full mb-6">
                                 <span class="material-icons-outlined text-5xl text-primary">cloud_off</span>
                             </div>
-                            <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">No Attendance Data Found</h3>
+                            <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2"><?= __('employees.no_attendance') ?></h3>
                             <p class="text-slate-500 dark:text-slate-400 max-w-md mb-8 leading-relaxed">
                                 We couldn't retrieve the attendance records from the HRIS system. This might be due to a synchronization delay or connection issue.
                             </p>
@@ -269,7 +270,7 @@ $onLeave = 0; // Would need additional API data
                                                 </span>
                                             <?php else: ?>
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-                                                    Not Yet
+                                                    <?= __('employees.not_yet') ?>
                                                 </span>
                                             <?php endif; ?>
                                         </td>
@@ -286,6 +287,7 @@ $onLeave = 0; // Would need additional API data
                                         <td class="px-4 py-3">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                                                 Present
+                                                <?= __('common.present') ?>
                                             </span>
                                         </td>
                                         <td class="px-4 py-3 text-right">

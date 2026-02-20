@@ -5,7 +5,7 @@
  */
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 
 <head>
     <meta charset="UTF-8">
@@ -186,7 +186,7 @@
                                     <span class="material-symbols-outlined text-[14px]">trending_up</span> +2%
                                 </span>
                             </div>
-                            <p class="text-sm font-medium text-slate-500">Total Vessels</p>
+                            <p class="text-sm font-medium text-slate-500"><?= __('clients.total_vessels') ?></p>
                             <p class="text-2xl font-bold text-navy mt-1">
                                 <?= count($vessels ?? []) ?>
                             </p>
@@ -205,7 +205,7 @@
                                     <span class="material-symbols-outlined text-[14px]">trending_up</span> +5%
                                 </span>
                             </div>
-                            <p class="text-sm font-medium text-slate-500">Active Crew</p>
+                            <p class="text-sm font-medium text-slate-500"><?= __('clients.active_crew') ?></p>
                             <p class="text-2xl font-bold text-navy mt-1">
                                 <?= $stats['active_crew'] ?? 0 ?>
                             </p>
@@ -224,7 +224,7 @@
                                     <span class="material-symbols-outlined text-[14px]">trending_up</span> +12%
                                 </span>
                             </div>
-                            <p class="text-sm font-medium text-slate-500">Total Revenue</p>
+                            <p class="text-sm font-medium text-slate-500"><?= __('clients.total_revenue') ?></p>
                             <p class="text-2xl font-bold text-navy mt-1">$
                                 <?= number_format($profit['monthly_client_rate_usd'] ?? 0, 0) ?>
                             </p>
@@ -243,7 +243,7 @@
                                     <span class="material-symbols-outlined text-[14px]">trending_up</span> +8%
                                 </span>
                             </div>
-                            <p class="text-sm font-medium text-slate-500">Total Profit</p>
+                            <p class="text-sm font-medium text-slate-500"><?= __('clients.total_profit') ?></p>
                             <p class="text-2xl font-bold text-navy mt-1">$
                                 <?= number_format($profit['monthly_profit_usd'] ?? 0, 0) ?>
                             </p>
@@ -257,7 +257,7 @@
                         <div
                             class="xl:col-span-1 bg-white rounded-xl border border-slate-100 shadow-sm p-6 flex flex-col h-full">
                             <div class="flex items-center justify-between mb-6">
-                                <h3 class="font-bold text-navy text-lg">Monthly Cost</h3>
+                                <h3 class="font-bold text-navy text-lg"><?= __('clients.monthly_cost') ?></h3>
                                 <button class="text-slate-400 hover:text-primary">
                                     <span class="material-symbols-outlined">more_horiz</span>
                                 </button>
@@ -265,7 +265,7 @@
 
                             <div class="flex-1 flex flex-col justify-center">
                                 <div class="mb-2">
-                                    <p class="text-sm text-slate-500 mb-1">Total Expenses</p>
+                                    <p class="text-sm text-slate-500 mb-1"><?= __('clients.total_expenses') ?></p>
                                     <?php
                                     // Get total from monthlyCost breakdown
                                     $totalCostUSD = $monthlyCost['total_usd'] ?? 0;
@@ -342,10 +342,10 @@
                         <!-- Fleet Overview -->
                         <div class="xl:col-span-2 flex flex-col gap-4">
                             <div class="flex items-center justify-between">
-                                <h3 class="font-bold text-navy text-lg">Fleet Overview</h3>
+                                <h3 class="font-bold text-navy text-lg"><?= __('vessels.title') ?></h3>
                                 <a href="<?= BASE_URL ?>vessels"
                                     class="text-sm font-medium text-primary hover:text-blue-700 flex items-center">
-                                    View All <span class="material-symbols-outlined text-sm ml-1">arrow_forward</span>
+                                    <?= __('common.view_all') ?> <span class="material-symbols-outlined text-sm ml-1">arrow_forward</span>
                                 </a>
                             </div>
 
@@ -415,7 +415,7 @@
                         <!-- Company Info -->
                         <div class="xl:col-span-1 bg-white rounded-xl border border-slate-100 shadow-sm p-6 h-full">
                             <div class="flex items-center justify-between mb-6">
-                                <h3 class="font-bold text-navy text-lg">Company Info</h3>
+                                <h3 class="font-bold text-navy text-lg"><?= __('clients.company_info') ?></h3>
                                 <a href="<?= BASE_URL ?>clients/edit/<?= $client['id'] ?>"
                                     class="text-primary hover:bg-primary/5 p-1 rounded-md transition-colors">
                                     <span class="material-symbols-outlined text-[20px]">edit</span>
@@ -486,7 +486,7 @@
                     <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
                         <div
                             class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <h3 class="font-bold text-navy text-lg">Crew Members</h3>
+                            <h3 class="font-bold text-navy text-lg"><?= __('clients.crew_members') ?></h3>
                             <div class="flex p-1 bg-slate-50 rounded-lg border border-slate-200">
                                 <button
                                     class="px-4 py-1.5 text-sm font-medium text-primary bg-white rounded-md shadow-sm transition-all">Active</button>

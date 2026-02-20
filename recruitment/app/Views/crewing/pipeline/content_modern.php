@@ -627,15 +627,15 @@ if (!empty($newCandidateAlerts)):
                 </div>
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
-                <a href="<?= url('/crewing/pipeline?view=my') ?>" style="
+                <button onclick="showDetail(<?= $alert['id'] ?>)" style="
                     background: linear-gradient(135deg, #10b981, #059669);
                     color: white; padding: 6px 12px; border-radius: 8px;
-                    font-size: 0.78rem; font-weight: 600; text-decoration: none;
+                    font-size: 0.78rem; font-weight: 600; border: none;
                     display: inline-flex; align-items: center; gap: 4px;
-                    transition: all 0.2s;
+                    cursor: pointer; transition: all 0.2s;
                 ">
                     <i class="fas fa-eye"></i>Lihat
-                </a>
+                </button>
                 <button onclick="dismissAlert(<?= $alert['id'] ?>)" style="
                     background: #f3f4f6; border: 1px solid #e5e7eb;
                     padding: 6px 10px; border-radius: 8px; cursor: pointer;

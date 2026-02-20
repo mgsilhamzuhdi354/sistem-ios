@@ -17,7 +17,7 @@ function formatNumber($num)
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= getLanguage() ?>">
 
 <head>
     <meta charset="utf-8" />
@@ -82,7 +82,7 @@ function formatNumber($num)
                     <div class="relative w-full max-w-md group">
                         <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
                         <input class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all"
-                            placeholder="Cari kontrak, kru, kapal..." type="text" />
+                            placeholder="<?= __('dashboard.search_placeholder') ?>" type="text" />
                     </div>
                 </div>
 
@@ -91,7 +91,7 @@ function formatNumber($num)
                     <button @click="open = !open" @click.away="open = false"
                         class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:border-brand-blue hover:text-brand-blue transition-all group">
                         <span class="material-icons-round text-lg">description</span>
-                        <span>Contracts</span>
+                        <span><?= __('sidebar.contracts') ?></span>
                         <?php $totalActive = $contractStats['active'] ?? 0; if ($totalActive > 0): ?>
                             <span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full"><?= $totalActive ?></span>
                         <?php endif; ?>
@@ -111,8 +111,8 @@ function formatNumber($num)
                                 <span class="material-icons-round text-brand-blue text-lg">folder_open</span>
                             </div>
                             <div class="flex-1">
-                                <div class="font-semibold text-sm text-slate-800">Semua Kontrak</div>
-                                <div class="text-xs text-slate-500"><?= $totalActive ?> aktif</div>
+                                <div class="font-semibold text-sm text-slate-800"><?= __('dashboard.all_contracts') ?></div>
+                                <div class="text-xs text-slate-500"><?= $totalActive ?> <?= __('dashboard.active_label') ?></div>
                             </div>
                             <?php if ($totalActive > 0): ?>
                                 <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-bold rounded-full"><?= $totalActive ?></span>
@@ -127,8 +127,8 @@ function formatNumber($num)
                                 <span class="material-icons-round text-green-600 text-lg">add_circle</span>
                             </div>
                             <div class="flex-1">
-                                <div class="font-semibold text-sm text-slate-800">Kontrak Baru</div>
-                                <div class="text-xs text-slate-500">Buat kontrak baru</div>
+                                <div class="font-semibold text-sm text-slate-800"><?= __('dashboard.new_contract') ?></div>
+                                <div class="text-xs text-slate-500"><?= __('dashboard.create_new_contract') ?></div>
                             </div>
                             <span class="material-icons-round text-slate-400 text-sm">arrow_forward</span>
                         </a>
@@ -143,8 +143,8 @@ function formatNumber($num)
                                 <span class="material-icons-round text-orange-600 text-lg">schedule</span>
                             </div>
                             <div class="flex-1 text-left">
-                                <div class="font-semibold text-sm text-slate-800">Segera Berakhir</div>
-                                <div class="text-xs text-slate-500"><?= $expiringCount > 0 ? "$expiringCount kontrak" : "Tidak ada" ?></div>
+                                <div class="font-semibold text-sm text-slate-800"><?= __('dashboard.expiring_soon_label') ?></div>
+                                <div class="text-xs text-slate-500"><?= $expiringCount > 0 ? "$expiringCount " . __('dashboard.contracts_label') : __('dashboard.none') ?></div>
                             </div>
                             <?php if ($expiringCount > 0): ?>
                                 <span class="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded-full animate-pulse"><?= $expiringCount ?></span>
@@ -158,10 +158,10 @@ function formatNumber($num)
                     <div class="flex items-center bg-slate-100 rounded-lg p-1">
                         <a href="<?= BASE_URL ?>dashboard/toggleMode?mode=classic"
                             class="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-white rounded-md transition-all flex items-center gap-1">
-                            <span class="material-icons-round text-sm">view_compact</span> Classic
+                            <span class="material-icons-round text-sm">view_compact</span> <?= __('common.classic') ?>
                         </a>
                         <span class="px-3 py-1.5 text-xs font-bold text-brand-blue bg-white rounded-md shadow-sm flex items-center gap-1">
-                            <span class="material-icons-round text-sm">auto_awesome</span> Modern
+                            <span class="material-icons-round text-sm">auto_awesome</span> <?= __('common.modern') ?>
                         </span>
                     </div>
 
@@ -182,14 +182,14 @@ function formatNumber($num)
                             x-transition:leave="transition ease-in duration-150"
                             class="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden" style="display:none;">
                             <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-                                <h4 class="font-bold text-sm text-slate-800">Notifikasi</h4>
-                                <span class="text-xs text-slate-400" x-text="notifications.length + ' notif'"></span>
+                                <h4 class="font-bold text-sm text-slate-800"><?= __('dashboard.notification_title') ?></h4>
+                                <span class="text-xs text-slate-400" x-text="notifications.length + ' <?= __('dashboard.notif_count') ?>'"></span>
                             </div>
                             <div class="max-h-80 overflow-y-auto divide-y divide-slate-50">
                                 <template x-if="notifications.length === 0">
                                     <div class="px-4 py-8 text-center">
                                         <span class="material-icons-round text-4xl text-emerald-400 mb-2 block">check_circle</span>
-                                        <p class="text-sm text-slate-400">Tidak ada notifikasi</p>
+                                        <p class="text-sm text-slate-400"><?= __('dashboard.no_notifications') ?></p>
                                     </div>
                                 </template>
                                 <template x-for="notif in notifications" :key="notif.message">
@@ -209,7 +209,7 @@ function formatNumber($num)
                                 </template>
                             </div>
                             <div class="px-4 py-2 border-t border-slate-100 bg-slate-50">
-                                <a href="<?= BASE_URL ?>notifications" class="text-xs font-semibold text-brand-blue hover:underline">Lihat Semua →</a>
+                                <a href="<?= BASE_URL ?>notifications" class="text-xs font-semibold text-brand-blue hover:underline"><?= __('dashboard.view_all') ?></a>
                             </div>
                         </div>
                     </div>
@@ -217,7 +217,7 @@ function formatNumber($num)
                     <a href="<?= BASE_URL ?>contracts/create"
                         class="bg-brand-gold hover:bg-yellow-400 text-slate-900 pl-4 pr-5 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-yellow-500/20">
                         <span class="material-icons-round text-lg">add_circle</span>
-                        Kontrak Baru
+                        <?= __('dashboard.new_contract') ?>
                     </a>
                 </div>
             </header>
@@ -227,9 +227,8 @@ function formatNumber($num)
                 <!-- Page Header -->
                 <div class="flex items-end justify-between">
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-800">Dashboard Overview</h2>
-                        <p class="text-slate-500 mt-1">Selamat
-                            <?= date('H') < 12 ? 'pagi' : (date('H') < 17 ? 'siang' : 'malam') ?>! Berikut ringkasan operasional maritim Anda.
+                        <h2 class="text-2xl font-bold text-slate-800"><?= __('dashboard.title') ?></h2>
+                        <p class="text-slate-500 mt-1"><?= date('H') < 12 ? __('dashboard.welcome_morning') : (date('H') < 17 ? __('dashboard.welcome_afternoon') : __('dashboard.welcome_evening')) ?>! <?= __('dashboard.summary_text') ?>
                         </p>
                     </div>
                     <div class="flex items-center gap-3">
@@ -245,7 +244,7 @@ function formatNumber($num)
                     <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-soft hover:shadow-lg transition-shadow duration-300">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="text-slate-500 text-sm font-medium mb-1">Kontrak Aktif</p>
+                                <p class="text-slate-500 text-sm font-medium mb-1"><?= __('dashboard.active_contracts') ?></p>
                                 <h3 class="text-3xl font-bold text-slate-800"><?= $contractStats['active'] ?? 0 ?></h3>
                             </div>
                             <div class="p-3 bg-blue-50 text-brand-blue rounded-xl">
@@ -254,7 +253,7 @@ function formatNumber($num)
                         </div>
                         <div class="mt-3 flex items-center gap-2">
                             <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md flex items-center gap-1">
-                                <span class="material-icons-round text-[14px]">trending_up</span> Aktif
+                                <span class="material-icons-round text-[14px]">trending_up</span> <?= __('common.active') ?>
                             </span>
                             <span class="text-xs text-slate-400"><?= $contractStats['total'] ?? 0 ?> total</span>
                         </div>
@@ -264,7 +263,7 @@ function formatNumber($num)
                     <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-soft hover:shadow-lg transition-shadow duration-300">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="text-slate-500 text-sm font-medium mb-1">Segera Berakhir</p>
+                                <p class="text-slate-500 text-sm font-medium mb-1"><?= __('dashboard.expiring_soon') ?></p>
                                 <h3 class="text-3xl font-bold text-slate-800"><?= $contractStats['expiringSoon'] ?? 0 ?></h3>
                             </div>
                             <div class="p-3 bg-amber-50 text-amber-500 rounded-xl">
@@ -274,11 +273,11 @@ function formatNumber($num)
                         <div class="mt-3 flex items-center gap-2">
                             <?php if (($contractStats['expiringSoon'] ?? 0) > 0): ?>
                                 <span class="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-md flex items-center gap-1">
-                                    <span class="material-icons-round text-[14px]">priority_high</span> Urgent
+                                    <span class="material-icons-round text-[14px]">priority_high</span> <?= __('dashboard.urgent') ?>
                                 </span>
-                                <span class="text-xs text-slate-400">Perlu tindakan</span>
+                                <span class="text-xs text-slate-400"><?= __('dashboard.needs_action') ?></span>
                             <?php else: ?>
-                                <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">Aman</span>
+                                <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md"><?= __('dashboard.safe') ?></span>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -287,7 +286,7 @@ function formatNumber($num)
                     <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-soft hover:shadow-lg transition-shadow duration-300">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="text-slate-500 text-sm font-medium mb-1">Kru Aktif</p>
+                                <p class="text-slate-500 text-sm font-medium mb-1"><?= __('dashboard.active_crew') ?></p>
                                 <h3 class="text-3xl font-bold text-slate-800"><?= $contractStats['onboard'] ?? 0 ?></h3>
                             </div>
                             <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
@@ -295,8 +294,8 @@ function formatNumber($num)
                             </div>
                         </div>
                         <div class="mt-3 flex items-center gap-2">
-                            <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md">Onboard</span>
-                            <span class="text-xs text-slate-400"><?= $vesselStats['total'] ?? 0 ?> kapal</span>
+                            <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md"><?= __('dashboard.onboard') ?></span>
+                            <span class="text-xs text-slate-400"><?= $vesselStats['total'] ?? 0 ?> <?= __('dashboard.vessels') ?></span>
                         </div>
                     </div>
 
@@ -304,7 +303,7 @@ function formatNumber($num)
                     <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-soft hover:shadow-lg transition-shadow duration-300">
                         <div class="flex items-start justify-between">
                             <div>
-                                <p class="text-slate-500 text-sm font-medium mb-1">Payroll Bulanan</p>
+                                <p class="text-slate-500 text-sm font-medium mb-1"><?= __('dashboard.monthly_payroll') ?></p>
                                 <h3 class="text-3xl font-bold text-slate-800"><?= formatNumber($monthlyPayroll ?? 0) ?></h3>
                             </div>
                             <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
@@ -313,7 +312,7 @@ function formatNumber($num)
                         </div>
                         <div class="mt-3 flex items-center gap-2">
                             <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md flex items-center gap-1">USD</span>
-                            <span class="text-xs text-slate-400">Update hari ini</span>
+                            <span class="text-xs text-slate-400"><?= __('dashboard.updated_today') ?></span>
                         </div>
                     </div>
                 </div>
@@ -333,7 +332,7 @@ function formatNumber($num)
                 <div class="space-y-4 opacity-0 animate-fade-in animate-d1">
                     <h4 class="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2 px-1">
                         <span class="material-icons-round text-brand-gold">notifications_active</span>
-                        Alert Kontrak Prioritas
+                        <?= __('dashboard.contract_priority_alerts') ?>
                     </h4>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <a href="<?= BASE_URL ?>contracts?filter=expiring7"
@@ -344,7 +343,7 @@ function formatNumber($num)
                                 </div>
                                 <div>
                                     <h5 class="font-bold text-xl text-slate-800 leading-none"><?= $expiring7 ?></h5>
-                                    <p class="text-xs text-red-600 font-medium mt-1">Kritis < 7 hari</p>
+                                    <p class="text-xs text-red-600 font-medium mt-1"><?= __('dashboard.critical_7_days') ?></p>
                                 </div>
                             </div>
                             <span class="material-icons-round text-red-300 group-hover:text-red-500 transition-colors">chevron_right</span>
@@ -357,7 +356,7 @@ function formatNumber($num)
                                 </div>
                                 <div>
                                     <h5 class="font-bold text-xl text-slate-800 leading-none"><?= $expiring30 ?></h5>
-                                    <p class="text-xs text-amber-600 font-medium mt-1">Warning < 30 hari</p>
+                                    <p class="text-xs text-amber-600 font-medium mt-1"><?= __('dashboard.warning_30_days') ?></p>
                                 </div>
                             </div>
                             <span class="material-icons-round text-amber-300 group-hover:text-amber-500 transition-colors">chevron_right</span>
@@ -370,7 +369,7 @@ function formatNumber($num)
                                 </div>
                                 <div>
                                     <h5 class="font-bold text-xl text-slate-800 leading-none"><?= $expiring60 ?></h5>
-                                    <p class="text-xs text-brand-blue font-medium mt-1">Info < 60 hari</p>
+                                    <p class="text-xs text-brand-blue font-medium mt-1"><?= __('dashboard.info_60_days') ?></p>
                                 </div>
                             </div>
                             <span class="material-icons-round text-blue-300 group-hover:text-brand-blue transition-colors">chevron_right</span>
@@ -400,31 +399,31 @@ function formatNumber($num)
                             <div>
                                 <h4 class="font-bold text-slate-800 flex items-center gap-2">
                                     <span class="material-icons-round text-emerald-500">sailing</span>
-                                    Profit per Vessel
+                                    <?= __('dashboard.profit_per_vessel') ?>
                                 </h4>
-                                <p class="text-xs text-slate-400">Revenue vs Cost dari kontrak aktif (dalam USD)</p>
+                                <p class="text-xs text-slate-400"><?= __('dashboard.revenue_vs_cost') ?></p>
                             </div>
                             <a href="<?= BASE_URL ?>reports/by-vessel" class="text-xs font-bold text-brand-blue flex items-center gap-1 hover:underline">
-                                Detail <span class="material-icons-round text-xs">arrow_forward</span>
+                                <?= __('dashboard.detail') ?> <span class="material-icons-round text-xs">arrow_forward</span>
                             </a>
                         </div>
 
                         <!-- Summary Cards -->
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-5">
                             <div class="bg-blue-50 rounded-xl p-4 text-center">
-                                <p class="text-[10px] uppercase tracking-wider text-blue-500 font-bold mb-1">Total Revenue</p>
+                                <p class="text-[10px] uppercase tracking-wider text-blue-500 font-bold mb-1"><?= __('dashboard.total_revenue') ?></p>
                                 <p class="text-xl font-bold text-blue-700"><?= formatNumber($totalRevenue) ?></p>
                             </div>
                             <div class="bg-rose-50 rounded-xl p-4 text-center">
-                                <p class="text-[10px] uppercase tracking-wider text-rose-500 font-bold mb-1">Total Cost</p>
+                                <p class="text-[10px] uppercase tracking-wider text-rose-500 font-bold mb-1"><?= __('dashboard.total_cost') ?></p>
                                 <p class="text-xl font-bold text-rose-700"><?= formatNumber($totalCost) ?></p>
                             </div>
                             <div class="<?= $totalProfit >= 0 ? 'bg-emerald-50' : 'bg-red-50' ?> rounded-xl p-4 text-center">
-                                <p class="text-[10px] uppercase tracking-wider <?= $totalProfit >= 0 ? 'text-emerald-500' : 'text-red-500' ?> font-bold mb-1">Total Profit</p>
+                                <p class="text-[10px] uppercase tracking-wider <?= $totalProfit >= 0 ? 'text-emerald-500' : 'text-red-500' ?> font-bold mb-1"><?= __('dashboard.total_profit') ?></p>
                                 <p class="text-xl font-bold <?= $totalProfit >= 0 ? 'text-emerald-700' : 'text-red-700' ?>"><?= $totalProfit >= 0 ? '+' : '' ?><?= formatNumber($totalProfit) ?></p>
                             </div>
                             <div class="bg-amber-50 rounded-xl p-4 text-center">
-                                <p class="text-[10px] uppercase tracking-wider text-amber-500 font-bold mb-1">Avg Margin</p>
+                                <p class="text-[10px] uppercase tracking-wider text-amber-500 font-bold mb-1"><?= __('dashboard.avg_margin') ?></p>
                                 <p class="text-xl font-bold text-amber-700"><?= $totalMargin ?>%</p>
                             </div>
                         </div>
@@ -434,14 +433,14 @@ function formatNumber($num)
                         <div class="grid grid-cols-1 xl:grid-cols-2 gap-0 border-t border-slate-100">
                             <!-- Revenue vs Cost Bar Chart -->
                             <div class="p-5 border-r border-slate-100">
-                                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Revenue vs Cost per Kapal</h5>
+                                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4"><?= __('dashboard.revenue_vs_cost_per_vessel') ?></h5>
                                 <div class="relative" style="height: 280px;">
                                     <canvas id="vesselRevenueCostChart"></canvas>
                                 </div>
                             </div>
                             <!-- Profit Bar Chart -->
                             <div class="p-5">
-                                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Profit & Margin per Kapal</h5>
+                                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4"><?= __('dashboard.profit_margin_per_vessel') ?></h5>
                                 <div class="relative" style="height: 280px;">
                                     <canvas id="vesselProfitChart"></canvas>
                                 </div>
@@ -450,7 +449,7 @@ function formatNumber($num)
                         <?php else: ?>
                         <div class="p-8 text-center text-slate-400">
                             <span class="material-icons-round text-3xl mb-2 block">sailing</span>
-                            Belum ada data profit kapal
+                            <?= __('dashboard.no_vessel_profit_data') ?>
                         </div>
                         <?php endif; ?>
                     </div>
@@ -472,24 +471,24 @@ function formatNumber($num)
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="font-bold text-slate-800 flex items-center gap-2">
                                 <span class="material-icons-round text-indigo-500">business</span>
-                                Client Management
+                                <?= __('dashboard.client_management') ?>
                             </h4>
                             <a href="<?= BASE_URL ?>clients" class="text-xs font-bold text-brand-blue flex items-center gap-1 hover:underline">
-                                Lihat Semua <span class="material-icons-round text-xs">arrow_forward</span>
+                                <?= __('common.view_all') ?> <span class="material-icons-round text-xs">arrow_forward</span>
                             </a>
                         </div>
                         <?php if (!empty($clientsData)): ?>
                         <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
                             <!-- Client Vessels & Crew Bar Chart -->
                             <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-soft">
-                                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Kapal & Kru per Klien</h5>
+                                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4"><?= __('dashboard.vessels_crew_per_client') ?></h5>
                                 <div class="relative" style="height: 280px;">
                                     <canvas id="clientOverviewChart"></canvas>
                                 </div>
                             </div>
                             <!-- Client Cost Doughnut Chart -->
                             <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-soft">
-                                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Monthly Cost per Klien (USD)</h5>
+                                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4"><?= __('dashboard.monthly_cost_per_client') ?></h5>
                                 <div class="relative flex items-center justify-center" style="height: 280px;">
                                     <canvas id="clientCostChart"></canvas>
                                 </div>
@@ -498,7 +497,7 @@ function formatNumber($num)
                         <?php else: ?>
                         <div class="bg-white rounded-xl border border-slate-100 shadow-soft p-8 text-center text-slate-400">
                             <span class="material-icons-round text-3xl mb-2 block">business</span>
-                            Belum ada data klien
+                            <?= __('dashboard.no_client_data') ?>
                         </div>
                         <?php endif; ?>
                     </div>
@@ -509,8 +508,8 @@ function formatNumber($num)
                         <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-soft">
                             <div class="flex items-center justify-between mb-6">
                                 <div>
-                                    <h4 class="font-bold text-slate-800">Kontrak per Kapal</h4>
-                                    <p class="text-xs text-slate-400">Distribusi kontrak aktif</p>
+                                    <h4 class="font-bold text-slate-800"><?= __('dashboard.contracts_per_vessel') ?></h4>
+                                    <p class="text-xs text-slate-400"><?= __('dashboard.active_distribution') ?></p>
                                 </div>
                             </div>
                             <?php
@@ -541,8 +540,8 @@ function formatNumber($num)
                         <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-soft">
                             <div class="flex items-center justify-between mb-6">
                                 <div>
-                                    <h4 class="font-bold text-slate-800">Trend Bulanan</h4>
-                                    <p class="text-xs text-slate-400">Volume kontrak per bulan</p>
+                                    <h4 class="font-bold text-slate-800"><?= __('dashboard.monthly_trends') ?></h4>
+                                    <p class="text-xs text-slate-400"><?= __('dashboard.contract_volume') ?></p>
                                 </div>
                             </div>
                             <?php
@@ -574,24 +573,24 @@ function formatNumber($num)
                     <div class="bg-white rounded-xl border border-slate-100 shadow-soft overflow-hidden opacity-0 animate-fade-in animate-d4">
                         <div class="p-5 flex items-center justify-between border-b border-slate-100">
                             <div>
-                                <h4 class="font-bold text-slate-800">Kontrak Terbaru</h4>
-                                <p class="text-xs text-slate-400">Penugasan kru terbaru</p>
+                                <h4 class="font-bold text-slate-800"><?= __('dashboard.recent_contracts') ?></h4>
+                                <p class="text-xs text-slate-400"><?= __('dashboard.latest_assignments') ?></p>
                             </div>
                             <a class="text-xs font-bold text-brand-blue flex items-center gap-1 hover:underline" href="<?= BASE_URL ?>contracts">
-                                Lihat Semua <span class="material-icons-round text-xs">arrow_forward</span>
+                                <?= __('common.view_all') ?> <span class="material-icons-round text-xs">arrow_forward</span>
                             </a>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left">
                                 <thead>
                                     <tr class="bg-slate-50 border-b border-slate-100 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
-                                        <th class="px-5 py-3">ID Kontrak</th>
-                                        <th class="px-5 py-3">Kru</th>
-                                        <th class="px-5 py-3">Posisi</th>
-                                        <th class="px-5 py-3">Kapal</th>
-                                        <th class="px-5 py-3">Durasi</th>
-                                        <th class="px-5 py-3">Status</th>
-                                        <th class="px-5 py-3 text-center">Aksi</th>
+                                        <th class="px-5 py-3"><?= __('dashboard.contract_id') ?></th>
+                                        <th class="px-5 py-3"><?= __('dashboard.crew_col') ?></th>
+                                        <th class="px-5 py-3"><?= __('dashboard.position') ?></th>
+                                        <th class="px-5 py-3"><?= __('dashboard.vessel') ?></th>
+                                        <th class="px-5 py-3"><?= __('dashboard.duration') ?></th>
+                                        <th class="px-5 py-3"><?= __('common.status') ?></th>
+                                        <th class="px-5 py-3 text-center"><?= __('common.actions') ?></th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
@@ -613,7 +612,7 @@ function formatNumber($num)
                                                 <td class="px-5 py-3 text-sm text-slate-600"><?= htmlspecialchars($contract['vessel_name'] ?? 'N/A') ?></td>
                                                 <td class="px-5 py-3 text-sm text-slate-500">
                                                     <div class="flex flex-col">
-                                                        <span class="text-xs font-bold text-slate-700"><?= $contract['contract_duration'] ?? 'N/A' ?> Bln</span>
+                                                        <span class="text-xs font-bold text-slate-700"><?= $contract['contract_duration'] ?? 'N/A' ?> <?= __('dashboard.months_short') ?></span>
                                                         <span class="text-[10px]"><?= date('M Y', strtotime($contract['sign_on_date'] ?? 'now')) ?></span>
                                                     </div>
                                                 </td>
@@ -645,7 +644,7 @@ function formatNumber($num)
                                         <tr>
                                             <td colspan="7" class="px-5 py-10 text-center text-slate-400">
                                                 <span class="material-icons-round text-4xl mb-2 block">inbox</span>
-                                                Belum ada kontrak terbaru
+                                                <?= __('dashboard.no_recent_contracts') ?>
                                             </td>
                                         </tr>
                                     <?php endif; ?>
@@ -681,8 +680,8 @@ function formatNumber($num)
                             <span class="material-icons-round text-white text-xl">schedule</span>
                         </div>
                         <div>
-                            <h3 class="text-xl font-bold text-white">Kontrak Segera Berakhir</h3>
-                            <p class="text-orange-100 text-sm">Kontrak berakhir dalam 90 hari</p>
+                            <h3 class="text-xl font-bold text-white"><?= __('dashboard.contracts_expiring_soon') ?></h3>
+                            <p class="text-orange-100 text-sm"><?= __('dashboard.expiring_in_90_days') ?></p>
                         </div>
                     </div>
                     <button @click="showModal = false" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/20 transition-colors">
@@ -705,7 +704,7 @@ function formatNumber($num)
                         <div class="flex items-center justify-between">
                             <div>
                                 <div class="text-3xl font-bold text-red-600"><?= $mc30 ?></div>
-                                <div class="text-xs text-slate-500 mt-1">Kritis (≤30 hari)</div>
+                                <div class="text-xs text-slate-500 mt-1"><?= __('dashboard.critical_30') ?></div>
                             </div>
                             <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
                                 <span class="material-icons-round text-red-600">error</span>
@@ -716,7 +715,7 @@ function formatNumber($num)
                         <div class="flex items-center justify-between">
                             <div>
                                 <div class="text-3xl font-bold text-yellow-600"><?= $mw60 ?></div>
-                                <div class="text-xs text-slate-500 mt-1">Warning (31-60 hari)</div>
+                                <div class="text-xs text-slate-500 mt-1"><?= __('dashboard.warning_31_60') ?></div>
                             </div>
                             <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                                 <span class="material-icons-round text-yellow-600">warning</span>
@@ -727,7 +726,7 @@ function formatNumber($num)
                         <div class="flex items-center justify-between">
                             <div>
                                 <div class="text-3xl font-bold text-blue-600"><?= $mu90 ?></div>
-                                <div class="text-xs text-slate-500 mt-1">Info (61-90 hari)</div>
+                                <div class="text-xs text-slate-500 mt-1"><?= __('dashboard.info_61_90') ?></div>
                             </div>
                             <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                                 <span class="material-icons-round text-blue-600">info</span>
@@ -753,20 +752,20 @@ function formatNumber($num)
                                         <div class="flex items-center gap-3 mb-2">
                                             <span class="font-bold text-slate-800"><?= htmlspecialchars($contractId) ?></span>
                                             <span class="px-2 py-1 bg-<?= $urgencyClass ?>-100 text-<?= $urgencyClass ?>-700 text-xs font-bold rounded-full">
-                                                <?= $daysLeft ?> hari lagi
+                                                <?= $daysLeft ?> <?= __('dashboard.days_remaining') ?>
                                             </span>
                                         </div>
                                         <div class="grid grid-cols-3 gap-4 text-sm">
                                             <div>
-                                                <div class="text-xs text-slate-500">Nama Kru</div>
+                                                <div class="text-xs text-slate-500"><?= __('dashboard.crew_name') ?></div>
                                                 <div class="font-semibold text-slate-700"><?= htmlspecialchars($contract['crew_name'] ?? 'N/A') ?></div>
                                             </div>
                                             <div>
-                                                <div class="text-xs text-slate-500">Kapal</div>
+                                                <div class="text-xs text-slate-500"><?= __('dashboard.vessel_col') ?></div>
                                                 <div class="font-semibold text-slate-700"><?= htmlspecialchars($contract['vessel_name'] ?? 'N/A') ?></div>
                                             </div>
                                             <div>
-                                                <div class="text-xs text-slate-500">Tanggal Berakhir</div>
+                                                <div class="text-xs text-slate-500"><?= __('dashboard.end_date') ?></div>
                                                 <div class="font-semibold text-slate-700"><?= isset($contract['sign_off_date']) ? date('d M Y', strtotime($contract['sign_off_date'])) : '-' ?></div>
                                             </div>
                                         </div>
@@ -781,19 +780,19 @@ function formatNumber($num)
                     <?php else: ?>
                         <div class="text-center py-12">
                             <span class="material-icons-round text-6xl text-green-500 mb-3 block">check_circle</span>
-                            <div class="text-lg font-semibold text-slate-700">Tidak ada kontrak segera berakhir</div>
-                            <div class="text-sm text-slate-500 mt-1">Semua kontrak masih berlaku lebih dari 90 hari</div>
+                            <div class="text-lg font-semibold text-slate-700"><?= __('dashboard.no_expiring') ?></div>
+                            <div class="text-sm text-slate-500 mt-1"><?= __('dashboard.all_valid') ?></div>
                         </div>
                     <?php endif; ?>
                 </div>
 
                 <div class="bg-slate-50 px-6 py-4 flex items-center justify-between border-t border-slate-200">
                     <a href="<?= BASE_URL ?>contracts?filter=expiring" class="text-sm text-brand-blue hover:text-blue-700 font-semibold flex items-center gap-1">
-                        <span>Lihat semua di halaman Kontrak</span>
+                        <span><?= __('dashboard.view_in_contracts') ?></span>
                         <span class="material-icons-round text-sm">arrow_forward</span>
                     </a>
                     <button @click="showModal = false" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-semibold transition-colors">
-                        Tutup
+                        <?= __('common.close') ?>
                     </button>
                 </div>
             </div>

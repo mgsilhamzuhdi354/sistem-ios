@@ -7,7 +7,7 @@ $monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July
 $taxLabels = ['pph21' => 'PPh 21 (NPWP)', 'pph21_non_npwp' => 'PPh 21 (Non-NPWP)', 'exempt' => 'Exempt', 'foreign' => 'Foreign'];
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,11 +29,11 @@ $taxLabels = ['pph21' => 'PPh 21 (NPWP)', 'pph21_non_npwp' => 'PPh 21 (Non-NPWP)
     <main class="flex-1 flex flex-col h-screen overflow-hidden ml-64">
         <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0">
             <div>
-                <h1 class="text-base font-bold text-slate-800 tracking-tight">Tax Report (PPh 21)</h1>
+                <h1 class="text-base font-bold text-slate-800 tracking-tight"><?= __('reports.tax_report') ?></h1>
                 <p class="text-[11px] text-slate-400"><?= date('F Y', strtotime("$year-$month-01")) ?></p>
             </div>
             <a href="<?= BASE_URL ?>reports" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-colors">
-                <span class="material-icons text-sm">arrow_back</span> Back
+                <span class="material-icons text-sm">arrow_back</span> <?= __('common.back') ?>
             </a>
         </header>
         <div class="flex-1 overflow-y-auto p-6">
@@ -85,7 +85,7 @@ $taxLabels = ['pph21' => 'PPh 21 (NPWP)', 'pph21_non_npwp' => 'PPh 21 (Non-NPWP)
                             <tr><td colspan="6" class="py-16 text-center">
                                 <div class="flex flex-col items-center">
                                     <div class="bg-slate-100 p-5 rounded-full mb-4"><span class="material-icons text-4xl text-slate-300">receipt</span></div>
-                                    <h3 class="text-base font-semibold text-slate-700">No payroll data for this period</h3>
+                                    <h3 class="text-base font-semibold text-slate-700"><?= __('reports.no_data') ?></h3>
                                 </div>
                             </td></tr>
                             <?php else: ?>

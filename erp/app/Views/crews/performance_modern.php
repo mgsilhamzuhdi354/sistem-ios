@@ -14,11 +14,11 @@ $excellentCount = count(array_filter($performanceData, fn($d) => $d['score'] >= 
 $needImprovementCount = count(array_filter($performanceData, fn($d) => $d['score'] < 60));
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Performa Crew | IndoOcean ERP</title>
+    <title><?= __('crews.performance_title') ?> | IndoOcean ERP</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -70,7 +70,7 @@ $needImprovementCount = count(array_filter($performanceData, fn($d) => $d['score
             <!-- Header -->
             <header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between z-10 flex-shrink-0 shadow-sm">
                 <div class="flex items-center gap-4">
-                    <h1 class="text-xl font-bold text-slate-800 tracking-tight">Performa Crew</h1>
+                    <h1 class="text-xl font-bold text-slate-800 tracking-tight"><?= __('crews.performance_title') ?></h1>
                     <div class="hidden sm:flex items-center px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-medium border border-green-200">
                         <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-2 animate-pulse"></span>
                         System Online
@@ -93,15 +93,15 @@ $needImprovementCount = count(array_filter($performanceData, fn($d) => $d['score
             <!-- Filter Bar -->
             <div class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 flex-shrink-0">
                 <div class="flex flex-col gap-1">
-                    <h2 class="text-sm font-semibold text-slate-900">Filter Data Performance</h2>
-                    <p class="text-xs text-slate-500">Pilih parameter untuk melihat KPI dan laporan</p>
+                    <h2 class="text-sm font-semibold text-slate-900"><?= __('crews.filter_performance') ?></h2>
+                    <p class="text-xs text-slate-500"><?= __('crews.filter_performance_desc') ?></p>
                 </div>
                 <form method="GET" class="flex flex-wrap items-end gap-3">
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Crew Member</label>
+                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider"><?= __('crews.crew_member') ?></label>
                         <div class="relative group">
                             <select name="crew_id" class="appearance-none bg-slate-50 border border-slate-200 text-slate-700 py-2.5 pl-4 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary w-64 cursor-pointer transition-shadow hover:shadow-sm text-sm">
-                                <option value="">-- Semua Crew Onboard --</option>
+                                <option value="">-- <?= __('crews.all_crew_onboard') ?> --</option>
                                 <?php foreach ($crews as $crew): ?>
                                     <option value="<?= $crew['id'] ?>" <?= ($selectedCrew == $crew['id']) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($crew['full_name']) ?>
@@ -112,13 +112,13 @@ $needImprovementCount = count(array_filter($performanceData, fn($d) => $d['score
                         </div>
                     </div>
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Period</label>
+                        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider"><?= __('crews.period') ?></label>
                         <input type="month" name="period" value="<?= $year ?>-<?= str_pad($month, 2, '0', STR_PAD_LEFT) ?>"
                             class="bg-slate-50 border border-slate-200 text-slate-700 py-2.5 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary cursor-pointer transition-shadow hover:shadow-sm text-sm">
                     </div>
                     <button type="submit" class="bg-primary hover:bg-slate-800 text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow-sm shadow-primary/30 transition-all active:scale-95 flex items-center gap-2 h-[42px]">
                         <span class="material-icons-outlined text-lg">filter_list</span>
-                        Apply Filter
+                        <?= __('common.filter') ?>
                     </button>
                 </form>
             </div>
@@ -136,9 +136,9 @@ $needImprovementCount = count(array_filter($performanceData, fn($d) => $d['score
                             <div class="bg-white p-4 rounded-2xl shadow-lg mb-6 transform rotate-3 hover:rotate-0 transition-transform duration-500 relative z-10">
                                 <span class="material-icons-outlined text-6xl text-secondary">insights</span>
                             </div>
-                            <h3 class="text-lg font-bold text-slate-800 mb-2 relative z-10">Data Visualization</h3>
+                            <h3 class="text-lg font-bold text-slate-800 mb-2 relative z-10"><?= __('crews.data_visualization') ?></h3>
                             <p class="text-sm text-slate-500 relative z-10">
-                                Comprehensive KPI tracking untuk performa crew di kapal.
+                                <?= __('crews.kpi_tracking_desc') ?>
                             </p>
                         </div>
                         <!-- Right Panel -->
@@ -147,36 +147,36 @@ $needImprovementCount = count(array_filter($performanceData, fn($d) => $d['score
                                 <div class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 text-secondary mb-4">
                                     <span class="material-icons-outlined">search</span>
                                 </div>
-                                <h2 class="text-2xl font-bold text-slate-900 mb-2">Siap Menganalisa?</h2>
+                                <h2 class="text-2xl font-bold text-slate-900 mb-2"><?= __('crews.ready_analyze') ?></h2>
                                 <p class="text-slate-600 text-sm leading-relaxed">
-                                    Belum ada data performa yang ditampilkan. Untuk melihat metrik detail, evaluasi, dan grafik progres karir, silakan pilih crew dari menu filter di atas.
+                                    <?= __('crews.no_performance_data') ?>
                                 </p>
                             </div>
                             <div class="space-y-4">
                                 <div class="flex items-start gap-3">
                                     <span class="material-icons-outlined text-green-500 mt-0.5">check_circle</span>
                                     <div>
-                                        <h4 class="text-sm font-semibold text-slate-800">Pilih Crew</h4>
-                                        <p class="text-xs text-slate-500">Pilih crew dari dropdown "Crew Onboard".</p>
+                                        <h4 class="text-sm font-semibold text-slate-800"><?= __('crews.select_crew_step') ?></h4>
+                                        <p class="text-xs text-slate-500"><?= __('crews.select_crew_step_desc') ?></p>
                                     </div>
                                 </div>
                                 <div class="flex items-start gap-3">
                                     <span class="material-icons-outlined text-green-500 mt-0.5">check_circle</span>
                                     <div>
-                                        <h4 class="text-sm font-semibold text-slate-800">Atur Periode</h4>
-                                        <p class="text-xs text-slate-500">Tentukan rentang waktu yang akan dianalisis.</p>
+                                        <h4 class="text-sm font-semibold text-slate-800"><?= __('crews.set_period') ?></h4>
+                                        <p class="text-xs text-slate-500"><?= __('crews.set_period_desc') ?></p>
                                     </div>
                                 </div>
                                 <div class="flex items-start gap-3 opacity-50">
                                     <span class="material-icons-outlined text-slate-400 mt-0.5">radio_button_unchecked</span>
                                     <div>
-                                        <h4 class="text-sm font-semibold text-slate-800">Lihat Laporan</h4>
-                                        <p class="text-xs text-slate-500">Data akan muncul otomatis setelah pemilihan.</p>
+                                        <h4 class="text-sm font-semibold text-slate-800"><?= __('crews.view_report') ?></h4>
+                                        <p class="text-xs text-slate-500"><?= __('crews.view_report_desc') ?></p>
                                     </div>
                                 </div>
                             </div>
                             <div class="mt-8 pt-6 border-t border-slate-200 flex justify-between items-center">
-                                <span class="text-xs font-medium text-slate-400">Butuh bantuan? <a class="text-secondary hover:underline" href="#">Lihat Dokumentasi</a></span>
+                                <span class="text-xs font-medium text-slate-400"><?= __('crews.need_help') ?> <a class="text-secondary hover:underline" href="#"><?= __('crews.view_docs') ?></a></span>
                             </div>
                         </div>
                     </div>
@@ -189,7 +189,7 @@ $needImprovementCount = count(array_filter($performanceData, fn($d) => $d['score
                         <!-- Total Crew -->
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between group hover:shadow-md transition-shadow">
                             <div>
-                                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Total Crew</p>
+                                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"><?= __('crews.total_crew') ?></p>
                                 <h3 class="text-3xl font-bold text-slate-900"><?= $totalCrew ?></h3>
                             </div>
                             <div class="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center text-secondary group-hover:scale-110 transition-transform">
@@ -199,7 +199,7 @@ $needImprovementCount = count(array_filter($performanceData, fn($d) => $d['score
                         <!-- Avg Performance -->
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between group hover:shadow-md transition-shadow">
                             <div>
-                                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Rata-rata Performa</p>
+                                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"><?= __('crews.avg_performance') ?></p>
                                 <h3 class="text-3xl font-bold <?= $avgScore >= 80 ? 'text-green-600' : ($avgScore >= 60 ? 'text-yellow-600' : 'text-red-600') ?>"><?= $avgScore ?>%</h3>
                             </div>
                             <div class="h-12 w-12 rounded-lg <?= $avgScore >= 80 ? 'bg-green-50 text-green-500' : ($avgScore >= 60 ? 'bg-yellow-50 text-yellow-500' : 'bg-red-50 text-red-500') ?> flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -219,7 +219,7 @@ $needImprovementCount = count(array_filter($performanceData, fn($d) => $d['score
                         <!-- Need Improvement -->
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between group hover:shadow-md transition-shadow">
                             <div>
-                                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Perlu Perbaikan</p>
+                                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"><?= __('crews.needs_improvement') ?></p>
                                 <h3 class="text-3xl font-bold text-red-600"><?= $needImprovementCount ?></h3>
                             </div>
                             <div class="h-12 w-12 rounded-lg bg-red-50 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
@@ -232,13 +232,13 @@ $needImprovementCount = count(array_filter($performanceData, fn($d) => $d['score
                     <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in-delay-1">
                         <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                             <div>
-                                <h3 class="text-base font-bold text-slate-900">Detail Performance</h3>
+                                <h3 class="text-base font-bold text-slate-900"><?= __('crews.detail_performance') ?></h3>
                                 <p class="text-xs text-slate-500 mt-0.5">Periode: <?= $year ?>-<?= str_pad($month, 2, '0', STR_PAD_LEFT) ?></p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <button class="px-3 py-1.5 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1">
                                     <span class="material-icons-outlined text-sm">download</span>
-                                    Export
+                                    <?= __('common.export') ?>
                                 </button>
                             </div>
                         </div>
@@ -246,14 +246,14 @@ $needImprovementCount = count(array_filter($performanceData, fn($d) => $d['score
                             <table class="w-full">
                                 <thead>
                                     <tr class="bg-slate-50 border-b border-slate-100">
-                                        <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Nama Crew</th>
-                                        <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Posisi</th>
-                                        <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Kapal</th>
-                                        <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Attendance</th>
-                                        <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Skills</th>
-                                        <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Discipline</th>
-                                        <th class="py-3 px-4 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Score</th>
-                                        <th class="py-3 px-4 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                                        <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"><?= __('crews.crew_name') ?></th>
+                                        <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"><?= __('ranks.position') ?></th>
+                                        <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"><?= __('crews.vessel') ?></th>
+                                        <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"><?= __('crews.attendance') ?></th>
+                                        <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"><?= __('crews.skills') ?></th>
+                                        <th class="py-3 px-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"><?= __('crews.discipline') ?></th>
+                                        <th class="py-3 px-4 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider"><?= __('crews.score') ?></th>
+                                        <th class="py-3 px-4 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider"><?= __('common.status') ?></th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= getLanguage() ?>">
 
 <head>
     <meta charset="UTF-8">
@@ -62,8 +62,8 @@
             <header
                 class="h-20 flex items-center justify-between px-8 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 z-10 sticky top-0">
                 <div class="flex flex-col">
-                    <h2 class="text-xl font-bold text-slate-800">Contract Management</h2>
-                    <p class="text-xs text-slate-500">Manage crew contracts, renewals, and terminations</p>
+                    <h2 class="text-xl font-bold text-slate-800"><?= __('contracts.title') ?></h2>
+                    <p class="text-xs text-slate-500"><?= __('contracts.subtitle') ?></p>
                 </div>
 
                 <div class="flex items-center gap-5">
@@ -71,11 +71,11 @@
                     <div class="flex items-center bg-slate-100 rounded-lg p-1">
                         <a href="<?= BASE_URL ?>contracts/toggleMode?mode=classic"
                             class="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-white rounded-md transition-all flex items-center gap-1">
-                            <span class="material-icons-round text-sm">view_compact</span> Classic
+                            <span class="material-icons-round text-sm">view_compact</span> <?= __('common.classic') ?>
                         </a>
                         <span
                             class="px-3 py-1.5 text-xs font-bold text-brand-blue bg-white rounded-md shadow-sm flex items-center gap-1">
-                            <span class="material-icons-round text-sm">auto_awesome</span> Modern
+                            <span class="material-icons-round text-sm">auto_awesome</span> <?= __('common.modern') ?>
                         </span>
                     </div>
                     <div class="h-6 w-px bg-slate-200"></div>
@@ -89,7 +89,7 @@
                     <a href="<?= BASE_URL ?>contracts/create"
                         class="bg-brand-gold hover:bg-yellow-400 text-slate-900 pl-4 pr-5 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-yellow-500/20">
                         <span class="material-icons-round text-lg">add_circle</span>
-                        New Contract
+                        <?= __('dashboard.new_contract') ?>
                     </a>
                 </div>
             </header>
@@ -101,22 +101,22 @@
                     <form method="GET" action="<?= BASE_URL ?>contracts" class="grid grid-cols-1 md:grid-cols-12 gap-4">
                         <div class="md:col-span-5">
                             <label
-                                class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Search</label>
+                                class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block"><?= __('common.search') ?></label>
                             <div class="relative group">
                                 <span
                                     class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-blue transition-colors text-xl">search</span>
                                 <input
                                     class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-brand-blue/10 focus:border-brand-blue transition-all"
-                                    placeholder="Contract No or Crew Name..." type="text" name="search"
+                                    placeholder="<?= __('contracts.contract_number') ?>..." type="text" name="search"
                                     value="<?= htmlspecialchars($filters['search'] ?? '') ?>" />
                             </div>
                         </div>
                         <div class="md:col-span-2">
                             <label
-                                class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Status</label>
+                                class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block"><?= __('common.status') ?></label>
                             <select name="status"
                                 class="w-full py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-brand-blue/10 focus:border-brand-blue transition-all">
-                                <option value="">All Status</option>
+                                <option value=""><?= __('common.all') ?> <?= __('common.status') ?></option>
                                 <?php foreach ($statuses as $key => $label): ?>
                                     <option value="<?= $key ?>" <?= ($filters['status'] ?? '') === $key ? 'selected' : '' ?>>
                                         <?= $label ?>
@@ -126,10 +126,10 @@
                         </div>
                         <div class="md:col-span-2">
                             <label
-                                class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Vessel</label>
+                                class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block"><?= __('contracts.vessel') ?></label>
                             <select name="vessel_id"
                                 class="w-full py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-brand-blue/10 focus:border-brand-blue transition-all">
-                                <option value="">All Vessels</option>
+                                <option value=""><?= __('common.all') ?> <?= __('sidebar.vessels') ?></option>
                                 <?php foreach ($vessels as $v): ?>
                                     <option value="<?= $v['id'] ?>" <?= ($filters['vessel_id'] ?? '') == $v['id'] ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($v['name']) ?>
@@ -139,10 +139,10 @@
                         </div>
                         <div class="md:col-span-2">
                             <label
-                                class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">Client</label>
+                                class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block"><?= __('contracts.client') ?></label>
                             <select name="client_id"
                                 class="w-full py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:ring-2 focus:ring-brand-blue/10 focus:border-brand-blue transition-all">
-                                <option value="">All Clients</option>
+                                <option value=""><?= __('common.all') ?> <?= __('sidebar.clients') ?></option>
                                 <?php foreach ($clients as $c): ?>
                                     <option value="<?= $c['id'] ?>" <?= ($filters['client_id'] ?? '') == $c['id'] ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($c['name']) ?>
@@ -166,14 +166,14 @@
                             <thead>
                                 <tr
                                     class="bg-slate-50/80 border-b border-slate-100 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
-                                    <th class="px-6 py-4">Contract No</th>
-                                    <th class="px-6 py-4">Crew Name</th>
-                                    <th class="px-6 py-4">Rank</th>
-                                    <th class="px-6 py-4">Vessel</th>
-                                    <th class="px-6 py-4">Client</th>
-                                    <th class="px-6 py-4">Sign On / Off</th>
-                                    <th class="px-6 py-4">Status</th>
-                                    <th class="px-6 py-4 text-center">Actions</th>
+                                    <th class="px-6 py-4"><?= __('contracts.contract_number') ?></th>
+                                    <th class="px-6 py-4"><?= __('crews.crew_name') ?></th>
+                                    <th class="px-6 py-4"><?= __('contracts.rank') ?></th>
+                                    <th class="px-6 py-4"><?= __('contracts.vessel') ?></th>
+                                    <th class="px-6 py-4"><?= __('contracts.client') ?></th>
+                                    <th class="px-6 py-4"><?= __('contracts.sign_on_date') ?> / <?= __('contracts.sign_off_date') ?></th>
+                                    <th class="px-6 py-4"><?= __('common.status') ?></th>
+                                    <th class="px-6 py-4 text-center"><?= __('common.actions') ?></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
@@ -181,7 +181,7 @@
                                     <tr>
                                         <td colspan="8" class="px-6 py-12 text-center text-slate-400">
                                             <span class="material-icons-round text-4xl mb-2 block">inbox</span>
-                                            No contracts found
+                                            <?= __('contracts.no_contracts') ?>
                                         </td>
                                     </tr>
                                 <?php else: ?>
@@ -277,10 +277,10 @@
                         ?>
                         <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
                             <p class="text-xs text-slate-500 font-medium">
-                                Showing
-                                <?= (($page - 1) * $perPage) + 1 ?> to
-                                <?= min($page * $perPage, $total) ?> of
-                                <?= $total ?> results
+                                <?= __('common.showing') ?>
+                                <?= (($page - 1) * $perPage) + 1 ?> - 
+                                <?= min($page * $perPage, $total) ?> <?= __('common.of') ?>
+                                <?= $total ?> <?= __('common.entries') ?>
                             </p>
                             <div class="flex items-center gap-2">
                                 <?php if ($page > 1): ?>

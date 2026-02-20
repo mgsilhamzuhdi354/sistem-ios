@@ -13,7 +13,7 @@ $typeIcons = [
 ];
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,17 +35,17 @@ $typeIcons = [
     <main class="flex-1 flex flex-col h-screen overflow-hidden ml-64">
         <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0">
             <div>
-                <h1 class="text-base font-bold text-slate-800 tracking-tight">Notifications</h1>
-                <p class="text-[11px] text-slate-400">System alerts and notifications</p>
+                <h1 class="text-base font-bold text-slate-800 tracking-tight"><?= __('notifications.title') ?></h1>
+                <p class="text-[11px] text-slate-400"><?= __('notifications.subtitle') ?></p>
             </div>
             <div class="flex items-center gap-2">
                 <a href="<?= BASE_URL ?>notifications/generate"
                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-colors">
-                    <span class="material-icons text-sm">sync</span> Generate Alerts
+                    <span class="material-icons text-sm">sync</span> <?= __('notifications.generate_alerts') ?>
                 </a>
                 <a href="<?= BASE_URL ?>notifications/mark-all-read"
                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm">
-                    <span class="material-icons text-sm">done_all</span> Mark All Read
+                    <span class="material-icons text-sm">done_all</span> <?= __('notifications.mark_all_read') ?>
                 </a>
             </div>
         </header>
@@ -63,7 +63,7 @@ $typeIcons = [
 
             <div class="flex items-center gap-2 mb-6">
                 <span class="material-icons text-blue-600 text-2xl">notifications</span>
-                <h2 class="text-2xl font-bold text-slate-800 tracking-tight">All Notifications</h2>
+                <h2 class="text-2xl font-bold text-slate-800 tracking-tight"><?= __('notifications.all_notifications') ?></h2>
             </div>
 
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden opacity-0 animate-fade-in">

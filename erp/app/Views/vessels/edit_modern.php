@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Vessel | IndoOcean ERP</title>
+    <title><?= __('vessels.edit_vessel') ?> | IndoOcean ERP</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -76,9 +76,9 @@
                 <div class="flex items-center text-slate-500 text-sm">
                     <span class="material-icons-round text-lg mr-2 text-slate-400">home</span>
                     <span class="mx-2 text-slate-300">/</span>
-                    <span>Vessels</span>
+                    <span><?= __('vessels.title') ?></span>
                     <span class="mx-2 text-slate-300">/</span>
-                    <span class="text-slate-800 font-medium">Edit Vessel</span>
+                    <span class="text-slate-800 font-medium"><?= __('vessels.edit_vessel') ?></span>
                 </div>
                 
                 <div class="flex items-center gap-4">
@@ -99,8 +99,8 @@
                 <!-- Page Header -->
                 <div class="max-w-5xl mx-auto mb-8">
                     <div class="flex flex-col">
-                        <h1 class="text-3xl font-bold text-slate-900 tracking-tight mb-2">Edit Vessel</h1>
-                        <p class="text-slate-500">Update vessel details and technical specifications.</p>
+                        <h1 class="text-3xl font-bold text-slate-900 tracking-tight mb-2"><?= __('vessels.edit_vessel') ?></h1>
+                        <p class="text-slate-500"><?= __('vessels.edit_vessel_subtitle') ?></p>
                     </div>
                 </div>
 
@@ -113,7 +113,7 @@
                             <div class="p-2 bg-amber-50 rounded-lg text-secondary">
                                 <span class="material-icons-round text-xl">sailing</span>
                             </div>
-                            <h2 class="text-lg font-bold text-slate-800">Vessel Information</h2>
+                            <h2 class="text-lg font-bold text-slate-800"><?= __('vessels.vessel_info') ?></h2>
                         </div>
                         
                         <div class="p-8 flex flex-col xl:flex-row gap-8">
@@ -169,19 +169,19 @@
                                 <!-- Vessel Name -->
                                 <div class="space-y-2">
                                     <label class="block text-sm font-semibold text-slate-700">
-                                        Vessel Name <span class="text-red-500">*</span>
+                                        <?= __('vessels.vessel_name') ?> <span class="text-red-500">*</span>
                                     </label>
                                     <input type="text" 
                                            name="name" 
                                            value="<?= htmlspecialchars($vessel['name'] ?? '') ?>"
                                            required
                                            class="w-full rounded-xl custom-input px-4 py-3 text-slate-700 placeholder-slate-400 focus:ring-0 border"
-                                           placeholder="Enter vessel name">
+                                           placeholder="<?= __('vessels.enter_vessel_name') ?>">
                                 </div>
 
                                 <!-- IMO Number -->
                                 <div class="space-y-2">
-                                    <label class="block text-sm font-semibold text-slate-700">IMO Number</label>
+                                    <label class="block text-sm font-semibold text-slate-700"><?= __('vessels.imo_number') ?></label>
                                     <input type="text" 
                                            name="imo_number" 
                                            value="<?= htmlspecialchars($vessel['imo_number'] ?? '') ?>"
@@ -191,7 +191,7 @@
 
                                 <!-- Vessel Type -->
                                 <div class="space-y-2">
-                                    <label class="block text-sm font-semibold text-slate-700">Vessel Type</label>
+                                    <label class="block text-sm font-semibold text-slate-700"><?= __('vessels.vessel_type') ?></label>
                                     <div class="relative">
                                         <select name="vessel_type_id" 
                                                 class="w-full rounded-xl custom-input px-4 py-3 text-slate-700 focus:ring-0 border appearance-none pr-10">
@@ -210,7 +210,7 @@
 
                                 <!-- Flag State -->
                                 <div class="space-y-2">
-                                    <label class="block text-sm font-semibold text-slate-700">Flag State</label>
+                                    <label class="block text-sm font-semibold text-slate-700"><?= __('vessels.flag_state') ?></label>
                                     <div class="relative">
                                         <select name="flag_state_id" 
                                                 class="w-full rounded-xl custom-input px-4 py-3 text-slate-700 focus:ring-0 border appearance-none pr-10">
@@ -229,7 +229,7 @@
 
                                 <!-- Client / Owner -->
                                 <div class="col-span-1 md:col-span-2 space-y-2">
-                                    <label class="block text-sm font-semibold text-slate-700">Client / Ship Owner</label>
+                                    <label class="block text-sm font-semibold text-slate-700"><?= __('vessels.client_owner') ?></label>
                                     <div class="relative">
                                         <select name="client_id" 
                                                 class="w-full rounded-xl custom-input pl-10 pr-10 py-3 text-slate-700 focus:ring-0 border appearance-none">
@@ -258,13 +258,13 @@
                             <div class="p-2 bg-blue-50 rounded-lg text-primary">
                                 <span class="material-icons-round text-xl">info</span>
                             </div>
-                            <h2 class="text-lg font-bold text-slate-800">Technical Details</h2>
+                            <h2 class="text-lg font-bold text-slate-800"><?= __('vessels.technical_details') ?></h2>
                         </div>
                         
                         <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                             <!-- Gross Tonnage -->
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-slate-700">Gross Tonnage (GT)</label>
+                                <label class="block text-sm font-semibold text-slate-700"><?= __('vessels.gross_tonnage') ?></label>
                                 <input type="text" 
                                        name="gross_tonnage" 
                                        value="<?= htmlspecialchars($vessel['gross_tonnage'] ?? '') ?>"
@@ -273,7 +273,7 @@
 
                             <!-- Deadweight -->
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-slate-700">Deadweight (DWT)</label>
+                                <label class="block text-sm font-semibold text-slate-700"><?= __('vessels.deadweight') ?></label>
                                 <input type="text" 
                                        name="dwt" 
                                        value="<?= htmlspecialchars($vessel['dwt'] ?? '') ?>"
@@ -282,7 +282,7 @@
 
                             <!-- Year Built -->
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-slate-700">Year Built</label>
+                                <label class="block text-sm font-semibold text-slate-700"><?= __('vessels.year_built') ?></label>
                                 <input type="number" 
                                        name="year_built" 
                                        value="<?= htmlspecialchars($vessel['year_built'] ?? '') ?>"
@@ -291,7 +291,7 @@
 
                             <!-- Call Sign -->
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-slate-700">Call Sign</label>
+                                <label class="block text-sm font-semibold text-slate-700"><?= __('vessels.call_sign') ?></label>
                                 <input type="text" 
                                        name="call_sign" 
                                        value="<?= htmlspecialchars($vessel['call_sign'] ?? '') ?>"
@@ -300,7 +300,7 @@
 
                             <!-- Crew Capacity -->
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-slate-700">Crew Capacity</label>
+                                <label class="block text-sm font-semibold text-slate-700"><?= __('vessels.crew_capacity') ?></label>
                                 <input type="number" 
                                        name="crew_capacity" 
                                        value="<?= htmlspecialchars($vessel['crew_capacity'] ?? 25) ?>"
@@ -309,7 +309,7 @@
 
                             <!-- Status -->
                             <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-slate-700">Status</label>
+                                <label class="block text-sm font-semibold text-slate-700"><?= __('common.status') ?></label>
                                 <div class="relative">
                                     <select name="status" 
                                             class="w-full rounded-xl custom-input pl-8 pr-10 py-3 text-slate-700 focus:ring-0 border appearance-none">

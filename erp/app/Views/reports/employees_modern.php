@@ -6,7 +6,7 @@
 $currentPage = 'reports';
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,12 +29,12 @@ $currentPage = 'reports';
     <main class="flex-1 flex flex-col h-screen overflow-hidden ml-64">
         <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0">
             <div>
-                <h1 class="text-base font-bold text-slate-800 tracking-tight">Employee Report</h1>
-                <p class="text-[11px] text-slate-400">Employee statistics and data from HRIS</p>
+                <h1 class="text-base font-bold text-slate-800 tracking-tight"><?= __('reports.employee_reports') ?></h1>
+                <p class="text-[11px] text-slate-400"><?= __('reports.employee_data_desc') ?></p>
             </div>
             <a href="<?= BASE_URL ?>reports"
                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-colors">
-                <span class="material-icons text-sm">arrow_back</span> Back
+                <span class="material-icons text-sm">arrow_back</span> <?= __('common.back') ?>
             </a>
         </header>
 
@@ -96,7 +96,7 @@ $currentPage = 'reports';
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-6 opacity-0 animate-fade-in animate-d2">
                     <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
                         <div class="p-2 bg-indigo-50 rounded-lg"><span class="material-icons text-indigo-600">pie_chart</span></div>
-                        <h3 class="text-sm font-bold text-slate-800">Employees by Department</h3>
+                        <h3 class="text-sm font-bold text-slate-800"><?= __('reports.employee_data') ?></h3>
                     </div>
                     <div class="p-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                         <?php foreach ($byDepartment as $dept => $count): ?>

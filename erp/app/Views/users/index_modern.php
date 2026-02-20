@@ -15,7 +15,7 @@ $roleColors = [
 ];
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -37,13 +37,13 @@ $roleColors = [
     <main class="flex-1 flex flex-col h-screen overflow-hidden ml-64">
         <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0">
             <div>
-                <h1 class="text-base font-bold text-slate-800 tracking-tight">User Management</h1>
-                <p class="text-[11px] text-slate-400">Kelola pengguna sistem</p>
+                <h1 class="text-base font-bold text-slate-800 tracking-tight"><?= __('users.title') ?></h1>
+                <p class="text-[11px] text-slate-400"><?= __('users.subtitle') ?></p>
             </div>
             <?php if (method_exists($this, 'checkPermission') && $this->checkPermission('users', 'create')): ?>
             <a href="<?= BASE_URL ?>users/create"
                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm">
-                <span class="material-icons text-sm">person_add</span> Tambah User
+                <span class="material-icons text-sm">person_add</span> <?= __('users.add_user') ?>
             </a>
             <?php endif; ?>
         </header>
@@ -109,12 +109,12 @@ $roleColors = [
                         <thead>
                             <tr class="bg-slate-50 border-b border-slate-200">
                                 <th class="px-5 py-2.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-10">#</th>
-                                <th class="px-5 py-2.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">User</th>
+                                <th class="px-5 py-2.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider"><?= __('users.username') ?></th>
                                 <th class="px-5 py-2.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Email</th>
                                 <th class="px-5 py-2.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Role</th>
-                                <th class="px-5 py-2.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Last Login</th>
-                                <th class="px-5 py-2.5 text-center text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                                <th class="px-5 py-2.5 text-center text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-28">Actions</th>
+                                <th class="px-5 py-2.5 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider"><?= __('users.last_login') ?></th>
+                                <th class="px-5 py-2.5 text-center text-[11px] font-semibold text-slate-500 uppercase tracking-wider"><?= __('common.status') ?></th>
+                                <th class="px-5 py-2.5 text-center text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-28"><?= __('common.actions') ?></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">

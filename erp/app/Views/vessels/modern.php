@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= getLanguage() ?>">
 
 <head>
     <meta charset="UTF-8">
@@ -110,9 +110,9 @@
                 <div class="flex items-center text-slate-500 text-sm">
                     <span class="material-icons-round text-lg mr-2">home</span>
                     <span class="mx-2">/</span>
-                    <span>Vessels</span>
+                    <span><?= __('sidebar.vessels') ?></span>
                     <span class="mx-2">/</span>
-                    <span class="text-slate-800 font-medium">Management</span>
+                    <span class="text-slate-800 font-medium"><?= __('sidebar.management') ?></span>
                 </div>
 
                 <div class="flex items-center gap-4">
@@ -139,15 +139,14 @@
                 <!-- Page Header -->
                 <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 mt-2">
                     <div>
-                        <h1 class="text-3xl font-bold text-slate-800 tracking-tight mb-2">Vessel Management</h1>
-                        <p class="text-slate-500 max-w-2xl">Manage your fleet vessels, track live status, and monitor
-                            crew assignments in real-time.</p>
+                        <h1 class="text-3xl font-bold text-slate-800 tracking-tight mb-2"><?= __('vessels.title') ?></h1>
+                        <p class="text-slate-500 max-w-2xl"><?= __('vessels.subtitle') ?></p>
                     </div>
 
                     <a href="<?= BASE_URL ?>vessels/create"
                         class="px-6 py-3 bg-secondary hover:bg-amber-600 text-white rounded-xl shadow-[0_10px_20px_-5px_rgba(212,175,55,0.5)] hover:shadow-[0_15px_30px_-5px_rgba(212,175,55,0.6)] flex items-center gap-2 font-medium transition-all transform hover:-translate-y-0.5 border border-white/20">
                         <span class="material-icons-round text-xl">add</span>
-                        Add New Vessel
+                        <?= __('vessels.create_title') ?>
                     </a>
                 </div>
 
@@ -225,7 +224,7 @@
                                                 <span>
                                                     <?= $crewPercentage ?>%
                                                 </span>
-                                                <span class="text-[8px] font-normal opacity-70">Crew</span>
+                                                <span class="text-[8px] font-normal opacity-70"><?= __('sidebar.crew') ?></span>
                                             </div>
                                         </div>
                                     </div>
@@ -234,19 +233,19 @@
                                     <div
                                         class="grid grid-cols-2 gap-y-4 gap-x-2 text-sm mb-6 bg-slate-50/50 rounded-xl p-4 border border-slate-100">
                                         <div class="col-span-1">
-                                            <p class="text-xs text-slate-400 uppercase tracking-wider mb-0.5">IMO Number</p>
+                                            <p class="text-xs text-slate-400 uppercase tracking-wider mb-0.5"><?= __('vessels.imo_number') ?></p>
                                             <p class="font-medium text-slate-700 font-mono">
                                                 <?= htmlspecialchars($vessel['imo_number']) ?>
                                             </p>
                                         </div>
                                         <div class="col-span-1">
-                                            <p class="text-xs text-slate-400 uppercase tracking-wider mb-0.5">Flag</p>
+                                            <p class="text-xs text-slate-400 uppercase tracking-wider mb-0.5"><?= __('vessels.flag') ?></p>
                                             <p class="font-medium text-slate-700">
                                                 <?= htmlspecialchars($vessel['flag_state'] ?? 'N/A') ?>
                                             </p>
                                         </div>
                                         <div class="col-span-2">
-                                            <p class="text-xs text-slate-400 uppercase tracking-wider mb-0.5">Owner</p>
+                                            <p class="text-xs text-slate-400 uppercase tracking-wider mb-0.5"><?= __('vessels.owner') ?></p>
                                             <div class="flex items-center gap-2">
                                                 <span class="material-icons-round text-base text-slate-400">verified_user</span>
                                                 <p class="font-medium text-slate-700 truncate">
@@ -260,22 +259,22 @@
                                     <div
                                         class="flex items-center justify-between text-xs text-slate-500 mt-auto pt-4 border-t border-slate-200">
                                         <span>
-                                            <?= $crewCount ?> Crew Onboard
+                                            <?= $crewCount ?> <?= __('crews.onboard') ?>
                                         </span>
                                         <div class="flex items-center gap-2">
                                             <a href="<?= BASE_URL ?>vessels/<?= $vessel['id'] ?>"
                                                 class="h-8 w-8 rounded-lg flex items-center justify-center bg-white hover:bg-primary hover:text-white text-slate-500 transition-colors shadow-sm border border-slate-100"
-                                                title="View Details">
+                                                title="<?= __('common.view') ?>">
                                                 <span class="material-icons-round text-lg">visibility</span>
                                             </a>
                                             <a href="<?= BASE_URL ?>vessels/edit/<?= $vessel['id'] ?>"
                                                 class="h-8 w-8 rounded-lg flex items-center justify-center bg-white hover:bg-secondary hover:text-white text-slate-500 transition-colors shadow-sm border border-slate-100"
-                                                title="Edit Vessel">
+                                                title="<?= __('common.edit') ?>">
                                                 <span class="material-icons-round text-lg">edit</span>
                                             </a>
                                             <a href="<?= BASE_URL ?>vessels/crew/<?= $vessel['id'] ?>"
                                                 class="h-8 w-8 rounded-lg flex items-center justify-center bg-white hover:bg-emerald-600 hover:text-white text-slate-500 transition-colors shadow-sm border border-slate-100"
-                                                title="Manage Crew">
+                                                title="<?= __('sidebar.crew') ?>">
                                                 <span class="material-icons-round text-lg">groups</span>
                                             </a>
                                         </div>
@@ -294,9 +293,8 @@
                                 <span
                                     class="material-icons-round text-3xl text-slate-400 group-hover:text-white">add</span>
                             </div>
-                            <h3 class="text-lg font-bold text-slate-600">Add New Vessel</h3>
-                            <p class="text-sm text-slate-400 mt-2">Register a new vessel to your fleet management
-                                system.</p>
+                            <h3 class="text-lg font-bold text-slate-600"><?= __('vessels.create_title') ?></h3>
+                            <p class="text-sm text-slate-400 mt-2"><?= __('vessels.subtitle') ?></p>
                         </div>
                     </a>
                 </div>
@@ -309,7 +307,7 @@
                             <span class="material-icons-round">sailing</span>
                         </div>
                         <div>
-                            <p class="text-xs text-slate-500 uppercase font-semibold">Total Vessels</p>
+                            <p class="text-xs text-slate-500 uppercase font-semibold"><?= __('vessels.list_title') ?></p>
                             <p class="text-xl font-bold text-slate-800">
                                 <?= count($vessels ?? []) ?>
                             </p>
@@ -321,7 +319,7 @@
                             <span class="material-icons-round">group</span>
                         </div>
                         <div>
-                            <p class="text-xs text-slate-500 uppercase font-semibold">Active Crew</p>
+                            <p class="text-xs text-slate-500 uppercase font-semibold"><?= __('dashboard.active_crew') ?></p>
                             <p class="text-xl font-bold text-slate-800">
                                 <?= $total_crew ?? 0 ?>
                             </p>
@@ -333,7 +331,7 @@
                             <span class="material-icons-round">warning_amber</span>
                         </div>
                         <div>
-                            <p class="text-xs text-slate-500 uppercase font-semibold">Maintenance</p>
+                            <p class="text-xs text-slate-500 uppercase font-semibold"><?= __('common.status') ?></p>
                             <p class="text-xl font-bold text-slate-800">
                                 <?= $maintenance_count ?? 0 ?>
                             </p>

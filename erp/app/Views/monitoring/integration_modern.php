@@ -56,7 +56,7 @@ $threatPercent = $totalCount > 0 ? round((($totalCount - $connectedCount) / $tot
 $firewallBars = $connectedCount;
 ?>
 <!DOCTYPE html>
-<html class="dark" lang="id">
+<html class="dark" lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

@@ -5,7 +5,7 @@
 $currentPage = 'reports';
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,18 +26,18 @@ $currentPage = 'reports';
     <main class="flex-1 flex flex-col h-screen overflow-hidden ml-64">
         <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0">
             <div>
-                <h1 class="text-base font-bold text-slate-800 tracking-tight">Contracts by Client</h1>
-                <p class="text-[11px] text-slate-400">Crew contracts grouped by client/principal</p>
+                <h1 class="text-base font-bold text-slate-800 tracking-tight"><?= __('reports.by_client') ?></h1>
+                <p class="text-[11px] text-slate-400"><?= __('reports.by_client_desc') ?></p>
             </div>
             <a href="<?= BASE_URL ?>reports" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-colors">
-                <span class="material-icons text-sm">arrow_back</span> Back
+                <span class="material-icons text-sm">arrow_back</span> <?= __('common.back') ?>
             </a>
         </header>
         <div class="flex-1 overflow-y-auto p-6">
             <?php if (empty($clients)): ?>
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-10 text-center">
                     <div class="bg-slate-100 p-5 rounded-full inline-block mb-4"><span class="material-icons text-4xl text-slate-300">business</span></div>
-                    <h3 class="text-base font-semibold text-slate-700 mb-1">No clients found</h3>
+                    <h3 class="text-base font-semibold text-slate-700 mb-1"><?= __('common.no_data') ?></h3>
                 </div>
             <?php else: ?>
                 <?php foreach ($clients as $i => $client): ?>

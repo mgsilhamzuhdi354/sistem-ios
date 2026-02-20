@@ -5,7 +5,7 @@
 $currentPage = 'reports';
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,7 +27,7 @@ $currentPage = 'reports';
     <main class="flex-1 flex flex-col h-screen overflow-hidden ml-64">
         <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0">
             <div>
-                <h1 class="text-base font-bold text-slate-800 tracking-tight">Expiring Contracts</h1>
+                <h1 class="text-base font-bold text-slate-800 tracking-tight"><?= __('reports.expiring_contracts') ?></h1>
                 <p class="text-[11px] text-slate-400">Contracts expiring within <?= $days ?? 60 ?> days</p>
             </div>
             <div class="flex items-center gap-2">
@@ -35,7 +35,7 @@ $currentPage = 'reports';
                     <span class="material-icons text-sm">download</span> Export CSV
                 </a>
                 <a href="<?= BASE_URL ?>reports" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-colors">
-                    <span class="material-icons text-sm">arrow_back</span> Back
+                    <span class="material-icons text-sm">arrow_back</span> <?= __('common.back') ?>
                 </a>
             </div>
         </header>
@@ -57,7 +57,7 @@ $currentPage = 'reports';
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 opacity-0 animate-fade-in animate-d1">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Expiring Soon</p>
+                            <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider"><?= __('reports.expiring_contracts') ?></p>
                             <p class="text-3xl font-extrabold text-amber-500 mt-1"><?= count($contracts ?? []) ?></p>
                         </div>
                         <div class="p-3 bg-amber-50 rounded-xl"><span class="material-icons text-amber-500 text-2xl">schedule</span></div>
@@ -82,7 +82,7 @@ $currentPage = 'reports';
                             <tr><td colspan="6" class="py-16 text-center">
                                 <div class="flex flex-col items-center">
                                     <div class="bg-slate-100 p-5 rounded-full mb-4"><span class="material-icons text-4xl text-slate-300">event_available</span></div>
-                                    <h3 class="text-base font-semibold text-slate-700">No expiring contracts</h3>
+                                    <h3 class="text-base font-semibold text-slate-700"><?= __('reports.no_expiring_contracts') ?></h3>
                                 </div>
                             </td></tr>
                             <?php else: ?>

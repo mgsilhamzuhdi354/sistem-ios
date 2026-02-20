@@ -7,7 +7,7 @@ $currentPage = 'ranks';
 $isEdit = isset($rank);
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,13 +31,13 @@ $isEdit = isset($rank);
         <!-- Top Bar -->
         <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0">
             <div class="flex items-center text-sm text-slate-500">
-                <a href="<?= BASE_URL ?>ranks" class="hover:text-blue-600 transition-colors">Master Pangkat</a>
+                <a href="<?= BASE_URL ?>ranks" class="hover:text-blue-600 transition-colors"><?= __('ranks.master_title') ?></a>
                 <span class="material-icons-round text-sm mx-2">chevron_right</span>
-                <span class="font-medium text-slate-800"><?= $isEdit ? 'Edit' : 'Tambah Baru' ?></span>
+                <span class="font-medium text-slate-800"><?= $isEdit ? __('common.edit') : __('common.add_new') ?></span>
             </div>
             <a href="<?= BASE_URL ?>ranks"
                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-colors">
-                <span class="material-icons text-sm">arrow_back</span> Kembali
+                <span class="material-icons text-sm">arrow_back</span> <?= __('common.back') ?>
             </a>
         </header>
 
@@ -50,7 +50,7 @@ $isEdit = isset($rank);
                         <span class="material-icons-round text-amber-600 text-3xl"><?= $isEdit ? 'edit' : 'add_circle' ?></span>
                     </div>
                     <div>
-                        <h2 class="text-xl font-bold text-slate-800"><?= $isEdit ? 'Edit Pangkat' : 'Tambah Pangkat Baru' ?></h2>
+                        <h2 class="text-xl font-bold text-slate-800"><?= $isEdit ? __('ranks.edit_rank') : __('ranks.add_rank') ?></h2>
                         <p class="text-sm text-slate-400"><?= $isEdit ? 'Perbarui data pangkat ' . htmlspecialchars($rank['name']) : 'Isi form untuk menambahkan pangkat baru' ?></p>
                     </div>
                 </div>
@@ -63,7 +63,7 @@ $isEdit = isset($rank);
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                                    Nama Pangkat <span class="text-red-500">*</span>
+                                    <?= __('ranks.rank_name') ?> <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" name="name" required
                                        value="<?= htmlspecialchars($rank['name'] ?? '') ?>"
@@ -72,7 +72,7 @@ $isEdit = isset($rank);
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                                    Kode <span class="text-slate-300">(Opsional)</span>
+                                    <?= __('ranks.rank_code') ?> <span class="text-slate-300">(<?= __('common.optional') ?>)</span>
                                 </label>
                                 <input type="text" name="code"
                                        value="<?= htmlspecialchars($rank['code'] ?? '') ?>"
@@ -85,7 +85,7 @@ $isEdit = isset($rank);
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                                    Department <span class="text-red-500">*</span>
+                                    <?= __('ranks.department') ?> <span class="text-red-500">*</span>
                                 </label>
                                 <select name="department" required
                                         class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all">
@@ -96,7 +96,7 @@ $isEdit = isset($rank);
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
-                                    Urutan Level <span class="text-red-500">*</span>
+                                    <?= __('ranks.level_order') ?> <span class="text-red-500">*</span>
                                 </label>
                                 <input type="number" name="level" required min="1"
                                        value="<?= $rank['level'] ?? 99 ?>"
@@ -133,8 +133,8 @@ $isEdit = isset($rank);
                             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Status</label>
                             <select name="is_active"
                                     class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all">
-                                <option value="1" <?= $rank['is_active'] ? 'selected' : '' ?>>Active</option>
-                                <option value="0" <?= !$rank['is_active'] ? 'selected' : '' ?>>Inactive</option>
+                                <option value="1" <?= $rank['is_active'] ? 'selected' : '' ?>><?= __('common.active') ?></option>
+                                <option value="0" <?= !$rank['is_active'] ? 'selected' : '' ?>><?= __('common.inactive') ?></option>
                             </select>
                         </div>
                         <?php endif; ?>
@@ -148,7 +148,7 @@ $isEdit = isset($rank);
                             <button type="submit"
                                     class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5 inline-flex items-center gap-2">
                                 <span class="material-icons text-sm">save</span>
-                                Simpan Pangkat
+                                <?= __('ranks.save_rank') ?>
                             </button>
                         </div>
                     </form>

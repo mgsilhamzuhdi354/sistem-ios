@@ -18,7 +18,7 @@ $uniquePages = count($stats['top_pages'] ?? []);
 $growthPercentage = 0;
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -97,7 +97,7 @@ $growthPercentage = 0;
                         <h1 class="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
                             Company Profile Visitors
                         </h1>
-                        <p class="text-slate-500 dark:text-slate-400 font-medium text-sm">Track pengunjung website company profile</p>
+                        <p class="text-slate-500 dark:text-slate-400 font-medium text-sm"><?= __('monitoring.visitors_subtitle') ?></p>
                     </div>
                 </div>
                 <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" onclick="document.documentElement.classList.toggle('dark')">
@@ -111,13 +111,13 @@ $growthPercentage = 0;
                 <div class="mb-12">
                     <div class="glass-panel bg-glass-white dark:bg-glass-dark px-2 py-2 rounded-full flex gap-1 shadow-float inline-flex">
                         <a href="?period=today" class="px-5 py-2 rounded-full text-sm font-semibold transition-all hover:scale-105 <?= $period === 'today' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200' ?>">
-                            Today
+                            <?= __('common.today') ?>
                         </a>
                         <a href="?period=week" class="px-5 py-2 rounded-full text-sm font-semibold transition-all hover:scale-105 <?= $period === 'week' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200' ?>">
-                            This Week
+                            <?= __('monitoring.this_week') ?>
                         </a>
                         <a href="?period=month" class="px-5 py-2 rounded-full text-sm font-semibold transition-all hover:scale-105 <?= $period === 'month' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200' ?>">
-                            This Month
+                            <?= __('monitoring.this_month') ?>
                         </a>
                     </div>
                 </div>
@@ -136,7 +136,7 @@ $growthPercentage = 0;
                                     <span class="text-xs font-semibold text-green-500 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-full">+<?= $growthPercentage ?>%</span>
                                 </div>
                                 <div class="space-y-1">
-                                    <h3 class="text-slate-500 dark:text-slate-400 text-sm font-medium">Total Visitors</h3>
+                                    <h3 class="text-slate-500 dark:text-slate-400 text-sm font-medium"><?= __('monitoring.total_visitors') ?></h3>
                                     <p class="text-4xl font-bold text-slate-800 dark:text-white tracking-tight"><?= $totalVisitors ?></p>
                                 </div>
                             </div>
@@ -150,7 +150,7 @@ $growthPercentage = 0;
                                     <span class="text-xs font-semibold text-slate-400 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded-full">-</span>
                                 </div>
                                 <div class="space-y-1">
-                                    <h3 class="text-slate-500 dark:text-slate-400 text-sm font-medium">Countries</h3>
+                                    <h3 class="text-slate-500 dark:text-slate-400 text-sm font-medium"><?= __('monitoring.countries') ?></h3>
                                     <p class="text-4xl font-bold text-slate-800 dark:text-white tracking-tight"><?= $uniqueCountries ?></p>
                                 </div>
                             </div>
@@ -164,7 +164,7 @@ $growthPercentage = 0;
                                     <span class="text-xs font-semibold text-slate-400 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded-full">-</span>
                                 </div>
                                 <div class="space-y-1">
-                                    <h3 class="text-slate-500 dark:text-slate-400 text-sm font-medium">Unique Pages</h3>
+                                    <h3 class="text-slate-500 dark:text-slate-400 text-sm font-medium"><?= __('monitoring.unique_pages') ?></h3>
                                     <p class="text-4xl font-bold text-slate-800 dark:text-white tracking-tight"><?= $uniquePages ?></p>
                                 </div>
                             </div>
@@ -174,7 +174,7 @@ $growthPercentage = 0;
                         <div class="glass-panel bg-white/80 dark:bg-slate-800/80 rounded-2xl shadow-float p-8 min-h-[300px] flex flex-col relative overflow-hidden">
                             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
                             <div class="flex justify-between items-center mb-8">
-                                <h2 class="text-xl font-bold text-slate-800 dark:text-white">Recent Visitors</h2>
+                                <h2 class="text-xl font-bold text-slate-800 dark:text-white"><?= __('monitoring.recent_visitors') ?></h2>
                                 <a class="text-sm font-semibold text-primary hover:text-secondary flex items-center gap-1 transition-colors" href="<?= BASE_URL ?>monitoring/activity">
                                     Full Report <span class="material-icons-round text-base">arrow_forward</span>
                                 </a>

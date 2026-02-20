@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= getLanguage() ?>">
 
 <head>
     <meta charset="UTF-8">
@@ -93,7 +93,7 @@
                 class="h-16 bg-surface-light border-b border-border-light flex items-center justify-between px-6 z-10 shadow-sm">
                 <div class="flex items-center">
                     <h1 class="text-base font-bold text-text-main-light flex items-center gap-2">
-                        <span class="text-slate-400 font-normal">Command Center /</span> Client Management
+                        <span class="text-slate-400 font-normal">Command Center /</span> <?= __('clients.title') ?>
                     </h1>
                 </div>
 
@@ -103,7 +103,7 @@
                         <i class="ph ph-magnifying-glass text-slate-400 mr-2"></i>
                         <input
                             class="bg-transparent border-none focus:ring-0 text-sm text-text-main-light w-full placeholder-slate-400 p-0"
-                            placeholder="Search clients, KPIs, vessels..." type="text" />
+                            placeholder="<?= __('common.search') ?>..." type="text" />
                     </div>
                 </div>
             </header>
@@ -148,7 +148,7 @@
                                     <i class="ph-bold ph-arrow-up-right mr-1"></i> 12.5%
                                 </span>
                             </div>
-                            <p class="text-sm text-slate-500 font-medium">Total Managed Revenue</p>
+                            <p class="text-sm text-slate-500 font-medium"><?= __('dashboard.total_revenue') ?></p>
                             <h3 class="text-2xl font-bold text-slate-900 mt-1">
                                 $
                                 <?= number_format($totalRevenue / 1000, 1) ?>k
@@ -167,7 +167,7 @@
                                     <i class="ph-bold ph-arrow-up-right mr-1"></i> 3.2%
                                 </span>
                             </div>
-                            <p class="text-sm text-slate-500 font-medium">Overall Profit Margin</p>
+                            <p class="text-sm text-slate-500 font-medium"><?= __('dashboard.avg_margin') ?></p>
                             <h3 class="text-2xl font-bold text-slate-900 mt-1">
                                 <?= number_format($avgMargin, 1) ?>%
                             </h3>
@@ -203,7 +203,7 @@
                     <!-- Section Header -->
                     <div class="flex flex-col sm:flex-row justify-between items-end mb-4 gap-4 px-1">
                         <div>
-                            <h2 class="text-lg font-bold text-slate-900">Active Clients</h2>
+                            <h2 class="text-lg font-bold text-slate-900"><?= __('sidebar.clients') ?></h2>
                             <p class="text-xs text-slate-500 mt-1">Monitoring
                                 <?= $clientCount ?> principal accounts
                             </p>
@@ -219,7 +219,7 @@
                             </button>
                             <a href="<?= BASE_URL ?>clients/create"
                                 class="px-3 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-semibold shadow-md shadow-primary/20 transition-all flex items-center">
-                                <i class="ph-bold ph-plus mr-2"></i> Add Client
+                                <i class="ph-bold ph-plus mr-2"></i> <?= __('common.add_new') ?>
                             </a>
                         </div>
                     </div>
@@ -227,11 +227,11 @@
                     <!-- Table Header -->
                     <div
                         class="grid grid-cols-12 gap-4 px-5 py-3 bg-white rounded-t-xl text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-border-light sticky top-0 backdrop-blur-sm z-10">
-                        <div class="col-span-4">Client / Principal</div>
-                        <div class="col-span-3">Profit Contribution</div>
-                        <div class="col-span-2 text-right">Revenue</div>
-                        <div class="col-span-2 text-right">Margin</div>
-                        <div class="col-span-1 text-center">Action</div>
+                        <div class="col-span-4"><?= __('contracts.client') ?></div>
+                        <div class="col-span-3"><?= __('dashboard.total_profit') ?></div>
+                        <div class="col-span-2 text-right"><?= __('vessels.revenue') ?></div>
+                        <div class="col-span-2 text-right"><?= __('vessels.margin') ?></div>
+                        <div class="col-span-1 text-center"><?= __('common.actions') ?></div>
                     </div>
 
                     <!-- Client List -->
@@ -336,7 +336,7 @@
                 <div class="w-full md:w-80 lg:w-96 bg-white border-l border-border-light flex flex-col shadow-xl z-20">
                     <div class="p-5 border-b border-border-light flex justify-between items-center bg-slate-50/50">
                         <h3 class="font-bold text-slate-900 flex items-center">
-                            <i class="ph-fill ph-chart-line-up text-primary mr-2"></i> Profit Analytics
+                            <i class="ph-fill ph-chart-line-up text-primary mr-2"></i> <?= __('analytics.title') ?>
                         </h3>
                     </div>
 
@@ -440,12 +440,12 @@
 
                         <!-- Quick Actions -->
                         <div class="mt-8 border-t border-border-light pt-6">
-                            <h4 class="text-xs font-bold text-slate-900 mb-4">Quick Actions</h4>
+                            <h4 class="text-xs font-bold text-slate-900 mb-4"><?= __('common.actions') ?></h4>
                             <div class="grid grid-cols-2 gap-3">
                                 <button
                                     class="p-3 border border-border-light rounded-lg hover:border-primary hover:text-primary transition-colors text-xs font-medium text-slate-600 flex flex-col items-center justify-center gap-2">
                                     <i class="ph ph-file-pdf text-xl"></i>
-                                    Export Report
+                                    <?= __('common.export') ?> <?= __('reports.title') ?>
                                 </button>
                                 <button
                                     class="p-3 border border-border-light rounded-lg hover:border-primary hover:text-primary transition-colors text-xs font-medium text-slate-600 flex flex-col items-center justify-center gap-2">

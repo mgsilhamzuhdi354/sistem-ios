@@ -5,12 +5,12 @@
 $currentPage = 'skill_matrix';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crew Skill Matrix - IndoOcean ERP</title>
+    <title><?= __('crews.skill_matrix_title') ?> - IndoOcean ERP</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
@@ -86,7 +86,7 @@ $currentPage = 'skill_matrix';
                         class="lg:hidden p-2 rounded-md text-slate-600 hover:bg-slate-100">
                         <span class="material-icons">menu</span>
                     </button>
-                    <h2 class="text-lg font-semibold text-slate-900 hidden sm:block">Crew Management
+                    <h2 class="text-lg font-semibold text-slate-900 hidden sm:block"><?= __('crews.title') ?>
                     </h2>
                 </div>
 
@@ -94,7 +94,7 @@ $currentPage = 'skill_matrix';
                     <div
                         class="hidden md:flex items-center bg-slate-100 rounded-full px-3 py-1.5 border border-transparent focus-within:border-brand-gold transition-colors">
                         <span class="material-icons text-slate-400 text-sm">search</span>
-                        <input type="text" placeholder="Search globally..."
+                        <input type="text" placeholder="<?= __('common.search') ?>..."
                             class="bg-transparent border-none text-sm focus:ring-0 text-slate-900 placeholder-slate-400 w-48">
                     </div>
                     <button
@@ -113,14 +113,13 @@ $currentPage = 'skill_matrix';
                     <!-- Page Header -->
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <h1 class="text-3xl font-bold text-slate-900 mb-1">Crew Skill Matrix</h1>
-                            <p class="text-sm text-slate-600">Competency matrix and certification
-                                tracking for all crew members.</p>
+                            <h1 class="text-3xl font-bold text-slate-900 mb-1"><?= __('crews.skill_matrix_title') ?></h1>
+                            <p class="text-sm text-slate-600"><?= __('crews.skill_matrix_subtitle') ?></p>
                         </div>
                         <a href="<?= BASE_URL ?>crews/modern"
                             class="inline-flex items-center gap-2 bg-brand-gold hover:bg-yellow-600 text-white px-5 py-2.5 rounded-lg font-medium shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
                             <span class="material-icons text-sm">arrow_back</span>
-                            Back to Crew List
+                            <?= __('crews.back_to_list') ?>
                         </a>
                     </div>
 
@@ -143,7 +142,7 @@ $currentPage = 'skill_matrix';
                                     <span class="material-icons">stars</span>
                                 </div>
                             </div>
-                            <p class="text-xs text-slate-500">Unique skill types registered</p>
+                            <p class="text-xs text-slate-500"><?= __('crews.unique_skills') ?></p>
                         </div>
 
                         <!-- Crew with Skills -->
@@ -153,7 +152,7 @@ $currentPage = 'skill_matrix';
                                 <div>
                                     <p
                                         class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                        Crew with Skills</p>
+                                        <?= __('crews.crew_with_skills') ?></p>
                                     <h3 class="text-3xl font-bold text-slate-900 mt-1">
                                         <?= $statistics['total_crew_with_skills'] ?? 0 ?>
                                     </h3>
@@ -163,7 +162,7 @@ $currentPage = 'skill_matrix';
                                     <span class="material-icons">people</span>
                                 </div>
                             </div>
-                            <p class="text-xs text-slate-500">Members actively registered</p>
+                            <p class="text-xs text-slate-500"><?= __('crews.members_registered') ?></p>
                         </div>
 
                         <!-- Expert Level -->
@@ -183,7 +182,7 @@ $currentPage = 'skill_matrix';
                                     <span class="material-icons">workspace_premium</span>
                                 </div>
                             </div>
-                            <p class="text-xs text-slate-500">Expert certifications held</p>
+                            <p class="text-xs text-slate-500"><?= __('crews.expert_certs') ?></p>
                         </div>
 
                         <!-- Total Entries -->
@@ -203,7 +202,7 @@ $currentPage = 'skill_matrix';
                                     <span class="material-icons">library_books</span>
                                 </div>
                             </div>
-                            <p class="text-xs text-slate-500">Total skill records</p>
+                            <p class="text-xs text-slate-500"><?= __('crews.total_records') ?></p>
                         </div>
                     </div>
 
@@ -214,15 +213,14 @@ $currentPage = 'skill_matrix';
                             <div class="text-6xl text-slate-300 dark:text-slate-600 mb-4">
                                 <span class="material-icons" style="font-size: 64px;">grid_view</span>
                             </div>
-                            <h3 class="text-xl font-semibold text-slate-700 mb-2">No Skills Data</h3>
+                            <h3 class="text-xl font-semibold text-slate-700 mb-2"><?= __('crews.no_skills_data') ?></h3>
                             <p class="text-slate-500 max-w-md mx-auto mb-6">
-                                No crew members have registered skills yet. Add crew members and their skills to view the
-                                competency matrix.
+                                <?= __('crews.no_skills_desc') ?>
                             </p>
                             <a href="<?= BASE_URL ?>crews/modern"
                                 class="inline-flex items-center gap-2 bg-brand-gold hover:bg-yellow-600 text-white px-5 py-2.5 rounded-lg font-medium">
                                 <span class="material-icons text-sm">groups</span>
-                                Go to Crew List
+                                <?= __('crews.go_to_crew_list') ?>
                             </a>
                         </div>
                     <?php else: ?>
@@ -234,7 +232,7 @@ $currentPage = 'skill_matrix';
                                 class="p-5 border-b border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                                 <div class="flex items-center gap-2">
                                     <span class="material-icons text-brand-gold">grid_view</span>
-                                    <h3 class="font-bold text-slate-900">Competency Matrix</h3>
+                                    <h3 class="font-bold text-slate-900"><?= __('crews.competency_matrix') ?></h3>
                                 </div>
 
                                 <div class="flex gap-3 w-full sm:w-auto">
@@ -243,14 +241,14 @@ $currentPage = 'skill_matrix';
                                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <span class="material-icons text-slate-400 text-sm">search</span>
                                         </span>
-                                        <input type="text" x-model="searchQuery" placeholder="Search skills..."
+                                        <input type="text" x-model="searchQuery" placeholder="<?= __('crews.search_skills') ?>..."
                                             class="pl-9 pr-4 py-2 w-full sm:w-64 bg-slate-50 border-none rounded-lg text-sm focus:ring-2 focus:ring-brand-gold/30 text-slate-900 placeholder-slate-400">
                                     </div>
 
                                     <!-- Level Filter -->
                                     <select x-model="levelFilter"
                                         class="py-2 pl-3 pr-8 bg-slate-50 border-none rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-brand-gold/30 cursor-pointer">
-                                        <option value="">All Levels</option>
+                                        <option value=""><?= __('crews.all_levels') ?></option>
                                         <option value="basic">Basic</option>
                                         <option value="intermediate">Intermediate</option>
                                         <option value="advanced">Advanced</option>

@@ -4,7 +4,7 @@
  * Tailwind + Chart.js + Alpine.js
  */
 $currentPage = 'payroll';
-$months = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+$months = ['', __('payroll.months.january'), __('payroll.months.february'), __('payroll.months.march'), __('payroll.months.april'), __('payroll.months.may'), __('payroll.months.june'), __('payroll.months.july'), __('payroll.months.august'), __('payroll.months.september'), __('payroll.months.october'), __('payroll.months.november'), __('payroll.months.december')];
 
 // Calculate summary totals
 $totalCrew = count($items ?? []);
@@ -29,12 +29,12 @@ $nextYear = $month == 12 ? $year + 1 : $year;
 $periodStatus = $period['status'] ?? 'draft';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payroll Management | IndoOcean ERP</title>
+    <title><?= __('payroll.title') ?> | IndoOcean ERP</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -90,9 +90,9 @@ $periodStatus = $period['status'] ?? 'draft';
             <!-- Header -->
             <header class="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between z-10 flex-shrink-0 shadow-sm">
                 <div class="flex items-center gap-2 text-sm">
-                    <span class="text-slate-400 font-medium">Crew</span>
+                    <span class="text-slate-400 font-medium"><?= __('sidebar.crews') ?></span>
                     <span class="material-icons-outlined text-slate-400 text-sm">chevron_right</span>
-                    <span class="text-slate-800 font-semibold">Manajemen Penggajian</span>
+                    <span class="text-slate-800 font-semibold"><?= __('payroll.title') ?></span>
                 </div>
 
                 <div class="flex items-center gap-3">
@@ -131,14 +131,14 @@ $periodStatus = $period['status'] ?? 'draft';
                 <!-- Page Header -->
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-6 mb-6 animate-fade-in">
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-800">Manajemen Penggajian</h2>
-                        <p class="text-sm text-slate-500">Proses gaji crew dan pajak</p>
+                        <h2 class="text-2xl font-bold text-slate-800"><?= __('payroll.title') ?></h2>
+                        <p class="text-sm text-slate-500"><?= __('payroll.subtitle') ?></p>
                     </div>
                     <div class="flex items-center gap-3">
                         <a href="<?= BASE_URL ?>payroll/export/<?= $period['id'] ?? 0 ?>"
                             class="flex items-center gap-2 px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-medium text-slate-700 hover:bg-white hover:shadow-sm transition-all">
                             <span class="material-icons-outlined text-sm">download</span>
-                            Export CSV
+                            <?= __('common.export') ?> CSV
                         </a>
                         <form method="POST" action="<?= BASE_URL ?>payroll/process" style="display: inline;">
                             <input type="hidden" name="month" value="<?= $month ?>">
@@ -146,7 +146,7 @@ $periodStatus = $period['status'] ?? 'draft';
                             <button type="submit"
                                 class="flex items-center gap-2 px-5 py-2.5 bg-amber-500 text-white rounded-xl text-sm font-bold hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30">
                                 <span class="material-icons-outlined text-sm">play_arrow</span>
-                                Jalankan Payroll
+                                <?= __('payroll.run_payroll') ?>
                             </button>
                         </form>
                     </div>
@@ -159,7 +159,7 @@ $periodStatus = $period['status'] ?? 'draft';
                         <span class="material-icons-outlined text-slate-500">chevron_left</span>
                     </a>
                     <div class="text-center min-w-[140px]">
-                        <p class="text-[10px] text-slate-400 uppercase font-semibold tracking-wider">Payroll Period</p>
+                        <p class="text-[10px] text-slate-400 uppercase font-semibold tracking-wider"><?= __('payroll.period') ?></p>
                         <p class="text-lg font-bold text-slate-800"><?= $months[$month] ?> <?= $year ?></p>
                     </div>
                     <a href="?month=<?= $nextMonth ?>&year=<?= $nextYear ?>"
@@ -183,9 +183,9 @@ $periodStatus = $period['status'] ?? 'draft';
                             <input type="hidden" name="period_id" value="<?= $period['id'] ?>">
                             <button type="submit"
                                 class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-bold hover:bg-emerald-600 transition-all"
-                                onclick="return confirm('Mark this payroll period as completed?')">
+                                onclick="return confirm('<?= __('payroll.confirm_complete') ?>')">
                                 <span class="material-icons text-sm">check</span>
-                                Mark Complete
+                                <?= __('payroll.mark_complete') ?>
                             </button>
                         </form>
                     <?php endif; ?>
@@ -203,7 +203,7 @@ $periodStatus = $period['status'] ?? 'draft';
                                 </div>
                             </div>
                             <p class="text-2xl font-bold text-slate-800"><?= $totalCrew ?></p>
-                            <p class="text-xs font-medium text-slate-400 mt-1">Total Crew</p>
+                            <p class="text-xs font-medium text-slate-400 mt-1"><?= __('crews.total_crew') ?></p>
                         </div>
 
                         <!-- Gross Salary -->
@@ -214,7 +214,7 @@ $periodStatus = $period['status'] ?? 'draft';
                                 </div>
                             </div>
                             <p class="text-2xl font-bold text-slate-800">$<?= number_format($totalGross, 2) ?></p>
-                            <p class="text-xs font-medium text-slate-400 mt-1">Gaji Kotor</p>
+                            <p class="text-xs font-medium text-slate-400 mt-1"><?= __('payroll.gross_salary') ?></p>
                         </div>
 
                         <!-- Total Tax -->
@@ -225,7 +225,7 @@ $periodStatus = $period['status'] ?? 'draft';
                                 </div>
                             </div>
                             <p class="text-2xl font-bold text-slate-800">$<?= number_format($totalTax, 2) ?></p>
-                            <p class="text-xs font-medium text-slate-400 mt-1">Total Pajak</p>
+                            <p class="text-xs font-medium text-slate-400 mt-1"><?= __('payroll.total_tax') ?></p>
                         </div>
 
                         <!-- Net Payable -->
@@ -236,15 +236,15 @@ $periodStatus = $period['status'] ?? 'draft';
                                 </div>
                             </div>
                             <p class="text-2xl font-bold text-emerald-600">$<?= number_format($totalNet, 2) ?></p>
-                            <p class="text-xs font-medium text-slate-400 mt-1">Total Dibayarkan</p>
+                            <p class="text-xs font-medium text-slate-400 mt-1"><?= __('payroll.net_payable') ?></p>
                         </div>
                     </div>
 
                     <!-- Monthly Trend Chart -->
                     <div class="lg:col-span-1 bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between animate-fade-in-delay-3">
                         <div class="flex items-center justify-between mb-3">
-                            <h3 class="text-sm font-bold text-slate-700">Monthly Trend</h3>
-                            <span class="text-xs text-slate-400">Last 6 Months</span>
+                            <h3 class="text-sm font-bold text-slate-700"><?= __('payroll.monthly_trend') ?></h3>
+                            <span class="text-xs text-slate-400"><?= __('payroll.last_6_months') ?></span>
                         </div>
                         <div class="h-28 w-full flex-1">
                             <canvas id="payrollTrendChart"></canvas>
@@ -265,15 +265,15 @@ $periodStatus = $period['status'] ?? 'draft';
                     <!-- Table Header -->
                     <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div class="flex items-center gap-3">
-                            <h3 class="text-lg font-bold text-slate-800">Payroll Details</h3>
-                            <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-xs font-semibold text-slate-600"><?= $totalCrew ?> Items</span>
+                            <h3 class="text-lg font-bold text-slate-800"><?= __('payroll.details') ?></h3>
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-xs font-semibold text-slate-600"><?= $totalCrew ?> <?= __('common.entries') ?></span>
                         </div>
                         <div class="flex items-center gap-3 w-full sm:w-auto">
                             <div class="relative w-full sm:w-64">
                                 <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
                                 <input type="text" x-model="searchQuery" @input="filterItems()"
                                     class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 placeholder-slate-400 transition-all"
-                                    placeholder="Search crew...">
+                                    placeholder="<?= __('payroll.search_crew') ?>">
                             </div>
                             <button class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-500 hover:bg-slate-100 transition-colors">
                                 <span class="material-icons-outlined text-lg">filter_list</span>
@@ -286,16 +286,16 @@ $periodStatus = $period['status'] ?? 'draft';
                         <table class="w-full text-sm text-left">
                             <thead class="text-[11px] text-slate-400 uppercase bg-slate-50/80 tracking-wider">
                                 <tr>
-                                    <th class="px-6 py-3.5 font-semibold">Nama Crew</th>
-                                    <th class="px-6 py-3.5 font-semibold">Jabatan</th>
-                                    <th class="px-6 py-3.5 font-semibold">Kapal</th>
-                                    <th class="px-6 py-3.5 font-semibold text-right">Basic</th>
-                                    <th class="px-6 py-3.5 font-semibold text-right">Tunjangan</th>
-                                    <th class="px-6 py-3.5 font-semibold text-right">Bruto</th>
-                                    <th class="px-6 py-3.5 font-semibold text-right">Pajak (5%)</th>
-                                    <th class="px-6 py-3.5 font-semibold text-right">Netto</th>
-                                    <th class="px-6 py-3.5 font-semibold text-center">Status</th>
-                                    <th class="px-6 py-3.5 font-semibold text-center">Action</th>
+                                    <th class="px-6 py-3.5 font-semibold"><?= __('crews.crew_name') ?></th>
+                                    <th class="px-6 py-3.5 font-semibold"><?= __('crews.rank') ?></th>
+                                    <th class="px-6 py-3.5 font-semibold"><?= __('crews.vessel') ?></th>
+                                    <th class="px-6 py-3.5 font-semibold text-right"><?= __('payroll.basic_salary') ?></th>
+                                    <th class="px-6 py-3.5 font-semibold text-right"><?= __('payroll.allowances') ?></th>
+                                    <th class="px-6 py-3.5 font-semibold text-right"><?= __('payroll.gross') ?></th>
+                                    <th class="px-6 py-3.5 font-semibold text-right"><?= __('payroll.tax') ?> (5%)</th>
+                                    <th class="px-6 py-3.5 font-semibold text-right"><?= __('payroll.net') ?></th>
+                                    <th class="px-6 py-3.5 font-semibold text-center"><?= __('common.status') ?></th>
+                                    <th class="px-6 py-3.5 font-semibold text-center"><?= __('common.actions') ?></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
@@ -306,8 +306,8 @@ $periodStatus = $period['status'] ?? 'draft';
                                                 <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
                                                     <span class="material-icons-outlined text-3xl text-slate-300">calculate</span>
                                                 </div>
-                                                <p class="text-slate-500 font-medium">Belum ada data payroll</p>
-                                                <p class="text-slate-400 text-xs mt-1">Klik "Jalankan Payroll" untuk generate data gaji</p>
+                                                <p class="text-slate-500 font-medium"><?= __('payroll.no_payroll') ?></p>
+                                                <p class="text-slate-400 text-xs mt-1"><?= __('payroll.click_run_payroll') ?></p>
                                             </div>
                                         </td>
                                     </tr>
@@ -395,7 +395,7 @@ $periodStatus = $period['status'] ?? 'draft';
                     <?php if (!empty($items)): ?>
                         <div class="px-6 py-3.5 bg-slate-50/80 border-t border-slate-200 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                             <div>
-                                Showing <span class="font-semibold text-slate-700" x-text="visibleCount"><?= $totalCrew ?></span> of <?= $totalCrew ?> items
+                                <?= __('common.showing') ?> <span class="font-semibold text-slate-700" x-text="visibleCount"><?= $totalCrew ?></span> <?= __('common.of') ?> <?= $totalCrew ?> <?= __('common.entries') ?>
                             </div>
                             <div class="flex gap-3 items-center">
                                 <span>Rumus: <span class="text-slate-400">Gross ($<?= number_format($totalGross, 2) ?>) - Deductions ($<?= number_format($totalDeductions, 2) ?>) - Tax ($<?= number_format($totalTax, 2) ?>) = </span><span class="text-emerald-600 font-bold">Net $<?= number_format($totalNet, 2) ?></span></span>
@@ -411,16 +411,16 @@ $periodStatus = $period['status'] ?? 'draft';
                             <input type="hidden" name="period_id" value="<?= $period['id'] ?>">
                             <button type="submit"
                                 class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
-                                onclick="return confirm('Send payslips to all crew via email?')">
+                                onclick="return confirm('<?= __('payroll.confirm_send_payslips') ?>')">
                                 <span class="material-icons-outlined text-sm">email</span>
-                                Send Payslips via Email
+                                <?= __('payroll.send_payslips') ?>
                             </button>
                         </form>
                     </div>
                 <?php endif; ?>
 
                 <div class="mt-4 text-right text-xs text-slate-400">
-                    * Semua nilai dalam USD dengan 2 desimal untuk akurasi
+                    * <?= __('payroll.usd_note') ?>
                 </div>
 
                 <!-- Vessel Summary (if data exists) -->
@@ -428,7 +428,7 @@ $periodStatus = $period['status'] ?? 'draft';
                     <div class="mt-8 animate-fade-in-delay-3">
                         <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                             <span class="material-icons-outlined text-amber-500">pie_chart</span>
-                            Summary by Vessel
+                            <?= __('payroll.summary_by_vessel') ?>
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <?php foreach ($summary as $vesselSummary): ?>
@@ -440,7 +440,7 @@ $periodStatus = $period['status'] ?? 'draft';
                                             </div>
                                             <span class="font-bold text-slate-800"><?= htmlspecialchars($vesselSummary['vessel_name'] ?? 'Unknown') ?></span>
                                         </div>
-                                        <span class="text-xs font-semibold text-slate-400"><?= $vesselSummary['crew_count'] ?? 0 ?> crew</span>
+                                        <span class="text-xs font-semibold text-slate-400"><?= $vesselSummary['crew_count'] ?? 0 ?> <?= __('sidebar.crews') ?></span>
                                     </div>
                                     <div class="space-y-2 text-sm">
                                         <div class="flex justify-between">

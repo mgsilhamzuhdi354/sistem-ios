@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expiring Contracts | IndoOcean ERP</title>
+    <title><?= __('contracts.expiring_title') ?> | IndoOcean ERP</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
@@ -66,9 +66,9 @@
             <header
                 class="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between z-10 flex-shrink-0">
                 <div class="flex items-center gap-2">
-                    <span class="text-slate-400 font-medium text-sm">Contracts</span>
+                    <span class="text-slate-400 font-medium text-sm"><?= __('sidebar.contracts') ?></span>
                     <span class="material-icons-outlined text-slate-400 text-sm">chevron_right</span>
-                    <span class="text-slate-800 font-semibold text-sm">Expiring Contracts</span>
+                    <span class="text-slate-800 font-semibold text-sm"><?= __('contracts.expiring_title') ?></span>
                 </div>
 
                 <div class="flex items-center gap-4">
@@ -96,16 +96,15 @@
                         <div>
                             <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
                                 <span class="material-icons-outlined text-orange-500 text-3xl">schedule</span>
-                                Expiring Contracts
+                                <?= __('contracts.expiring_title') ?>
                             </h2>
-                            <p class="text-slate-500 mt-1">Contracts that will expire soon — take action before it's too
-                                late</p>
+                            <p class="text-slate-500 mt-1"><?= __('contracts.expiring_subtitle') ?></p>
                         </div>
 
                         <a href="<?= BASE_URL ?>contracts"
                             class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all shadow-sm">
                             <span class="material-icons-outlined text-sm">arrow_back</span>
-                            Back to Contracts
+                            <?= __('contracts.back_to_contracts') ?>
                         </a>
                     </div>
 
@@ -113,13 +112,13 @@
                     <div class="bg-white border border-slate-200 rounded-2xl p-6 mb-8 shadow-sm">
                         <div class="flex items-center gap-4">
                             <label for="expiry-filter" class="text-sm font-medium text-slate-600">
-                                Show contracts expiring within:
+                                <?= __('contracts.show_expiring_within') ?>:
                             </label>
                             <select id="expiry-filter"
                                 class="bg-slate-50 border-slate-200 rounded-xl text-sm font-semibold px-4 py-2 min-w-[150px] focus:ring-blue-500 focus:border-blue-500 transition-all">
-                                <option value="30">30 days</option>
-                                <option value="60" selected>60 days</option>
-                                <option value="90">90 days</option>
+                                <option value="30">30 <?= __('contracts.days_label') ?></option>
+                                <option value="60" selected>60 <?= __('contracts.days_label') ?></option>
+                                <option value="90">90 <?= __('contracts.days_label') ?></option>
                             </select>
                         </div>
                     </div>
@@ -136,7 +135,7 @@
                                 <div class="text-3xl font-bold text-slate-800">
                                     <?= isset($critical_count) ? $critical_count : 0 ?>
                                 </div>
-                                <div class="text-sm font-medium text-red-600/80">Critical (≤7 days)</div>
+                                <div class="text-sm font-medium text-red-600/80"><?= __('contracts.critical_days') ?></div>
                             </div>
                         </div>
 
@@ -150,7 +149,7 @@
                                 <div class="text-3xl font-bold text-slate-800">
                                     <?= isset($warning_count) ? $warning_count : 0 ?>
                                 </div>
-                                <div class="text-sm font-medium text-amber-600/80">Warning (8-30 days)</div>
+                                <div class="text-sm font-medium text-amber-600/80"><?= __('contracts.warning_days') ?></div>
                             </div>
                         </div>
 
@@ -164,7 +163,7 @@
                                 <div class="text-3xl font-bold text-slate-800">
                                     <?= isset($upcoming_count) ? $upcoming_count : 0 ?>
                                 </div>
-                                <div class="text-sm font-medium text-blue-600/80">Upcoming (31+ days)</div>
+                                <div class="text-sm font-medium text-blue-600/80"><?= __('contracts.upcoming_days') ?></div>
                             </div>
                         </div>
                     </div>
@@ -177,10 +176,9 @@
                                 <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
                                     <span class="material-icons-outlined text-emerald-500 text-5xl">check_circle</span>
                                 </div>
-                                <h3 class="text-lg font-bold text-slate-800">No contracts expiring within 60 days - Great!
+                                <h3 class="text-lg font-bold text-slate-800"><?= __('contracts.no_expiring') ?>
                                 </h3>
-                                <p class="text-slate-500 text-sm mt-1">Everything looks good for now. Check back later for
-                                    updates.</p>
+                                <p class="text-slate-500 text-sm mt-1"><?= __('contracts.all_good') ?></p>
                             </div>
                         <?php else: ?>
                             <!-- Table with Data -->
@@ -208,7 +206,7 @@
                                                 Sign Off Date</th>
                                             <th
                                                 class="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider text-center">
-                                                Days Left</th>
+                                                <?= __('contracts.days_left') ?></th>
                                             <th
                                                 class="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider text-right">
                                                 Actions</th>

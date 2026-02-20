@@ -18,11 +18,11 @@ $sColor = $statusColors[$contract['status'] ?? 'draft'] ?? $statusColors['draft'
 $daysRemaining = $daysRemaining ?? null;
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($contract['contract_no'] ?? '') ?> | Contract Detail</title>
+    <title><?= htmlspecialchars($contract['contract_no'] ?? '') ?> | <?= __('contracts.contract_detail') ?></title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -68,7 +68,7 @@ $daysRemaining = $daysRemaining ?? null;
                             <span class="material-icons-outlined text-xl">arrow_back</span>
                         </a>
                         <div>
-                            <h1 class="text-xl font-bold text-gray-900">Contract Detail - <?= htmlspecialchars($contract['contract_no'] ?? '') ?></h1>
+                            <h1 class="text-xl font-bold text-gray-900"><?= __('contracts.contract_detail') ?> - <?= htmlspecialchars($contract['contract_no'] ?? '') ?></h1>
                             <p class="text-sm text-gray-500 mt-0.5"><?= htmlspecialchars($contract['crew_name'] ?? '') ?> — <?= htmlspecialchars($contract['rank_name'] ?? '-') ?></p>
                         </div>
                     </div>
@@ -78,17 +78,17 @@ $daysRemaining = $daysRemaining ?? null;
                         </span>
                         <?php if (in_array($contract['status'] ?? '', ['active', 'onboard'])): ?>
                             <a href="<?= BASE_URL ?>contracts/renew/<?= $contract['id'] ?>" class="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 transition-colors">
-                                <span class="material-icons-outlined text-sm">autorenew</span> Renew
+                                <span class="material-icons-outlined text-sm">autorenew</span> <?= __('contracts.renew') ?>
                             </a>
                             <a href="<?= BASE_URL ?>contracts/terminate/<?= $contract['id'] ?>" class="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition-colors">
-                                <span class="material-icons-outlined text-sm">close</span> Terminate
+                                <span class="material-icons-outlined text-sm">close</span> <?= __('contracts.terminate') ?>
                             </a>
                         <?php endif; ?>
                         <a href="<?= BASE_URL ?>contracts/export-pdf/<?= $contract['id'] ?>" target="_blank" class="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors">
                             <span class="material-icons-outlined text-sm">picture_as_pdf</span> PDF
                         </a>
                         <a href="<?= BASE_URL ?>contracts/edit/<?= $contract['id'] ?>" class="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
-                            <span class="material-icons-outlined text-sm">edit</span> Edit
+                            <span class="material-icons-outlined text-sm">edit</span> <?= __('common.edit') ?>
                         </a>
                     </div>
                 </div>
@@ -116,7 +116,7 @@ $daysRemaining = $daysRemaining ?? null;
                         <div class="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden animate-fade-in">
                             <div class="flex items-center gap-2 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
                                 <span class="material-icons-outlined text-indigo-500">description</span>
-                                <h3 class="font-semibold text-gray-900">Contract Information</h3>
+                                <h3 class="font-semibold text-gray-900"><?= __('contracts.contract_info') ?></h3>
                             </div>
                             <div class="p-6 space-y-3">
                                 <?php
@@ -140,7 +140,7 @@ $daysRemaining = $daysRemaining ?? null;
                         <div class="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden animate-d1">
                             <div class="flex items-center gap-2 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
                                 <span class="material-icons-outlined text-indigo-500">event</span>
-                                <h3 class="font-semibold text-gray-900">Contract Period</h3>
+                                <h3 class="font-semibold text-gray-900"><?= __('contracts.contract_period') ?></h3>
                             </div>
                             <div class="p-6 space-y-3">
                                 <div class="flex justify-between items-center">
@@ -152,14 +152,14 @@ $daysRemaining = $daysRemaining ?? null;
                                     <span class="text-sm font-medium text-gray-900"><?= $contract['sign_off_date'] ? date('d M Y', strtotime($contract['sign_off_date'])) : '-' ?></span>
                                 </div>
                                 <div class="flex justify-between items-center">
-                                    <span class="text-sm text-gray-500">Duration</span>
-                                    <span class="text-sm font-medium text-gray-900"><?= $contract['duration_months'] ?? '-' ?> months</span>
+                                    <span class="text-sm text-gray-500"><?= __('contracts.duration') ?></span>
+                                    <span class="text-sm font-medium text-gray-900"><?= $contract['duration_months'] ?? '-' ?> <?= __('contracts.months') ?></span>
                                 </div>
                                 <div class="flex justify-between items-center">
-                                    <span class="text-sm text-gray-500">Days Remaining</span>
+                                    <span class="text-sm text-gray-500"><?= __('contracts.days_remaining') ?></span>
                                     <?php if ($daysRemaining !== null && in_array($contract['status'], ['active', 'onboard'])): ?>
                                         <?php $dc = $daysRemaining <= 7 ? 'bg-red-100 text-red-700' : ($daysRemaining <= 30 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'); ?>
-                                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold <?= $dc ?>"><?= $daysRemaining ?> days</span>
+                                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold <?= $dc ?>"><?= $daysRemaining ?> <?= __('documents.days') ?></span>
                                     <?php else: ?>
                                         <span class="text-sm text-gray-400">-</span>
                                     <?php endif; ?>
@@ -171,7 +171,7 @@ $daysRemaining = $daysRemaining ?? null;
                         <div class="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden animate-d2">
                             <div class="flex items-center gap-2 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
                                 <span class="material-icons-outlined text-indigo-500">payments</span>
-                                <h3 class="font-semibold text-gray-900">Salary Structure</h3>
+                                <h3 class="font-semibold text-gray-900"><?= __('contracts.salary_structure') ?></h3>
                             </div>
                             <div class="p-6 space-y-3">
                                 <?php $cs = $contract['currency_symbol'] ?? '$'; ?>
@@ -223,7 +223,7 @@ $daysRemaining = $daysRemaining ?? null;
                         <div class="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden animate-fade-in">
                             <div class="flex items-center gap-2 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
                                 <span class="material-icons-outlined text-indigo-500">receipt_long</span>
-                                <h3 class="font-semibold text-gray-900">Tax Information</h3>
+                                <h3 class="font-semibold text-gray-900"><?= __('contracts.tax_info') ?></h3>
                             </div>
                             <div class="p-6 space-y-3">
                                 <div class="flex justify-between items-center">
@@ -245,11 +245,11 @@ $daysRemaining = $daysRemaining ?? null;
                         <div class="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden animate-d1">
                             <div class="flex items-center gap-2 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
                                 <span class="material-icons-outlined text-indigo-500">verified</span>
-                                <h3 class="font-semibold text-gray-900">Approval Workflow</h3>
+                                <h3 class="font-semibold text-gray-900"><?= __('contracts.approval_workflow') ?></h3>
                             </div>
                             <div class="p-6">
                                 <?php if (empty($approvals)): ?>
-                                    <p class="text-sm text-gray-400 text-center py-4">No approvals yet</p>
+                                    <p class="text-sm text-gray-400 text-center py-4"><?= __('contracts.no_approvals') ?></p>
                                 <?php else: ?>
                                     <div class="space-y-3">
                                         <?php foreach ($approvals as $approval): ?>
@@ -276,11 +276,11 @@ $daysRemaining = $daysRemaining ?? null;
                                                     <div class="flex gap-1">
                                                         <form method="POST" action="<?= BASE_URL ?>contracts/approve/<?= $contract['id'] ?>">
                                                             <button type="submit" class="inline-flex items-center gap-1 rounded-lg bg-green-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-green-700 transition-colors">
-                                                                <span class="material-icons-outlined text-sm">check</span> Approve
+                                                                <span class="material-icons-outlined text-sm">check</span> <?= __('contracts.approve') ?>
                                                             </button>
                                                         </form>
                                                         <button onclick="document.getElementById('rejectModal').classList.remove('hidden')" class="inline-flex items-center gap-1 rounded-lg bg-red-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-red-700 transition-colors">
-                                                            <span class="material-icons-outlined text-sm">close</span> Reject
+                                                            <span class="material-icons-outlined text-sm">close</span> <?= __('contracts.reject') ?>
                                                         </button>
                                                     </div>
                                                 <?php endif; ?>
@@ -295,7 +295,7 @@ $daysRemaining = $daysRemaining ?? null;
                         <div class="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden animate-d2">
                             <div class="flex items-center gap-2 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
                                 <span class="material-icons-outlined text-indigo-500">folder_open</span>
-                                <h3 class="font-semibold text-gray-900">Documents</h3>
+                                <h3 class="font-semibold text-gray-900"><?= __('contracts.documents_section') ?></h3>
                             </div>
                             <div class="p-6">
                                 <!-- Upload Form -->
@@ -322,7 +322,7 @@ $daysRemaining = $daysRemaining ?? null;
                                             <input type="file" name="document" required class="w-full text-sm text-gray-500 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100 transition-colors">
                                         </div>
                                         <button type="submit" class="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm">
-                                            <span class="material-icons-outlined text-sm">upload</span> Upload
+                                            <span class="material-icons-outlined text-sm">upload</span> <?= __('common.upload') ?>
                                         </button>
                                     </div>
                                 </form>
@@ -331,7 +331,7 @@ $daysRemaining = $daysRemaining ?? null;
                                 <?php if (empty($documents)): ?>
                                     <div class="text-center py-6">
                                         <span class="material-icons-outlined text-4xl text-gray-300 block mb-2">description</span>
-                                        <p class="text-sm text-gray-400">No documents uploaded</p>
+                                        <p class="text-sm text-gray-400"><?= __('contracts.no_documents') ?></p>
                                     </div>
                                 <?php else: ?>
                                     <div class="space-y-2">
@@ -360,11 +360,11 @@ $daysRemaining = $daysRemaining ?? null;
                         <div class="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden animate-d2">
                             <div class="flex items-center gap-2 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
                                 <span class="material-icons-outlined text-indigo-500">history</span>
-                                <h3 class="font-semibold text-gray-900">Activity Log</h3>
+                                <h3 class="font-semibold text-gray-900"><?= __('contracts.activity_log') ?></h3>
                             </div>
                             <div class="p-6">
                                 <?php if (empty($logs)): ?>
-                                    <p class="text-sm text-gray-400 text-center py-4">No activity yet</p>
+                                    <p class="text-sm text-gray-400 text-center py-4"><?= __('contracts.no_activity') ?></p>
                                 <?php else: ?>
                                     <div class="max-h-64 overflow-y-auto custom-scrollbar divide-y divide-gray-100">
                                         <?php foreach ($logs as $log): ?>
@@ -393,17 +393,17 @@ $daysRemaining = $daysRemaining ?? null;
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden" onclick="event.stopPropagation()">
             <div class="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
                 <h3 class="text-white font-semibold flex items-center gap-2">
-                    <span class="material-icons-outlined">gavel</span> Reject Contract
+                    <span class="material-icons-outlined">gavel</span> <?= __('contracts.reject_contract') ?>
                 </h3>
             </div>
             <form method="POST" action="<?= BASE_URL ?>contracts/reject/<?= $contract['id'] ?>">
                 <div class="px-6 py-5">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Reason for rejection</label>
-                    <textarea name="reason" rows="3" required placeholder="Enter rejection reason..." class="w-full rounded-lg border-gray-300 text-sm focus:border-red-500 focus:ring-red-500"></textarea>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><?= __('contracts.rejection_reason') ?></label>
+                    <textarea name="reason" rows="3" required placeholder="<?= __('contracts.enter_reason') ?>" class="w-full rounded-lg border-gray-300 text-sm focus:border-red-500 focus:ring-red-500"></textarea>
                 </div>
                 <div class="flex justify-end gap-2 px-6 py-4 bg-gray-50 border-t border-gray-100">
-                    <button type="button" onclick="document.getElementById('rejectModal').classList.add('hidden')" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">Cancel</button>
-                    <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors">Confirm Reject</button>
+                    <button type="button" onclick="document.getElementById('rejectModal').classList.add('hidden')" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"><?= __('common.cancel') ?></button>
+                    <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors"><?= __('contracts.confirm_reject') ?></button>
                 </div>
             </form>
         </div>

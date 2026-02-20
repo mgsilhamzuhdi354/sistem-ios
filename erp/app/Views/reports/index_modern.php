@@ -6,7 +6,7 @@
 $currentPage = 'reports';
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,8 +30,8 @@ $currentPage = 'reports';
         <!-- Header -->
         <header class="h-14 bg-white border-b border-slate-200 flex items-center px-6 flex-shrink-0">
             <div>
-                <h1 class="text-base font-bold text-slate-800 tracking-tight">Reports Center</h1>
-                <p class="text-[11px] text-slate-400">Generate and download reports</p>
+                <h1 class="text-base font-bold text-slate-800 tracking-tight"><?= __('reports.title') ?></h1>
+                <p class="text-[11px] text-slate-400"><?= __('reports.subtitle') ?></p>
             </div>
         </header>
 
@@ -39,7 +39,7 @@ $currentPage = 'reports';
         <div class="flex-1 overflow-y-auto p-6">
             <div class="flex items-center gap-2 mb-6">
                 <span class="material-icons text-blue-600 text-2xl">assessment</span>
-                <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Available Reports</h2>
+                <h2 class="text-2xl font-bold text-slate-800 tracking-tight"><?= __('reports.available_reports') ?></h2>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -47,13 +47,13 @@ $currentPage = 'reports';
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden opacity-0 animate-fade-in">
                     <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
                         <div class="p-2 bg-blue-50 rounded-lg"><span class="material-icons text-blue-600">description</span></div>
-                        <h3 class="text-sm font-bold text-slate-800">Contract Reports</h3>
+                        <h3 class="text-sm font-bold text-slate-800"><?= __('reports.contract_reports') ?></h3>
                     </div>
                     <div class="divide-y divide-slate-100">
                         <div class="px-5 py-4 flex items-center justify-between hover:bg-blue-50/40 transition-colors">
                             <div>
-                                <p class="text-sm font-semibold text-slate-800">Active Contracts</p>
-                                <p class="text-xs text-slate-400 mt-0.5">List of all currently active contracts</p>
+                                <p class="text-sm font-semibold text-slate-800"><?= __('reports.active_contracts') ?></p>
+                                <p class="text-xs text-slate-400 mt-0.5"><?= __('reports.active_contracts_desc') ?></p>
                             </div>
                             <div class="flex gap-2">
                                 <a href="<?= BASE_URL ?>reports/activeContracts" class="p-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors">
@@ -66,8 +66,8 @@ $currentPage = 'reports';
                         </div>
                         <div class="px-5 py-4 flex items-center justify-between hover:bg-blue-50/40 transition-colors">
                             <div>
-                                <p class="text-sm font-semibold text-slate-800">Expiring Contracts</p>
-                                <p class="text-xs text-slate-400 mt-0.5">Contracts expiring within 60 days</p>
+                                <p class="text-sm font-semibold text-slate-800"><?= __('reports.expiring_contracts') ?></p>
+                                <p class="text-xs text-slate-400 mt-0.5"><?= __('reports.expiring_contracts_desc') ?></p>
                             </div>
                             <div class="flex gap-2">
                                 <a href="<?= BASE_URL ?>reports/expiringContracts" class="p-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors">
@@ -80,8 +80,8 @@ $currentPage = 'reports';
                         </div>
                         <div class="px-5 py-4 flex items-center justify-between hover:bg-blue-50/40 transition-colors">
                             <div>
-                                <p class="text-sm font-semibold text-slate-800">Contracts by Vessel</p>
-                                <p class="text-xs text-slate-400 mt-0.5">Contract breakdown per vessel</p>
+                                <p class="text-sm font-semibold text-slate-800"><?= __('reports.by_vessel') ?></p>
+                                <p class="text-xs text-slate-400 mt-0.5"><?= __('reports.by_vessel_desc') ?></p>
                             </div>
                             <a href="<?= BASE_URL ?>reports/by-vessel" class="p-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors">
                                 <span class="material-icons text-lg">visibility</span>
@@ -89,8 +89,8 @@ $currentPage = 'reports';
                         </div>
                         <div class="px-5 py-4 flex items-center justify-between hover:bg-blue-50/40 transition-colors">
                             <div>
-                                <p class="text-sm font-semibold text-slate-800">Contracts by Client</p>
-                                <p class="text-xs text-slate-400 mt-0.5">Contract summary per client/principal</p>
+                                <p class="text-sm font-semibold text-slate-800"><?= __('reports.by_client') ?></p>
+                                <p class="text-xs text-slate-400 mt-0.5"><?= __('reports.by_client_desc') ?></p>
                             </div>
                             <a href="<?= BASE_URL ?>reports/by-client" class="p-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors">
                                 <span class="material-icons text-lg">visibility</span>
@@ -103,13 +103,13 @@ $currentPage = 'reports';
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden opacity-0 animate-fade-in animate-d1">
                     <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
                         <div class="p-2 bg-emerald-50 rounded-lg"><span class="material-icons text-emerald-600">account_balance_wallet</span></div>
-                        <h3 class="text-sm font-bold text-slate-800">Payroll Reports</h3>
+                        <h3 class="text-sm font-bold text-slate-800"><?= __('reports.payroll_reports') ?></h3>
                     </div>
                     <div class="divide-y divide-slate-100">
                         <div class="px-5 py-4 flex items-center justify-between hover:bg-blue-50/40 transition-colors">
                             <div>
-                                <p class="text-sm font-semibold text-slate-800">Monthly Payroll Summary</p>
-                                <p class="text-xs text-slate-400 mt-0.5">Complete payroll breakdown per month</p>
+                                <p class="text-sm font-semibold text-slate-800"><?= __('reports.payroll_summary') ?></p>
+                                <p class="text-xs text-slate-400 mt-0.5"><?= __('reports.payroll_summary_desc') ?></p>
                             </div>
                             <a href="<?= BASE_URL ?>reports/payroll-summary" class="p-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors">
                                 <span class="material-icons text-lg">visibility</span>
@@ -117,8 +117,8 @@ $currentPage = 'reports';
                         </div>
                         <div class="px-5 py-4 flex items-center justify-between hover:bg-blue-50/40 transition-colors">
                             <div>
-                                <p class="text-sm font-semibold text-slate-800">Tax Report (PPh 21)</p>
-                                <p class="text-xs text-slate-400 mt-0.5">Tax deduction report for tax filing</p>
+                                <p class="text-sm font-semibold text-slate-800"><?= __('reports.tax_report') ?></p>
+                                <p class="text-xs text-slate-400 mt-0.5"><?= __('reports.tax_report_desc') ?></p>
                             </div>
                             <a href="<?= BASE_URL ?>reports/taxReport" class="p-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors">
                                 <span class="material-icons text-lg">visibility</span>
@@ -131,14 +131,14 @@ $currentPage = 'reports';
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden opacity-0 animate-fade-in animate-d2">
                     <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
                         <div class="p-2 bg-amber-50 rounded-lg"><span class="material-icons text-amber-600">people</span></div>
-                        <h3 class="text-sm font-bold text-slate-800">Employee Reports</h3>
+                        <h3 class="text-sm font-bold text-slate-800"><?= __('reports.employee_reports') ?></h3>
                         <span class="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-100 text-emerald-600 rounded-full">HRIS</span>
                     </div>
                     <div class="divide-y divide-slate-100">
                         <div class="px-5 py-4 flex items-center justify-between hover:bg-blue-50/40 transition-colors">
                             <div>
-                                <p class="text-sm font-semibold text-slate-800">Employee Data</p>
-                                <p class="text-xs text-slate-400 mt-0.5">Employee report from HRIS integration</p>
+                                <p class="text-sm font-semibold text-slate-800"><?= __('reports.employee_data') ?></p>
+                                <p class="text-xs text-slate-400 mt-0.5"><?= __('reports.employee_data_desc') ?></p>
                             </div>
                             <a href="<?= BASE_URL ?>reports/employees" class="p-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors">
                                 <span class="material-icons text-lg">visibility</span>
@@ -151,13 +151,13 @@ $currentPage = 'reports';
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden opacity-0 animate-fade-in animate-d3">
                     <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
                         <div class="p-2 bg-red-50 rounded-lg"><span class="material-icons text-red-500">security</span></div>
-                        <h3 class="text-sm font-bold text-slate-800">Audit & Compliance</h3>
+                        <h3 class="text-sm font-bold text-slate-800"><?= __('reports.audit_compliance') ?></h3>
                     </div>
                     <div class="divide-y divide-slate-100">
                         <div class="px-5 py-4 flex items-center justify-between hover:bg-blue-50/40 transition-colors">
                             <div>
-                                <p class="text-sm font-semibold text-slate-800">Contract Change Log</p>
-                                <p class="text-xs text-slate-400 mt-0.5">Audit trail of all contract changes</p>
+                                <p class="text-sm font-semibold text-slate-800"><?= __('reports.contract_log') ?></p>
+                                <p class="text-xs text-slate-400 mt-0.5"><?= __('reports.contract_log_desc') ?></p>
                             </div>
                             <a href="<?= BASE_URL ?>reports/auditLog" class="p-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors">
                                 <span class="material-icons text-lg">visibility</span>

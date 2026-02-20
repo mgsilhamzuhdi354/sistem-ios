@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah Kapal Baru | IndoOcean ERP</title>
+    <title><?= __('vessels.add_vessel') ?> | IndoOcean ERP</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -85,9 +85,9 @@
                 <div class="flex items-center text-slate-500 text-sm">
                     <span class="material-icons-round text-lg mr-2 text-slate-400">home</span>
                     <span class="mx-2 text-slate-300">/</span>
-                    <a href="<?= BASE_URL ?>vessels" class="hover:text-primary transition-colors">Vessels</a>
+                    <a href="<?= BASE_URL ?>vessels" class="hover:text-primary transition-colors"><?= __('vessels.title') ?></a>
                     <span class="mx-2 text-slate-300">/</span>
-                    <span class="text-slate-800 font-medium">Tambah Kapal Baru</span>
+                    <span class="text-slate-800 font-medium"><?= __('vessels.add_vessel') ?></span>
                 </div>
                 
                 <div class="flex items-center gap-4">
@@ -109,8 +109,8 @@
                 <div class="max-w-5xl mx-auto mb-8 animate-fade-in">
                     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
                         <div>
-                            <h1 class="text-3xl font-bold text-slate-900 tracking-tight mb-2">Tambah Kapal Baru</h1>
-                            <p class="text-slate-500">Masukkan informasi kapal di bawah ini untuk mendaftarkan vessel baru ke sistem.</p>
+                            <h1 class="text-3xl font-bold text-slate-900 tracking-tight mb-2"><?= __('vessels.add_vessel') ?></h1>
+                            <p class="text-slate-500"><?= __('vessels.add_vessel_subtitle') ?></p>
                         </div>
                         <a href="<?= BASE_URL ?>vessels" 
                            class="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-medium hover:bg-white hover:shadow-sm transition-all text-sm">
@@ -130,8 +130,8 @@
                                 <span class="material-icons-round text-xl">sailing</span>
                             </div>
                             <div>
-                                <h2 class="text-lg font-bold text-slate-800">Informasi Kapal</h2>
-                                <p class="text-xs text-slate-400">Data dasar vessel yang akan didaftarkan</p>
+                                <h2 class="text-lg font-bold text-slate-800"><?= __('vessels.vessel_info') ?></h2>
+                                <p class="text-xs text-slate-400"><?= __('vessels.vessel_info_subtitle') ?></p>
                             </div>
                         </div>
                         
@@ -140,7 +140,7 @@
                                 <!-- Vessel Name -->
                                 <div class="space-y-2">
                                     <label class="block text-sm font-semibold text-slate-700">
-                                        Vessel Name <span class="text-red-500">*</span>
+                                        <?= __('vessels.vessel_name') ?> <span class="text-red-500">*</span>
                                     </label>
                                     <input type="text" 
                                            name="name" 
@@ -160,11 +160,11 @@
 
                                 <!-- Vessel Type -->
                                 <div class="space-y-2">
-                                    <label class="block text-sm font-semibold text-slate-700">Vessel Type</label>
+                                    <label class="block text-sm font-semibold text-slate-700"><?= __('vessels.vessel_type') ?></label>
                                     <div class="relative">
                                         <select name="vessel_type_id" 
                                                 class="w-full rounded-xl custom-input px-4 py-3 text-slate-700 focus:ring-0 border appearance-none pr-10">
-                                            <option value="">Pilih Tipe</option>
+                                            <option value=""><?= __('vessels.select_type') ?></option>
                                             <?php foreach ($vesselTypes ?? [] as $type): ?>
                                                 <option value="<?= $type['id'] ?>">
                                                     <?= htmlspecialchars($type['name']) ?>
@@ -179,11 +179,11 @@
 
                                 <!-- Flag State -->
                                 <div class="space-y-2">
-                                    <label class="block text-sm font-semibold text-slate-700">Flag State</label>
+                                    <label class="block text-sm font-semibold text-slate-700"><?= __('vessels.flag_state') ?></label>
                                     <div class="relative">
                                         <select name="flag_state_id" 
                                                 class="w-full rounded-xl custom-input px-4 py-3 text-slate-700 focus:ring-0 border appearance-none pr-10">
-                                            <option value="">Pilih Flag</option>
+                                            <option value=""><?= __('vessels.select_flag') ?></option>
                                             <?php foreach ($flagStates ?? [] as $flag): ?>
                                                 <option value="<?= $flag['id'] ?>">
                                                     <?= htmlspecialchars($flag['name']) ?>
@@ -198,11 +198,11 @@
 
                                 <!-- Client / Owner -->
                                 <div class="col-span-1 md:col-span-2 space-y-2">
-                                    <label class="block text-sm font-semibold text-slate-700">Client / Ship Owner</label>
+                                    <label class="block text-sm font-semibold text-slate-700"><?= __('vessels.client_owner') ?></label>
                                     <div class="relative">
                                         <select name="client_id" 
                                                 class="w-full rounded-xl custom-input pl-10 pr-10 py-3 text-slate-700 focus:ring-0 border appearance-none">
-                                            <option value="">Pilih Client</option>
+                                            <option value=""><?= __('vessels.select_client') ?></option>
                                             <?php foreach ($clients ?? [] as $client): ?>
                                                 <option value="<?= $client['id'] ?>">
                                                     <?= htmlspecialchars($client['name']) ?>
@@ -228,8 +228,8 @@
                                 <span class="material-icons-round text-xl">info</span>
                             </div>
                             <div>
-                                <h2 class="text-lg font-bold text-slate-800">Detail Teknis</h2>
-                                <p class="text-xs text-slate-400">Spesifikasi teknis dan kapasitas kapal</p>
+                                <h2 class="text-lg font-bold text-slate-800"><?= __('vessels.technical_details') ?></h2>
+                                <p class="text-xs text-slate-400"><?= __('vessels.technical_details_subtitle') ?></p>
                             </div>
                         </div>
                         

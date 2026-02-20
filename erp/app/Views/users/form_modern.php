@@ -7,7 +7,7 @@ $isEdit = !empty($user);
 $roles = $roles ?? [];
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,9 +29,9 @@ $roles = $roles ?? [];
     <main class="flex-1 flex flex-col h-screen overflow-hidden ml-64">
         <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0">
             <div class="flex items-center text-sm text-slate-500">
-                <a href="<?= BASE_URL ?>users" class="hover:text-blue-600 transition-colors">User Management</a>
+                <a href="<?= BASE_URL ?>users" class="hover:text-blue-600 transition-colors"><?= __('users.title') ?></a>
                 <span class="material-icons-round text-sm mx-2">chevron_right</span>
-                <span class="font-medium text-slate-800"><?= $isEdit ? 'Edit User' : 'Add New User' ?></span>
+                <span class="font-medium text-slate-800"><?= $isEdit ? __('users.edit_title') : __('users.create_title') ?></span>
             </div>
             <a href="<?= BASE_URL ?>users" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-colors">
                 <span class="material-icons text-sm">arrow_back</span> Kembali
@@ -126,8 +126,8 @@ $roles = $roles ?? [];
                         <div class="mb-5">
                             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Status</label>
                             <select name="is_active" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all">
-                                <option value="1" <?= $user['is_active'] ? 'selected' : '' ?>>Active</option>
-                                <option value="0" <?= !$user['is_active'] ? 'selected' : '' ?>>Inactive</option>
+                                <option value="1" <?= $user['is_active'] ? 'selected' : '' ?>><?= __('common.active') ?></option>
+                                <option value="0" <?= !$user['is_active'] ? 'selected' : '' ?>><?= __('common.inactive') ?></option>
                             </select>
                         </div>
                         <?php endif; ?>
@@ -137,7 +137,7 @@ $roles = $roles ?? [];
                             <a href="<?= BASE_URL ?>users" class="px-5 py-2.5 border border-slate-200 text-slate-600 text-sm font-semibold rounded-xl hover:bg-slate-50 transition-colors">Batal</a>
                             <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-0.5 inline-flex items-center gap-2">
                                 <span class="material-icons text-sm">save</span>
-                                <?= $isEdit ? 'Update User' : 'Buat User' ?>
+                                <?= $isEdit ? __('users.update_user') : __('users.create_user') ?>
                             </button>
                         </div>
                     </form>

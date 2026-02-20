@@ -51,11 +51,11 @@ $avatarColors = [
 ];
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= session()->get('lang') ?? 'en' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payroll Karyawan | IndoOcean ERP</title>
+    <title><?= __('employees.payroll_title') ?> | IndoOcean ERP</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -139,9 +139,9 @@ $avatarColors = [
                     <ol class="flex items-center space-x-2">
                         <li><a class="text-slate-400 hover:text-primary transition-colors" href="<?= BASE_URL ?>"><span class="material-symbols-outlined text-[20px]">home</span></a></li>
                         <li><span class="text-slate-300">/</span></li>
-                        <li><a class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors" href="<?= BASE_URL ?>employees">Employees</a></li>
+                        <li><a class="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors" href="<?= BASE_URL ?>employees"><?= __('employees.title') ?></a></li>
                         <li><span class="text-slate-300">/</span></li>
-                        <li><span aria-current="page" class="text-sm font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md">Payroll Karyawan</span></li>
+                        <li><span aria-current="page" class="text-sm font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md"><?= __('employees.payroll_title') ?></span></li>
                     </ol>
                 </nav>
                 <div class="flex items-center space-x-6">
@@ -157,9 +157,9 @@ $avatarColors = [
                 <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10 animate-slide-up">
                     <div>
                         <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-                            Payroll Karyawan
+                            <?= __('employees.payroll_title') ?>
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-                                Active Period
+                                <?= __('common.active_period') ?>
                             </span>
                         </h1>
                         <p class="mt-2 text-sm text-slate-500 font-medium">Data payroll karyawan dari sistem HRIS Absensi.</p>
@@ -184,7 +184,7 @@ $avatarColors = [
                             </span>
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-slate-500 mb-1">Total Employees</p>
+                            <p class="text-sm font-medium text-slate-500 mb-1"><?= __('employees.total_employees') ?></p>
                             <p class="text-3xl font-bold text-slate-800 tracking-tight"><?= $totalEmployees ?></p>
                         </div>
                     </div>
@@ -196,7 +196,7 @@ $avatarColors = [
                             <span class="text-xs font-medium text-slate-400"><?= $monthsEn[$month] ?> <?= $year ?></span>
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-slate-500 mb-1">Total Gross Salary</p>
+                            <p class="text-sm font-medium text-slate-500 mb-1"><?= __('employees.total_gross') ?></p>
                             <p class="text-3xl font-bold text-slate-800 tracking-tight">Rp <?= number_format($totalGajiPokok, 0, ',', '.') ?></p>
                         </div>
                     </div>
@@ -208,7 +208,7 @@ $avatarColors = [
                             <span class="text-xs font-medium text-slate-400">Inc. PPH21</span>
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-slate-500 mb-1">Total Deductions</p>
+                            <p class="text-sm font-medium text-slate-500 mb-1"><?= __('employees.total_deductions') ?></p>
                             <p class="text-3xl font-bold text-red-500 tracking-tight">Rp <?= number_format($totalPotongan, 0, ',', '.') ?></p>
                         </div>
                     </div>
@@ -224,7 +224,7 @@ $avatarColors = [
                             </span>
                         </div>
                         <div class="relative z-10">
-                            <p class="text-sm font-medium text-slate-500 mb-1">Net Payroll</p>
+                            <p class="text-sm font-medium text-slate-500 mb-1"><?= __('employees.net_payroll') ?></p>
                             <p class="text-3xl font-bold text-green-600 tracking-tight">Rp <?= number_format($totalGaji, 0, ',', '.') ?></p>
                             <div class="mt-2 flex items-center text-xs text-green-600 font-semibold bg-green-50 w-fit px-2 py-1 rounded-md">
                                 <span class="material-symbols-outlined text-[14px] mr-1">check_circle</span> Disbursed
@@ -237,7 +237,7 @@ $avatarColors = [
                 <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200 p-6 mb-8 shadow-sm animate-slide-up delay-100">
                     <form method="GET" action="<?= BASE_URL ?>employees/payroll" class="flex flex-col md:flex-row md:items-end gap-5">
                         <div class="w-full md:w-1/4 group">
-                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide group-focus-within:text-primary transition-colors">Month</label>
+                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide group-focus-within:text-primary transition-colors"><?= __('common.month') ?></label>
                             <div class="relative">
                                 <select name="bulan" class="w-full appearance-none pl-4 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white outline-none transition-all cursor-pointer hover:border-primary/50">
                                     <?php for ($m = 1; $m <= 12; $m++): ?>
@@ -250,7 +250,7 @@ $avatarColors = [
                             </div>
                         </div>
                         <div class="w-full md:w-1/4 group">
-                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide group-focus-within:text-primary transition-colors">Year</label>
+                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide group-focus-within:text-primary transition-colors"><?= __('common.year') ?></label>
                             <div class="relative">
                                 <select name="tahun" class="w-full appearance-none pl-4 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-primary focus:border-transparent focus:bg-white outline-none transition-all cursor-pointer hover:border-primary/50">
                                     <?php for ($y = date('Y'); $y >= date('Y') - 2; $y--): ?>
@@ -263,7 +263,7 @@ $avatarColors = [
                             </div>
                         </div>
                         <div class="w-full md:flex-1 group">
-                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide group-focus-within:text-primary transition-colors">Search Employee</label>
+                            <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide group-focus-within:text-primary transition-colors"><?= __('employees.search_employee') ?></label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <span class="material-symbols-outlined text-slate-400 text-[20px] group-focus-within:text-primary transition-colors">search</span>
@@ -377,7 +377,7 @@ $avatarColors = [
                                 </tbody>
                                 <tfoot class="bg-slate-50/90 border-t border-slate-200 backdrop-blur-sm">
                                     <tr>
-                                        <td class="px-8 py-6 text-sm font-bold text-slate-700 text-right uppercase tracking-wider" colspan="3">Total Summary</td>
+                                        <td class="px-8 py-6 text-sm font-bold text-slate-700 text-right uppercase tracking-wider" colspan="3"><?= __('common.total_summary') ?></td>
                                         <td class="px-8 py-6 text-sm text-slate-900 text-right font-mono font-bold"><?= number_format($totalGajiPokok, 0, ',', '.') ?></td>
                                         <td class="px-8 py-6 text-sm text-slate-900 text-right font-mono font-bold"><?= number_format($totalTunjangan, 0, ',', '.') ?></td>
                                         <td class="px-8 py-6 text-sm text-slate-900 text-right font-mono font-bold"><?= number_format($totalLembur, 0, ',', '.') ?></td>
