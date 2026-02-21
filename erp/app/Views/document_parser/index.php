@@ -423,7 +423,7 @@ function documentParser() {
             this.isProcessing = true; this.hasResult = false; this.errorMessage = ''; this.pageFilter = 'all';
             const fd = new FormData(); fd.append('document', this.selectedFile);
             try {
-                const res = await fetch('<?= BASE_URL ?>document-parser/process', {
+                const res = await fetch('<?= BASE_URL ?>DocumentParser/process', {
                     method: 'POST',
                     headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': '<?= $csrf_token ?>' },
                     body: fd
