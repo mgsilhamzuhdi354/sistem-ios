@@ -71,6 +71,33 @@
         .material-symbols-filled {
             font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
+
+        /* Book-flip modal animation */
+        @keyframes bookOpen {
+            0% { transform: perspective(1200px) rotateY(-90deg) scale(0.8); opacity: 0; }
+            40% { transform: perspective(1200px) rotateY(10deg) scale(1.02); opacity: 1; }
+            70% { transform: perspective(1200px) rotateY(-5deg) scale(1); }
+            100% { transform: perspective(1200px) rotateY(0deg) scale(1); opacity: 1; }
+        }
+        @keyframes bookClose {
+            0% { transform: perspective(1200px) rotateY(0deg) scale(1); opacity: 1; }
+            100% { transform: perspective(1200px) rotateY(-90deg) scale(0.8); opacity: 0; }
+        }
+        .book-open-enter {
+            animation: bookOpen 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            transform-origin: left center;
+        }
+        .book-open-leave {
+            animation: bookClose 0.3s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+            transform-origin: left center;
+        }
+        @keyframes fadeInBackdrop {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .backdrop-fade-in {
+            animation: fadeInBackdrop 0.3s ease forwards;
+        }
     </style>
 </head>
 
@@ -257,96 +284,65 @@
                     <!-- Main Content Grid -->
                     <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
 
-                        <!-- Monthly Cost Breakdown -->
+                        <!-- Biaya Bulanan (Data Real dari Gaji Kru) -->
                         <div
                             class="xl:col-span-1 bg-white rounded-xl border border-slate-100 shadow-sm p-6 flex flex-col h-full">
                             <div class="flex items-center justify-between mb-6">
-                                <h3 class="font-bold text-navy text-lg"><?= __('clients.monthly_cost') ?></h3>
-                                <button class="text-slate-400 hover:text-primary">
-                                    <span class="material-symbols-outlined">more_horiz</span>
-                                </button>
+                                <h3 class="font-bold text-navy text-lg">Biaya Bulanan</h3>
+                                <span class="text-[10px] font-medium text-slate-400 bg-slate-50 px-2 py-1 rounded">Data Real</span>
                             </div>
 
                             <div class="flex-1 flex flex-col justify-center">
                                 <div class="mb-2">
-                                    <p class="text-sm text-slate-500 mb-1"><?= __('clients.total_expenses') ?></p>
+                                    <p class="text-sm text-slate-500 mb-1">Total Pengeluaran Gaji Kru</p>
                                     <?php
-                                    // Get total from monthlyCost breakdown
                                     $totalCostUSD = $monthlyCost['total_usd'] ?? 0;
-                                    $totalCostIDR = $totalCostUSD * 15300; // Approximate IDR conversion
                                     ?>
-                                    <p class="text-2xl font-bold text-navy tracking-tight">IDR
-                                        <?= number_format($totalCostIDR, 0, ',', '.') ?>
-                                    </p>
-                                    <p class="text-sm font-medium text-slate-400">≈ $
-                                        <?= number_format($totalCostUSD, 2) ?> USD
-                                    </p>
+                                    <p class="text-2xl font-bold text-navy tracking-tight">$<?= number_format($totalCostUSD, 2) ?></p>
+                                    <p class="text-xs font-medium text-slate-400 mt-1">Total gaji bulanan semua kru aktif</p>
                                 </div>
 
-                                <div class="mt-8 space-y-4">
+                                <!-- Breakdown per Currency (data real) -->
+                                <div class="mt-6 space-y-3">
+                                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Rincian Per Mata Uang</p>
                                     <?php
-                                    // Calculate breakdown percentages based on actual crew salary data
-                                    // For now, we'll show salary as the main component
-                                    $salaryPercent = 100; // All cost is currently salary-based
-                                    
-                                    // Calculate estimated operational costs (rough estimate: 20% of salary)
-                                    $operationsEstimate = $totalCostUSD * 0.20;
-                                    $maintenanceEstimate = $totalCostUSD * 0.15;
-                                    $wagesActual = $totalCostUSD;
-
-                                    $totalEstimate = $operationsEstimate + $maintenanceEstimate + $wagesActual;
-
-                                    $opsPercent = $totalEstimate > 0 ? round(($operationsEstimate / $totalEstimate) * 100) : 0;
-                                    $maintPercent = $totalEstimate > 0 ? round(($maintenanceEstimate / $totalEstimate) * 100) : 0;
-                                    $wagesPercent = $totalEstimate > 0 ? round(($wagesActual / $totalEstimate) * 100) : 0;
+                                    $byCurrency = $monthlyCost['by_currency'] ?? [];
+                                    $symbols = $monthlyCost['symbols'] ?? [];
+                                    if (!empty($byCurrency)):
+                                        $maxAmount = max($byCurrency);
+                                        foreach ($byCurrency as $currCode => $amount):
+                                            $pct = $maxAmount > 0 ? round(($amount / $maxAmount) * 100) : 0;
+                                            $sym = $symbols[$currCode] ?? $currCode;
                                     ?>
-
-                                    <div>
-                                        <div class="flex justify-between text-xs font-medium mb-1.5">
-                                            <span class="text-slate-600">Operations</span>
-                                            <span class="text-primary">
-                                                <?= $opsPercent ?>%
-                                            </span>
-                                        </div>
-                                        <div class="w-full bg-slate-100 rounded-full h-2">
-                                            <div class="bg-primary h-2 rounded-full" style="width: <?= $opsPercent ?>%">
+                                        <div>
+                                            <div class="flex justify-between text-xs font-medium mb-1.5">
+                                                <span class="text-slate-600"><?= $currCode ?></span>
+                                                <span class="text-navy font-semibold"><?= $sym ?> <?= number_format($amount, 0, ',', '.') ?></span>
+                                            </div>
+                                            <div class="w-full bg-slate-100 rounded-full h-2">
+                                                <div class="bg-primary h-2 rounded-full transition-all" style="width: <?= $pct ?>%"></div>
                                             </div>
                                         </div>
-                                    </div>
+                                    <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <p class="text-sm text-slate-400 italic">Belum ada data gaji</p>
+                                    <?php endif; ?>
+                                </div>
 
-                                    <div>
-                                        <div class="flex justify-between text-xs font-medium mb-1.5">
-                                            <span class="text-slate-600">Maintenance</span>
-                                            <span class="text-amber-500">
-                                                <?= $maintPercent ?>%
-                                            </span>
-                                        </div>
-                                        <div class="w-full bg-slate-100 rounded-full h-2">
-                                            <div class="bg-amber-500 h-2 rounded-full"
-                                                style="width: <?= $maintPercent ?>%"></div>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div class="flex justify-between text-xs font-medium mb-1.5">
-                                            <span class="text-slate-600">Crew Wages</span>
-                                            <span class="text-emerald-500">
-                                                <?= $wagesPercent ?>%
-                                            </span>
-                                        </div>
-                                        <div class="w-full bg-slate-100 rounded-full h-2">
-                                            <div class="bg-emerald-500 h-2 rounded-full"
-                                                style="width: <?= $wagesPercent ?>%"></div>
-                                        </div>
+                                <!-- USD Equivalent -->
+                                <div class="mt-4 pt-4 border-t border-slate-100">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs text-slate-400">Setara USD</span>
+                                        <span class="text-sm font-bold text-primary">$ <?= number_format($totalCostUSD, 2) ?></span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Fleet & Profit Section (Tabbed) -->
-                        <div class="xl:col-span-2 flex flex-col gap-4" x-data="{ activeTab: 'fleet' }">
+                        <div class="xl:col-span-2 flex flex-col gap-4" x-data="{ activeTab: 'fleet', vesselModal: false, selectedVessel: null }">
                             <!-- Tab Headers -->
-                            <div class="flex items-center justify-between">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
                                 <div class="flex items-center gap-1 p-1 bg-slate-100 rounded-lg">
                                     <button @click="activeTab = 'fleet'"
                                         :class="activeTab === 'fleet' ? 'bg-white text-navy shadow-sm font-semibold' : 'text-slate-500 hover:text-navy'"
@@ -365,19 +361,26 @@
                                         </span>
                                     </button>
                                 </div>
-                                <a href="<?= BASE_URL ?>vessels"
-                                    class="text-sm font-medium text-primary hover:text-blue-700 flex items-center">
-                                    <?= __('common.view_all') ?> <span class="material-symbols-outlined text-sm ml-1">arrow_forward</span>
-                                </a>
+                                <div class="flex items-center gap-2">
+                                    <a href="<?= BASE_URL ?>vessels/create?client_id=<?= $client['id'] ?>"
+                                        class="flex items-center gap-1.5 bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm hover:shadow-md transition-all active:scale-95">
+                                        <span class="material-symbols-outlined text-[16px]">add</span>
+                                        Tambah Kapal
+                                    </a>
+                                    <a href="<?= BASE_URL ?>vessels"
+                                        class="text-sm font-medium text-primary hover:text-blue-700 flex items-center">
+                                        Lihat Semua <span class="material-symbols-outlined text-sm ml-1">arrow_forward</span>
+                                    </a>
+                                </div>
                             </div>
 
-                            <!-- Tab 1: Fleet Management (Full Vessel List) -->
+                            <!-- Tab 1: Manajemen Kapal (Daftar Kapal Lengkap) -->
                             <div x-show="activeTab === 'fleet'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <?php if (!empty($vessels)): ?>
-                                        <?php foreach ($vessels as $vessel): ?>
-                                            <div class="group bg-white rounded-xl border border-slate-100 shadow-sm p-4 hover:border-primary/30 hover:shadow-md transition-all cursor-pointer">
-                                                <!-- Vessel Image -->
+                                        <?php foreach ($vessels as $vIdx => $vessel): ?>
+                                            <div @click="selectedVessel = <?= $vIdx ?>; vesselModal = true" class="group bg-white rounded-xl border border-slate-100 shadow-sm p-4 hover:border-primary/30 hover:shadow-md transition-all cursor-pointer">
+                                                <!-- Foto Kapal -->
                                                 <div class="h-32 rounded-lg bg-gradient-to-br from-slate-200 to-slate-300 w-full mb-4 relative overflow-hidden">
                                                     <?php if (!empty($vessel['image_url'])): ?>
                                                         <?php
@@ -411,9 +414,15 @@
                                                             <?= htmlspecialchars($vessel['vessel_type_name'] ?? '') ?> • IMO: <?= htmlspecialchars($vessel['imo_number'] ?? 'N/A') ?>
                                                         </p>
                                                     </div>
-                                                    <div class="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-md text-slate-600 text-xs font-medium border border-slate-100">
-                                                        <span class="material-symbols-outlined text-sm">group</span>
-                                                        <?= $vessel['crew_count'] ?? 0 ?>
+                                                    <div class="flex items-center gap-2">
+                                                        <a href="<?= BASE_URL ?>vessels/edit/<?= $vessel['id'] ?>" @click.stop
+                                                            class="flex items-center gap-1 bg-slate-50 hover:bg-primary hover:text-white px-2 py-1 rounded-md text-slate-500 text-xs font-medium border border-slate-100 transition-all">
+                                                            <span class="material-symbols-outlined text-[14px]">edit</span>
+                                                        </a>
+                                                        <div class="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-md text-slate-600 text-xs font-medium border border-slate-100">
+                                                            <span class="material-symbols-outlined text-sm">group</span>
+                                                            <?= $vessel['crew_count'] ?? 0 ?>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -426,6 +435,83 @@
                                     <?php endif; ?>
                                 </div>
                             </div>
+
+                            <!-- Vessel Detail Modal (Book-Flip Animation) -->
+                            <template x-if="vesselModal">
+                                <div class="fixed inset-0 z-[9999] flex items-center justify-center p-4" @click.self="vesselModal = false">
+                                    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm backdrop-fade-in" @click="vesselModal = false"></div>
+                                    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden book-open-enter z-10">
+                                        <!-- Modal Header -->
+                                        <?php foreach ($vessels as $mIdx => $mv): ?>
+                                        <div x-show="selectedVessel === <?= $mIdx ?>">
+                                            <!-- Foto Kapal Besar -->
+                                            <div class="h-48 bg-gradient-to-br from-slate-200 to-slate-300 relative overflow-hidden">
+                                                <?php if (!empty($mv['image_url'])): ?>
+                                                    <?php
+                                                    $mImgUrl = $mv['image_url'];
+                                                    if (!preg_match('/^https?:\/\//', $mImgUrl)) {
+                                                        $mImgUrl = BASE_URL . $mImgUrl;
+                                                    }
+                                                    ?>
+                                                    <img src="<?= $mImgUrl ?>" alt="<?= htmlspecialchars($mv['name']) ?>" class="w-full h-full object-cover">
+                                                <?php else: ?>
+                                                    <div class="w-full h-full flex items-center justify-center">
+                                                        <span class="material-symbols-outlined text-6xl text-slate-400">directions_boat</span>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div class="absolute top-3 right-3 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-navy shadow">
+                                                    <?= ucfirst($mv['status'] ?? 'Active') ?>
+                                                </div>
+                                                <button @click="vesselModal = false" class="absolute top-3 left-3 bg-black/30 hover:bg-black/50 text-white rounded-full p-1.5 transition-all">
+                                                    <span class="material-symbols-outlined text-lg">close</span>
+                                                </button>
+                                            </div>
+
+                                            <!-- Info Kapal -->
+                                            <div class="p-6">
+                                                <h3 class="text-xl font-bold text-navy mb-1"><?= htmlspecialchars($mv['name']) ?></h3>
+                                                <p class="text-sm text-slate-500 mb-4"><?= htmlspecialchars($mv['vessel_type_name'] ?? '-') ?></p>
+
+                                                <div class="grid grid-cols-2 gap-4 mb-6">
+                                                    <div class="bg-slate-50 rounded-xl p-3">
+                                                        <p class="text-[10px] font-bold text-slate-400 uppercase">Nomor IMO</p>
+                                                        <p class="text-sm font-semibold text-navy"><?= htmlspecialchars($mv['imo_number'] ?? 'N/A') ?></p>
+                                                    </div>
+                                                    <div class="bg-slate-50 rounded-xl p-3">
+                                                        <p class="text-[10px] font-bold text-slate-400 uppercase">Jumlah Kru</p>
+                                                        <p class="text-sm font-semibold text-navy"><?= $mv['crew_count'] ?? 0 ?> Orang</p>
+                                                    </div>
+                                                    <div class="bg-slate-50 rounded-xl p-3">
+                                                        <p class="text-[10px] font-bold text-slate-400 uppercase">Bendera</p>
+                                                        <p class="text-sm font-semibold text-navy"><?= $mv['flag_emoji'] ?? '' ?> <?= htmlspecialchars($mv['flag_state'] ?? 'N/A') ?></p>
+                                                    </div>
+                                                    <div class="bg-slate-50 rounded-xl p-3">
+                                                        <p class="text-[10px] font-bold text-slate-400 uppercase">Status</p>
+                                                        <p class="text-sm font-semibold <?= ($mv['status'] ?? 'active') === 'active' ? 'text-emerald-600' : 'text-amber-600' ?>">
+                                                            <?= ucfirst($mv['status'] ?? 'Active') ?>
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Tombol Aksi -->
+                                                <div class="flex gap-3">
+                                                    <a href="<?= BASE_URL ?>vessels/edit/<?= $mv['id'] ?>"
+                                                        class="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 shadow-sm">
+                                                        <span class="material-symbols-outlined text-lg">edit</span>
+                                                        Edit Kapal
+                                                    </a>
+                                                    <a href="<?= BASE_URL ?>vessels/<?= $mv['id'] ?>"
+                                                        class="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-navy px-4 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95">
+                                                        <span class="material-symbols-outlined text-lg">visibility</span>
+                                                        Lihat Detail
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </template>
 
                             <!-- Tab 2: Profit Per Vessel -->
                             <div x-show="activeTab === 'profit'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
@@ -596,18 +682,27 @@
                         </div>
                     </div>
 
-                    <!-- Crew Members Table -->
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                    <!-- Anggota Kru Table -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden" x-data="{ crewFilter: 'active' }">
                         <div
                             class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <h3 class="font-bold text-navy text-lg"><?= __('clients.crew_members') ?></h3>
+                            <h3 class="font-bold text-navy text-lg">Anggota Kru</h3>
                             <div class="flex p-1 bg-slate-50 rounded-lg border border-slate-200">
-                                <button
-                                    class="px-4 py-1.5 text-sm font-medium text-primary bg-white rounded-md shadow-sm transition-all">Active</button>
-                                <button
-                                    class="px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-navy transition-all">Non-Active</button>
-                                <button
-                                    class="px-4 py-1.5 text-sm font-medium text-slate-500 hover:text-navy transition-all">All</button>
+                                <button @click="crewFilter = 'active'"
+                                    :class="crewFilter === 'active' ? 'text-primary bg-white shadow-sm' : 'text-slate-500 hover:text-navy'"
+                                    class="px-4 py-1.5 text-sm font-medium rounded-md transition-all">
+                                    Aktif <span class="text-[10px] ml-1 opacity-60">(<?= $stats['active_crew'] ?>)</span>
+                                </button>
+                                <button @click="crewFilter = 'inactive'"
+                                    :class="crewFilter === 'inactive' ? 'text-primary bg-white shadow-sm' : 'text-slate-500 hover:text-navy'"
+                                    class="px-4 py-1.5 text-sm font-medium rounded-md transition-all">
+                                    Non-Aktif <span class="text-[10px] ml-1 opacity-60">(<?= $stats['inactive_crew'] ?>)</span>
+                                </button>
+                                <button @click="crewFilter = 'all'"
+                                    :class="crewFilter === 'all' ? 'text-primary bg-white shadow-sm' : 'text-slate-500 hover:text-navy'"
+                                    class="px-4 py-1.5 text-sm font-medium rounded-md transition-all">
+                                    Semua <span class="text-[10px] ml-1 opacity-60">(<?= $stats['active_crew'] + $stats['inactive_crew'] ?>)</span>
+                                </button>
                             </div>
                         </div>
 
@@ -615,103 +710,92 @@
                             <table class="w-full text-left border-collapse">
                                 <thead>
                                     <tr class="bg-slate-50/50 border-b border-slate-100">
-                                        <th
-                                            class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                                            Crew Member</th>
-                                        <th
-                                            class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                                            Rank</th>
-                                        <th
-                                            class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                                            Assigned Vessel</th>
-                                        <th
-                                            class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                                            Monthly Salary</th>
-                                        <th
-                                            class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider text-right">
-                                            Est. Profit</th>
-                                        <th
-                                            class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                                        </th>
+                                        <th class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Anggota Kru</th>
+                                        <th class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Jabatan</th>
+                                        <th class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Kapal</th>
+                                        <th class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Gaji Bulanan</th>
+                                        <th class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider text-right">Est. Profit</th>
+                                        <th class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider"></th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-50">
                                     <?php if (!empty($contracts)): ?>
                                         <?php foreach ($contracts as $contract): ?>
-                                            <?php if (in_array($contract['status'], ['active', 'onboard'])): ?>
-                                                <tr class="hover:bg-slate-50/80 transition-colors group">
-                                                    <td class="px-6 py-4">
-                                                        <div class="flex items-center gap-3">
-                                                            <?php
-                                                            $crewInitials = '';
-                                                            $crewNameParts = explode(' ', $contract['crew_name'] ?? 'N/A');
-                                                            foreach ($crewNameParts as $part) {
-                                                                if (!empty($part)) {
-                                                                    $crewInitials .= strtoupper(substr($part, 0, 1));
-                                                                }
+                                            <?php
+                                            $isActive = in_array($contract['status'], ['active', 'onboard']);
+                                            $statusTag = $isActive ? 'active' : 'inactive';
+                                            ?>
+                                            <tr class="hover:bg-slate-50/80 transition-colors group"
+                                                x-show="crewFilter === 'all' || crewFilter === '<?= $statusTag ?>'" x-transition>
+                                                <td class="px-6 py-4">
+                                                    <div class="flex items-center gap-3">
+                                                        <?php
+                                                        $crewInitials = '';
+                                                        $crewNameParts = explode(' ', $contract['crew_name'] ?? 'N/A');
+                                                        foreach ($crewNameParts as $part) {
+                                                            if (!empty($part)) {
+                                                                $crewInitials .= strtoupper(substr($part, 0, 1));
                                                             }
-                                                            $crewInitials = substr($crewInitials, 0, 2);
-                                                            ?>
-                                                            <div
-                                                                class="size-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-bold">
-                                                                <?= $crewInitials ?>
+                                                        }
+                                                        $crewInitials = substr($crewInitials, 0, 2);
+                                                        ?>
+                                                        <div class="size-10 rounded-full bg-gradient-to-br <?= $isActive ? 'from-blue-400 to-blue-600' : 'from-slate-300 to-slate-400' ?> flex items-center justify-center text-white text-sm font-bold">
+                                                            <?= $crewInitials ?>
+                                                        </div>
+                                                        <div>
+                                                            <p class="text-sm font-semibold text-navy">
+                                                                <?= htmlspecialchars($contract['crew_name'] ?? 'N/A') ?>
+                                                            </p>
+                                                            <div class="flex items-center gap-1.5">
+                                                                <p class="text-xs text-slate-400">ID: CR-<?= str_pad($contract['crew_id'] ?? '0', 4, '0', STR_PAD_LEFT) ?></p>
+                                                                <?php if (!$isActive): ?>
+                                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-500"><?= ucfirst($contract['status'] ?? 'inactive') ?></span>
+                                                                <?php endif; ?>
                                                             </div>
-                                                            <div>
-                                                                <p class="text-sm font-semibold text-navy">
-                                                                    <?= htmlspecialchars($contract['crew_name'] ?? 'N/A') ?>
-                                                                </p>
-                                                                <p class="text-xs text-slate-400">ID: CR-
-                                                                    <?= str_pad($contract['crew_id'] ?? '0', 4, '0', STR_PAD_LEFT) ?>
-                                                                </p>
-                                                            </div>
                                                         </div>
-                                                    </td>
-                                                    <td class="px-6 py-4">
-                                                        <span
-                                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                                                            <?= htmlspecialchars($contract['rank'] ?? 'N/A') ?>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= $isActive ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-slate-50 text-slate-500 border border-slate-100' ?>">
+                                                        <?= htmlspecialchars($contract['rank'] ?? 'N/A') ?>
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="size-2 <?= $isActive ? 'bg-emerald-500' : 'bg-slate-300' ?> rounded-full"></div>
+                                                        <span class="text-sm text-slate-600 font-medium">
+                                                            <?= htmlspecialchars($contract['vessel_name'] ?? 'Belum Ditugaskan') ?>
                                                         </span>
-                                                    </td>
-                                                    <td class="px-6 py-4">
-                                                        <div class="flex items-center gap-2">
-                                                            <div class="size-2 bg-emerald-500 rounded-full"></div>
-                                                            <span class="text-sm text-slate-600 font-medium">
-                                                                <?= htmlspecialchars($contract['vessel_name'] ?? 'Unassigned') ?>
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td class="px-6 py-4">
-                                                        <div class="flex flex-col">
-                                                            <?php
-                                                            $salaryIDR = ($contract['salary_usd'] ?? 0) * 15300;
-                                                            ?>
-                                                            <span class="text-sm font-medium text-navy">IDR
-                                                                <?= number_format($salaryIDR, 0, ',', '.') ?>
-                                                            </span>
-                                                            <span class="text-xs text-slate-400">≈ $
-                                                                <?= number_format($contract['salary_usd'] ?? 0, 0) ?> USD
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td class="px-6 py-4 text-right">
-                                                        <span class="text-sm font-bold text-emerald-600">+$
-                                                            <?= number_format($contract['profit_usd'] ?? 0, 0) ?>
-                                                        </span>
-                                                    </td>
-                                                    <td class="px-6 py-4 text-right">
-                                                        <button class="text-slate-300 hover:text-primary transition-colors">
-                                                            <span class="material-symbols-outlined">more_vert</span>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            <?php endif; ?>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <div class="flex flex-col">
+                                                        <?php $salaryIDR = ($contract['salary_usd'] ?? 0) * 15300; ?>
+                                                        <span class="text-sm font-medium text-navy">IDR <?= number_format($salaryIDR, 0, ',', '.') ?></span>
+                                                        <span class="text-xs text-slate-400">≈ $<?= number_format($contract['salary_usd'] ?? 0, 0) ?> USD</span>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-4 text-right">
+                                                    <?php if ($isActive && ($contract['profit_usd'] ?? 0) > 0): ?>
+                                                        <span class="text-sm font-bold text-emerald-600">+$<?= number_format($contract['profit_usd'] ?? 0, 0) ?></span>
+                                                    <?php elseif ($isActive && ($contract['profit_usd'] ?? 0) < 0): ?>
+                                                        <span class="text-sm font-bold text-rose-600">-$<?= number_format(abs($contract['profit_usd'] ?? 0), 0) ?></span>
+                                                    <?php else: ?>
+                                                        <span class="text-sm text-slate-400">-</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td class="px-6 py-4 text-right">
+                                                    <button class="text-slate-300 hover:text-primary transition-colors">
+                                                        <span class="material-symbols-outlined">more_vert</span>
+                                                    </button>
+                                                </td>
+                                            </tr>
                                         <?php endforeach; ?>
                                     <?php else: ?>
                                         <tr>
                                             <td colspan="6" class="px-6 py-12 text-center">
-                                                <span
-                                                    class="material-symbols-outlined text-5xl text-slate-200">groups</span>
-                                                <p class="text-slate-400 mt-2">No crew members assigned to this client</p>
+                                                <span class="material-symbols-outlined text-5xl text-slate-200">groups</span>
+                                                <p class="text-slate-400 mt-2">Belum ada anggota kru untuk klien ini</p>
                                             </td>
                                         </tr>
                                     <?php endif; ?>
