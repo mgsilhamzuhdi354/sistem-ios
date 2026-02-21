@@ -227,26 +227,37 @@
                                     </div>
                                 </div>
 
-                                <!-- Client / Owner -->
+                                <!-- Client / Owner (Locked - cannot change) -->
                                 <div class="col-span-1 md:col-span-2 space-y-2">
-                                    <label class="block text-sm font-semibold text-slate-700"><?= __('vessels.client_owner') ?></label>
+                                    <label class="block text-sm font-semibold text-slate-700 flex items-center gap-1.5">
+                                        <?= __('vessels.client_owner') ?>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-100">
+                                            <span class="material-icons-round text-[12px] mr-0.5">lock</span>
+                                            Terkunci
+                                        </span>
+                                    </label>
                                     <div class="relative">
-                                        <select name="client_id" 
-                                                class="w-full rounded-xl custom-input pl-10 pr-10 py-3 text-slate-700 focus:ring-0 border appearance-none">
-                                            <?php foreach ($clients as $client): ?>
-                                                <option value="<?= $client['id'] ?>" 
-                                                    <?= ($vessel['client_id'] ?? '') == $client['id'] ? 'selected' : '' ?>>
-                                                    <?= htmlspecialchars($client['name']) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
+                                        <input type="hidden" name="client_id" value="<?= $vessel['client_id'] ?? '' ?>">
+                                        <div class="w-full rounded-xl bg-slate-100 pl-10 pr-4 py-3 text-slate-600 border border-slate-200 cursor-not-allowed font-medium">
+                                            <?php
+                                            $currentClientName = '-';
+                                            foreach ($clients as $cl) {
+                                                if (($vessel['client_id'] ?? '') == $cl['id']) {
+                                                    $currentClientName = htmlspecialchars($cl['name']);
+                                                    break;
+                                                }
+                                            }
+                                            echo $currentClientName;
+                                            ?>
+                                        </div>
                                         <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
                                             <span class="material-icons-round text-lg">business</span>
                                         </div>
-                                        <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-500">
-                                            <span class="material-icons-round">expand_more</span>
-                                        </div>
                                     </div>
+                                    <p class="text-xs text-slate-400 flex items-center gap-1">
+                                        <span class="material-icons-round text-[14px]">info</span>
+                                        Pemilik kapal tidak dapat diubah dari halaman ini
+                                    </p>
                                 </div>
                             </div>
                         </div>
