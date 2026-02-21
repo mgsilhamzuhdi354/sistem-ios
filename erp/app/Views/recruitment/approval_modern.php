@@ -51,6 +51,29 @@ $stats = $stats ?? [];
         .modal-overlay { animation: fadeIn 0.2s ease-out; }
         .modal-content { animation: slideUp 0.3s ease-out; }
         .completeness-bar { transition: width 0.6s ease-out; }
+
+        /* Book-opening animation */
+        @keyframes bookOpen {
+            0% { opacity: 0; transform: perspective(1200px) rotateY(-90deg) scale(0.8); transform-origin: left center; }
+            40% { opacity: 1; transform: perspective(1200px) rotateY(-20deg) scale(0.95); }
+            70% { transform: perspective(1200px) rotateY(5deg) scale(1.01); }
+            100% { opacity: 1; transform: perspective(1200px) rotateY(0deg) scale(1); transform-origin: left center; }
+        }
+        @keyframes bookClose {
+            0% { opacity: 1; transform: perspective(1200px) rotateY(0deg) scale(1); }
+            100% { opacity: 0; transform: perspective(1200px) rotateY(-90deg) scale(0.8); transform-origin: left center; }
+        }
+        .book-open { animation: bookOpen 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        .book-close { animation: bookClose 0.3s ease-in forwards; }
+        @keyframes pageFadeIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .page-fade-in { animation: pageFadeIn 0.4s ease-out forwards; }
+        .page-fade-in-d1 { animation-delay: 0.1s; opacity: 0; }
+        .page-fade-in-d2 { animation-delay: 0.2s; opacity: 0; }
+        .page-fade-in-d3 { animation-delay: 0.3s; opacity: 0; }
+        .page-fade-in-d4 { animation-delay: 0.4s; opacity: 0; }
     </style>
 </head>
 <body class="font-display bg-background-light text-slate-800 min-h-screen flex overflow-hidden">
@@ -324,27 +347,35 @@ $stats = $stats ?? [];
 
 <!-- ==================== MODALS ==================== -->
 
-<!-- Detail Modal -->
+<!-- Detail Modal (Book-Opening Animation) -->
 <div id="detailModal" class="fixed inset-0 z-50 hidden">
-    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm modal-overlay" onclick="closeModal('detailModal')"></div>
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" style="animation: fadeIn 0.3s ease-out" onclick="closeDetailModal()"></div>
     <div class="absolute inset-0 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-modal w-full max-w-2xl max-h-[85vh] overflow-hidden modal-content">
-            <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined">person</span>
-                    <h3 class="text-lg font-bold">Detail Kandidat</h3>
+        <div id="detailModalInner" class="bg-white rounded-2xl shadow-modal w-full max-w-3xl max-h-[90vh] overflow-hidden book-open">
+            <!-- Book spine/header -->
+            <div class="px-6 py-5 bg-gradient-to-r from-indigo-700 via-blue-600 to-indigo-500 text-white flex items-center justify-between relative overflow-hidden">
+                <div class="absolute inset-0 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg width=&quot;40&quot; height=&quot;40&quot; viewBox=&quot;0 0 40 40&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cpath d=&quot;M0 0h40v40H0z&quot; fill=&quot;none&quot;/%3E%3Cpath d=&quot;M0 20h40M20 0v40&quot; stroke=&quot;white&quot; stroke-width=&quot;0.5&quot;/%3E%3C/svg%3E');"></div>
+                <div class="flex items-center gap-3 relative z-10">
+                    <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                        <span class="material-symbols-outlined text-xl">menu_book</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Profil Lengkap Kandidat</h3>
+                        <p class="text-blue-100 text-xs">Data Recruitment System</p>
+                    </div>
                 </div>
-                <button onclick="closeModal('detailModal')" class="p-1 hover:bg-white/20 rounded-lg transition-colors">
+                <button onclick="closeDetailModal()" class="p-2 hover:bg-white/20 rounded-xl transition-colors relative z-10">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
-            <div class="p-6 overflow-y-auto max-h-[calc(85vh-140px)]" id="detailContent">
-                <div class="flex items-center justify-center py-12">
-                    <div class="animate-spin w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full"></div>
+            <div class="p-6 overflow-y-auto max-h-[calc(90vh-160px)]" id="detailContent" style="scroll-behavior:smooth">
+                <div class="flex flex-col items-center justify-center py-16">
+                    <div class="animate-spin w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full"></div>
+                    <p class="text-slate-400 text-sm mt-4">Membuka data...</p>
                 </div>
             </div>
-            <div class="px-6 py-4 border-t border-slate-100 flex justify-between items-center bg-slate-50">
-                <button onclick="closeModal('detailModal')" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors">Tutup</button>
+            <div class="px-6 py-4 border-t border-slate-100 flex justify-between items-center bg-slate-50/80 backdrop-blur">
+                <button onclick="closeDetailModal()" class="px-5 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-100 transition-colors">Tutup</button>
                 <div class="flex gap-2" id="detailActions"></div>
             </div>
         </div>
@@ -452,6 +483,25 @@ function closeModal(id) {
     document.body.style.overflow = '';
 }
 
+// Book-opening detail modal
+function openDetailModal() {
+    const modal = document.getElementById('detailModal');
+    const inner = document.getElementById('detailModalInner');
+    modal.classList.remove('hidden');
+    inner.classList.remove('book-close');
+    inner.classList.add('book-open');
+    document.body.style.overflow = 'hidden';
+}
+function closeDetailModal() {
+    const inner = document.getElementById('detailModalInner');
+    inner.classList.remove('book-open');
+    inner.classList.add('book-close');
+    setTimeout(() => {
+        document.getElementById('detailModal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }, 300);
+}
+
 // ========== Toast ==========
 function showToast(msg, type = 'success') {
     const toast = document.getElementById('toast');
@@ -463,128 +513,154 @@ function showToast(msg, type = 'success') {
     setTimeout(() => toast.classList.add('hidden'), 4000);
 }
 
-// ========== View Detail ==========
+// ========== View Detail (Book-Opening) ==========
 function viewDetail(crewId) {
     const content = document.getElementById('detailContent');
     const actions = document.getElementById('detailActions');
-    content.innerHTML = '<div class="flex items-center justify-center py-12"><div class="animate-spin w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full"></div></div>';
+    content.innerHTML = '<div class="flex flex-col items-center justify-center py-16"><div class="relative"><div class="animate-spin w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full"></div></div><p class="text-slate-400 text-sm mt-4">Membuka data...</p></div>';
     actions.innerHTML = '';
-    openModal('detailModal');
+    openDetailModal();
 
-    fetch(BASE_URL + 'recruitment/candidateDetail/' + crewId)
-        .then(r => r.json())
+    fetch(BASE_URL + 'recruitment/candidateDetail/' + crewId, { credentials: 'same-origin' })
+        .then(r => {
+            if (!r.ok) throw new Error('Server error: ' + r.status);
+            return r.json();
+        })
         .then(data => {
-            if (data.error) {
-                content.innerHTML = `<p class="text-red-500 text-center py-8">${data.error}</p>`;
-                return;
-            }
+            if (data.error) { content.innerHTML = `<p class="text-red-500 text-center py-8">${data.error}</p>`; return; }
             const c = data.crew;
             const docs = data.documents || [];
-            
-            let photoHtml = '';
-            if (c.photo) {
-                photoHtml = `<img src="${BASE_URL}uploads/crew_photos/${c.photo}" alt="Photo" class="w-20 h-20 rounded-xl object-cover border-2 border-white shadow-md">`;
-            } else {
-                photoHtml = `<div class="w-20 h-20 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-2xl shadow-md">${(c.full_name||'N').charAt(0).toUpperCase()}</div>`;
-            }
+            let photoHtml = c.photo
+                ? `<img src="${BASE_URL}uploads/crew_photos/${c.photo}" alt="Photo" class="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-lg">`
+                : `<div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-3xl shadow-lg border-4 border-white">${(c.full_name||'N').charAt(0).toUpperCase()}</div>`;
 
             content.innerHTML = `
-                <div class="flex items-start gap-5 mb-6">
+                <!-- Profile Header -->
+                <div class="flex items-start gap-5 mb-8 page-fade-in">
                     ${photoHtml}
                     <div class="flex-1">
-                        <h3 class="text-xl font-bold text-slate-900">${c.full_name || '-'}</h3>
-                        <p class="text-sm text-slate-500">${c.rank_name || '-'} · ${c.employee_id || ''}</p>
-                        <span class="inline-flex items-center px-2.5 py-1 mt-2 rounded-full text-[11px] font-bold ${c.status === 'pending_approval' ? 'bg-amber-100 text-amber-700' : c.status === 'available' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}">
-                            ${(c.status || '').replace(/_/g,' ').toUpperCase()}
-                        </span>
+                        <h3 class="text-2xl font-bold text-slate-900">${c.full_name || '-'}</h3>
+                        <p class="text-slate-500 mt-0.5">${c.rank_name || 'Rank belum ditentukan'} · <span class="font-mono text-xs bg-slate-100 px-2 py-0.5 rounded">${c.employee_id || 'N/A'}</span></p>
+                        <div class="flex items-center gap-2 mt-2">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold ${c.status === 'pending_approval' ? 'bg-amber-100 text-amber-700 border border-amber-200' : c.status === 'available' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'}">
+                                <span class="material-symbols-outlined text-[12px] mr-1">${c.status === 'pending_approval' ? 'schedule' : c.status === 'available' ? 'check_circle' : 'info'}</span>
+                                ${(c.status || '').replace(/_/g,' ').toUpperCase()}
+                            </span>
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200"><span class="material-symbols-outlined text-[12px] mr-1">how_to_reg</span>Recruitment</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div class="bg-slate-50 p-3.5 rounded-xl">
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Email</p>
-                        <p class="text-sm text-slate-700">${c.email || '-'}</p>
-                    </div>
-                    <div class="bg-slate-50 p-3.5 rounded-xl">
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Telepon</p>
-                        <p class="text-sm text-slate-700">${c.phone || '-'}</p>
-                    </div>
-                    <div class="bg-slate-50 p-3.5 rounded-xl">
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Gender</p>
-                        <p class="text-sm text-slate-700">${c.gender === 'male' ? 'Laki-laki' : c.gender === 'female' ? 'Perempuan' : '-'}</p>
-                    </div>
-                    <div class="bg-slate-50 p-3.5 rounded-xl">
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Tanggal Lahir</p>
-                        <p class="text-sm text-slate-700">${c.birth_date || '-'}</p>
-                    </div>
-                    <div class="bg-slate-50 p-3.5 rounded-xl">
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Kebangsaan</p>
-                        <p class="text-sm text-slate-700">${c.nationality || '-'}</p>
-                    </div>
-                    <div class="bg-slate-50 p-3.5 rounded-xl">
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Pengalaman Laut</p>
-                        <p class="text-sm text-slate-700">${c.total_sea_time_months ? c.total_sea_time_months + ' bulan' : '-'}</p>
+                <!-- Section: Informasi Pribadi -->
+                <div class="mb-6 page-fade-in page-fade-in-d1">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[14px]">person</span> Informasi Pribadi
+                    </h4>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                            <p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Email</p>
+                            <p class="text-sm text-slate-700 font-medium truncate">${c.email || '-'}</p>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                            <p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Telepon</p>
+                            <p class="text-sm text-slate-700 font-medium">${c.phone || '-'}</p>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                            <p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Gender</p>
+                            <p class="text-sm text-slate-700 font-medium">${c.gender === 'male' ? '👨 Laki-laki' : c.gender === 'female' ? '👩 Perempuan' : '-'}</p>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                            <p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Tanggal Lahir</p>
+                            <p class="text-sm text-slate-700 font-medium">${c.birth_date || '-'}</p>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                            <p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Tempat Lahir</p>
+                            <p class="text-sm text-slate-700 font-medium">${c.birth_place || '-'}</p>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                            <p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Kebangsaan</p>
+                            <p class="text-sm text-slate-700 font-medium">🌐 ${c.nationality || '-'}</p>
+                        </div>
                     </div>
                 </div>
 
-                ${c.address ? `
-                <div class="bg-slate-50 p-3.5 rounded-xl mb-6">
-                    <p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Alamat</p>
-                    <p class="text-sm text-slate-700">${c.address}${c.city ? ', ' + c.city : ''}${c.province ? ', ' + c.province : ''}${c.postal_code ? ' ' + c.postal_code : ''}</p>
-                </div>` : ''}
+                <!-- Section: Pengalaman & Alamat -->
+                <div class="mb-6 page-fade-in page-fade-in-d2">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[14px]">sailing</span> Pengalaman & Alamat
+                    </h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                            <p class="text-[10px] font-semibold text-blue-500 uppercase mb-1">Total Pengalaman Laut</p>
+                            <p class="text-lg font-bold text-blue-700">${c.total_sea_time_months ? c.total_sea_time_months + ' <span class="text-sm font-normal">bulan</span>' : '<span class="text-slate-400 text-sm">Belum ada data</span>'}</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <p class="text-[10px] font-semibold text-slate-400 uppercase mb-1">Alamat Lengkap</p>
+                            <p class="text-sm text-slate-700">${c.address || '-'}${c.city ? ', ' + c.city : ''}${c.province ? ', ' + c.province : ''}${c.postal_code ? ' ' + c.postal_code : ''}</p>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Section: Kontak Darurat -->
                 ${c.emergency_name ? `
-                <div class="bg-orange-50 border border-orange-100 p-3.5 rounded-xl mb-6">
-                    <p class="text-[10px] font-semibold text-orange-500 uppercase mb-1">Kontak Darurat</p>
-                    <p class="text-sm text-slate-700">${c.emergency_name} (${c.emergency_relation || '-'}) — ${c.emergency_phone || '-'}</p>
+                <div class="mb-6 page-fade-in page-fade-in-d3">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[14px]">emergency</span> Kontak Darurat
+                    </h4>
+                    <div class="bg-orange-50 border border-orange-200 p-4 rounded-xl flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600"><span class="material-symbols-outlined">call</span></div>
+                        <div>
+                            <p class="text-sm font-bold text-slate-800">${c.emergency_name}</p>
+                            <p class="text-xs text-slate-500">${c.emergency_relation || '-'} · ${c.emergency_phone || '-'}</p>
+                        </div>
+                    </div>
                 </div>` : ''}
 
-                ${docs.length > 0 ? `
-                <div>
-                    <p class="text-sm font-bold text-slate-700 mb-3">Dokumen (${docs.length})</p>
+                <!-- Section: Dokumen -->
+                <div class="page-fade-in page-fade-in-d4">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[14px]">folder_open</span> Dokumen Crew (${docs.length})
+                    </h4>
+                    ${docs.length > 0 ? `
                     <div class="space-y-2">
                         ${docs.map(d => `
-                            <div class="flex items-center justify-between bg-slate-50 px-4 py-2.5 rounded-lg">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-[16px] text-slate-400">description</span>
-                                    <span class="text-sm text-slate-700">${d.document_name || d.document_type || 'Document'}</span>
+                            <div class="flex items-center justify-between bg-slate-50 border border-slate-100 px-4 py-3 rounded-xl hover:bg-slate-100 transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600"><span class="material-symbols-outlined text-[18px]">description</span></div>
+                                    <div>
+                                        <p class="text-sm font-medium text-slate-700">${d.document_name || d.document_type || 'Document'}</p>
+                                        <p class="text-[10px] text-slate-400">${d.expiry_date ? 'Exp: ' + d.expiry_date : 'No expiry'}</p>
+                                    </div>
                                 </div>
-                                <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full ${d.status === 'valid' ? 'bg-emerald-100 text-emerald-700' : d.status === 'expired' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}">
-                                    ${d.status || 'pending'}
-                                </span>
+                                <span class="text-[11px] font-bold px-2.5 py-1 rounded-full ${d.status === 'valid' ? 'bg-emerald-100 text-emerald-700' : d.status === 'expired' ? 'bg-red-100 text-red-700' : 'bg-slate-200 text-slate-600'}">${(d.status || 'pending').toUpperCase()}</span>
                             </div>
                         `).join('')}
-                    </div>
-                </div>` : '<p class="text-sm text-slate-400 text-center py-4">Belum ada dokumen</p>'}
+                    </div>` : '<div class="bg-slate-50 border border-slate-100 rounded-xl p-6 text-center"><span class="material-symbols-outlined text-3xl text-slate-300 mb-2">folder_off</span><p class="text-sm text-slate-400">Belum ada dokumen</p></div>'}
+                </div>
 
                 ${c.notes ? `
-                <div class="mt-6 bg-blue-50 border border-blue-100 p-3.5 rounded-xl">
-                    <p class="text-[10px] font-semibold text-blue-500 uppercase mb-1">Catatan</p>
+                <div class="mt-6 bg-indigo-50 border border-indigo-100 p-4 rounded-xl">
+                    <p class="text-[10px] font-semibold text-indigo-500 uppercase mb-1 flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">sticky_note_2</span> Catatan</p>
                     <p class="text-sm text-slate-700 whitespace-pre-line">${c.notes}</p>
                 </div>` : ''}
             `;
 
-            // Actions based on status
             if (c.status === 'pending_approval') {
                 actions.innerHTML = `
-                    <button onclick="closeModal('detailModal'); showApproveModal(${crewId}, '${(c.full_name||'').replace(/'/g, "\\'")}')"
-                            class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold transition-colors flex items-center gap-2">
+                    <button onclick="closeDetailModal(); setTimeout(() => showApproveModal(${crewId}, '${(c.full_name||'').replace(/'/g, "\\'")}'), 350)"
+                            class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold transition-colors flex items-center gap-2 shadow-sm">
                         <span class="material-symbols-outlined text-[16px]">check</span> Approve
                     </button>
-                    <button onclick="closeModal('detailModal'); showRejectModal(${crewId}, '${(c.full_name||'').replace(/'/g, "\\'")}')"
-                            class="px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-bold transition-colors flex items-center gap-2">
+                    <button onclick="closeDetailModal(); setTimeout(() => showRejectModal(${crewId}, '${(c.full_name||'').replace(/'/g, "\\'")}'), 350)"
+                            class="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-bold transition-colors flex items-center gap-2 shadow-sm">
                         <span class="material-symbols-outlined text-[16px]">close</span> Reject
                     </button>`;
             } else if (c.status === 'available') {
-                actions.innerHTML = `
-                    <a href="${BASE_URL}contracts/create?crew_id=${crewId}"
-                       class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition-colors flex items-center gap-2 no-underline">
-                        <span class="material-symbols-outlined text-[16px]">description</span> Buat Kontrak
-                    </a>`;
+                actions.innerHTML = `<a href="${BASE_URL}contracts/create?crew_id=${crewId}" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition-colors flex items-center gap-2 no-underline shadow-sm"><span class="material-symbols-outlined text-[16px]">description</span> Buat Kontrak</a>`;
             }
         })
         .catch(err => {
-            content.innerHTML = `<p class="text-red-500 text-center py-8">Error: ${err.message}</p>`;
+            content.innerHTML = `<div class="text-center py-12"><span class="material-symbols-outlined text-4xl text-red-300 mb-3">error</span><p class="text-red-500 font-medium">Gagal memuat data</p><p class="text-slate-400 text-sm mt-1">${err.message}</p></div>`;
         });
 }
 
@@ -607,21 +683,22 @@ function submitApprove() {
     fetch(BASE_URL + 'recruitment/approve/' + crewId, {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest'},
-        body: 'approval_notes=' + encodeURIComponent(notes)
+        body: 'approval_notes=' + encodeURIComponent(notes),
+        credentials: 'same-origin'
     })
-    .then(r => r.json())
+    .then(r => {
+        if (r.redirected) { window.location.href = r.url; return; }
+        const ct = r.headers.get('content-type') || '';
+        if (ct.includes('application/json')) return r.json();
+        return r.text().then(txt => { throw new Error('Server returned HTML instead of JSON. Possible session expired.'); });
+    })
     .then(data => {
+        if (!data) return;
         closeModal('approveModal');
         if (data.success) {
             showToast(data.message, 'success');
-            // Remove card with animation
             const card = document.getElementById('card-' + crewId);
-            if (card) {
-                card.style.transition = 'all 0.4s ease';
-                card.style.opacity = '0';
-                card.style.transform = 'scale(0.95)';
-                setTimeout(() => card.remove(), 400);
-            }
+            if (card) { card.style.transition = 'all 0.4s ease'; card.style.opacity = '0'; card.style.transform = 'scale(0.95)'; setTimeout(() => card.remove(), 400); }
             setTimeout(() => location.reload(), 1500);
         } else {
             showToast(data.message || 'Gagal approve', 'error');
@@ -662,20 +739,22 @@ function submitReject() {
     fetch(BASE_URL + 'recruitment/reject/' + crewId, {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest'},
-        body: 'rejection_reason=' + encodeURIComponent(reason)
+        body: 'rejection_reason=' + encodeURIComponent(reason),
+        credentials: 'same-origin'
     })
-    .then(r => r.json())
+    .then(r => {
+        if (r.redirected) { window.location.href = r.url; return; }
+        const ct = r.headers.get('content-type') || '';
+        if (ct.includes('application/json')) return r.json();
+        return r.text().then(txt => { throw new Error('Server returned HTML instead of JSON. Possible session expired.'); });
+    })
     .then(data => {
+        if (!data) return;
         closeModal('rejectModal');
         if (data.success) {
             showToast(data.message, 'success');
             const card = document.getElementById('card-' + crewId);
-            if (card) {
-                card.style.transition = 'all 0.4s ease';
-                card.style.opacity = '0';
-                card.style.transform = 'scale(0.95)';
-                setTimeout(() => card.remove(), 400);
-            }
+            if (card) { card.style.transition = 'all 0.4s ease'; card.style.opacity = '0'; card.style.transform = 'scale(0.95)'; setTimeout(() => card.remove(), 400); }
             setTimeout(() => location.reload(), 1500);
         } else {
             showToast(data.message || 'Gagal reject', 'error');
@@ -694,7 +773,9 @@ function submitReject() {
 // Close modals on ESC
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-        ['detailModal', 'approveModal', 'rejectModal'].forEach(id => closeModal(id));
+        closeDetailModal();
+        closeModal('approveModal');
+        closeModal('rejectModal');
     }
 });
 </script>
