@@ -111,11 +111,6 @@ $inactiveSub = 'text-slate-500 hover:text-slate-700 hover:bg-slate-50';
             </div>
         </div>
 
-        <!-- Vessels -->
-        <a href="<?= BASE_URL ?>vessels" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['vessels'] ? $activeClass : $inactiveClass ?>">
-            <span class="material-icons text-[18px] <?= $act['vessels'] ? $activeIcon : $inactiveIcon ?>">directions_boat</span>
-            <?= __('sidebar.vessels') ?>
-        </a>
 
         <!-- Clients -->
         <div x-data="{ open: <?= $act['clients'] ? 'true' : 'false' ?> }" x-cloak>

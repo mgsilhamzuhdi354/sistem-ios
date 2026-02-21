@@ -191,6 +191,15 @@ $periodStatus = $period['status'] ?? 'draft';
                     <?php endif; ?>
                 </div>
 
+                <!-- Payroll Date Info -->
+                <div class="mb-6 flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl animate-fade-in-delay-1">
+                    <span class="material-icons text-blue-600 text-lg">event</span>
+                    <p class="text-sm text-blue-800">
+                        Tanggal proses gaji: <strong>Setiap tanggal <?= htmlspecialchars($payroll_day ?? '15') ?></strong> setiap bulan.
+                        <a href="<?= BASE_URL ?>settings" class="text-blue-600 hover:text-blue-800 underline text-xs font-medium ml-1">Ubah di Pengaturan →</a>
+                    </p>
+                </div>
+
                 <!-- Stats + Trend Row -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                     <!-- 4 Stat Cards -->

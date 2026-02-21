@@ -7,9 +7,11 @@
 namespace App\Controllers;
 
 require_once APPPATH . 'Models/PayrollModel.php';
+require_once APPPATH . 'Models/SettingsModel.php';
 
 use App\Models\PayrollPeriodModel;
 use App\Models\PayrollItemModel;
+use App\Models\SettingsModel;
 
 class Payroll extends BaseController
 {
@@ -39,6 +41,7 @@ class Payroll extends BaseController
             'summary' => $this->itemModel->getSummaryByVessel($period['id']),
             'month' => $month,
             'year' => $year,
+            'payroll_day' => (new SettingsModel($this->db))->get('payroll_day', '15'),
             'flash' => $this->getFlash()
         ];
 

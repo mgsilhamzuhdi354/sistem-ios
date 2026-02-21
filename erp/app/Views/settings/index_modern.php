@@ -212,9 +212,10 @@ $currentLang = getLanguage();
                         <div class="p-5 space-y-4">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1.5"><?= __('settings.payroll_processing_day') ?></label>
-                                <input type="number" name="settings[payroll_day]" min="1" max="31"
-                                       value="<?= htmlspecialchars($payrollSettings['payroll_day'] ?? '25') ?>"
+                                <input type="number" name="settings[payroll_day]" min="1" max="28"
+                                       value="<?= htmlspecialchars($payrollSettings['payroll_day'] ?? '15') ?>"
                                        class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400">
+                                <p class="text-[11px] text-slate-400 mt-1">Tanggal proses gaji kru setiap bulan (default: tanggal 15)</p>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1.5"><?= __('settings.auto_generate_payroll') ?></label>
