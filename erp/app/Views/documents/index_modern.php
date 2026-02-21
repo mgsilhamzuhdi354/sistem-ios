@@ -48,6 +48,43 @@ $currentPage = 'documents';
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in { animation: fadeInUp 0.4s ease-out forwards; }
+
+        /* Book Opening Animation */
+        @keyframes bookOpen {
+            0% { transform: perspective(1200px) rotateY(-90deg) scale(0.6); opacity: 0; }
+            40% { transform: perspective(1200px) rotateY(-20deg) scale(0.9); opacity: 0.8; }
+            70% { transform: perspective(1200px) rotateY(5deg) scale(1.02); opacity: 1; }
+            100% { transform: perspective(1200px) rotateY(0deg) scale(1); opacity: 1; }
+        }
+        @keyframes bookClose {
+            0% { transform: perspective(1200px) rotateY(0deg) scale(1); opacity: 1; }
+            100% { transform: perspective(1200px) rotateY(-90deg) scale(0.6); opacity: 0; }
+        }
+        @keyframes pageFlip {
+            0% { transform: perspective(800px) rotateY(90deg); opacity: 0; }
+            50% { transform: perspective(800px) rotateY(-5deg); opacity: 1; }
+            100% { transform: perspective(800px) rotateY(0deg); opacity: 1; }
+        }
+        @keyframes slideInRow {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .book-modal { animation: bookOpen 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; transform-origin: left center; }
+        .book-modal-closing { animation: bookClose 0.4s ease-in forwards; transform-origin: left center; }
+        .book-page { animation: pageFlip 0.5s ease-out forwards; transform-origin: left center; }
+        .book-row { animation: slideInRow 0.3s ease-out forwards; opacity: 0; }
+        .book-spine {
+            background: linear-gradient(135deg, #92400e 0%, #78350f 50%, #92400e 100%);
+            box-shadow: inset -3px 0 8px rgba(0,0,0,0.3), inset 3px 0 4px rgba(255,255,255,0.1);
+        }
+        .book-cover {
+            background: linear-gradient(145deg, #fefce8 0%, #fef9c3 30%, #fef08a 100%);
+            box-shadow: 0 20px 60px -15px rgba(0,0,0,0.3), 0 0 0 1px rgba(146,64,14,0.1);
+        }
+        .book-cover-blue {
+            background: linear-gradient(145deg, #eff6ff 0%, #dbeafe 30%, #bfdbfe 100%);
+            box-shadow: 0 20px 60px -15px rgba(0,0,0,0.3), 0 0 0 1px rgba(29,78,216,0.1);
+        }
     </style>
 </head>
 
@@ -133,14 +170,16 @@ $currentPage = 'documents';
                             </div>
                         </div>
 
-                        <!-- Total Documents -->
-                        <div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between group hover:shadow-md transition-shadow">
-                            <div>
+                        <!-- Total Documents (Clickable) -->
+                        <div onclick="openCrewBookModal()" class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl shadow-sm border-2 border-blue-200 dark:border-blue-700 flex items-center justify-between group hover:shadow-lg hover:border-blue-400 transition-all cursor-pointer relative overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <div class="relative">
                                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1"><?= __('documents.total_documents') ?></p>
                                 <h3 class="text-3xl font-bold text-gray-900 dark:text-white"><?= array_sum($statusCounts) ?></h3>
+                                <p class="text-[10px] text-blue-500 font-semibold mt-1 flex items-center gap-1"><span class="material-icons" style="font-size:12px">touch_app</span> Klik untuk lihat</p>
                             </div>
-                            <div class="h-12 w-12 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500 dark:text-blue-400 group-hover:scale-110 transition-transform">
-                                <span class="material-icons">description</span>
+                            <div class="h-12 w-12 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500 dark:text-blue-400 group-hover:scale-110 group-hover:rotate-6 transition-transform relative">
+                                <span class="material-icons">menu_book</span>
                             </div>
                         </div>
                     </div>
@@ -331,6 +370,294 @@ $currentPage = 'documents';
             </div>
         </div>
     </div>
+
+    <!-- Book Modal: Crew List -->
+    <div id="crewBookModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onclick="if(event.target===this) closeCrewBookModal()">
+        <div class="flex items-stretch max-w-3xl w-full mx-4">
+            <!-- Book Spine -->
+            <div class="book-spine w-6 rounded-l-lg flex-shrink-0 hidden md:block"></div>
+            <!-- Book Content -->
+            <div id="crewBookContent" class="book-cover rounded-r-2xl md:rounded-l-none rounded-l-2xl w-full overflow-hidden">
+                <!-- Book Cover Header -->
+                <div class="bg-gradient-to-r from-amber-700 to-amber-800 px-8 py-6 relative overflow-hidden">
+                    <div class="absolute inset-0 opacity-10">
+                        <div class="absolute top-2 left-4 w-32 h-32 border border-white/30 rounded-full"></div>
+                        <div class="absolute bottom-2 right-4 w-24 h-24 border border-white/20 rounded-full"></div>
+                    </div>
+                    <div class="relative flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="h-14 w-14 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                <span class="material-icons text-white text-3xl">menu_book</span>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-white">Buku Dokumen Kru</h3>
+                                <p class="text-amber-200 text-sm">Pilih kru untuk melihat dokumen</p>
+                            </div>
+                        </div>
+                        <button onclick="closeCrewBookModal()" class="p-2 hover:bg-white/10 rounded-full transition-colors">
+                            <span class="material-icons text-white">close</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Crew List Body -->
+                <div class="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar" id="crewBookBody">
+                    <div class="flex items-center justify-center py-12">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+                        <span class="ml-3 text-gray-500">Membuka buku...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Book Modal: Crew Documents -->
+    <div id="crewDocsBookModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm" onclick="if(event.target===this) closeCrewDocsBookModal()">
+        <div class="flex items-stretch max-w-4xl w-full mx-4">
+            <!-- Book Spine -->
+            <div class="book-spine w-6 rounded-l-lg flex-shrink-0 hidden md:block"></div>
+            <!-- Book Content -->
+            <div id="crewDocsBookContent" class="book-cover-blue rounded-r-2xl md:rounded-l-none rounded-l-2xl w-full overflow-hidden">
+                <!-- Book Cover Header -->
+                <div class="bg-gradient-to-r from-blue-700 to-blue-800 px-8 py-6 relative overflow-hidden">
+                    <div class="absolute inset-0 opacity-10">
+                        <div class="absolute top-2 left-4 w-32 h-32 border border-white/30 rounded-full"></div>
+                        <div class="absolute bottom-2 right-4 w-24 h-24 border border-white/20 rounded-full"></div>
+                    </div>
+                    <div class="relative flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <button onclick="closeCrewDocsBookModal()" class="p-2 hover:bg-white/10 rounded-full transition-colors">
+                                <span class="material-icons text-white">arrow_back</span>
+                            </button>
+                            <div class="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                <span class="material-icons text-white text-2xl">folder_open</span>
+                            </div>
+                            <div>
+                                <h3 id="crewDocsTitle" class="text-lg font-bold text-white">Dokumen Kru</h3>
+                                <p id="crewDocsSubtitle" class="text-blue-200 text-sm"></p>
+                            </div>
+                        </div>
+                        <button onclick="closeCrewDocsBookModal()" class="p-2 hover:bg-white/10 rounded-full transition-colors">
+                            <span class="material-icons text-white">close</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Documents Body -->
+                <div class="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar" id="crewDocsBookBody">
+                    <div class="flex items-center justify-center py-12">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <span class="ml-3 text-gray-500">Membuka halaman...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Preview Modal -->
+    <div id="docPreviewModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm" onclick="if(event.target===this) this.classList.add('hidden')">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl mx-4 overflow-hidden" style="max-height:90vh">
+            <div class="flex items-center justify-between px-6 py-4 bg-slate-50 border-b">
+                <h4 id="docPreviewTitle" class="text-sm font-bold text-slate-800"></h4>
+                <div class="flex items-center gap-2">
+                    <a id="docPreviewDownload" href="#" class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 text-sm font-medium">
+                        <span class="material-icons text-sm">download</span> Download
+                    </a>
+                    <button onclick="document.getElementById('docPreviewModal').classList.add('hidden')" class="p-1.5 hover:bg-gray-200 rounded-full">
+                        <span class="material-icons text-gray-500">close</span>
+                    </button>
+                </div>
+            </div>
+            <div class="bg-gray-100" style="height:75vh">
+                <iframe id="docPreviewFrame" src="" class="w-full h-full border-0"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE = '<?= BASE_URL ?>';
+
+        // Open Crew Book Modal
+        function openCrewBookModal() {
+            const modal = document.getElementById('crewBookModal');
+            const content = document.getElementById('crewBookContent');
+            modal.classList.remove('hidden');
+            content.classList.remove('book-modal-closing');
+            content.classList.add('book-modal');
+            loadCrewList();
+        }
+
+        function closeCrewBookModal() {
+            const modal = document.getElementById('crewBookModal');
+            const content = document.getElementById('crewBookContent');
+            content.classList.add('book-modal-closing');
+            setTimeout(() => modal.classList.add('hidden'), 400);
+        }
+
+        // Load crew list via AJAX
+        async function loadCrewList() {
+            const body = document.getElementById('crewBookBody');
+            body.innerHTML = `<div class="flex items-center justify-center py-12">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+                <span class="ml-3 text-gray-500">Membuka buku...</span>
+            </div>`;
+
+            try {
+                const res = await fetch(BASE + 'documents/apiCrewList');
+                const data = await res.json();
+
+                if (data.success && data.crews.length > 0) {
+                    let html = '<div class="space-y-2">';
+                    data.crews.forEach((crew, i) => {
+                        const initials = crew.full_name.substring(0, 2).toUpperCase();
+                        const delay = i * 0.06;
+                        html += `
+                        <div class="book-row flex items-center justify-between p-4 bg-white rounded-xl border border-amber-100 hover:border-amber-300 hover:shadow-md transition-all group cursor-pointer" 
+                             style="animation-delay: ${delay}s"
+                             onclick="openCrewDocsBook(${crew.id}, '${crew.full_name.replace(/'/g, "\\'")}'    )">
+                            <div class="flex items-center gap-4">
+                                <div class="w-11 h-11 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                                    ${initials}
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-800 text-sm">${crew.full_name}</p>
+                                    <p class="text-xs text-slate-400">${crew.employee_id || 'No ID'}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="px-3 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full">
+                                    ${crew.doc_count} file
+                                </span>
+                                <button class="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg transition-all shadow-sm group-hover:shadow-md">
+                                    <span class="material-icons" style="font-size:14px">folder_open</span> Lihat File
+                                </button>
+                            </div>
+                        </div>`;
+                    });
+                    html += '</div>';
+                    body.innerHTML = html;
+                } else {
+                    body.innerHTML = `<div class="text-center py-12">
+                        <span class="material-icons text-5xl text-gray-300">folder_off</span>
+                        <p class="text-gray-500 mt-3">Belum ada dokumen kru</p>
+                    </div>`;
+                }
+            } catch (err) {
+                body.innerHTML = `<div class="text-center py-12">
+                    <span class="material-icons text-5xl text-red-300">error</span>
+                    <p class="text-red-500 mt-3">Gagal memuat data</p>
+                </div>`;
+            }
+        }
+
+        // Open Crew Documents Book Modal
+        function openCrewDocsBook(crewId, crewName) {
+            const modal = document.getElementById('crewDocsBookModal');
+            const content = document.getElementById('crewDocsBookContent');
+            document.getElementById('crewDocsTitle').textContent = 'Dokumen: ' + crewName;
+            document.getElementById('crewDocsSubtitle').textContent = '';
+            modal.classList.remove('hidden');
+            content.classList.remove('book-modal-closing');
+            content.classList.add('book-modal', 'book-page');
+            loadCrewDocs(crewId);
+        }
+
+        function closeCrewDocsBookModal() {
+            const modal = document.getElementById('crewDocsBookModal');
+            const content = document.getElementById('crewDocsBookContent');
+            content.classList.add('book-modal-closing');
+            setTimeout(() => modal.classList.add('hidden'), 400);
+        }
+
+        // Load crew documents
+        async function loadCrewDocs(crewId) {
+            const body = document.getElementById('crewDocsBookBody');
+            body.innerHTML = `<div class="flex items-center justify-center py-12">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span class="ml-3 text-gray-500">Membuka halaman...</span>
+            </div>`;
+
+            try {
+                const res = await fetch(BASE + 'documents/apiCrewDocs/' + crewId);
+                const data = await res.json();
+
+                if (data.success && data.documents.length > 0) {
+                    document.getElementById('crewDocsSubtitle').textContent = data.documents.length + ' dokumen ditemukan';
+                    let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-3">';
+                    data.documents.forEach((doc, i) => {
+                        const delay = i * 0.08;
+                        const ext = (doc.file_name || '').split('.').pop().toUpperCase();
+                        const icon = getDocIcon(ext);
+                        const statusBadge = getStatusBadge(doc.status);
+                        const expiryText = doc.expiry_date ? formatDocDate(doc.expiry_date) : 'Tidak ada';
+                        html += `
+                        <div class="book-row bg-white rounded-xl border border-blue-100 hover:border-blue-300 hover:shadow-lg transition-all p-4 cursor-pointer group" 
+                             style="animation-delay: ${delay}s"
+                             onclick="previewDocument(${doc.id}, '${(doc.document_name || doc.file_name || '').replace(/'/g, "\\'")}')">
+                            <div class="flex items-start gap-3">
+                                <div class="w-12 h-14 rounded-lg ${icon.bg} flex flex-col items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                                    <span class="material-icons ${icon.color}" style="font-size:20px">${icon.icon}</span>
+                                    <span class="text-[8px] font-bold ${icon.color} mt-0.5">${ext}</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-semibold text-sm text-slate-800 truncate">${doc.document_name || doc.file_name}</p>
+                                    <p class="text-xs text-slate-400 mt-0.5">${doc.type_name || doc.document_type || '-'}</p>
+                                    <div class="flex items-center gap-2 mt-2">
+                                        ${statusBadge}
+                                        <span class="text-[10px] text-slate-400">Exp: ${expiryText}</span>
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span class="material-icons text-blue-500" style="font-size:20px">visibility</span>
+                                </div>
+                            </div>
+                        </div>`;
+                    });
+                    html += '</div>';
+                    body.innerHTML = html;
+                } else {
+                    body.innerHTML = `<div class="text-center py-12">
+                        <span class="material-icons text-5xl text-gray-300">folder_off</span>
+                        <p class="text-gray-500 mt-3">Belum ada dokumen</p>
+                    </div>`;
+                }
+            } catch (err) {
+                body.innerHTML = `<div class="text-center py-12">
+                    <span class="material-icons text-5xl text-red-300">error</span>
+                    <p class="text-red-500 mt-3">Gagal memuat dokumen</p>
+                </div>`;
+            }
+        }
+
+        function getDocIcon(ext) {
+            switch(ext) {
+                case 'PDF': return { icon: 'picture_as_pdf', bg: 'bg-red-50', color: 'text-red-500' };
+                case 'JPG': case 'JPEG': case 'PNG': case 'GIF': return { icon: 'image', bg: 'bg-green-50', color: 'text-green-500' };
+                case 'DOC': case 'DOCX': return { icon: 'description', bg: 'bg-blue-50', color: 'text-blue-500' };
+                default: return { icon: 'insert_drive_file', bg: 'bg-gray-50', color: 'text-gray-500' };
+            }
+        }
+
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'valid': return '<span class="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded">Valid</span>';
+                case 'expiring_soon': return '<span class="px-1.5 py-0.5 bg-yellow-50 text-yellow-600 text-[10px] font-bold rounded">Segera Expired</span>';
+                case 'expired': return '<span class="px-1.5 py-0.5 bg-red-50 text-red-600 text-[10px] font-bold rounded">Expired</span>';
+                default: return '<span class="px-1.5 py-0.5 bg-gray-50 text-gray-500 text-[10px] font-bold rounded">-</span>';
+            }
+        }
+
+        function formatDocDate(dateStr) {
+            const d = new Date(dateStr);
+            const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+            return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+        }
+
+        function previewDocument(docId, docName) {
+            document.getElementById('docPreviewTitle').textContent = docName;
+            document.getElementById('docPreviewFrame').src = BASE + 'documents/preview/' + docId;
+            document.getElementById('docPreviewDownload').href = BASE + 'documents/download/' + docId;
+            document.getElementById('docPreviewModal').classList.remove('hidden');
+        }
+    </script>
 
 </body>
 </html>

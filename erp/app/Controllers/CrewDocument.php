@@ -378,4 +378,52 @@ class CrewDocument extends BaseController
 
         return null;
     }
+
+    /**
+     * API: Get all crews with document counts (AJAX)
+     */
+    public function apiCrewList()
+    {
+        $this->requireAuth();
+        
+        $sql = "SELECT c.id, c.full_name, c.employee_id, 
+                    COUNT(cd.id) AS doc_count
+                FROM crews c
+                LEFT JOIN crew_documents cd ON c.id = cd.crew_id
+                GROUP BY c.id, c.full_name, c.employee_id
+                HAVING doc_count > 0
+                ORDER BY c.full_name ASC";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $crews = [];
+        while ($row = $result->fetch_assoc()) {
+            $crews[] = $row;
+        }
+        
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'crews' => $crews]);
+        exit;
+    }
+
+    /**
+     * API: Get all documents for a specific crew (AJAX)
+     */
+    public function apiCrewDocs($crewId)
+    {
+        $this->requireAuth();
+        
+        $docs = $this->docModel->getByCrew((int)$crewId);
+        $crew = $this->crewModel->find((int)$crewId);
+        
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'crew' => $crew ? ['id' => $crew['id'], 'full_name' => $crew['full_name'], 'employee_id' => $crew['employee_id'] ?? ''] : null,
+            'documents' => $docs ?: []
+        ]);
+        exit;
+    }
 }
+
