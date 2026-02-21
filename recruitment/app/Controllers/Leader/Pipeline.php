@@ -166,11 +166,17 @@ class Pipeline extends BaseController
 
         // If Master Admin, allow direct update
         if (isMasterAdmin()) {
-            $stmt = $this->db->prepare("UPDATE applications SET status_id = ?, updated_at = NOW() WHERE id = ?");
+            $stmt = $this->db->prepare("UPDATE applications SET status_id = ?, status_updated_at = NOW(), updated_at = NOW() WHERE id = ?");
             $stmt->bind_param('ii', $newStatusId, $applicationId);
 
             if ($stmt->execute()) {
                 $this->notifyStatusChange($applicationId, $newStatusId);
+                
+                // AUTO-PUSH TO ERP when status changes to 6 (Hired)
+                if ($newStatusId == 6) {
+                    $this->autoPushToErp($applicationId);
+                }
+                
                 return $this->json(['success' => true, 'message' => 'Status updated successfully']);
             }
             return $this->json(['success' => false, 'message' => 'Failed to update status']);
@@ -257,6 +263,74 @@ class Pipeline extends BaseController
         // Auto-create interview session if status is Interview
         if ($newStatusId == 3) {
             $this->createInterviewSession($applicationId);
+        }
+    }
+
+    /**
+     * Auto-push approved applicant to ERP system
+     */
+    private function autoPushToErp($applicationId) {
+        try {
+            require_once APPPATH . 'Libraries/ErpSync.php';
+            
+            $stmt = $this->db->prepare("
+                SELECT a.*, u.full_name, u.email, u.phone,
+                       ap.gender, ap.date_of_birth, ap.place_of_birth,
+                       ap.nationality, ap.address as profile_address,
+                       ap.city, ap.postal_code,
+                       ap.emergency_name, ap.emergency_phone, ap.emergency_relation,
+                       ap.total_sea_service_months,
+                       cp.employee_id
+                FROM applications a
+                JOIN users u ON a.user_id = u.id
+                LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
+                LEFT JOIN crewing_profiles cp ON u.id = cp.user_id
+                WHERE a.id = ?
+            ");
+            $stmt->bind_param('i', $applicationId);
+            $stmt->execute();
+            $app = $stmt->get_result()->fetch_assoc();
+            
+            if (!$app || !empty($app['sent_to_erp_at'])) return;
+            
+            $rawGender = strtolower(trim($app['gender'] ?? ''));
+            $gender = in_array($rawGender, ['female', 'perempuan', 'p', 'f', 'w']) ? 'female' : 'male';
+            
+            $crewData = [
+                'full_name' => $app['full_name'],
+                'email' => $app['email'] ?? '',
+                'phone' => $app['phone'] ?? '',
+                'employee_id' => $app['employee_id'] ?: ('IO' . date('Ymd') . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT)),
+                'candidate_id' => $app['user_id'],
+                'status' => 'available',
+                'notes' => 'Auto-pushed from recruitment pipeline',
+                'gender' => $gender,
+                'birth_date' => $app['date_of_birth'] ?? null,
+                'birth_place' => $app['place_of_birth'] ?? '',
+                'nationality' => $app['nationality'] ?? 'Indonesian',
+                'address' => $app['profile_address'] ?? '',
+                'city' => $app['city'] ?? '',
+                'postal_code' => $app['postal_code'] ?? '',
+                'emergency_name' => $app['emergency_name'] ?? '',
+                'emergency_phone' => $app['emergency_phone'] ?? '',
+                'emergency_relation' => $app['emergency_relation'] ?? '',
+                'total_sea_time_months' => intval($app['total_sea_service_months'] ?? 0),
+            ];
+            
+            $erpSync = new \ErpSync($this->db);
+            $existingCrewId = $erpSync->getCrewByCandidateId($app['user_id']);
+            if ($existingCrewId) {
+                $erpSync->updateCrew($existingCrewId, $crewData);
+            } else {
+                $erpSync->createCrew($crewData);
+            }
+            
+            $updateStmt = $this->db->prepare("UPDATE applications SET sent_to_erp_at = NOW() WHERE id = ?");
+            $updateStmt->bind_param('i', $applicationId);
+            $updateStmt->execute();
+            
+        } catch (\Throwable $e) {
+            error_log("Auto-push to ERP failed for application #$applicationId: " . $e->getMessage());
         }
     }
 
