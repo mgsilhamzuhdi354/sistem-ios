@@ -30,7 +30,8 @@ class ContractModel extends BaseModel
                     cl.name AS client_name,
                     r.name AS rank_name, r.department,
                     cs.basic_salary, cs.overtime_allowance, cs.leave_pay, cs.bonus, 
-                    cs.other_allowance, cs.total_monthly, cs.exchange_rate,
+                    cs.other_allowance, cs.total_monthly, cs.exchange_rate, cs.client_rate,
+                    cs.currency_id,
                     cur.code AS currency_code, cur.symbol AS currency_symbol,
                     ct.tax_type, ct.npwp_number, ct.tax_rate
                 FROM contracts c
