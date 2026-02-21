@@ -379,7 +379,7 @@ class Contract extends BaseController
             'deductionTypes' => DEDUCTION_TYPES,
         ];
 
-        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
         $view = $uiMode === 'modern' ? 'contracts/edit_modern' : 'contracts/form';
         return $this->view($view, $data);
     }
