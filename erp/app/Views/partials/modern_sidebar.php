@@ -112,19 +112,10 @@ $inactiveSub = 'text-slate-500 hover:text-slate-700 hover:bg-slate-50';
         </div>
 
         <!-- Vessels -->
-        <div x-data="{ open: <?= $act['vessels'] ? 'true' : 'false' ?> }" x-cloak>
-            <button @click.prevent="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['vessels'] ? $activeClass : $inactiveClass ?>">
-                <span class="flex items-center gap-3">
-                    <span class="material-icons text-[18px] <?= $act['vessels'] ? $activeIcon : $inactiveIcon ?>">directions_boat</span>
-                    <?= __('sidebar.vessels') ?>
-                </span>
-                <span class="material-icons text-[16px] transition-transform duration-200" :class="open && 'rotate-180'">expand_more</span>
-            </button>
-            <div x-show="open" x-collapse class="ml-9 mt-1 space-y-0.5">
-                <a href="<?= BASE_URL ?>vessels" class="block px-3 py-1.5 rounded-md text-xs <?= $act['vessels-list'] ? $activeSub : $inactiveSub ?>"><?= __('sidebar.vessel_list') ?></a>
-                <a href="<?= BASE_URL ?>vessels/profit" class="block px-3 py-1.5 rounded-md text-xs <?= $act['vessels-profit'] ? $activeSub : $inactiveSub ?>"><?= __('sidebar.profit_per_vessel') ?></a>
-            </div>
-        </div>
+        <a href="<?= BASE_URL ?>vessels" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['vessels'] ? $activeClass : $inactiveClass ?>">
+            <span class="material-icons text-[18px] <?= $act['vessels'] ? $activeIcon : $inactiveIcon ?>">directions_boat</span>
+            <?= __('sidebar.vessels') ?>
+        </a>
 
         <!-- Clients -->
         <div x-data="{ open: <?= $act['clients'] ? 'true' : 'false' ?> }" x-cloak>
