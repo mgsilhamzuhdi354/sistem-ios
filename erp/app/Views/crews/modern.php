@@ -256,6 +256,8 @@ function getStatusBadge($status)
                                         <?= __('crews.rank') ?></th>
                                     <th class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500">
                                         <?= __('common.status') ?></th>
+                                    <th class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                        Sumber</th>
                                     <th
                                         class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 text-right">
                                         <?= __('common.actions') ?></th>
@@ -264,7 +266,7 @@ function getStatusBadge($status)
                             <tbody class="divide-y divide-slate-100">
                                 <?php if (empty($crews)): ?>
                                     <tr>
-                                        <td colspan="7" class="py-12 px-6 text-center text-slate-500">
+                                        <td colspan="8" class="py-12 px-6 text-center text-slate-500">
                                             <div class="flex flex-col items-center">
                                                 <span
                                                     class="material-icons-round text-6xl mb-2 text-slate-300">group_off</span>
@@ -316,6 +318,18 @@ function getStatusBadge($status)
                                                 <?= htmlspecialchars($crew['rank_name'] ?? 'Not Assigned') ?>
                                             </td>
                                             <td class="py-4 px-6"><?= getStatusBadge($crew['status'] ?? 'unknown') ?></td>
+                                            <td class="py-4 px-6">
+                                                <?php
+                                                $source = strtolower($crew['source'] ?? 'manual');
+                                                if ($source === 'recruitment') {
+                                                    echo '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200"><span class="material-icons-round" style="font-size:12px">how_to_reg</span>Recruitment</span>';
+                                                } elseif ($source === 'contract_sync') {
+                                                    echo '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 border border-orange-200"><span class="material-icons-round" style="font-size:12px">sync</span>Sync</span>';
+                                                } else {
+                                                    echo '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200"><span class="material-icons-round" style="font-size:12px">edit</span>Manual</span>';
+                                                }
+                                                ?>
+                                            </td>
                                             <td class="py-4 px-6 text-right">
                                                 <div
                                                     class="flex items-center justify-end space-x-2 opacity-80 group-hover:opacity-100 transition-opacity">
