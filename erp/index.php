@@ -83,7 +83,7 @@ if (strpos($method, '-') !== false) {
 }
 
 // Load routes configuration
-$controllerMap = require_once APPPATH . 'Config/Routes.php';
+$controllerMap = require APPPATH . 'Config/Routes.php';
 $controllerName = $controllerMap[$controllerName] ?? $controllerName;
 $controllerFile = APPPATH . 'Controllers/' . $controllerName . '.php';
 
