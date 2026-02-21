@@ -89,11 +89,13 @@ class ContractModel extends BaseModel
                     v.name AS vessel_name,
                     cl.name AS client_name,
                     r.name AS rank_name,
+                    cr.source AS crew_source,
                     DATEDIFF(c.sign_off_date, CURDATE()) AS days_remaining
                 FROM contracts c
                 LEFT JOIN vessels v ON c.vessel_id = v.id
                 LEFT JOIN clients cl ON c.client_id = cl.id
                 LEFT JOIN ranks r ON c.rank_id = r.id
+                LEFT JOIN crews cr ON c.crew_id = cr.id
                 WHERE $whereClause
                 ORDER BY c.created_at DESC
                 LIMIT $perPage OFFSET $offset";

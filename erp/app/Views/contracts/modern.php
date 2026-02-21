@@ -173,13 +173,14 @@
                                     <th class="px-6 py-4"><?= __('contracts.client') ?></th>
                                     <th class="px-6 py-4"><?= __('contracts.sign_on_date') ?> / <?= __('contracts.sign_off_date') ?></th>
                                     <th class="px-6 py-4"><?= __('common.status') ?></th>
+                                    <th class="px-6 py-4">Sumber</th>
                                     <th class="px-6 py-4 text-center"><?= __('common.actions') ?></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
                                 <?php if (empty($contracts)): ?>
                                     <tr>
-                                        <td colspan="8" class="px-6 py-12 text-center text-slate-400">
+                                        <td colspan="9" class="px-6 py-12 text-center text-slate-400">
                                             <span class="material-icons-round text-4xl mb-2 block">inbox</span>
                                             <?= __('contracts.no_contracts') ?>
                                         </td>
@@ -251,6 +252,18 @@
                                                     class="px-2.5 py-1 rounded-full bg-<?= $statusColor ?>-50 text-<?= $statusColor ?>-600 border border-<?= $statusColor ?>-100 text-[10px] font-bold uppercase tracking-tight">
                                                     <?= ucfirst(str_replace('_', ' ', $contract['status'])) ?>
                                                 </span>
+                                            </td>
+                                            <td class="px-6 py-5">
+                                                <?php
+                                                $src = strtolower($contract['crew_source'] ?? 'manual');
+                                                if ($src === 'recruitment') {
+                                                    echo '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200"><span class="material-icons-round" style="font-size:12px">how_to_reg</span>Recruitment</span>';
+                                                } elseif ($src === 'contract_sync') {
+                                                    echo '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 border border-orange-200"><span class="material-icons-round" style="font-size:12px">sync</span>Sync</span>';
+                                                } else {
+                                                    echo '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200"><span class="material-icons-round" style="font-size:12px">edit</span>Manual</span>';
+                                                }
+                                                ?>
                                             </td>
                                             <td class="px-6 py-5 text-center">
                                                 <div class="flex items-center justify-center gap-2">
