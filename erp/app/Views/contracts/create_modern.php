@@ -212,28 +212,32 @@
                             </div>
                         <?php endif; ?>
 
-                        <!-- Manual Crew Input -->
+                        <!-- Crew Selection Dropdown -->
                         <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
                             <h5 class="text-sm font-bold text-gray-700 mb-4">
-                                <i class="fas fa-keyboard"></i> <?= __('contracts.manual_entry') ?>
+                                <i class="fas fa-user-check"></i> Select Crew Member
                             </h5>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                        Crew ID <span class="text-red-500">*</span>
+                                        Crew <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="number" name="crew_id" x-model="formData.crewId" required
-                                        class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none"
-                                        placeholder="<?= __('contracts.enter_crew_id') ?>">
+                                    <select name="crew_id" x-model="formData.crewId" required
+                                        @change="updateCrewName()"
+                                        class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none">
+                                        <option value="">-- Select Crew --</option>
+                                        <?php foreach ($crews as $cr): ?>
+                                            <option value="<?= $cr['id'] ?>" data-name="<?= htmlspecialchars($cr['name']) ?>"><?= htmlspecialchars($cr['name']) ?> (<?= $cr['employee_id'] ?? 'N/A' ?>) - <?= htmlspecialchars($cr['rank'] ?? 'No Rank') ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
                                 </div>
-
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                        Crew Name <span class="text-red-500">*</span>
+                                        Crew Name
                                     </label>
-                                    <input type="text" name="crew_name" x-model="formData.crewName" required
-                                        class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none"
-                                        placeholder="<?= __('contracts.crew_full_name') ?>">
+                                    <input type="text" name="crew_name" x-model="formData.crewName" readonly
+                                        class="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-600 cursor-not-allowed"
+                                        placeholder="Auto-filled from selection">
                                 </div>
                             </div>
                         </div>
@@ -623,7 +627,7 @@
                 totalDeductions: 0,
 
                 selectRecruitmentCrew(crew) {
-                    this.formData.crewId = crew.id;
+                    this.formData.crewId = String(crew.id);
                     this.formData.crewName = crew.full_name;
                     if (crew.current_rank_id) {
                         this.formData.rankId = crew.current_rank_id;
@@ -635,10 +639,19 @@
                     });
                     event.currentTarget.classList.add('selected');
 
-                    // Smooth scroll
+                    // Smooth scroll to the dropdown
                     setTimeout(() => {
-                        document.querySelector('input[name="crew_id"]').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        document.querySelector('select[name="crew_id"]').scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }, 100);
+                },
+
+                updateCrewName() {
+                    const select = document.querySelector('select[name="crew_id"]');
+                    if (select && select.selectedIndex > 0) {
+                        this.formData.crewName = select.options[select.selectedIndex].dataset.name || '';
+                    } else {
+                        this.formData.crewName = '';
+                    }
                 },
 
                 getCurrencySymbol() {

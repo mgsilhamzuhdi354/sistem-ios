@@ -196,23 +196,29 @@ if (isset($contract['currency_code'])) {
                             </div>
                         </div>
 
-                        <!-- Crew Details -->
+                        <!-- Crew Selection Dropdown -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                    Crew ID <span class="text-red-500">*</span>
+                                    Crew <span class="text-red-500">*</span>
                                 </label>
-                                <input type="number" name="crew_id" x-model="formData.crewId" required
-                                    class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none"
-                                    placeholder="Crew ID">
+                                <select name="crew_id" x-model="formData.crewId" required
+                                    @change="updateCrewName()"
+                                    class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none">
+                                    <option value="">-- Select Crew --</option>
+                                    <?php foreach ($crews as $cr): ?>
+                                        <option value="<?= $cr['id'] ?>" data-name="<?= htmlspecialchars($cr['name']) ?>"
+                                            <?= ($contract['crew_id'] ?? '') == $cr['id'] ? 'selected' : '' ?>><?= htmlspecialchars($cr['name']) ?> (<?= $cr['employee_id'] ?? 'N/A' ?>) - <?= htmlspecialchars($cr['rank'] ?? 'No Rank') ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                    Crew Name <span class="text-red-500">*</span>
+                                    Crew Name
                                 </label>
-                                <input type="text" name="crew_name" x-model="formData.crewName" required
-                                    class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none"
-                                    placeholder="Nama lengkap crew">
+                                <input type="text" name="crew_name" x-model="formData.crewName" readonly
+                                    class="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-600 cursor-not-allowed"
+                                    placeholder="Auto-filled from selection">
                             </div>
                         </div>
 
@@ -699,6 +705,15 @@ if (isset($contract['currency_code'])) {
                 clientRate: 0,
                 profit: 0,
                 totalDeductions: 0,
+
+                updateCrewName() {
+                    const select = document.querySelector('select[name="crew_id"]');
+                    if (select && select.selectedIndex > 0) {
+                        this.formData.crewName = select.options[select.selectedIndex].dataset.name || '';
+                    } else {
+                        this.formData.crewName = '';
+                    }
+                },
 
                 getCurrencySymbol() {
                     const code = this.currencyMap[this.formData.currencyId] || 'USD';

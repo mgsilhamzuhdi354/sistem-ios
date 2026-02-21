@@ -170,6 +170,23 @@ class Contract extends BaseController
 
         $crewId = $this->input('crew_id');
 
+        // Validate crew_id exists in crews table
+        if (!empty($crewId)) {
+            $crewCheck = $this->db->prepare("SELECT id, full_name FROM crews WHERE id = ? LIMIT 1");
+            $crewCheck->bind_param('i', $crewId);
+            $crewCheck->execute();
+            $crewResult = $crewCheck->get_result();
+            if (!$crewResult || $crewResult->num_rows === 0) {
+                $this->setFlash('error', 'Crew ID tidak ditemukan. Pilih crew dari dropdown.');
+                $this->redirect('contracts/create');
+                return;
+            }
+        } else {
+            $this->setFlash('error', 'Crew harus dipilih.');
+            $this->redirect('contracts/create');
+            return;
+        }
+
         // Prevent duplicate: check if crew already has an active/pending/draft contract
         if (!empty($crewId)) {
             $stmt = $this->db->prepare(
@@ -346,6 +363,7 @@ class Contract extends BaseController
         $rankModel = new RankModel($this->db);
         $currencyModel = new CurrencyModel($this->db);
         $deductionModel = new ContractDeductionModel($this->db);
+        $crewModel = new CrewModel($this->db);
 
         $data = [
             'title' => 'Edit Contract - ' . $contract['contract_no'],
@@ -355,6 +373,7 @@ class Contract extends BaseController
             'clients' => $clientModel->getForDropdown(),
             'ranks' => $rankModel->getForDropdown(),
             'currencies' => $currencyModel->getForDropdown(),
+            'crews' => $crewModel->getForDropdown(),
             'contractTypes' => CONTRACT_TYPES,
             'taxTypes' => TAX_TYPES,
             'deductionTypes' => DEDUCTION_TYPES,

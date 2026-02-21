@@ -169,10 +169,10 @@ class CrewModel extends BaseModel
      */
     public function getForDropdown()
     {
-        $sql = "SELECT c.id, c.full_name as name, c.employee_id, r.name as `rank`
+        $sql = "SELECT c.id, c.full_name as name, c.employee_id, c.status, r.name as `rank`
                 FROM {$this->table} c
                 LEFT JOIN ranks r ON c.current_rank_id = r.id
-                WHERE c.status IN ('available', 'onboard')
+                WHERE c.status IN ('available', 'onboard', 'pending_approval', 'standby')
                 ORDER BY c.full_name ASC";
         return $this->query($sql);
     }
