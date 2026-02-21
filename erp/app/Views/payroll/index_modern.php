@@ -191,13 +191,89 @@ $periodStatus = $period['status'] ?? 'draft';
                     <?php endif; ?>
                 </div>
 
-                <!-- Payroll Date Info -->
-                <div class="mb-6 flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl animate-fade-in-delay-1">
-                    <span class="material-icons text-blue-600 text-lg">event</span>
-                    <p class="text-sm text-blue-800">
-                        Tanggal proses gaji: <strong>Setiap tanggal <?= htmlspecialchars($payroll_day ?? '15') ?></strong> setiap bulan.
-                        <a href="<?= BASE_URL ?>settings" class="text-blue-600 hover:text-blue-800 underline text-xs font-medium ml-1">Ubah di Pengaturan →</a>
-                    </p>
+                <!-- Payroll Calendar Alert & Date Search -->
+                <?php
+                    $pDay = (int)($payroll_day ?? 15);
+                    $payrollDate = mktime(0, 0, 0, $month, $pDay, $year);
+                    $dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                    $monthNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                    $payDayName = $dayNames[date('w', $payrollDate)];
+                    $payDateFormatted = date('Y-m-d', $payrollDate);
+                    $today = date('Y-m-d');
+                    $isPayday = ($today === $payDateFormatted);
+                    $isPast = ($today > $payDateFormatted);
+                ?>
+                <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in-delay-1">
+                    <!-- Calendar Card -->
+                    <div class="bg-white rounded-2xl shadow-sm border <?= $isPayday ? 'border-emerald-300 ring-2 ring-emerald-100' : 'border-slate-200' ?> overflow-hidden hover:shadow-md transition-all">
+                        <div class="flex items-stretch">
+                            <!-- Calendar Icon -->
+                            <div class="w-24 flex-shrink-0 flex flex-col items-center justify-center <?= $isPayday ? 'bg-gradient-to-b from-emerald-500 to-emerald-600' : ($isPast ? 'bg-gradient-to-b from-slate-400 to-slate-500' : 'bg-gradient-to-b from-blue-500 to-blue-600') ?> text-white px-3 py-4">
+                                <span class="text-[10px] uppercase font-bold tracking-widest opacity-80"><?= $dayNames[date('w', $payrollDate)] ?></span>
+                                <span class="text-4xl font-black leading-none mt-1"><?= $pDay ?></span>
+                                <span class="text-[10px] uppercase font-bold tracking-wider opacity-80 mt-1"><?= substr($monthNames[$month], 0, 3) ?> <?= $year ?></span>
+                            </div>
+                            <!-- Info -->
+                            <div class="flex-1 p-4 flex flex-col justify-center">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <?php if ($isPayday): ?>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold animate-pulse">
+                                            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> HARI INI
+                                        </span>
+                                    <?php elseif ($isPast): ?>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold">
+                                            <span class="material-icons" style="font-size:10px">check_circle</span> SUDAH LEWAT
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold">
+                                            <span class="material-icons" style="font-size:10px">schedule</span> AKAN DATANG
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                                <p class="text-sm font-bold text-slate-800">Tanggal Gajian Kru</p>
+                                <p class="text-xs text-slate-500 mt-0.5"><?= $payDayName ?>, <?= $pDay ?> <?= $monthNames[$month] ?> <?= $year ?></p>
+                                <a href="<?= BASE_URL ?>settings" class="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-800 font-medium mt-2">
+                                    <span class="material-icons" style="font-size:12px">settings</span> Ubah Tanggal
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Date Search Card -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-all md:col-span-2">
+                        <div class="p-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="p-1.5 bg-amber-50 rounded-lg">
+                                    <span class="material-icons text-amber-600 text-sm">calendar_month</span>
+                                </div>
+                                <h4 class="text-sm font-bold text-slate-800">Cari Berdasarkan Tanggal</h4>
+                            </div>
+                            <div class="flex flex-wrap items-end gap-3">
+                                <div class="flex-1 min-w-[140px]">
+                                    <label class="block text-[11px] font-semibold text-slate-500 mb-1">Dari Tanggal</label>
+                                    <input type="date" id="dateFrom" 
+                                           class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400">
+                                </div>
+                                <div class="flex-1 min-w-[140px]">
+                                    <label class="block text-[11px] font-semibold text-slate-500 mb-1">Sampai Tanggal</label>
+                                    <input type="date" id="dateTo" 
+                                           class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400">
+                                </div>
+                                <button onclick="filterByDate()" 
+                                        class="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-lg transition-all shadow-sm">
+                                    <span class="material-icons text-sm">search</span> Cari
+                                </button>
+                                <button onclick="resetDateFilter()" 
+                                        class="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-medium rounded-lg transition-all">
+                                    <span class="material-icons text-sm">restart_alt</span> Reset
+                                </button>
+                            </div>
+                            <p id="dateFilterResult" class="text-xs text-slate-400 mt-2 hidden">
+                                <span class="material-icons text-xs align-middle">info</span> 
+                                <span id="dateFilterText"></span>
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Stats + Trend Row -->
@@ -337,7 +413,8 @@ $periodStatus = $period['status'] ?? 'draft';
                                         <tr class="hover:bg-slate-50/80 transition-colors group crew-row"
                                             data-name="<?= strtolower(htmlspecialchars($item['crew_name'] ?? '')) ?>"
                                             data-rank="<?= strtolower(htmlspecialchars($item['rank_name'] ?? '')) ?>"
-                                            data-vessel="<?= strtolower(htmlspecialchars($item['vessel_name'] ?? '')) ?>">
+                                            data-vessel="<?= strtolower(htmlspecialchars($item['vessel_name'] ?? '')) ?>"
+                                            data-date="<?= htmlspecialchars($item['created_at'] ?? $item['pay_date'] ?? date('Y-m-d', mktime(0,0,0,$month,$pDay,$year))) ?>">
                                             <!-- Crew Name -->
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="flex items-center gap-3">
@@ -556,12 +633,62 @@ $periodStatus = $period['status'] ?? 'draft';
                         const rank = row.getAttribute('data-rank') || '';
                         const vessel = row.getAttribute('data-vessel') || '';
                         const match = !query || name.includes(query) || rank.includes(query) || vessel.includes(query);
-                        row.style.display = match ? '' : 'none';
-                        if (match) count++;
+                        // Also respect date filter
+                        const isDateHidden = row.getAttribute('data-date-hidden') === 'true';
+                        row.style.display = (match && !isDateHidden) ? '' : 'none';
+                        if (match && !isDateHidden) count++;
                     });
                     this.visibleCount = count;
                 }
             };
+        }
+
+        // Date Filter Functions
+        function filterByDate() {
+            const from = document.getElementById('dateFrom').value;
+            const to = document.getElementById('dateTo').value;
+            const rows = document.querySelectorAll('.crew-row');
+            let count = 0;
+            let total = rows.length;
+
+            rows.forEach(row => {
+                const rowDate = (row.getAttribute('data-date') || '').substring(0, 10);
+                let show = true;
+                if (from && rowDate < from) show = false;
+                if (to && rowDate > to) show = false;
+                row.setAttribute('data-date-hidden', show ? 'false' : 'true');
+                row.style.display = show ? '' : 'none';
+                if (show) count++;
+            });
+
+            // Show result text
+            const resultEl = document.getElementById('dateFilterResult');
+            const textEl = document.getElementById('dateFilterText');
+            resultEl.classList.remove('hidden');
+            
+            let rangeText = '';
+            if (from && to) rangeText = `Menampilkan ${count} dari ${total} data (${formatDate(from)} - ${formatDate(to)})`;
+            else if (from) rangeText = `Menampilkan ${count} dari ${total} data (dari ${formatDate(from)})`;
+            else if (to) rangeText = `Menampilkan ${count} dari ${total} data (sampai ${formatDate(to)})`;
+            else rangeText = 'Pilih tanggal untuk memfilter';
+            textEl.textContent = rangeText;
+        }
+
+        function resetDateFilter() {
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            document.getElementById('dateFilterResult').classList.add('hidden');
+            const rows = document.querySelectorAll('.crew-row');
+            rows.forEach(row => {
+                row.setAttribute('data-date-hidden', 'false');
+                row.style.display = '';
+            });
+        }
+
+        function formatDate(dateStr) {
+            const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            const parts = dateStr.split('-');
+            return parseInt(parts[2]) + ' ' + months[parseInt(parts[1])] + ' ' + parts[0];
         }
     </script>
 </body>
