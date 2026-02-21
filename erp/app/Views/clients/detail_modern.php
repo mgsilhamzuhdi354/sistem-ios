@@ -684,11 +684,27 @@
                                             </div>
 
                                             <!-- Crew List Section -->
-                                            <div class="p-5">
-                                                <h4 class="text-sm font-bold text-navy mb-3 flex items-center gap-1.5">
-                                                    <span class="material-symbols-outlined text-[18px] text-primary">groups</span>
-                                                    Daftar Kru
-                                                </h4>
+                                            <?php
+                                            $dvActiveCount = 0; $dvInactiveCount = 0;
+                                            foreach ($contracts as $dc) {
+                                                if (($dc['vessel_id'] ?? null) == $dv['id']) {
+                                                    if (in_array($dc['status'], ['active', 'onboard'])) { $dvActiveCount++; } else { $dvInactiveCount++; }
+                                                }
+                                            }
+                                            $dvTotalCount = $dvActiveCount + $dvInactiveCount;
+                                            ?>
+                                            <div class="p-5" x-data="{ dvCrewFilter: 'active' }">
+                                                <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+                                                    <h4 class="text-sm font-bold text-navy flex items-center gap-1.5">
+                                                        <span class="material-symbols-outlined text-[18px] text-primary">groups</span>
+                                                        Daftar Kru
+                                                    </h4>
+                                                    <div class="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+                                                        <button @click="dvCrewFilter = 'active'" :class="dvCrewFilter === 'active' ? 'bg-white text-navy shadow-sm font-semibold' : 'text-slate-500 hover:text-navy'" class="px-3 py-1 rounded-md text-[11px] transition-all">Aktif <span class="text-[10px] opacity-70">(<?= $dvActiveCount ?>)</span></button>
+                                                        <button @click="dvCrewFilter = 'inactive'" :class="dvCrewFilter === 'inactive' ? 'bg-white text-navy shadow-sm font-semibold' : 'text-slate-500 hover:text-navy'" class="px-3 py-1 rounded-md text-[11px] transition-all">Non-Aktif <span class="text-[10px] opacity-70">(<?= $dvInactiveCount ?>)</span></button>
+                                                        <button @click="dvCrewFilter = 'all'" :class="dvCrewFilter === 'all' ? 'bg-white text-navy shadow-sm font-semibold' : 'text-slate-500 hover:text-navy'" class="px-3 py-1 rounded-md text-[11px] transition-all">Semua <span class="text-[10px] opacity-70">(<?= $dvTotalCount ?>)</span></button>
+                                                    </div>
+                                                </div>
                                                 <div class="overflow-x-auto rounded-lg border border-slate-100">
                                                     <table class="w-full text-left border-collapse">
                                                         <thead>
@@ -706,18 +722,23 @@
                                                             <?php
                                                             $dvCrewFound = false;
                                                             foreach ($contracts as $dc):
-                                                                if (($dc['vessel_id'] ?? null) == $dv['id'] && in_array($dc['status'], ['active', 'onboard'])):
+                                                                if (($dc['vessel_id'] ?? null) == $dv['id']):
                                                                     $dvCrewFound = true;
+                                                                    $isActive = in_array($dc['status'], ['active', 'onboard']);
+                                                                    $filterTag = $isActive ? 'active' : 'inactive';
                                                                     $daysRemaining = $dc['days_remaining'] ?? null;
                                                                     $contractNo = !empty($dc['contract_number']) ? $dc['contract_number'] : 'CTR-' . date('Y', strtotime($dc['sign_on_date'] ?? 'now')) . '-' . str_pad($dc['id'] ?? '0', 4, '0', STR_PAD_LEFT);
                                                                     $signOff = !empty($dc['sign_off_date']) ? date('d M Y', strtotime($dc['sign_off_date'])) : '-';
                                                             ?>
-                                                                <tr class="hover:bg-blue-50/30 transition-colors">
+                                                                <tr class="hover:bg-blue-50/30 transition-colors <?= !$isActive ? 'opacity-60' : '' ?>" x-show="dvCrewFilter === 'all' || dvCrewFilter === '<?= $filterTag ?>'" x-transition>
                                                                     <td class="px-3 py-2.5">
-                                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700"><?= htmlspecialchars($dc['rank'] ?? $dc['rank_name'] ?? 'N/A') ?></span>
+                                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium <?= $isActive ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-500' ?>"><?= htmlspecialchars($dc['rank'] ?? $dc['rank_name'] ?? 'N/A') ?></span>
                                                                     </td>
                                                                     <td class="px-3 py-2.5">
                                                                         <span class="text-xs font-semibold text-navy"><?= htmlspecialchars($dc['crew_name'] ?? 'N/A') ?></span>
+                                                                        <?php if (!$isActive): ?>
+                                                                            <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-bold bg-slate-100 text-slate-400 uppercase"><?= ucfirst($dc['status'] ?? 'N/A') ?></span>
+                                                                        <?php endif; ?>
                                                                     </td>
                                                                     <td class="px-3 py-2.5">
                                                                         <span class="text-xs text-slate-600 font-mono"><?= htmlspecialchars($contractNo) ?></span>
