@@ -750,10 +750,6 @@
                                                                     <td class="px-3 py-2.5">
                                                                         <?php
                                                                         $dcClientRate = $dc['client_rate'] ?? 0;
-                                                                        // Validate: if client_rate is more than 100x salary, it's likely corrupted data
-                                                                        if ($dcSalary > 0 && $dcClientRate > ($dcSalary * 100)) {
-                                                                            $dcClientRate = 0; // Reset corrupted value
-                                                                        }
                                                                         $dcProfit = $dcClientRate - $dcSalary;
                                                                         if ($dcClientRate > 0) {
                                                                             $profitColor = $dcProfit >= 0 ? 'text-emerald-600' : 'text-rose-600';
