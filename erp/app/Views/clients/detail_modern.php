@@ -438,14 +438,13 @@
 
                             <!-- Vessel Detail Modal (Book-Flip Animation) -->
                             <template x-if="vesselModal">
-                                <div class="fixed inset-0 z-[9999] flex items-center justify-center p-4" @click.self="vesselModal = false">
+                                <div class="fixed inset-0 z-[9999] flex items-center justify-center p-4" @click.self="vesselModal = false" @keydown.escape.window="vesselModal = false">
                                     <div class="absolute inset-0 bg-black/40 backdrop-blur-sm backdrop-fade-in" @click="vesselModal = false"></div>
-                                    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden book-open-enter z-10">
-                                        <!-- Modal Header -->
+                                    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto book-open-enter z-10">
                                         <?php foreach ($vessels as $mIdx => $mv): ?>
                                         <div x-show="selectedVessel === <?= $mIdx ?>">
-                                            <!-- Foto Kapal Besar -->
-                                            <div class="h-48 bg-gradient-to-br from-slate-200 to-slate-300 relative overflow-hidden">
+                                            <!-- Foto Kapal -->
+                                            <div class="h-44 bg-gradient-to-br from-slate-200 to-slate-300 relative overflow-hidden">
                                                 <?php if (!empty($mv['image_url'])): ?>
                                                     <?php
                                                     $mImgUrl = $mv['image_url'];
@@ -467,44 +466,113 @@
                                                 </button>
                                             </div>
 
-                                            <!-- Info Kapal -->
-                                            <div class="p-6">
-                                                <h3 class="text-xl font-bold text-navy mb-1"><?= htmlspecialchars($mv['name']) ?></h3>
-                                                <p class="text-sm text-slate-500 mb-4"><?= htmlspecialchars($mv['vessel_type_name'] ?? '-') ?></p>
-
-                                                <div class="grid grid-cols-2 gap-4 mb-6">
-                                                    <div class="bg-slate-50 rounded-xl p-3">
-                                                        <p class="text-[10px] font-bold text-slate-400 uppercase">Nomor IMO</p>
-                                                        <p class="text-sm font-semibold text-navy"><?= htmlspecialchars($mv['imo_number'] ?? 'N/A') ?></p>
+                                            <!-- Info Kapal + Tombol -->
+                                            <div class="p-5 border-b border-slate-100">
+                                                <div class="flex items-start justify-between mb-3">
+                                                    <div>
+                                                        <h3 class="text-lg font-bold text-navy"><?= htmlspecialchars($mv['name']) ?></h3>
+                                                        <p class="text-sm text-slate-500"><?= htmlspecialchars($mv['vessel_type_name'] ?? '-') ?> • IMO: <?= htmlspecialchars($mv['imo_number'] ?? 'N/A') ?></p>
                                                     </div>
-                                                    <div class="bg-slate-50 rounded-xl p-3">
-                                                        <p class="text-[10px] font-bold text-slate-400 uppercase">Jumlah Kru</p>
-                                                        <p class="text-sm font-semibold text-navy"><?= $mv['crew_count'] ?? 0 ?> Orang</p>
-                                                    </div>
-                                                    <div class="bg-slate-50 rounded-xl p-3">
-                                                        <p class="text-[10px] font-bold text-slate-400 uppercase">Bendera</p>
-                                                        <p class="text-sm font-semibold text-navy"><?= $mv['flag_emoji'] ?? '' ?> <?= htmlspecialchars($mv['flag_state'] ?? 'N/A') ?></p>
-                                                    </div>
-                                                    <div class="bg-slate-50 rounded-xl p-3">
-                                                        <p class="text-[10px] font-bold text-slate-400 uppercase">Status</p>
-                                                        <p class="text-sm font-semibold <?= ($mv['status'] ?? 'active') === 'active' ? 'text-emerald-600' : 'text-amber-600' ?>">
-                                                            <?= ucfirst($mv['status'] ?? 'Active') ?>
-                                                        </p>
+                                                    <div class="flex gap-2">
+                                                        <button onclick="alert('Edit Kapal: <?= htmlspecialchars($mv['name']) ?>\nFitur edit kapal dalam pengembangan.\nSilakan gunakan halaman Daftar Kapal untuk mengedit.')"
+                                                            class="flex items-center gap-1.5 bg-primary hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition-all active:scale-95 shadow-sm">
+                                                            <span class="material-symbols-outlined text-[16px]">edit</span>
+                                                            Edit
+                                                        </button>
+                                                        <button onclick="alert('Detail Kapal: <?= htmlspecialchars($mv['name']) ?>\nTipe: <?= htmlspecialchars($mv['vessel_type_name'] ?? '-') ?>\nIMO: <?= htmlspecialchars($mv['imo_number'] ?? 'N/A') ?>\nKru: <?= $mv['crew_count'] ?? 0 ?> Orang\nBendera: <?= htmlspecialchars($mv['flag_state'] ?? 'N/A') ?>\nStatus: <?= ucfirst($mv['status'] ?? 'Active') ?>')"
+                                                            class="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-navy px-3 py-2 rounded-lg text-xs font-bold transition-all active:scale-95">
+                                                            <span class="material-symbols-outlined text-[16px]">visibility</span>
+                                                            Detail
+                                                        </button>
                                                     </div>
                                                 </div>
 
-                                                <!-- Tombol Aksi -->
-                                                <div class="flex gap-3">
-                                                    <a href="<?= BASE_URL ?>vessels/edit/<?= $mv['id'] ?>"
-                                                        class="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 shadow-sm">
-                                                        <span class="material-symbols-outlined text-lg">edit</span>
-                                                        Edit Kapal
-                                                    </a>
-                                                    <a href="<?= BASE_URL ?>vessels/<?= $mv['id'] ?>"
-                                                        class="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-navy px-4 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95">
-                                                        <span class="material-symbols-outlined text-lg">visibility</span>
-                                                        Lihat Detail
-                                                    </a>
+                                                <div class="grid grid-cols-4 gap-2">
+                                                    <div class="bg-slate-50 rounded-lg p-2 text-center">
+                                                        <p class="text-[9px] font-bold text-slate-400 uppercase">Kru</p>
+                                                        <p class="text-sm font-bold text-navy"><?= $mv['crew_count'] ?? 0 ?></p>
+                                                    </div>
+                                                    <div class="bg-slate-50 rounded-lg p-2 text-center">
+                                                        <p class="text-[9px] font-bold text-slate-400 uppercase">IMO</p>
+                                                        <p class="text-sm font-bold text-navy"><?= htmlspecialchars($mv['imo_number'] ?? 'N/A') ?></p>
+                                                    </div>
+                                                    <div class="bg-slate-50 rounded-lg p-2 text-center">
+                                                        <p class="text-[9px] font-bold text-slate-400 uppercase">Bendera</p>
+                                                        <p class="text-sm font-bold text-navy"><?= $mv['flag_emoji'] ?? '' ?></p>
+                                                    </div>
+                                                    <div class="bg-slate-50 rounded-lg p-2 text-center">
+                                                        <p class="text-[9px] font-bold text-slate-400 uppercase">Status</p>
+                                                        <p class="text-sm font-bold <?= ($mv['status'] ?? 'active') === 'active' ? 'text-emerald-600' : 'text-amber-600' ?>"><?= ucfirst($mv['status'] ?? 'Active') ?></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Tabel Anggota Kru Kapal Ini -->
+                                            <div class="p-5">
+                                                <h4 class="text-sm font-bold text-navy mb-3 flex items-center gap-1.5">
+                                                    <span class="material-symbols-outlined text-[18px] text-primary">groups</span>
+                                                    Anggota Kru — <?= htmlspecialchars($mv['name']) ?>
+                                                </h4>
+                                                <div class="overflow-x-auto rounded-lg border border-slate-100">
+                                                    <table class="w-full text-left border-collapse">
+                                                        <thead>
+                                                            <tr class="bg-slate-50/80 border-b border-slate-100">
+                                                                <th class="px-3 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Anggota Kru</th>
+                                                                <th class="px-3 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Jabatan</th>
+                                                                <th class="px-3 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gaji Bulanan</th>
+                                                                <th class="px-3 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Est. Profit</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="divide-y divide-slate-50">
+                                                            <?php
+                                                            $vesselCrewFound = false;
+                                                            foreach ($contracts as $mc):
+                                                                if (($mc['vessel_id'] ?? null) == $mv['id'] && in_array($mc['status'], ['active', 'onboard'])):
+                                                                    $vesselCrewFound = true;
+                                                            ?>
+                                                                <tr class="hover:bg-blue-50/30 transition-colors">
+                                                                    <td class="px-3 py-2.5">
+                                                                        <div class="flex items-center gap-2">
+                                                                            <?php
+                                                                            $mci = '';
+                                                                            $mcParts = explode(' ', $mc['crew_name'] ?? 'N/A');
+                                                                            foreach ($mcParts as $mcp) { if (!empty($mcp)) $mci .= strtoupper(substr($mcp, 0, 1)); }
+                                                                            $mci = substr($mci, 0, 2);
+                                                                            ?>
+                                                                            <div class="size-7 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-[10px] font-bold"><?= $mci ?></div>
+                                                                            <span class="text-xs font-semibold text-navy"><?= htmlspecialchars($mc['crew_name'] ?? 'N/A') ?></span>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td class="px-3 py-2.5">
+                                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700"><?= htmlspecialchars($mc['rank'] ?? $mc['rank_name'] ?? 'N/A') ?></span>
+                                                                    </td>
+                                                                    <td class="px-3 py-2.5">
+                                                                        <span class="text-xs font-medium text-navy">$<?= number_format($mc['salary_usd'] ?? 0, 0) ?></span>
+                                                                    </td>
+                                                                    <td class="px-3 py-2.5 text-right">
+                                                                        <?php if (($mc['profit_usd'] ?? 0) > 0): ?>
+                                                                            <span class="text-xs font-bold text-emerald-600">+$<?= number_format($mc['profit_usd'] ?? 0, 0) ?></span>
+                                                                        <?php elseif (($mc['profit_usd'] ?? 0) < 0): ?>
+                                                                            <span class="text-xs font-bold text-rose-600">-$<?= number_format(abs($mc['profit_usd'] ?? 0), 0) ?></span>
+                                                                        <?php else: ?>
+                                                                            <span class="text-xs text-slate-400">-</span>
+                                                                        <?php endif; ?>
+                                                                    </td>
+                                                                </tr>
+                                                            <?php
+                                                                endif;
+                                                            endforeach;
+                                                            if (!$vesselCrewFound):
+                                                            ?>
+                                                                <tr>
+                                                                    <td colspan="4" class="px-3 py-6 text-center">
+                                                                        <span class="material-symbols-outlined text-3xl text-slate-200">groups</span>
+                                                                        <p class="text-xs text-slate-400 mt-1">Belum ada kru aktif di kapal ini</p>
+                                                                    </td>
+                                                                </tr>
+                                                            <?php endif; ?>
+                                                        </tbody>
+                                                    </table>
                                                 </div>
                                             </div>
                                         </div>
