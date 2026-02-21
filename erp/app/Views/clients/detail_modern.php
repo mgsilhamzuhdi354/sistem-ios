@@ -101,7 +101,7 @@
     </style>
 </head>
 
-<body class="bg-background-light font-display text-slate-600 antialiased">
+<body class="bg-background-light font-display text-slate-600 antialiased" x-data="{ editClientModal: false }">
 
     <div class="flex h-screen w-full overflow-hidden">
         <!-- Include Modern Sidebar -->
@@ -184,20 +184,15 @@
 
                         <!-- Action Buttons -->
                         <div class="flex gap-3 w-full md:w-auto">
-                            <a href="<?= BASE_URL ?>clients/edit/<?= $client['id'] ?>"
+                            <button @click="editClientModal = true"
                                 class="flex-1 md:flex-none justify-center flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-sm font-medium transition-all shadow-sm">
                                 <span class="material-symbols-outlined text-[20px]">edit</span>
                                 Edit
-                            </a>
+                            </button>
                             <button
                                 class="flex-1 md:flex-none justify-center flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-sm font-medium transition-all shadow-sm">
                                 <span class="material-symbols-outlined text-[20px]">mail</span>
                                 Message
-                            </button>
-                            <button
-                                class="flex-1 md:flex-none justify-center flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-all shadow-md shadow-blue-200">
-                                <span class="material-symbols-outlined text-[20px]">add</span>
-                                New Order
                             </button>
                         </div>
                     </div>
@@ -1082,6 +1077,185 @@
             </div>
         </main>
     </div>
+
+    <!-- Edit Client Modal (Book-Flip Animation) -->
+    <template x-if="editClientModal">
+        <div class="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+             @keydown.escape.window="editClientModal = false">
+            <!-- Backdrop -->
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm backdrop-fade-in" @click="editClientModal = false"></div>
+
+            <!-- Modal Content -->
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto book-open-enter z-10">
+                <!-- Modal Header -->
+                <div class="sticky top-0 z-20 bg-gradient-to-r from-slate-800 to-slate-900 rounded-t-2xl px-6 py-5 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-white/10 rounded-lg">
+                            <span class="material-symbols-outlined text-amber-400 text-2xl">edit_note</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white">Edit Client</h3>
+                            <p class="text-slate-400 text-xs">Perbarui informasi klien <?= htmlspecialchars($client['name'] ?? '') ?></p>
+                        </div>
+                    </div>
+                    <button @click="editClientModal = false"
+                            class="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-400 hover:text-white">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <!-- Form -->
+                <form action="<?= BASE_URL ?>clients/update/<?= $client['id'] ?>" method="POST">
+                    <div class="p-6 space-y-6">
+                        <!-- Section 1: Company Information -->
+                        <div class="bg-slate-50/50 rounded-xl border border-slate-100 overflow-hidden">
+                            <div class="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-blue-600 text-lg">business</span>
+                                <h4 class="font-bold text-slate-800 text-sm">Informasi Perusahaan</h4>
+                            </div>
+                            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Company Name -->
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-semibold text-slate-500">Nama Perusahaan <span class="text-red-400">*</span></label>
+                                    <input type="text" name="name" required
+                                           value="<?= htmlspecialchars($client['name'] ?? '') ?>"
+                                           class="w-full rounded-lg bg-white border border-slate-200 px-3.5 py-2.5 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
+                                           placeholder="Nama perusahaan">
+                                </div>
+                                <!-- Short Name -->
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-semibold text-slate-500">Nama Singkat / Kode</label>
+                                    <input type="text" name="short_name"
+                                           value="<?= htmlspecialchars($client['short_name'] ?? '') ?>"
+                                           class="w-full rounded-lg bg-white border border-slate-200 px-3.5 py-2.5 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
+                                           placeholder="Kode singkat">
+                                </div>
+                                <!-- Country -->
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-semibold text-slate-500">Negara</label>
+                                    <input type="text" name="country"
+                                           value="<?= htmlspecialchars($client['country'] ?? '') ?>"
+                                           class="w-full rounded-lg bg-white border border-slate-200 px-3.5 py-2.5 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
+                                           placeholder="Negara">
+                                </div>
+                                <!-- City -->
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-semibold text-slate-500">Kota</label>
+                                    <input type="text" name="city"
+                                           value="<?= htmlspecialchars($client['city'] ?? '') ?>"
+                                           class="w-full rounded-lg bg-white border border-slate-200 px-3.5 py-2.5 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
+                                           placeholder="Kota">
+                                </div>
+                                <!-- Address -->
+                                <div class="md:col-span-2 space-y-1.5">
+                                    <label class="block text-xs font-semibold text-slate-500">Alamat</label>
+                                    <textarea name="address" rows="2"
+                                              class="w-full rounded-lg bg-white border border-slate-200 px-3.5 py-2.5 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400 resize-none"
+                                              placeholder="Alamat lengkap"><?= htmlspecialchars($client['address'] ?? '') ?></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Contact Details -->
+                        <div class="bg-slate-50/50 rounded-xl border border-slate-100 overflow-hidden">
+                            <div class="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-green-600 text-lg">call</span>
+                                <h4 class="font-bold text-slate-800 text-sm">Detail Kontak</h4>
+                            </div>
+                            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Email -->
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-semibold text-slate-500">Email</label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                            <span class="material-symbols-outlined text-[18px]">mail</span>
+                                        </span>
+                                        <input type="email" name="email"
+                                               value="<?= htmlspecialchars($client['email'] ?? '') ?>"
+                                               class="w-full rounded-lg bg-white border border-slate-200 pl-10 pr-3.5 py-2.5 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
+                                               placeholder="email@perusahaan.com">
+                                    </div>
+                                </div>
+                                <!-- Phone -->
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-semibold text-slate-500">Telepon</label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                            <span class="material-symbols-outlined text-[18px]">phone</span>
+                                        </span>
+                                        <input type="text" name="phone"
+                                               value="<?= htmlspecialchars($client['phone'] ?? '') ?>"
+                                               class="w-full rounded-lg bg-white border border-slate-200 pl-10 pr-3.5 py-2.5 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
+                                               placeholder="+62 xxx xxxx xxxx">
+                                    </div>
+                                </div>
+                                <!-- Website -->
+                                <div class="md:col-span-2 space-y-1.5">
+                                    <label class="block text-xs font-semibold text-slate-500">Website</label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                            <span class="material-symbols-outlined text-[18px]">language</span>
+                                        </span>
+                                        <input type="url" name="website"
+                                               value="<?= htmlspecialchars($client['website'] ?? '') ?>"
+                                               class="w-full rounded-lg bg-white border border-slate-200 pl-10 pr-3.5 py-2.5 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
+                                               placeholder="https://">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Contact Person -->
+                        <div class="bg-slate-50/50 rounded-xl border border-slate-100 overflow-hidden">
+                            <div class="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-purple-600 text-lg">person</span>
+                                <h4 class="font-bold text-slate-800 text-sm">Kontak Person</h4>
+                            </div>
+                            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Contact Name -->
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-semibold text-slate-500">Nama</label>
+                                    <input type="text" name="contact_person"
+                                           value="<?= htmlspecialchars($client['contact_person'] ?? '') ?>"
+                                           class="w-full rounded-lg bg-white border border-slate-200 px-3.5 py-2.5 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
+                                           placeholder="Nama kontak person">
+                                </div>
+                                <!-- Contact Email -->
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-semibold text-slate-500">Email</label>
+                                    <input type="email" name="contact_email"
+                                           value="<?= htmlspecialchars($client['contact_email'] ?? '') ?>"
+                                           class="w-full rounded-lg bg-white border border-slate-200 px-3.5 py-2.5 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
+                                           placeholder="email@kontak.com">
+                                </div>
+                                <!-- Contact Phone -->
+                                <div class="md:col-span-2 space-y-1.5">
+                                    <label class="block text-xs font-semibold text-slate-500">Telepon</label>
+                                    <input type="text" name="contact_phone"
+                                           value="<?= htmlspecialchars($client['contact_phone'] ?? '') ?>"
+                                           class="w-full rounded-lg bg-white border border-slate-200 px-3.5 py-2.5 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder-slate-400"
+                                           placeholder="+62 xxx xxxx xxxx">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="sticky bottom-0 bg-white border-t border-slate-100 px-6 py-4 flex items-center justify-end gap-3 rounded-b-2xl">
+                        <button type="button" @click="editClientModal = false"
+                                class="px-5 py-2.5 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-all">
+                            Batal
+                        </button>
+                        <button type="submit"
+                                class="px-6 py-2.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-sm font-bold shadow-lg shadow-amber-200/50 hover:shadow-amber-300/50 transition-all flex items-center gap-2 active:scale-95">
+                            <span class="material-symbols-outlined text-[18px]">save</span>
+                            Update Client
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
 
 </body>
 
