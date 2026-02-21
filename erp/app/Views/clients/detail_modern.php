@@ -697,6 +697,8 @@
                                                                 <th class="px-3 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama</th>
                                                                 <th class="px-3 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">No. Kontrak</th>
                                                                 <th class="px-3 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sign Off</th>
+                                                                <th class="px-3 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gaji Bulanan</th>
+                                                                <th class="px-3 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Est. Profit</th>
                                                                 <th class="px-3 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Sisa Hari</th>
                                                             </tr>
                                                         </thead>
@@ -723,6 +725,36 @@
                                                                     <td class="px-3 py-2.5">
                                                                         <span class="text-xs text-slate-600"><?= $signOff ?></span>
                                                                     </td>
+                                                                    <td class="px-3 py-2.5">
+                                                                        <?php
+                                                                        $dcSalary = $dc['total_monthly'] ?? 0;
+                                                                        $dcCurrCode = $dc['currency_code'] ?? 'USD';
+                                                                        $dcCurrSymbol = $dc['currency_symbol'] ?? '$';
+                                                                        if ($dcCurrCode === 'IDR') {
+                                                                            echo '<span class="text-xs font-semibold text-slate-700">' . $dcCurrSymbol . ' ' . number_format($dcSalary, 0, ',', '.') . '</span>';
+                                                                        } else {
+                                                                            echo '<span class="text-xs font-semibold text-slate-700">' . $dcCurrSymbol . ' ' . number_format($dcSalary, 0) . '</span>';
+                                                                        }
+                                                                        ?>
+                                                                        <span class="block text-[9px] text-slate-400"><?= $dcCurrCode ?></span>
+                                                                    </td>
+                                                                    <td class="px-3 py-2.5">
+                                                                        <?php
+                                                                        $dcClientRate = $dc['client_rate'] ?? 0;
+                                                                        $dcProfit = $dcClientRate - $dcSalary;
+                                                                        if ($dcClientRate > 0) {
+                                                                            $profitColor = $dcProfit >= 0 ? 'text-emerald-600' : 'text-rose-600';
+                                                                            $profitSign = $dcProfit >= 0 ? '+' : '';
+                                                                            if ($dcCurrCode === 'IDR') {
+                                                                                echo '<span class="text-xs font-bold ' . $profitColor . '">' . $profitSign . $dcCurrSymbol . ' ' . number_format($dcProfit, 0, ',', '.') . '</span>';
+                                                                            } else {
+                                                                                echo '<span class="text-xs font-bold ' . $profitColor . '">' . $profitSign . $dcCurrSymbol . number_format($dcProfit, 0) . '</span>';
+                                                                            }
+                                                                        } else {
+                                                                            echo '<span class="text-xs text-slate-400">-</span>';
+                                                                        }
+                                                                        ?>
+                                                                    </td>
                                                                     <td class="px-3 py-2.5 text-right">
                                                                         <?php if ($daysRemaining !== null && $daysRemaining >= 0): ?>
                                                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold <?= $daysRemaining <= 30 ? 'bg-rose-50 text-rose-600' : ($daysRemaining <= 90 ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600') ?>">
@@ -741,7 +773,7 @@
                                                             if (!$dvCrewFound):
                                                             ?>
                                                                 <tr>
-                                                                    <td colspan="5" class="px-3 py-6 text-center">
+                                                                    <td colspan="7" class="px-3 py-6 text-center">
                                                                         <span class="material-symbols-outlined text-3xl text-slate-200">groups</span>
                                                                         <p class="text-xs text-slate-400 mt-1">Belum ada kru aktif di kapal ini</p>
                                                                     </td>
