@@ -501,6 +501,67 @@
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <!-- Spesifikasi Kapal -->
+                                            <div class="px-5 pb-5">
+                                                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                                    <span class="material-symbols-outlined text-[16px] text-primary">settings</span>
+                                                    Spesifikasi Kapal
+                                                </h4>
+                                                <div class="grid grid-cols-2 gap-2">
+                                                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                                                        <span class="material-symbols-outlined text-[16px] text-blue-500">straighten</span>
+                                                        <div>
+                                                            <p class="text-[9px] font-bold text-slate-400 uppercase">GRT</p>
+                                                            <p class="text-xs font-semibold text-navy"><?= !empty($mv['gross_tonnage']) ? number_format($mv['gross_tonnage'], 0, ',', '.') . ' GT' : '-' ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                                                        <span class="material-symbols-outlined text-[16px] text-indigo-500">weight</span>
+                                                        <div>
+                                                            <p class="text-[9px] font-bold text-slate-400 uppercase">DWT</p>
+                                                            <p class="text-xs font-semibold text-navy"><?= !empty($mv['dwt']) ? number_format($mv['dwt'], 0, ',', '.') . ' T' : '-' ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                                                        <span class="material-symbols-outlined text-[16px] text-amber-500">calendar_month</span>
+                                                        <div>
+                                                            <p class="text-[9px] font-bold text-slate-400 uppercase">Tahun</p>
+                                                            <p class="text-xs font-semibold text-navy"><?= !empty($mv['year_built']) ? $mv['year_built'] : '-' ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                                                        <span class="material-symbols-outlined text-[16px] text-emerald-500">groups</span>
+                                                        <div>
+                                                            <p class="text-[9px] font-bold text-slate-400 uppercase">Kapasitas</p>
+                                                            <p class="text-xs font-semibold text-navy"><?= ($mv['active_crew_count'] ?? $mv['crew_count'] ?? 0) ?>/<?= $mv['crew_capacity'] ?? 25 ?> Kru</p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                                                        <span class="material-symbols-outlined text-[16px] text-rose-500">cell_tower</span>
+                                                        <div>
+                                                            <p class="text-[9px] font-bold text-slate-400 uppercase">Call Sign</p>
+                                                            <p class="text-xs font-semibold text-navy"><?= !empty($mv['call_sign']) ? htmlspecialchars($mv['call_sign']) : '-' ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                                                        <span class="material-symbols-outlined text-[16px] text-cyan-500">precision_manufacturing</span>
+                                                        <div>
+                                                            <p class="text-[9px] font-bold text-slate-400 uppercase">Engine</p>
+                                                            <p class="text-xs font-semibold text-navy truncate" title="<?= htmlspecialchars($mv['engine_type'] ?? '') ?>"><?= !empty($mv['engine_type']) ? htmlspecialchars($mv['engine_type']) : '-' ?></p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <?php if (!empty($mv['flag_state_name'])): ?>
+                                                <div class="mt-2 flex items-center gap-2 bg-blue-50 rounded-lg px-3 py-2">
+                                                    <span class="text-lg"><?= $mv['flag_emoji'] ?? '🏳️' ?></span>
+                                                    <div>
+                                                        <p class="text-[9px] font-bold text-blue-400 uppercase">Bendera Negara</p>
+                                                        <p class="text-xs font-semibold text-blue-800"><?= htmlspecialchars($mv['flag_state_name']) ?></p>
+                                                    </div>
+                                                </div>
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
                                         <?php endforeach; ?>
                                     </div>
