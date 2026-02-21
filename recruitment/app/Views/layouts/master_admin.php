@@ -118,7 +118,7 @@
             $uri = $_SERVER['REQUEST_URI'];
             $isUsersSection = strpos($uri, '/master-admin/users') !== false;
             $isRecruitmentSection = strpos($uri, '/master-admin/vacancies') !== false || strpos($uri, '/master-admin/pipeline') !== false || strpos($uri, '/master-admin/requests') !== false;
-            $isApplicationsSection = strpos($uri, '/admin/interviews') !== false || strpos($uri, '/admin/documents') !== false || strpos($uri, '/admin/medical') !== false || strpos($uri, '/master-admin/archive') !== false || strpos($uri, '/master-admin/recruitment-report') !== false;
+            $isApplicationsSection = strpos($uri, '/master-admin/interviews') !== false || strpos($uri, '/master-admin/documents') !== false || strpos($uri, '/master-admin/medical') !== false || strpos($uri, '/master-admin/archive') !== false || strpos($uri, '/master-admin/recruitment-report') !== false;
             $isSystemSection = strpos($uri, '/master-admin/reports') !== false || strpos($uri, '/master-admin/settings') !== false || strpos($uri, '/master-admin/email-settings') !== false || strpos($uri, '/master-admin/profile') !== false;
 
             // Get pending requests count
@@ -211,22 +211,22 @@
                 </div>
                 <ul class="nav-submenu">
                     <li class="nav-item">
-                        <a href="<?= url('/admin/interviews') ?>"
-                            class="nav-link <?= strpos($uri, '/admin/interviews') !== false ? 'active' : '' ?>">
+                        <a href="<?= url('/master-admin/interviews') ?>"
+                            class="nav-link <?= strpos($uri, '/master-admin/interviews') !== false ? 'active' : '' ?>">
                             <i class="fas fa-robot"></i>
                             <span>AI Interview</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="<?= url('/admin/documents') ?>"
-                            class="nav-link <?= strpos($uri, '/admin/documents') !== false ? 'active' : '' ?>">
+                        <a href="<?= url('/master-admin/documents') ?>"
+                            class="nav-link <?= strpos($uri, '/master-admin/documents') !== false ? 'active' : '' ?>">
                             <i class="fas fa-file-alt"></i>
                             <span>Dokumen</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="<?= url('/admin/medical') ?>"
-                            class="nav-link <?= strpos($uri, '/admin/medical') !== false ? 'active' : '' ?>">
+                        <a href="<?= url('/master-admin/medical') ?>"
+                            class="nav-link <?= strpos($uri, '/master-admin/medical') !== false ? 'active' : '' ?>">
                             <i class="fas fa-heartbeat"></i>
                             <span>Medical</span>
                         </a>

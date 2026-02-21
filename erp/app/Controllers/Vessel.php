@@ -26,6 +26,7 @@ class Vessel extends BaseController
 
     public function index()
     {
+        $this->requirePermission('vessels', 'view');
         // Check UI mode from session
         $uiMode = $_SESSION['ui_mode'] ?? 'classic';
 
@@ -62,6 +63,7 @@ class Vessel extends BaseController
 
     public function show($id)
     {
+        $this->requirePermission('vessels', 'view');
         $vessel = $this->vesselModel->getWithDetails($id);
         if (!$vessel) {
             $this->setFlash('error', 'Vessel not found');
@@ -81,6 +83,7 @@ class Vessel extends BaseController
 
     public function create()
     {
+        $this->requirePermission('vessels', 'create');
         // Check UI mode from session
         $uiMode = $_SESSION['ui_mode'] ?? 'modern';
 
@@ -102,6 +105,7 @@ class Vessel extends BaseController
 
     public function store()
     {
+        $this->requirePermission('vessels', 'create');
         if (!$this->isPost()) {
             $this->redirect('vessels');
         }
@@ -127,6 +131,7 @@ class Vessel extends BaseController
 
     public function edit($id)
     {
+        $this->requirePermission('vessels', 'edit');
         $vessel = $this->vesselModel->find($id);
         if (!$vessel) {
             $this->setFlash('error', 'Vessel not found');
@@ -155,6 +160,7 @@ class Vessel extends BaseController
 
     public function update($id)
     {
+        $this->requirePermission('vessels', 'edit');
         if (!$this->isPost()) {
             $this->redirect('vessels/' . $id);
         }

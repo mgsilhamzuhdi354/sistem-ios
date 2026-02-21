@@ -77,7 +77,7 @@
                                             <?= date('d M Y', strtotime($session['created_at'])) ?>
                                         </td>
                                         <td>
-                                            <a href="<?= url('/admin/interviews/review/' . $session['id']) ?>"
+                                            <a href="<?= url('/master-admin/interviews/review/' . $session['id']) ?>"
                                                 class="btn btn-sm btn-outline">
                                                 <i class="fas fa-eye"></i> Review
                                             </a>
@@ -97,7 +97,7 @@
         <div class="card">
             <div class="card-header">
                 <h3>Question Banks</h3>
-                <a href="<?= url('/admin/interviews/questions/create') ?>" class="btn btn-primary btn-sm">
+                <a href="<?= url('/master-admin/interviews/questions/create') ?>" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus"></i> Add Question Bank
                 </a>
             </div>
@@ -107,7 +107,7 @@
                         <i class="fas fa-question-circle"></i>
                         <h3>No Question Banks</h3>
                         <p>Create question banks to use in AI interviews.</p>
-                        <a href="<?= url('/admin/interviews/questions/create') ?>" class="btn btn-primary">
+                        <a href="<?= url('/master-admin/interviews/questions/create') ?>" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Create Question Bank
                         </a>
                     </div>
@@ -135,7 +135,7 @@
                                     </span>
                                 </div>
                                 <div class="bank-actions">
-                                    <a href="<?= url('/admin/interviews/questions/' . $bank['id']) ?>"
+                                    <a href="<?= url('/master-admin/interviews/questions/' . $bank['id']) ?>"
                                         class="btn btn-outline btn-sm">
                                         <i class="fas fa-edit"></i> Manage
                                     </a>

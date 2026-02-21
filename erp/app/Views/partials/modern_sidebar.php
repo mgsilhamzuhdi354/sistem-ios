@@ -33,6 +33,7 @@ $act = [
     'crew-payroll-mgmt' => (str_ends_with($_sidebarPath, '/payroll') || str_ends_with($_sidebarPath, '/payroll/')) && !$_isActive('/employees/payroll'),
     'crew-payroll-history' => $_isActive('/payroll/history') && !$_isActive('/employees'),
     'documents'       => $_isActive('/documents'),
+    'doc-parser'      => $_isActive('/document-parser'),
     'crew-performance'=> $_isActive('/crews/performance'),
     'employees'       => $_isActive('/employees') && !$_isActive('/employees/attendance') && !$_isActive('/employees/payroll') && !$_isActive('/employees/performance'),
     'attendance'      => $_isActive('/employees/attendance'),
@@ -182,6 +183,15 @@ $inactiveSub = 'text-slate-500 hover:text-slate-700 hover:bg-slate-50';
         <a href="<?= BASE_URL ?>documents" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['documents'] ? $activeClass : $inactiveClass ?>">
             <span class="material-icons text-[18px] <?= $act['documents'] ? $activeIcon : $inactiveIcon ?>">folder_open</span>
             <?= __('sidebar.documents') ?>
+        </a>
+
+        <!-- AI Document Scanner -->
+        <a href="<?= BASE_URL ?>document-parser" class="flex items-center justify-between px-3 py-2 rounded-lg <?= $act['doc-parser'] ? $activeClass : $inactiveClass ?>">
+            <span class="flex items-center gap-3">
+                <span class="material-icons text-[18px] <?= $act['doc-parser'] ? $activeIcon : $inactiveIcon ?>">smart_toy</span>
+                <?= __('sidebar.ai_scan_cert') ?>
+            </span>
+            <span class="px-1.5 py-0.5 text-[9px] font-bold bg-violet-100 text-violet-600 rounded-full leading-none">AI</span>
         </a>
 
         <!-- Performance -->

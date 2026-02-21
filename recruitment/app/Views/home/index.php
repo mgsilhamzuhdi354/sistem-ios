@@ -20,8 +20,8 @@
                 <ul class="nav-menu">
                     <li><a href="<?= url('/') ?>" class="active">Home</a></li>
                     <li><a href="<?= url('/jobs') ?>">Jobs</a></li>
-                    <li><a href="/PT_indoocean/about.html">About</a></li>
-                    <li><a href="/PT_indoocean/contact.html">Contact</a></li>
+                    <li><a href="<?= url('/about') ?>">About</a></li>
+                    <li><a href="<?= url('/contact') ?>">Contact</a></li>
                 </ul>
                 <div class="nav-actions">
                     <?php if (isLoggedIn()): ?>
@@ -241,8 +241,8 @@
                     <ul>
                         <li><a href="<?= url('/jobs') ?>">Job Vacancies</a></li>
                         <li><a href="<?= url('/register') ?>">Apply Now</a></li>
-                        <li><a href="/PT_indoocean/about.html">About Us</a></li>
-                        <li><a href="/PT_indoocean/contact.html">Contact</a></li>
+                        <li><a href="<?= url('/about') ?>">About Us</a></li>
+                        <li><a href="<?= url('/contact') ?>">Contact</a></li>
                     </ul>
                 </div>
                 <div class="footer-contact">

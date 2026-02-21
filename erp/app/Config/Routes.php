@@ -43,4 +43,8 @@ return [
 
     // Monitoring
     'Monitoring' => 'Monitoring',
+
+    // AI Document Parser
+    'DocumentParser' => 'DocumentParser',
+    'Document-parser' => 'DocumentParser',
 ];

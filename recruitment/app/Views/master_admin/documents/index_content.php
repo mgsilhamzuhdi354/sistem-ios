@@ -99,7 +99,7 @@
                             <div class="progress" style="width: <?= $percent ?>%"></div>
                         </div>
 
-                        <a href="<?= url('/admin/documents/applicant/' . $app['user_id']) ?>" class="btn btn-outline btn-block">
+                        <a href="<?= url('/master-admin/documents/applicant/' . $app['user_id']) ?>" class="btn btn-outline btn-block">
                             <i class="fas fa-folder-open"></i> View Documents
                         </a>
                     </div>

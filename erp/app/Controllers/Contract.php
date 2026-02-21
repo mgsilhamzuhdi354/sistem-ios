@@ -41,6 +41,7 @@ class Contract extends BaseController
      */
     public function index()
     {
+        $this->requirePermission('contracts', 'view');
         // Check UI mode from session (classic or modern)
         $uiMode = $_SESSION['ui_mode'] ?? 'classic';
 
@@ -79,6 +80,7 @@ class Contract extends BaseController
      */
     public function create()
     {
+        $this->requirePermission('contracts', 'create');
         $vesselModel = new VesselModel($this->db);
         $clientModel = new ClientModel($this->db);
         $rankModel = new RankModel($this->db);
@@ -161,6 +163,7 @@ class Contract extends BaseController
      */
     public function store()
     {
+        $this->requirePermission('contracts', 'create');
         if (!$this->isPost()) {
             $this->redirect('contracts');
         }
@@ -282,6 +285,7 @@ class Contract extends BaseController
      */
     public function viewContract($id)
     {
+        $this->requirePermission('contracts', 'view');
         $contract = $this->contractModel->getWithDetails($id);
         if (!$contract) {
             $this->setFlash('error', 'Contract not found');
@@ -330,6 +334,7 @@ class Contract extends BaseController
      */
     public function edit($id)
     {
+        $this->requirePermission('contracts', 'edit');
         $contract = $this->contractModel->getWithDetails($id);
         if (!$contract) {
             $this->setFlash('error', 'Contract not found');
@@ -363,6 +368,7 @@ class Contract extends BaseController
      */
     public function update($id)
     {
+        $this->requirePermission('contracts', 'edit');
         if (!$this->isPost()) {
             $this->redirect('contracts/' . $id);
         }
@@ -450,6 +456,7 @@ class Contract extends BaseController
      */
     public function approve($id)
     {
+        $this->requirePermission('contracts', 'approve');
         if (!$this->isPost()) {
             $this->redirect('contracts/' . $id);
         }
@@ -505,6 +512,7 @@ class Contract extends BaseController
      */
     public function reject($id)
     {
+        $this->requirePermission('contracts', 'approve');
         if (!$this->isPost()) {
             $this->redirect('contracts/' . $id);
         }
@@ -697,6 +705,7 @@ class Contract extends BaseController
      */
     public function delete($id)
     {
+        $this->requirePermission('contracts', 'delete');
         $contract = $this->contractModel->find($id);
 
         if ($contract && $contract['status'] === CONTRACT_STATUS_DRAFT) {

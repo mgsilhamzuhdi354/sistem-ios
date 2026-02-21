@@ -2,7 +2,13 @@
 /**
  * ERP Database Fix - Add ALL Missing Columns
  * Fixes missing columns in existing tables
+ * SECURITY: Can only be run from CLI
  */
+if (php_sapi_name() !== 'cli') {
+    http_response_code(404);
+    echo 'Page not found';
+    exit;
+}
 
 $host = 'localhost';
 $user = 'root';

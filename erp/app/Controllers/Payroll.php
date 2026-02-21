@@ -25,6 +25,7 @@ class Payroll extends BaseController
 
     public function index()
     {
+        $this->requirePermission('payroll', 'view');
         $month = (int) $this->input('month', date('n'));
         $year = (int) $this->input('year', date('Y'));
 
@@ -87,6 +88,7 @@ class Payroll extends BaseController
     }
     public function process()
     {
+        $this->requirePermission('payroll', 'create');
         if (!$this->isPost()) {
             $this->redirect('payroll');
         }
@@ -112,6 +114,7 @@ class Payroll extends BaseController
 
     public function complete()
     {
+        $this->requirePermission('payroll', 'approve');
         if (!$this->isPost()) {
             $this->redirect('payroll');
         }

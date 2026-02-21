@@ -1,6 +1,6 @@
 <div class="page-header">
     <h1><i class="fas fa-heartbeat"></i> Medical Checkups</h1>
-    <a href="<?= url('/admin/medical/schedule') ?>" class="btn btn-primary">
+    <a href="<?= url('/master-admin/medical/schedule') ?>" class="btn btn-primary">
         <i class="fas fa-plus"></i> Schedule MCU
     </a>
 </div>
@@ -110,7 +110,7 @@
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <a href="<?= url('/admin/medical/' . $mcu['id']) ?>" class="btn btn-sm btn-outline">
+                                    <a href="<?= url('/master-admin/medical/' . $mcu['id']) ?>" class="btn btn-sm btn-outline">
                                         <i class="fas fa-edit"></i> Update
                                     </a>
                                 </td>

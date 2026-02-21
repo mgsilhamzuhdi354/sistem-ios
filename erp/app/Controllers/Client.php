@@ -22,6 +22,7 @@ class Client extends BaseController
 
     public function index()
     {
+        $this->requirePermission('clients', 'view');
         // Check UI mode from session
         $uiMode = $_SESSION['ui_mode'] ?? 'classic';
 
@@ -72,6 +73,7 @@ class Client extends BaseController
 
     public function show($id)
     {
+        $this->requirePermission('clients', 'view');
         // Check UI mode from session
         $uiMode = $_SESSION['ui_mode'] ?? 'classic';
 
@@ -140,12 +142,14 @@ class Client extends BaseController
 
     public function create()
     {
+        $this->requirePermission('clients', 'create');
         $data = ['title' => 'Add New Client'];
         return $this->view('clients/form', $data);
     }
 
     public function store()
     {
+        $this->requirePermission('clients', 'create');
         if (!$this->isPost()) {
             $this->redirect('clients');
         }
@@ -171,6 +175,7 @@ class Client extends BaseController
 
     public function edit($id)
     {
+        $this->requirePermission('clients', 'edit');
         $client = $this->clientModel->find($id);
         if (!$client) {
             $this->setFlash('error', 'Client not found');
@@ -187,6 +192,7 @@ class Client extends BaseController
 
     public function update($id)
     {
+        $this->requirePermission('clients', 'edit');
         if (!$this->isPost()) {
             $this->redirect('clients/' . $id);
         }

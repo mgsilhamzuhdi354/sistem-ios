@@ -343,22 +343,31 @@ if (!$emailSent) {
     }
     
     /**
-     * DEV BYPASS - Auto login without password/OTP (LOCALHOST ONLY)
+     * DEV BYPASS - Auto login without password/OTP (LOCAL DEVELOPMENT ONLY)
      * Access via: /auth/dev-bypass
-     * WARNING: Remove this method in production!
+     * SECURITY: Requires BOTH APP_ENV=local AND localhost hostname
      */
     public function devBypass()
     {
-        // STRICT: Only allow on localhost
+        // DOUBLE CHECK: Require APP_ENV=local
+        $appEnv = $_ENV['APP_ENV'] ?? getenv('APP_ENV') ?? 'production';
+        if ($appEnv !== 'local' && $appEnv !== 'development') {
+            http_response_code(404);
+            echo 'Page not found';
+            exit;
+        }
+        
+        // STRICT: Only allow on localhost or .test domains (Laragon)
         $host = $_SERVER['HTTP_HOST'] ?? '';
-        $isLocal = ($host === 'localhost') || 
-                   (strpos($host, '127.0.0.1') !== false) ||
-                   (strpos($host, '::1') !== false);
+        // Remove port if present
+        $hostOnly = explode(':', $host)[0];
+        $isLocal = in_array($hostOnly, ['localhost', '127.0.0.1', '::1']) ||
+                   str_ends_with($hostOnly, '.test');
         
         if (!$isLocal) {
-            $this->setFlash('error', 'Dev bypass is only available on localhost.');
-            $this->redirect('auth/login');
-            return;
+            http_response_code(404);
+            echo 'Page not found';
+            exit;
         }
         
         // Find first active user - try known usernames
@@ -484,8 +493,9 @@ if (!$emailSent) {
             $emailSent = $mailer->sendPasswordReset($email, $token, $user['full_name']);
             
             // Development mode: If email cannot be sent, show direct link
-            // Remove this in production!
-            if (!$emailSent) {
+            // Only in local/development mode for security
+            $appEnv = $_ENV['APP_ENV'] ?? getenv('APP_ENV') ?? 'production';
+            if (!$emailSent && in_array($appEnv, ['local', 'development'])) {
                 $this->setFlash('info', "
                     <strong>Email tidak bisa dikirim (SMTP belum dikonfigurasi)</strong><br>
                     <small>Untuk development, gunakan link berikut:</small><br>

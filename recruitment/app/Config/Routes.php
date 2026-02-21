@@ -17,6 +17,8 @@ $routes = [];
 $routes['GET']['/'] = 'Home::index';
 $routes['GET']['/jobs'] = 'Jobs::index';
 $routes['GET']['/jobs/(:num)'] = 'Jobs::detail/$1';
+$routes['GET']['/about'] = 'Pages::about';
+$routes['GET']['/contact'] = 'Pages::contact';
 
 // Authentication
 $routes['GET']['/login'] = 'Auth/Login::index';
@@ -215,6 +217,11 @@ $routes['POST']['/crewing/erp/send'] = 'Crewing/ErpIntegration::sendToErp';
 $routes['POST']['/crewing/erp/get-ranks'] = 'Crewing/ErpIntegration::getRanks';
 $routes['POST']['/crewing/erp/check-status'] = 'Crewing/ErpIntegration::checkStatus';
 
+// Crewing - Notifications (Bell API)
+$routes['GET']['/crewing/notifications/fetch'] = 'Crewing/Notifications::fetch';
+$routes['POST']['/crewing/notifications/mark-read/(:num)'] = 'Crewing/Notifications::markRead/$1';
+$routes['POST']['/crewing/notifications/mark-all-read'] = 'Crewing/Notifications::markAllRead';
+
 // Crewing - Daily Report
 $routes['GET']['/crewing/daily-report'] = 'Crewing/DailyReport::index';
 $routes['GET']['/crewing/daily-report/export-pdf'] = 'Crewing/DailyReport::exportPdf';
@@ -351,6 +358,24 @@ $routes['POST']['/master-admin/vessel-types/store'] = 'MasterAdmin/VesselTypes::
 $routes['POST']['/master-admin/vessel-types/update/(:num)'] = 'MasterAdmin/VesselTypes::update/$1';
 $routes['POST']['/master-admin/vessel-types/delete/(:num)'] = 'MasterAdmin/VesselTypes::delete/$1';
 
+
+// Master Admin - Interviews (Own Controller)
+$routes['GET']['/master-admin/interviews'] = 'MasterAdmin/Interviews::index';
+$routes['GET']['/master-admin/interviews/review/(:num)'] = 'MasterAdmin/Interviews::review/$1';
+$routes['POST']['/master-admin/interviews/score/(:num)'] = 'MasterAdmin/Interviews::score/$1';
+$routes['POST']['/master-admin/interviews/reset/(:num)'] = 'MasterAdmin/Interviews::resetInterview/$1';
+$routes['POST']['/master-admin/interviews/assign'] = 'MasterAdmin/Interviews::assignInterview';
+
+// Master Admin - Documents (Own Controller)
+$routes['GET']['/master-admin/documents'] = 'MasterAdmin/Documents::index';
+$routes['GET']['/master-admin/documents/applicant/(:num)'] = 'MasterAdmin/Documents::applicant/$1';
+$routes['POST']['/master-admin/documents/verify/(:num)'] = 'MasterAdmin/Documents::verify/$1';
+$routes['POST']['/master-admin/documents/bulk-verify/(:num)'] = 'MasterAdmin/Documents::bulkVerify/$1';
+
+// Master Admin - Medical (Own Controller)
+$routes['GET']['/master-admin/medical'] = 'MasterAdmin/Medical::index';
+$routes['POST']['/master-admin/medical/schedule/(:num)'] = 'MasterAdmin/Medical::schedule/$1';
+$routes['POST']['/master-admin/medical/result/(:num)'] = 'MasterAdmin/Medical::result/$1';
 
 // Master Admin - Profile
 $routes['GET']['/master-admin/profile'] = 'MasterAdmin/Profile::index';
