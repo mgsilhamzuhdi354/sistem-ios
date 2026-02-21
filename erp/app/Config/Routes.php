@@ -47,4 +47,5 @@ return [
     // AI Document Parser
     'DocumentParser' => 'DocumentParser',
     'Document-parser' => 'DocumentParser',
+    'document-parser' => 'DocumentParser',
 ];
