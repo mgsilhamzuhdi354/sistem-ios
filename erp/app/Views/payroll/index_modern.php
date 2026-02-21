@@ -77,6 +77,28 @@ $periodStatus = $period['status'] ?? 'draft';
         .animate-fade-in-delay-1 { animation: fadeInUp 0.4s ease-out 0.1s forwards; opacity: 0; }
         .animate-fade-in-delay-2 { animation: fadeInUp 0.4s ease-out 0.2s forwards; opacity: 0; }
         .animate-fade-in-delay-3 { animation: fadeInUp 0.4s ease-out 0.3s forwards; opacity: 0; }
+
+        /* Book Opening Animation */
+        @keyframes bookOpen {
+            0% { transform: perspective(1200px) rotateY(-90deg) scale(0.6); opacity: 0; }
+            40% { transform: perspective(1200px) rotateY(-20deg) scale(0.9); opacity: 0.8; }
+            70% { transform: perspective(1200px) rotateY(5deg) scale(1.02); opacity: 1; }
+            100% { transform: perspective(1200px) rotateY(0deg) scale(1); opacity: 1; }
+        }
+        @keyframes bookClose {
+            0% { transform: perspective(1200px) rotateY(0deg) scale(1); opacity: 1; }
+            100% { transform: perspective(1200px) rotateY(-90deg) scale(0.6); opacity: 0; }
+        }
+        .book-modal { animation: bookOpen 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; transform-origin: left center; }
+        .book-modal-closing { animation: bookClose 0.4s ease-in forwards; transform-origin: left center; }
+        .book-spine {
+            background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 50%, #1e3a5f 100%);
+            box-shadow: inset -3px 0 8px rgba(0,0,0,0.3), inset 3px 0 4px rgba(255,255,255,0.1);
+        }
+        .book-cover {
+            background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 30%, #e2e8f0 100%);
+            box-shadow: 0 25px 60px -15px rgba(0,0,0,0.3), 0 0 0 1px rgba(30,58,95,0.1);
+        }
     </style>
 </head>
 
@@ -410,11 +432,13 @@ $periodStatus = $period['status'] ?? 'draft';
                                         $totalAllowances = $overtime + $leavePay + $bonus + $otherAllowance;
                                         $crewInitials = strtoupper(substr($item['crew_name'] ?? 'C', 0, 2));
                                     ?>
-                                        <tr class="hover:bg-slate-50/80 transition-colors group crew-row"
+                                        <tr class="hover:bg-blue-50/60 transition-colors group crew-row cursor-pointer"
                                             data-name="<?= strtolower(htmlspecialchars($item['crew_name'] ?? '')) ?>"
                                             data-rank="<?= strtolower(htmlspecialchars($item['rank_name'] ?? '')) ?>"
                                             data-vessel="<?= strtolower(htmlspecialchars($item['vessel_name'] ?? '')) ?>"
-                                            data-date="<?= htmlspecialchars($item['created_at'] ?? $item['pay_date'] ?? date('Y-m-d', mktime(0,0,0,$month,$pDay,$year))) ?>">
+                                            data-date="<?= htmlspecialchars($item['created_at'] ?? $item['pay_date'] ?? date('Y-m-d', mktime(0,0,0,$month,$pDay,$year))) ?>"
+                                            data-item-id="<?= (int)($item['id'] ?? 0) ?>"
+                                            onclick="openPayslipBook(<?= (int)($item['id'] ?? 0) ?>, '<?= htmlspecialchars(addslashes($item['crew_name'] ?? ''), ENT_QUOTES) ?>')">
                                             <!-- Crew Name -->
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="flex items-center gap-3">
@@ -465,10 +489,16 @@ $periodStatus = $period['status'] ?? 'draft';
                                             </td>
                                             <!-- Action -->
                                             <td class="px-6 py-4 text-center">
-                                                <a href="<?= BASE_URL ?>payroll/show/<?= $period['id'] ?? 0 ?>"
-                                                    class="text-slate-400 hover:text-amber-500 transition-colors">
-                                                    <span class="material-icons-outlined text-lg">edit_note</span>
-                                                </a>
+                                                <div class="flex items-center justify-center gap-1">
+                                                    <button onclick="event.stopPropagation(); openPayslipBook(<?= (int)($item['id'] ?? 0) ?>, '<?= htmlspecialchars(addslashes($item['crew_name'] ?? ''), ENT_QUOTES) ?>')"
+                                                        class="p-1.5 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors" title="Slip Gaji & Kirim Email">
+                                                        <span class="material-icons text-lg">mail</span>
+                                                    </button>
+                                                    <a href="<?= BASE_URL ?>payroll/payslip/<?= (int)($item['id'] ?? 0) ?>" target="_blank" onclick="event.stopPropagation()"
+                                                        class="p-1.5 rounded-lg hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 transition-colors" title="Lihat Slip (PDF)">
+                                                        <span class="material-icons text-lg">picture_as_pdf</span>
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -691,6 +721,230 @@ $periodStatus = $period['status'] ?? 'draft';
             return parseInt(parts[2]) + ' ' + months[parseInt(parts[1])] + ' ' + parts[0];
         }
     </script>
-</body>
 
+    <!-- Payslip Book Modal -->
+    <div id="payslipBookModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onclick="if(event.target===this) closePayslipBook()">
+        <div class="flex items-stretch w-full max-w-5xl mx-4" style="max-height:92vh">
+            <!-- Book Spine -->
+            <div class="book-spine w-6 rounded-l-lg flex-shrink-0 hidden md:block"></div>
+            <!-- Book Content -->
+            <div id="payslipBookContent" class="book-cover rounded-r-2xl md:rounded-l-none rounded-l-2xl w-full overflow-hidden flex flex-col" style="max-height:92vh">
+                <!-- Book Header -->
+                <div class="bg-gradient-to-r from-blue-800 to-blue-900 px-6 py-4 relative overflow-hidden flex-shrink-0">
+                    <div class="absolute inset-0 opacity-10">
+                        <div class="absolute top-1 left-3 w-24 h-24 border border-white/30 rounded-full"></div>
+                        <div class="absolute bottom-1 right-3 w-16 h-16 border border-white/20 rounded-full"></div>
+                    </div>
+                    <div class="relative flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="h-11 w-11 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                <span class="material-icons text-white text-xl">receipt_long</span>
+                            </div>
+                            <div>
+                                <h3 id="payslipBookTitle" class="text-base font-bold text-white">Slip Gaji</h3>
+                                <p id="payslipBookSubtitle" class="text-blue-200 text-xs">Lihat & Kirim via Email</p>
+                            </div>
+                        </div>
+                        <button onclick="closePayslipBook()" class="p-2 hover:bg-white/10 rounded-full transition-colors">
+                            <span class="material-icons text-white">close</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Book Body: Two Column Layout -->
+                <div class="flex flex-1 overflow-hidden">
+                    <!-- Left: Payslip Preview -->
+                    <div class="flex-1 bg-gray-100 overflow-hidden">
+                        <iframe id="payslipFrame" src="" class="w-full h-full border-0" style="min-height:500px"></iframe>
+                    </div>
+                    
+                    <!-- Right: Email Panel -->
+                    <div class="w-80 bg-white border-l border-slate-200 flex flex-col overflow-y-auto">
+                        <!-- Email Header -->
+                        <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
+                            <div class="flex items-center gap-2">
+                                <span class="material-icons text-blue-600 text-lg">email</span>
+                                <h4 class="font-bold text-slate-800 text-sm">Kirim Slip Gaji</h4>
+                            </div>
+                            <p class="text-[10px] text-slate-400 mt-1">Kirim slip gaji ke email kru secara otomatis</p>
+                        </div>
+                        
+                        <!-- Email Form -->
+                        <div class="p-5 flex-1 space-y-4">
+                            <!-- Crew Info Card -->
+                            <div id="emailCrewInfo" class="bg-blue-50 rounded-xl p-3">
+                                <div class="flex items-center gap-3">
+                                    <div id="emailCrewAvatar" class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">--</div>
+                                    <div class="min-w-0">
+                                        <p id="emailCrewName" class="font-semibold text-sm text-slate-800 truncate">Loading...</p>
+                                        <p id="emailCrewDetail" class="text-[10px] text-slate-500 truncate"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- To Email -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Kepada (Email)</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-icons" style="font-size:16px">email</span>
+                                    <input type="email" id="emailTo" placeholder="crew@email.com" 
+                                        class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                </div>
+                                <p id="emailNoEmail" class="hidden text-[10px] text-amber-600 mt-1 flex items-center gap-1">
+                                    <span class="material-icons" style="font-size:12px">warning</span>
+                                    Email kru belum terdaftar. Masukkan manual.
+                                </p>
+                            </div>
+                            
+                            <!-- Net Salary Display -->
+                            <div class="bg-emerald-50 rounded-xl p-3">
+                                <p class="text-[10px] font-medium text-emerald-600 mb-1">Net Take-Home Pay</p>
+                                <p id="emailNetSalary" class="text-lg font-bold text-emerald-700">$0</p>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="space-y-2 pt-2">
+                                <button id="btnSendPayslip" onclick="sendPayslipEmail()" 
+                                    class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-500/20">
+                                    <span class="material-icons text-sm">send</span>
+                                    Kirim Slip Gaji
+                                </button>
+                                <a id="btnDownloadPayslip" href="#" target="_blank"
+                                    class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-sm font-semibold transition-all">
+                                    <span class="material-icons text-sm">picture_as_pdf</span>
+                                    Buka Slip (Print/PDF)
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Send Status -->
+                        <div id="emailSendStatus" class="hidden px-5 py-3 border-t border-slate-100">
+                            <div id="emailStatusContent" class="flex items-center gap-2">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PAYROLL_BASE = '<?= BASE_URL ?>';
+        let currentPayslipItemId = null;
+
+        function openPayslipBook(itemId, crewName) {
+            currentPayslipItemId = itemId;
+            const modal = document.getElementById('payslipBookModal');
+            const content = document.getElementById('payslipBookContent');
+            
+            document.getElementById('payslipBookTitle').textContent = 'Slip Gaji: ' + crewName;
+            document.getElementById('payslipFrame').src = PAYROLL_BASE + 'payroll/payslip/' + itemId;
+            document.getElementById('btnDownloadPayslip').href = PAYROLL_BASE + 'payroll/payslip/' + itemId;
+            
+            // Reset email panel
+            document.getElementById('emailTo').value = '';
+            document.getElementById('emailNoEmail').classList.add('hidden');
+            document.getElementById('emailSendStatus').classList.add('hidden');
+            document.getElementById('emailCrewName').textContent = crewName;
+            document.getElementById('emailCrewAvatar').textContent = crewName.substring(0, 2).toUpperCase();
+            document.getElementById('emailCrewDetail').textContent = '';
+            document.getElementById('emailNetSalary').textContent = '$0';
+            
+            // Show modal
+            modal.classList.remove('hidden');
+            content.classList.remove('book-modal-closing');
+            content.classList.add('book-modal');
+            
+            // Load crew email via API
+            loadCrewEmail(itemId);
+        }
+
+        function closePayslipBook() {
+            const modal = document.getElementById('payslipBookModal');
+            const content = document.getElementById('payslipBookContent');
+            content.classList.add('book-modal-closing');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('payslipFrame').src = '';
+            }, 400);
+        }
+
+        async function loadCrewEmail(itemId) {
+            try {
+                const res = await fetch(PAYROLL_BASE + 'payroll/apiCrewEmail/' + itemId);
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('emailCrewName').textContent = data.crew_name;
+                    document.getElementById('emailCrewAvatar').textContent = (data.crew_name || '--').substring(0, 2).toUpperCase();
+                    document.getElementById('emailCrewDetail').textContent = (data.rank || '') + ' • ' + (data.vessel || '');
+                    
+                    const cur = data.currency === 'USD' ? '$' : (data.currency === 'IDR' ? 'Rp ' : (data.currency + ' '));
+                    document.getElementById('emailNetSalary').textContent = cur + Number(data.net_salary).toLocaleString('id-ID');
+                    
+                    if (data.email) {
+                        document.getElementById('emailTo').value = data.email;
+                    } else {
+                        document.getElementById('emailNoEmail').classList.remove('hidden');
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load crew email:', e);
+            }
+        }
+
+        async function sendPayslipEmail() {
+            const email = document.getElementById('emailTo').value.trim();
+            if (!email) {
+                alert('Masukkan email tujuan!');
+                return;
+            }
+            
+            const btn = document.getElementById('btnSendPayslip');
+            const statusEl = document.getElementById('emailSendStatus');
+            const statusContent = document.getElementById('emailStatusContent');
+            
+            // Sending state
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-spin material-icons text-sm">refresh</span> Mengirim...';
+            statusEl.classList.remove('hidden');
+            statusContent.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div><span class="text-xs text-blue-600">Mengirim slip gaji...</span>';
+            
+            try {
+                const formData = new FormData();
+                formData.append('item_id', currentPayslipItemId);
+                formData.append('email', email);
+                
+                const res = await fetch(PAYROLL_BASE + 'payroll/apiSendPayslip', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    statusContent.innerHTML = '<span class="material-icons text-emerald-500" style="font-size:16px">check_circle</span><span class="text-xs text-emerald-600">' + data.message + '</span>';
+                    btn.innerHTML = '<span class="material-icons text-sm">check</span> Terkirim!';
+                    btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    btn.classList.add('bg-emerald-600');
+                } else {
+                    statusContent.innerHTML = '<span class="material-icons text-red-500" style="font-size:16px">error</span><span class="text-xs text-red-600">' + (data.message || 'Gagal mengirim') + '</span>';
+                    btn.innerHTML = '<span class="material-icons text-sm">send</span> Kirim Slip Gaji';
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                statusContent.innerHTML = '<span class="material-icons text-red-500" style="font-size:16px">error</span><span class="text-xs text-red-600">Gagal mengirim email</span>';
+                btn.innerHTML = '<span class="material-icons text-sm">send</span> Kirim Slip Gaji';
+                btn.disabled = false;
+            }
+            
+            // Reset button after 5s
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.classList.remove('bg-emerald-600');
+                btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                btn.innerHTML = '<span class="material-icons text-sm">send</span> Kirim Slip Gaji';
+            }, 5000);
+        }
+    </script>
+
+</body>
 </html>

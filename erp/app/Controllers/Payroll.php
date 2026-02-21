@@ -256,4 +256,180 @@ class Payroll extends BaseController
         $this->setFlash('success', "Email sent: {$countSent} success, {$countFailed} failed.");
         $this->redirect("payroll/show/{$periodId}");
     }
+
+    /**
+     * View payslip for a specific payroll item
+     */
+    public function payslip($itemId)
+    {
+        $this->requirePermission('payroll', 'view');
+        
+        // Get payroll item
+        $sql = "SELECT pi.*, c.contract_no, c.crew_id
+                FROM payroll_items pi
+                LEFT JOIN contracts c ON pi.contract_id = c.id
+                WHERE pi.id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param('i', $itemId);
+        $stmt->execute();
+        $item = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        
+        if (!$item) {
+            $this->setFlash('error', 'Payroll item not found');
+            $this->redirect('payroll');
+            return;
+        }
+        
+        // Get period
+        $period = $this->periodModel->find($item['payroll_period_id']);
+        
+        // Get crew bank details
+        $crew = ['bank_account_name' => '', 'bank_account_number' => '', 'bank_name' => ''];
+        if (!empty($item['crew_id'])) {
+            $crewStmt = $this->db->prepare("SELECT full_name, bank_account_name, bank_account_number, bank_name, email FROM crews WHERE id = ?");
+            $crewStmt->bind_param('i', $item['crew_id']);
+            $crewStmt->execute();
+            $crewData = $crewStmt->get_result()->fetch_assoc();
+            $crewStmt->close();
+            if ($crewData) $crew = $crewData;
+        }
+        
+        $settingsModel = new SettingsModel($this->db);
+        $payroll_day = $settingsModel->get('payroll_day', '15');
+        
+        $data = [
+            'item' => $item,
+            'period' => $period,
+            'crew' => $crew,
+            'payroll_day' => $payroll_day
+        ];
+        
+        return $this->view('payroll/payslip_pdf', $data);
+    }
+
+    /**
+     * API: Get crew email and info by payroll item ID
+     */
+    public function apiCrewEmail($itemId)
+    {
+        $this->requireAuth();
+        
+        // Get payroll item + crew info
+        $sql = "SELECT pi.id, pi.crew_name, pi.rank_name, pi.vessel_name, pi.net_salary, pi.currency_code,
+                       c.crew_id, cr.email, cr.full_name, cr.bank_name
+                FROM payroll_items pi
+                LEFT JOIN contracts c ON pi.contract_id = c.id
+                LEFT JOIN crews cr ON c.crew_id = cr.id
+                WHERE pi.id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param('i', $itemId);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        
+        header('Content-Type: application/json');
+        if ($result) {
+            echo json_encode([
+                'success' => true,
+                'crew_name' => $result['full_name'] ?? $result['crew_name'],
+                'email' => $result['email'] ?? '',
+                'rank' => $result['rank_name'],
+                'vessel' => $result['vessel_name'],
+                'net_salary' => $result['net_salary'],
+                'currency' => $result['currency_code'],
+                'item_id' => $result['id']
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Item not found']);
+        }
+        exit;
+    }
+
+    /**
+     * API: Send payslip email for a single crew member
+     */
+    public function apiSendPayslip()
+    {
+        $this->requireAuth();
+        
+        $itemId = (int) $this->input('item_id');
+        $email = trim($this->input('email', ''));
+        
+        if (!$itemId || !$email) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Item ID dan email diperlukan']);
+            exit;
+        }
+        
+        // Get payroll item
+        $sql = "SELECT pi.*, c.crew_id
+                FROM payroll_items pi
+                LEFT JOIN contracts c ON pi.contract_id = c.id
+                WHERE pi.id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param('i', $itemId);
+        $stmt->execute();
+        $item = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        
+        if (!$item) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Payroll item tidak ditemukan']);
+            exit;
+        }
+        
+        $period = $this->periodModel->find($item['payroll_period_id']);
+        
+        // Try to send email
+        try {
+            if (class_exists('\\App\\Libraries\\Mailer')) {
+                $mailer = new \App\Libraries\Mailer();
+                $sent = $mailer->sendPayslip($email, $item['crew_name'], $period, $item);
+                
+                if ($sent) {
+                    $this->itemModel->update($itemId, [
+                        'email_status' => 'sent',
+                        'email_sent_at' => date('Y-m-d H:i:s'),
+                        'email_failure_reason' => null
+                    ]);
+                    
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message' => 'Slip gaji berhasil dikirim ke ' . $email]);
+                    exit;
+                }
+            }
+            
+            // Fallback: use PHP mail()
+            $monthNames = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+            $periodText = ($monthNames[$period['period_month']] ?? '') . ' ' . $period['period_year'];
+            $subject = "Slip Gaji - {$item['crew_name']} - {$periodText}";
+            $body = "Slip gaji Anda untuk periode {$periodText} telah tersedia.\n\n";
+            $body .= "Nama: {$item['crew_name']}\n";
+            $body .= "Kapal: {$item['vessel_name']}\n";
+            $body .= "Gaji Bersih: {$item['currency_code']} " . number_format($item['net_salary'], 0, ',', '.') . "\n\n";
+            $body .= "Silakan login ke ERP untuk melihat detail slip gaji.\n";
+            $body .= "Link: " . BASE_URL . "payroll/payslip/{$itemId}\n\n";
+            $body .= "PT. Indo Oceancrew Services";
+            
+            $headers = "From: noreply@indooceancrewservice.com\r\n";
+            $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+            
+            mail($email, $subject, $body, $headers);
+            
+            $this->itemModel->update($itemId, [
+                'email_status' => 'sent',
+                'email_sent_at' => date('Y-m-d H:i:s')
+            ]);
+            
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'Slip gaji berhasil dikirim ke ' . $email]);
+            exit;
+            
+        } catch (\Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Gagal mengirim email: ' . $e->getMessage()]);
+            exit;
+        }
+    }
 }
