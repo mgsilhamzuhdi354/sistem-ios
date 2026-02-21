@@ -340,7 +340,7 @@
                         </div>
 
                         <!-- Fleet & Profit Section (Tabbed) -->
-                        <div class="xl:col-span-2 flex flex-col gap-4" x-data="{ activeTab: 'fleet', vesselModal: false, selectedVessel: null }">
+                        <div class="xl:col-span-2 flex flex-col gap-4" x-data="{ activeTab: 'fleet', vesselModal: false, selectedVessel: null, vesselDetailModal: false }">
                             <!-- Tab Headers -->
                             <div class="flex items-center justify-between flex-wrap gap-2">
                                 <div class="flex items-center gap-1 p-1 bg-slate-100 rounded-lg">
@@ -479,10 +479,10 @@
                                                             <span class="material-symbols-outlined text-[16px]">edit</span>
                                                             Edit
                                                         </button>
-                                                        <button onclick="alert('Detail Kapal: <?= htmlspecialchars($mv['name']) ?>\nTipe: <?= htmlspecialchars($mv['vessel_type_name'] ?? '-') ?>\nIMO: <?= htmlspecialchars($mv['imo_number'] ?? 'N/A') ?>\nKru: <?= $mv['crew_count'] ?? 0 ?> Orang\nBendera: <?= htmlspecialchars($mv['flag_state'] ?? 'N/A') ?>\nStatus: <?= ucfirst($mv['status'] ?? 'Active') ?>')"
+                                                        <button @click="vesselDetailModal = true; vesselModal = false"
                                                             class="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-navy px-3 py-2 rounded-lg text-xs font-bold transition-all active:scale-95">
                                                             <span class="material-symbols-outlined text-[16px]">visibility</span>
-                                                            Detail
+                                                            Lihat Detail
                                                         </button>
                                                     </div>
                                                 </div>
@@ -573,6 +573,196 @@
                                                             <?php endif; ?>
                                                         </tbody>
                                                     </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Vessel Detail Comprehensive Modal (Book-Flip Animation) -->
+                            <template x-if="vesselDetailModal">
+                                <div class="fixed inset-0 z-[9999] flex items-center justify-center p-4" @click.self="vesselDetailModal = false" @keydown.escape.window="vesselDetailModal = false">
+                                    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm backdrop-fade-in" @click="vesselDetailModal = false"></div>
+                                    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto book-open-enter z-10">
+                                        <?php foreach ($vessels as $dIdx => $dv): ?>
+                                        <div x-show="selectedVessel === <?= $dIdx ?>">
+                                            <!-- Header -->
+                                            <div class="bg-gradient-to-r from-navy to-navy-light p-5 rounded-t-2xl relative">
+                                                <button @click="vesselDetailModal = false" class="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white rounded-full p-1.5 transition-all">
+                                                    <span class="material-symbols-outlined text-lg">close</span>
+                                                </button>
+                                                <div class="flex items-center gap-4">
+                                                    <div class="size-14 rounded-xl bg-white/10 flex items-center justify-center">
+                                                        <span class="material-symbols-outlined text-3xl text-white">directions_boat</span>
+                                                    </div>
+                                                    <div>
+                                                        <h3 class="text-xl font-bold text-white"><?= htmlspecialchars($dv['name']) ?></h3>
+                                                        <p class="text-sm text-blue-200">IMO: <?= htmlspecialchars($dv['imo_number'] ?? 'N/A') ?> | <?= htmlspecialchars($dv['vessel_type_name'] ?? 'Unknown Type') ?></p>
+                                                    </div>
+                                                    <div class="ml-auto">
+                                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold <?= ($dv['status'] ?? 'active') === 'active' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300' ?>">
+                                                            <?= ucfirst($dv['status'] ?? 'Active') ?>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Vessel Information Section -->
+                                            <div class="p-5 border-b border-slate-100">
+                                                <h4 class="text-sm font-bold text-navy mb-3 flex items-center gap-1.5">
+                                                    <span class="material-symbols-outlined text-[18px] text-primary">info</span>
+                                                    Informasi Kapal
+                                                </h4>
+                                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                    <div class="bg-slate-50 rounded-lg p-3">
+                                                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Nama Kapal</p>
+                                                        <p class="text-sm font-semibold text-navy"><?= htmlspecialchars($dv['name']) ?></p>
+                                                    </div>
+                                                    <div class="bg-slate-50 rounded-lg p-3">
+                                                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Nomor IMO</p>
+                                                        <p class="text-sm font-semibold text-navy"><?= htmlspecialchars($dv['imo_number'] ?? 'N/A') ?></p>
+                                                    </div>
+                                                    <div class="bg-slate-50 rounded-lg p-3">
+                                                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Tipe Kapal</p>
+                                                        <p class="text-sm font-semibold text-navy"><?= htmlspecialchars($dv['vessel_type_name'] ?? '-') ?></p>
+                                                    </div>
+                                                    <div class="bg-slate-50 rounded-lg p-3">
+                                                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Bendera</p>
+                                                        <p class="text-sm font-semibold text-navy"><?= ($dv['flag_emoji'] ?? '') ?> <?= htmlspecialchars($dv['flag_state'] ?? '-') ?></p>
+                                                    </div>
+                                                    <div class="bg-slate-50 rounded-lg p-3">
+                                                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Klien</p>
+                                                        <p class="text-sm font-semibold text-navy"><?= htmlspecialchars($client['name'] ?? '-') ?></p>
+                                                    </div>
+                                                    <div class="bg-slate-50 rounded-lg p-3">
+                                                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Tahun Dibangun</p>
+                                                        <p class="text-sm font-semibold text-navy"><?= $dv['year_built'] ?? '-' ?></p>
+                                                    </div>
+                                                    <div class="bg-slate-50 rounded-lg p-3">
+                                                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Gross Tonnage</p>
+                                                        <p class="text-sm font-semibold text-navy"><?= !empty($dv['gross_tonnage']) ? number_format($dv['gross_tonnage'], 0, ',', '.') . ' GT' : '-' ?></p>
+                                                    </div>
+                                                    <div class="bg-slate-50 rounded-lg p-3">
+                                                        <p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Kapasitas Kru</p>
+                                                        <p class="text-sm font-semibold text-navy"><?= $dv['crew_capacity'] ?? '-' ?></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Cost Summary Section -->
+                                            <?php
+                                            $dvCostIDR = 0; $dvCostUSD = 0; $dvActiveCrew = 0;
+                                            foreach ($contracts as $dc) {
+                                                if (($dc['vessel_id'] ?? null) == $dv['id'] && in_array($dc['status'], ['active', 'onboard'])) {
+                                                    $dvActiveCrew++;
+                                                    $dcCurr = $dc['currency_code'] ?? 'USD';
+                                                    $dcAmt = $dc['total_monthly'] ?? 0;
+                                                    if ($dcCurr === 'IDR') {
+                                                        $dvCostIDR += $dcAmt;
+                                                    } else {
+                                                        $dvCostUSD += ($dc['salary_usd'] ?? 0);
+                                                    }
+                                                }
+                                            }
+                                            ?>
+                                            <div class="p-5 border-b border-slate-100">
+                                                <h4 class="text-sm font-bold text-navy mb-3 flex items-center gap-1.5">
+                                                    <span class="material-symbols-outlined text-[18px] text-primary">payments</span>
+                                                    Ringkasan Biaya
+                                                </h4>
+                                                <div class="grid grid-cols-3 gap-3">
+                                                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 text-center">
+                                                        <p class="text-lg font-bold text-navy">Rp <?= number_format($dvCostIDR, 0, ',', '.') ?></p>
+                                                        <p class="text-[10px] font-bold text-blue-500 uppercase mt-1">Biaya Bulanan (IDR)</p>
+                                                    </div>
+                                                    <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4 text-center">
+                                                        <p class="text-lg font-bold text-navy">$<?= number_format($dvCostUSD, 0) ?></p>
+                                                        <p class="text-[10px] font-bold text-emerald-500 uppercase mt-1">Biaya Bulanan (USD)</p>
+                                                    </div>
+                                                    <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 text-center">
+                                                        <p class="text-lg font-bold text-navy"><?= $dvActiveCrew ?></p>
+                                                        <p class="text-[10px] font-bold text-amber-500 uppercase mt-1">Kru Aktif</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Crew List Section -->
+                                            <div class="p-5">
+                                                <h4 class="text-sm font-bold text-navy mb-3 flex items-center gap-1.5">
+                                                    <span class="material-symbols-outlined text-[18px] text-primary">groups</span>
+                                                    Daftar Kru
+                                                </h4>
+                                                <div class="overflow-x-auto rounded-lg border border-slate-100">
+                                                    <table class="w-full text-left border-collapse">
+                                                        <thead>
+                                                            <tr class="bg-slate-50/80 border-b border-slate-100">
+                                                                <th class="px-3 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Jabatan</th>
+                                                                <th class="px-3 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama</th>
+                                                                <th class="px-3 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">No. Kontrak</th>
+                                                                <th class="px-3 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sign Off</th>
+                                                                <th class="px-3 py-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Sisa Hari</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="divide-y divide-slate-50">
+                                                            <?php
+                                                            $dvCrewFound = false;
+                                                            foreach ($contracts as $dc):
+                                                                if (($dc['vessel_id'] ?? null) == $dv['id'] && in_array($dc['status'], ['active', 'onboard'])):
+                                                                    $dvCrewFound = true;
+                                                                    $daysRemaining = $dc['days_remaining'] ?? null;
+                                                                    $contractNo = !empty($dc['contract_number']) ? $dc['contract_number'] : 'CTR-' . date('Y', strtotime($dc['sign_on_date'] ?? 'now')) . '-' . str_pad($dc['id'] ?? '0', 4, '0', STR_PAD_LEFT);
+                                                                    $signOff = !empty($dc['sign_off_date']) ? date('d M Y', strtotime($dc['sign_off_date'])) : '-';
+                                                            ?>
+                                                                <tr class="hover:bg-blue-50/30 transition-colors">
+                                                                    <td class="px-3 py-2.5">
+                                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700"><?= htmlspecialchars($dc['rank'] ?? $dc['rank_name'] ?? 'N/A') ?></span>
+                                                                    </td>
+                                                                    <td class="px-3 py-2.5">
+                                                                        <span class="text-xs font-semibold text-navy"><?= htmlspecialchars($dc['crew_name'] ?? 'N/A') ?></span>
+                                                                    </td>
+                                                                    <td class="px-3 py-2.5">
+                                                                        <span class="text-xs text-slate-600 font-mono"><?= htmlspecialchars($contractNo) ?></span>
+                                                                    </td>
+                                                                    <td class="px-3 py-2.5">
+                                                                        <span class="text-xs text-slate-600"><?= $signOff ?></span>
+                                                                    </td>
+                                                                    <td class="px-3 py-2.5 text-right">
+                                                                        <?php if ($daysRemaining !== null && $daysRemaining >= 0): ?>
+                                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold <?= $daysRemaining <= 30 ? 'bg-rose-50 text-rose-600' : ($daysRemaining <= 90 ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600') ?>">
+                                                                                <?= $daysRemaining ?> hari
+                                                                            </span>
+                                                                        <?php elseif ($daysRemaining !== null): ?>
+                                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-600">Expired</span>
+                                                                        <?php else: ?>
+                                                                            <span class="text-xs text-slate-400">-</span>
+                                                                        <?php endif; ?>
+                                                                    </td>
+                                                                </tr>
+                                                            <?php
+                                                                endif;
+                                                            endforeach;
+                                                            if (!$dvCrewFound):
+                                                            ?>
+                                                                <tr>
+                                                                    <td colspan="5" class="px-3 py-6 text-center">
+                                                                        <span class="material-symbols-outlined text-3xl text-slate-200">groups</span>
+                                                                        <p class="text-xs text-slate-400 mt-1">Belum ada kru aktif di kapal ini</p>
+                                                                    </td>
+                                                                </tr>
+                                                            <?php endif; ?>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                <!-- Tombol Kembali -->
+                                                <div class="flex justify-center mt-4">
+                                                    <button @click="vesselDetailModal = false; vesselModal = true"
+                                                        class="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-navy px-5 py-2 rounded-lg text-sm font-bold transition-all active:scale-95">
+                                                        <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+                                                        Kembali
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
