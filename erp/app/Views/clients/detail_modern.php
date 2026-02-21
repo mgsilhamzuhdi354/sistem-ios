@@ -410,10 +410,6 @@
                                                         </p>
                                                     </div>
                                                     <div class="flex items-center gap-2">
-                                                        <a href="<?= BASE_URL ?>vessels/edit/<?= $vessel['id'] ?>" @click.stop
-                                                            class="flex items-center gap-1 bg-slate-50 hover:bg-primary hover:text-white px-2 py-1 rounded-md text-slate-500 text-xs font-medium border border-slate-100 transition-all">
-                                                            <span class="material-symbols-outlined text-[14px]">edit</span>
-                                                        </a>
                                                         <div class="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-md text-slate-600 text-xs font-medium border border-slate-100">
                                                             <span class="material-symbols-outlined text-sm">group</span>
                                                             <?= $vessel['crew_count'] ?? 0 ?>
@@ -469,11 +465,11 @@
                                                         <p class="text-sm text-slate-500"><?= htmlspecialchars($mv['vessel_type_name'] ?? '-') ?> • IMO: <?= htmlspecialchars($mv['imo_number'] ?? 'N/A') ?></p>
                                                     </div>
                                                     <div class="flex gap-2">
-                                                        <button onclick="alert('Edit Kapal: <?= htmlspecialchars($mv['name']) ?>\nFitur edit kapal dalam pengembangan.\nSilakan gunakan halaman Daftar Kapal untuk mengedit.')"
-                                                            class="flex items-center gap-1.5 bg-primary hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition-all active:scale-95 shadow-sm">
+                                                        <a href="<?= BASE_URL ?>vessels/edit/<?= $mv['id'] ?>"
+                                                            class="flex items-center gap-1.5 bg-primary hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition-all active:scale-95 shadow-sm no-underline">
                                                             <span class="material-symbols-outlined text-[16px]">edit</span>
                                                             Edit
-                                                        </button>
+                                                        </a>
                                                         <button @click="vesselDetailModal = true; vesselModal = false"
                                                             class="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-navy px-3 py-2 rounded-lg text-xs font-bold transition-all active:scale-95">
                                                             <span class="material-symbols-outlined text-[16px]">visibility</span>
@@ -754,6 +750,10 @@
                                                                     <td class="px-3 py-2.5">
                                                                         <?php
                                                                         $dcClientRate = $dc['client_rate'] ?? 0;
+                                                                        // Validate: if client_rate is more than 100x salary, it's likely corrupted data
+                                                                        if ($dcSalary > 0 && $dcClientRate > ($dcSalary * 100)) {
+                                                                            $dcClientRate = 0; // Reset corrupted value
+                                                                        }
                                                                         $dcProfit = $dcClientRate - $dcSalary;
                                                                         if ($dcClientRate > 0) {
                                                                             $profitColor = $dcProfit >= 0 ? 'text-emerald-600' : 'text-rose-600';
@@ -914,10 +914,7 @@
                         <div class="xl:col-span-1 bg-white rounded-xl border border-slate-100 shadow-sm p-6 h-full">
                             <div class="flex items-center justify-between mb-6">
                                 <h3 class="font-bold text-navy text-lg"><?= __('clients.company_info') ?></h3>
-                                <a href="<?= BASE_URL ?>clients/edit/<?= $client['id'] ?>"
-                                    class="text-primary hover:bg-primary/5 p-1 rounded-md transition-colors">
-                                    <span class="material-symbols-outlined text-[20px]">edit</span>
-                                </a>
+
                             </div>
 
                             <div class="space-y-5">
