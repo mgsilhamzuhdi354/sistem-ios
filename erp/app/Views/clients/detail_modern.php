@@ -343,76 +343,186 @@
                             </div>
                         </div>
 
-                        <!-- Fleet Overview -->
-                        <div class="xl:col-span-2 flex flex-col gap-4">
+                        <!-- Fleet & Profit Section (Tabbed) -->
+                        <div class="xl:col-span-2 flex flex-col gap-4" x-data="{ activeTab: 'fleet' }">
+                            <!-- Tab Headers -->
                             <div class="flex items-center justify-between">
-                                <h3 class="font-bold text-navy text-lg"><?= __('vessels.title') ?></h3>
+                                <div class="flex items-center gap-1 p-1 bg-slate-100 rounded-lg">
+                                    <button @click="activeTab = 'fleet'"
+                                        :class="activeTab === 'fleet' ? 'bg-white text-navy shadow-sm font-semibold' : 'text-slate-500 hover:text-navy'"
+                                        class="px-4 py-2 rounded-md text-sm transition-all">
+                                        <span class="flex items-center gap-1.5">
+                                            <span class="material-symbols-outlined text-[16px]">directions_boat</span>
+                                            Manajemen Kapal
+                                        </span>
+                                    </button>
+                                    <button @click="activeTab = 'profit'"
+                                        :class="activeTab === 'profit' ? 'bg-white text-navy shadow-sm font-semibold' : 'text-slate-500 hover:text-navy'"
+                                        class="px-4 py-2 rounded-md text-sm transition-all">
+                                        <span class="flex items-center gap-1.5">
+                                            <span class="material-symbols-outlined text-[16px]">analytics</span>
+                                            Profit Per Kapal
+                                        </span>
+                                    </button>
+                                </div>
                                 <a href="<?= BASE_URL ?>vessels"
                                     class="text-sm font-medium text-primary hover:text-blue-700 flex items-center">
                                     <?= __('common.view_all') ?> <span class="material-symbols-outlined text-sm ml-1">arrow_forward</span>
                                 </a>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
-                                <?php if (!empty($vessels)): ?>
-                                    <?php foreach (array_slice($vessels, 0, 2) as $vessel): ?>
-                                        <div
-                                            class="group bg-white rounded-xl border border-slate-100 shadow-sm p-4 hover:border-primary/30 transition-all cursor-pointer">
-                                            <!-- Vessel Image -->
-                                            <div
-                                                class="h-32 rounded-lg bg-gradient-to-br from-slate-200 to-slate-300 w-full mb-4 relative overflow-hidden">
-                                                <?php if (!empty($vessel['image_url'])): ?>
-                                                    <?php
-                                                    // Check if URL is already absolute (starts with http:// or https://)
-                                                    $imageUrl = $vessel['image_url'];
-                                                    if (!preg_match('/^https?:\/\//', $imageUrl)) {
-                                                        // Relative path, prepend BASE_URL
-                                                        $imageUrl = BASE_URL . $imageUrl;
-                                                    }
-                                                    ?>
-                                                    <img src="<?= $imageUrl ?>" alt="<?= htmlspecialchars($vessel['name']) ?>"
-                                                        class="w-full h-full object-cover"
-                                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                                    <div class="hidden w-full h-full items-center justify-center">
-                                                        <span
-                                                            class="material-symbols-outlined text-6xl text-slate-400">directions_boat</span>
+                            <!-- Tab 1: Fleet Management (Full Vessel List) -->
+                            <div x-show="activeTab === 'fleet'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <?php if (!empty($vessels)): ?>
+                                        <?php foreach ($vessels as $vessel): ?>
+                                            <div class="group bg-white rounded-xl border border-slate-100 shadow-sm p-4 hover:border-primary/30 hover:shadow-md transition-all cursor-pointer">
+                                                <!-- Vessel Image -->
+                                                <div class="h-32 rounded-lg bg-gradient-to-br from-slate-200 to-slate-300 w-full mb-4 relative overflow-hidden">
+                                                    <?php if (!empty($vessel['image_url'])): ?>
+                                                        <?php
+                                                        $imageUrl = $vessel['image_url'];
+                                                        if (!preg_match('/^https?:\/\//', $imageUrl)) {
+                                                            $imageUrl = BASE_URL . $imageUrl;
+                                                        }
+                                                        ?>
+                                                        <img src="<?= $imageUrl ?>" alt="<?= htmlspecialchars($vessel['name']) ?>"
+                                                            class="w-full h-full object-cover"
+                                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                        <div class="hidden w-full h-full items-center justify-center">
+                                                            <span class="material-symbols-outlined text-5xl text-slate-400">directions_boat</span>
+                                                        </div>
+                                                    <?php else: ?>
+                                                        <div class="w-full h-full flex items-center justify-center">
+                                                            <span class="material-symbols-outlined text-5xl text-slate-400">directions_boat</span>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                    <div class="absolute top-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-navy shadow-sm">
+                                                        <?= ucfirst($vessel['status'] ?? 'Active') ?>
                                                     </div>
-                                                <?php else: ?>
-                                                    <div class="w-full h-full flex items-center justify-center">
-                                                        <span
-                                                            class="material-symbols-outlined text-6xl text-slate-400">directions_boat</span>
-                                                    </div>
-                                                <?php endif; ?>
-                                                <div
-                                                    class="absolute top-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-navy shadow-sm">
-                                                    <?= ucfirst($vessel['status'] ?? 'Active') ?>
                                                 </div>
-                                            </div>
 
-                                            <div class="flex justify-between items-start">
-                                                <div>
-                                                    <h4 class="font-bold text-navy group-hover:text-primary transition-colors">
-                                                        <?= htmlspecialchars($vessel['name'] ?? 'N/A') ?>
-                                                    </h4>
-                                                    <p class="text-xs text-slate-500 mt-1">IMO:
-                                                        <?= htmlspecialchars($vessel['imo_number'] ?? 'N/A') ?>
-                                                    </p>
-                                                </div>
-                                                <div
-                                                    class="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-md text-slate-600 text-xs font-medium border border-slate-100">
-                                                    <span class="material-symbols-outlined text-sm">group</span>
-                                                    <?= $vessel['crew_count'] ?? 0 ?>
+                                                <div class="flex justify-between items-start">
+                                                    <div>
+                                                        <h4 class="font-bold text-navy group-hover:text-primary transition-colors">
+                                                            <?= htmlspecialchars($vessel['name'] ?? 'N/A') ?>
+                                                        </h4>
+                                                        <p class="text-xs text-slate-500 mt-1">
+                                                            <?= htmlspecialchars($vessel['vessel_type_name'] ?? '') ?> • IMO: <?= htmlspecialchars($vessel['imo_number'] ?? 'N/A') ?>
+                                                        </p>
+                                                    </div>
+                                                    <div class="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-md text-slate-600 text-xs font-medium border border-slate-100">
+                                                        <span class="material-symbols-outlined text-sm">group</span>
+                                                        <?= $vessel['crew_count'] ?? 0 ?>
+                                                    </div>
                                                 </div>
                                             </div>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <div class="col-span-2 bg-slate-50 rounded-xl p-8 text-center">
+                                            <span class="material-symbols-outlined text-5xl text-slate-300">directions_boat</span>
+                                            <p class="text-slate-400 mt-2">No vessels assigned to this client</p>
                                         </div>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <div class="col-span-2 bg-slate-50 rounded-xl p-8 text-center">
-                                        <span
-                                            class="material-symbols-outlined text-5xl text-slate-300">directions_boat</span>
-                                        <p class="text-slate-400 mt-2">No vessels assigned to this client</p>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <!-- Tab 2: Profit Per Vessel -->
+                            <div x-show="activeTab === 'profit'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                                <?php
+                                // Calculate totals from vesselProfitData
+                                $vpTotalRevenue = 0;
+                                $vpTotalCost = 0;
+                                $vpProfitableCount = 0;
+                                foreach ($vesselProfitData as $vp) {
+                                    $vpTotalRevenue += $vp['revenue_usd'];
+                                    $vpTotalCost += $vp['cost_usd'];
+                                    if ($vp['is_profitable']) $vpProfitableCount++;
+                                }
+                                $vpTotalProfit = $vpTotalRevenue - $vpTotalCost;
+                                $vpAvgMargin = $vpTotalRevenue > 0 ? ($vpTotalProfit / $vpTotalRevenue) * 100 : 0;
+                                ?>
+
+                                <!-- Profit KPI Mini Cards -->
+                                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                                    <div class="bg-white rounded-xl border border-slate-100 p-4 shadow-sm">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Revenue</p>
+                                        <p class="text-lg font-bold text-navy">$<?= number_format($vpTotalRevenue, 0) ?></p>
                                     </div>
-                                <?php endif; ?>
+                                    <div class="bg-white rounded-xl border border-slate-100 p-4 shadow-sm">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Cost</p>
+                                        <p class="text-lg font-bold text-navy">$<?= number_format($vpTotalCost, 0) ?></p>
+                                    </div>
+                                    <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-4 shadow-lg shadow-blue-200/50">
+                                        <p class="text-[10px] font-bold text-blue-200 uppercase tracking-wider mb-1">Net Profit</p>
+                                        <p class="text-lg font-bold text-white">$<?= number_format($vpTotalProfit, 0) ?></p>
+                                    </div>
+                                    <div class="bg-white rounded-xl border border-slate-100 p-4 shadow-sm">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Avg Margin</p>
+                                        <p class="text-lg font-bold <?= $vpAvgMargin > 0 ? 'text-emerald-600' : 'text-rose-600' ?>"><?= number_format($vpAvgMargin, 1) ?>%</p>
+                                    </div>
+                                </div>
+
+                                <!-- Profit Table -->
+                                <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr class="bg-slate-50/80 border-b border-slate-100">
+                                                    <th class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Vessel</th>
+                                                    <th class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">Revenue</th>
+                                                    <th class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">Cost</th>
+                                                    <th class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">Profit</th>
+                                                    <th class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-center">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-50">
+                                                <?php if (!empty($vesselProfitData)): ?>
+                                                    <?php foreach ($vesselProfitData as $vp): ?>
+                                                        <tr class="hover:bg-blue-50/30 transition-colors group">
+                                                            <td class="px-4 py-3">
+                                                                <div class="flex items-center gap-2.5">
+                                                                    <div class="<?= $vp['is_profitable'] ? 'bg-blue-100 text-blue-600' : 'bg-rose-100 text-rose-600' ?> rounded-lg p-1.5">
+                                                                        <span class="material-symbols-outlined text-[16px]">
+                                                                            <?= $vp['is_profitable'] ? 'directions_boat' : 'warning' ?>
+                                                                        </span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p class="font-semibold text-navy text-sm"><?= htmlspecialchars($vp['name']) ?></p>
+                                                                        <p class="text-[10px] text-slate-400 font-medium"><?= htmlspecialchars($vp['vessel_type']) ?> • <?= $vp['crew_count'] ?> Crew</p>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td class="px-4 py-3 text-right text-sm font-medium text-slate-600 tabular-nums">$<?= number_format($vp['revenue_usd'], 0) ?></td>
+                                                            <td class="px-4 py-3 text-right text-sm font-medium text-slate-600 tabular-nums">$<?= number_format($vp['cost_usd'], 0) ?></td>
+                                                            <td class="px-4 py-3 text-right text-sm font-bold tabular-nums <?= $vp['is_profitable'] ? 'text-navy' : 'text-rose-600' ?>">
+                                                                <?= $vp['is_profitable'] ? '$' : '-$' ?><?= number_format(abs($vp['profit_usd']), 0) ?>
+                                                            </td>
+                                                            <td class="px-4 py-3 text-center">
+                                                                <?php if ($vp['is_profitable']): ?>
+                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200/50">
+                                                                        Profit <?= number_format($vp['margin_percent'], 0) ?>%
+                                                                    </span>
+                                                                <?php else: ?>
+                                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200/50">
+                                                                        Loss <?= number_format(abs($vp['margin_percent']), 0) ?>%
+                                                                    </span>
+                                                                <?php endif; ?>
+                                                            </td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                <?php else: ?>
+                                                    <tr>
+                                                        <td colspan="5" class="px-4 py-8 text-center">
+                                                            <span class="material-symbols-outlined text-4xl text-slate-200">analytics</span>
+                                                            <p class="text-slate-400 mt-2 text-sm">No profit data available</p>
+                                                        </td>
+                                                    </tr>
+                                                <?php endif; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

@@ -404,4 +404,94 @@ class ClientModel extends BaseModel
 
         return round(($recent / $total) * 100, 0);
     }
+
+    /**
+     * Get profit data per vessel for a specific client
+     * Returns: array of vessels with revenue_usd, cost_usd, profit_usd, margin_percent, is_profitable
+     */
+    public function getVesselsProfitByClient($clientId)
+    {
+        // Get all vessels for this client
+        $vessels = $this->getVessels($clientId);
+
+        $defaultRates = [
+            'USD' => 1.0,
+            'IDR' => 0.000063,
+            'SGD' => 0.74,
+            'EUR' => 1.05,
+        ];
+
+        $profitData = [];
+
+        foreach ($vessels as $vessel) {
+            $vesselId = $vessel['id'];
+
+            // Get revenue (client_rate) and cost (total_monthly) grouped by currency
+            $sql = "SELECT 
+                        SUM(cs.client_rate) as total_revenue,
+                        SUM(cs.total_monthly) as total_cost,
+                        cur.code AS currency_code,
+                        cs.exchange_rate AS contract_rate
+                    FROM contracts c
+                    JOIN contract_salaries cs ON c.id = cs.contract_id
+                    LEFT JOIN currencies cur ON cs.currency_id = cur.id
+                    WHERE c.vessel_id = ? AND c.client_id = ? AND c.status IN ('active', 'onboard')
+                    GROUP BY cur.code, cs.exchange_rate";
+
+            $results = $this->query($sql, [$vesselId, $clientId], 'ii');
+
+            $totalRevenueUSD = 0;
+            $totalCostUSD = 0;
+
+            foreach ($results as $row) {
+                $revenue = $row['total_revenue'] ?? 0;
+                $cost = $row['total_cost'] ?? 0;
+                $contractRate = $row['contract_rate'] ?? 0;
+                $currency = $row['currency_code'] ?? 'IDR';
+
+                // Auto-detect currency
+                if (!$currency || ($currency === 'USD' && $revenue > 1000000)) {
+                    $currency = 'IDR';
+                }
+
+                // Convert to USD
+                if ($currency === 'USD') {
+                    $totalRevenueUSD += $revenue;
+                    $totalCostUSD += $cost;
+                } elseif ($contractRate > 0) {
+                    $totalRevenueUSD += $revenue / $contractRate;
+                    $totalCostUSD += $cost / $contractRate;
+                } else {
+                    $rate = $defaultRates[$currency] ?? 0.000063;
+                    $totalRevenueUSD += $revenue * $rate;
+                    $totalCostUSD += $cost * $rate;
+                }
+            }
+
+            $profit = $totalRevenueUSD - $totalCostUSD;
+            $margin = $totalRevenueUSD > 0 ? ($profit / $totalRevenueUSD) * 100 : 0;
+
+            $profitData[] = [
+                'id' => $vessel['id'],
+                'name' => $vessel['name'],
+                'vessel_type' => $vessel['vessel_type_name'] ?? '-',
+                'image_url' => $vessel['image_url'] ?? '',
+                'crew_count' => $vessel['crew_count'] ?? 0,
+                'status' => $vessel['status'] ?? 'active',
+                'imo_number' => $vessel['imo_number'] ?? 'N/A',
+                'revenue_usd' => round($totalRevenueUSD, 2),
+                'cost_usd' => round($totalCostUSD, 2),
+                'profit_usd' => round($profit, 2),
+                'margin_percent' => round($margin, 1),
+                'is_profitable' => $profit > 0,
+            ];
+        }
+
+        // Sort by profit (highest first)
+        usort($profitData, function ($a, $b) {
+            return $b['profit_usd'] <=> $a['profit_usd'];
+        });
+
+        return $profitData;
+    }
 }

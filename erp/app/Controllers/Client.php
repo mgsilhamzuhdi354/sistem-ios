@@ -118,6 +118,7 @@ class Client extends BaseController
             'currentPage' => 'clients',
             'client' => $client,
             'vessels' => $this->clientModel->getVessels($id),
+            'vesselProfitData' => $this->clientModel->getVesselsProfitByClient($id),
             'contracts' => $contracts,
             'monthlyCost' => $this->clientModel->getMonthlyCostBreakdown($id),
             'stats' => [
