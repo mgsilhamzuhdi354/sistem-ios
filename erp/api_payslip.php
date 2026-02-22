@@ -25,13 +25,23 @@ $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
 ini_set('session.cookie_samesite', 'Lax');
+ini_set('session.cookie_path', '/');
 if ($isHttps) ini_set('session.cookie_secure', 1);
 session_start();
 
 // Must be logged in
 if (empty($_SESSION['user_id'])) {
     header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Not authenticated',
+        'debug' => [
+            'session_id' => session_id(),
+            'session_status' => session_status(),
+            'has_cookie' => isset($_COOKIE[session_name()]),
+            'cookie_name' => session_name()
+        ]
+    ]);
     exit;
 }
 
