@@ -56,6 +56,23 @@ if ($db->connect_error) {
 }
 $db->set_charset('utf8mb4');
 
+// Auto-migrate: ensure required columns exist
+$migrateCols = [
+    'confirmed_at' => 'DATETIME NULL',
+    'email_sent_at' => 'DATETIME NULL',
+    'email_status' => "VARCHAR(20) DEFAULT 'pending'",
+];
+$existing = [];
+$colCheck = $db->query("SHOW COLUMNS FROM payroll_items");
+if ($colCheck) {
+    while ($r = $colCheck->fetch_assoc()) $existing[] = $r['Field'];
+}
+foreach ($migrateCols as $col => $def) {
+    if (!in_array($col, $existing)) {
+        $db->query("ALTER TABLE payroll_items ADD COLUMN $col $def");
+    }
+}
+
 header('Content-Type: application/json');
 
 // Helper: get actual columns for a table
