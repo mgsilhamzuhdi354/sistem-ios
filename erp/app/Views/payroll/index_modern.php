@@ -972,7 +972,7 @@ $periodStatus = $period['status'] ?? 'draft';
             const content = document.getElementById('payslipBookContent');
             
             document.getElementById('payslipBookTitle').textContent = 'Slip Gaji: ' + crewName;
-            document.getElementById('btnDownloadPayslip').href = PAYROLL_BASE + 'payroll/payslip/' + itemId;
+            document.getElementById('btnDownloadPayslip').href = PAYROLL_BASE + 'index.php?url=payroll/payslip/' + itemId;
             
             // Reset
             document.getElementById('emailTo').value = '';
@@ -1002,7 +1002,7 @@ $periodStatus = $period['status'] ?? 'draft';
         }
 
         async function loadPayslipData(itemId) {
-            const fetchUrl = PAYROLL_BASE + 'payroll/apiGetPayslipData/' + itemId;
+            const fetchUrl = PAYROLL_BASE + 'index.php?url=payroll/apiGetPayslipData/' + itemId;
             console.log('[Payslip] Fetching:', fetchUrl);
             try {
                 const res = await fetch(fetchUrl);
@@ -1145,7 +1145,7 @@ $periodStatus = $period['status'] ?? 'draft';
                 formData.append('other_deductions', document.getElementById('slipOtherDeduct').value);
                 formData.append('tax_rate', document.getElementById('slipTaxRate').value);
                 
-                const res = await fetch(PAYROLL_BASE + 'payroll/apiUpdatePayslip', {
+                const res = await fetch(PAYROLL_BASE + 'index.php?url=payroll/apiUpdatePayslip', {
                     method: 'POST',
                     body: formData
                 });
@@ -1194,7 +1194,7 @@ $periodStatus = $period['status'] ?? 'draft';
                 formData.append('item_id', currentPayslipItemId);
                 formData.append('email', email);
                 
-                const res = await fetch(PAYROLL_BASE + 'payroll/apiSendPayslip', {
+                const res = await fetch(PAYROLL_BASE + 'index.php?url=payroll/apiSendPayslip', {
                     method: 'POST',
                     body: formData
                 });
