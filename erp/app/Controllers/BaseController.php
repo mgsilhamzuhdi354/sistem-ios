@@ -214,6 +214,10 @@ class BaseController
     
     protected function redirect($url)
     {
+        // Ensure session data is written to disk before redirect
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
         header('Location: ' . BASE_URL . $url);
         exit;
     }
