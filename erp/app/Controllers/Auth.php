@@ -130,42 +130,27 @@ class Auth extends BaseController
         $mailer = new Mailer();
         $emailSent = $mailer->sendOtpCode($user['email'], $otpCode, $user['full_name']);
         
-if (!$emailSent) {
-            // Strict Security: Only allow bypass in LOCAL environment
+        if (!$emailSent) {
+            // Check if local environment
             $isLocal = ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?? 'production') === 'local' || 
                        ($_SERVER['HTTP_HOST'] === 'localhost') ||
                        (strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false);
             
             if ($isLocal) {
-                // ALLOW BYPASS FOR DEV ONLY
-                $this->loginHistoryModel->logAttempt($user['id'], 'success', 'OTP bypassed - Local Dev Mode');
-                
-                // Regenerate session ID for security
-                session_regenerate_id(true);
-                
-                // Set session
-                $_SESSION['user'] = [
-                    'id' => $user['id'],
-                    'username' => $user['username'],
+                // LOCAL DEV: Tetap pakai OTP, tapi tampilkan kode di layar
+                // (karena SMTP tidak berfungsi di localhost)
+                $_SESSION['pending_login'] = [
+                    'user_id' => $user['id'],
                     'email' => $user['email'],
-                    'role' => $user['role'],
-                    'full_name' => $user['full_name'],
-                    'avatar' => $user['avatar'] ?? null
+                    'expires' => time() + 300
                 ];
                 
-                $_SESSION['login_time'] = time();
-                $_SESSION['last_activity'] = time();
-                $_SESSION['ui_mode'] = 'modern';
-                
-                // Log activity
-                $this->activityModel->log($user['id'], 'login', 'user', $user['id'], 'User logged in (OTP bypassed - Local Mode)');
-                
-                $this->setFlash('warning', 'Peringatan: Login berhasil lewat bypass OTP (Mode Local). Konfigurasi SMTP Anda belum aktif.');
-                $this->redirect('');
+                $this->setFlash('warning', "⚠️ SMTP tidak aktif (Mode Local). Kode OTP Anda: <strong style='font-size:1.5em; letter-spacing:3px;'>{$otpCode}</strong>");
+                $this->redirect('auth/verify-otp');
                 return;
             }
             
-            // PRODUCTION: DENY LOGIN if OTP fails
+            // PRODUCTION: Tolak login kalau OTP gagal dikirim
             $this->loginHistoryModel->logAttempt($user['id'], 'failed', 'OTP Send Failed - SMTP Error');
             $this->setFlash('error', 'Gagal mengirim kode OTP. Sistem email sedang gangguan. Hubungi IT Support.');
             $this->redirect('auth/login');
