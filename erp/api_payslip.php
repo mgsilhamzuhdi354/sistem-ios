@@ -192,6 +192,14 @@ if ($action === 'get' && $id > 0) {
         'tax_rate' => floatval($_POST['tax_rate'] ?? 0),
     ];
     
+    // Also save computed salary values if provided
+    $computedFields = ['basic_salary', 'overtime_allowance', 'gross_salary', 'tax_amount', 'net_salary', 'total_deductions'];
+    foreach ($computedFields as $cf) {
+        if (isset($_POST[$cf])) {
+            $allFields[$cf] = floatval($_POST[$cf]);
+        }
+    }
+    
     // Handle status + confirmed_at
     if (!empty($_POST['status'])) {
         $allFields['status'] = $_POST['status'];

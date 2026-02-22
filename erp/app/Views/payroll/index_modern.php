@@ -1227,18 +1227,43 @@ $periodStatus = $period['status'] ?? 'draft';
             btn.innerHTML = '<span class="animate-spin material-icons text-sm">refresh</span> Menyimpan...';
             
             try {
+                // Compute values for saving
+                const basic = parseFloat(document.getElementById('slipOrigBasic').value) || 0;
+                const overtime = parseFloat(document.getElementById('slipOrigOvertime').value) || 0;
+                const actualSalary = basic + overtime;
+                const kurs = parseFloat(document.getElementById('slipKurs').value) || 1;
+                const reimbursement = parseFloat(document.getElementById('slipReimbursement').value) || 0;
+                const loans = parseFloat(document.getElementById('slipLoans').value) || 0;
+                const adminBank = parseFloat(document.getElementById('slipAdminBank').value) || 0;
+                const insurance = parseFloat(document.getElementById('slipInsurance').value) || 0;
+                const otherDeduct = parseFloat(document.getElementById('slipOtherDeduct').value) || 0;
+                const taxRate = parseFloat(document.getElementById('slipTaxRate').value) || 0;
+                
+                const idrSalary = actualSalary * kurs;
+                const gross = idrSalary + reimbursement;
+                const totalDeduct = adminBank + insurance + otherDeduct + loans;
+                const taxAmount = (actualSalary * kurs) * (taxRate / 100);
+                const net = gross - totalDeduct - taxAmount;
+                
                 const formData = new FormData();
                 formData.append('item_id', currentPayslipItemId);
-                formData.append('original_basic', document.getElementById('slipOrigBasic').value);
-                formData.append('original_overtime', document.getElementById('slipOrigOvertime').value);
-                formData.append('reimbursement', document.getElementById('slipReimbursement').value);
-                formData.append('loans', document.getElementById('slipLoans').value);
-                formData.append('exchange_rate', document.getElementById('slipKurs').value);
-                formData.append('admin_bank_fee', document.getElementById('slipAdminBank').value);
-                formData.append('insurance', document.getElementById('slipInsurance').value);
-                formData.append('other_deductions', document.getElementById('slipOtherDeduct').value);
-                formData.append('tax_rate', document.getElementById('slipTaxRate').value);
+                formData.append('original_basic', basic);
+                formData.append('original_overtime', overtime);
+                formData.append('reimbursement', reimbursement);
+                formData.append('loans', loans);
+                formData.append('exchange_rate', kurs);
+                formData.append('admin_bank_fee', adminBank);
+                formData.append('insurance', insurance);
+                formData.append('other_deductions', otherDeduct);
+                formData.append('tax_rate', taxRate);
                 formData.append('status', 'confirmed');
+                // Also save computed values to DB
+                formData.append('basic_salary', basic);
+                formData.append('overtime_allowance', overtime);
+                formData.append('gross_salary', gross);
+                formData.append('tax_amount', taxAmount);
+                formData.append('net_salary', net);
+                formData.append('total_deductions', totalDeduct + taxAmount);
                 
                 const res = await fetch(PAYROLL_BASE + 'api_payslip.php?action=update', {
                     method: 'POST',
@@ -1259,8 +1284,9 @@ $periodStatus = $period['status'] ?? 'draft';
                     savedInd.classList.add('flex');
                     document.getElementById('savedTime').textContent = 'Baru saja';
                     
-                    // Update table row status
+                    // Update table row status + values
                     updateTableRowStatus(currentPayslipItemId, 'confirmed', false);
+                    updateTableRowValues(currentPayslipItemId, basic, overtime, gross, taxAmount, net);
                 } else {
                     statusContent.innerHTML = '<span class="material-icons text-red-500" style="font-size:16px">error</span><span class="text-xs text-red-600">' + (data.message || 'Gagal menyimpan') + '</span>';
                 }
@@ -1389,6 +1415,22 @@ $periodStatus = $period['status'] ?? 'draft';
                     emailSpan.innerHTML = '<span class="material-icons" style="font-size:9px">mark_email_read</span> Terkirim';
                     statusDiv.appendChild(emailSpan);
                 }
+            }
+        }
+
+        // === Helper: update table row salary values live ===
+        function updateTableRowValues(itemId, basic, overtime, gross, tax, net) {
+            const row = document.querySelector('tr[data-item-id="' + itemId + '"]');
+            if (!row) return;
+            const cells = row.querySelectorAll('td');
+            // Table columns: Name(0), Rank(1), Vessel(2), Basic(3), Allowances(4), Gross(5), Tax(6), Net(7), Status(8), Actions(9)
+            if (cells.length >= 8) {
+                const f = (v) => '$' + Number(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                cells[3].innerHTML = '<span class="font-medium text-slate-800">' + f(basic) + '</span>';
+                cells[4].innerHTML = '<span class="' + (overtime > 0 ? 'text-slate-600' : 'text-slate-300') + '">' + f(overtime) + '</span>';
+                cells[5].innerHTML = '<span class="font-semibold text-slate-800">' + f(gross) + '</span>';
+                cells[6].innerHTML = '<span class="font-medium text-red-500">-' + f(tax) + '</span>';
+                cells[7].innerHTML = '<span class="font-bold text-emerald-600">' + f(net) + '</span>';
             }
         }
 
