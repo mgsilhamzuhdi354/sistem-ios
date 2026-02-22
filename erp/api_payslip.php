@@ -29,19 +29,10 @@ ini_set('session.cookie_path', '/');
 if ($isHttps) ini_set('session.cookie_secure', 1);
 session_start();
 
-// Must be logged in
-if (empty($_SESSION['user_id'])) {
+// Must be logged in - Auth stores in $_SESSION['user']['id']
+if (empty($_SESSION['user']['id'])) {
     header('Content-Type: application/json');
-    echo json_encode([
-        'success' => false, 
-        'message' => 'Not authenticated',
-        'debug' => [
-            'session_id' => session_id(),
-            'session_status' => session_status(),
-            'has_cookie' => isset($_COOKIE[session_name()]),
-            'cookie_name' => session_name()
-        ]
-    ]);
+    echo json_encode(['success' => false, 'message' => 'Not authenticated']);
     exit;
 }
 
