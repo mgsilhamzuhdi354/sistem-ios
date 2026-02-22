@@ -1189,7 +1189,7 @@ $periodStatus = $period['status'] ?? 'draft';
                 formData.append('item_id', currentPayslipItemId);
                 formData.append('email', email);
                 
-                const res = await fetch(PAYROLL_BASE + 'index.php?url=payroll/apiSendPayslip', {
+                const res = await fetch(PAYROLL_BASE + 'api_payslip.php?action=send_email', {
                     method: 'POST',
                     body: formData
                 });
