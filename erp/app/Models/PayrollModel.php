@@ -140,106 +140,96 @@ class PayrollItemModel extends BaseModel
                 $existingId = $existing[0]['id'];
             }
             
-            // Get exchange rate: use contract's custom rate if set, otherwise system default
-            // Auto-detect currency: if NULL or USD but amount > 1M, assume IDR
+            // Detect currency
             $originalCurrency = $contract['currency_code'] ?? null;
-            $originalGross = $contract['total_monthly'] ?? 0;
+            $totalMonthly = floatval($contract['total_monthly'] ?? 0);
             
-            if (!$originalCurrency || ($originalCurrency === 'USD' && $originalGross > 1000000)) {
+            if (!$originalCurrency || ($originalCurrency === 'USD' && $totalMonthly > 1000000)) {
                 $originalCurrency = 'IDR';
             }
             
-            if (!empty($contract['contract_exchange_rate']) && $contract['contract_exchange_rate'] > 0) {
-                // Contract has custom rate set by owner (1 USD = X currency)
-                // To convert to USD: amount / rate
-                $exchangeRate = 1 / $contract['contract_exchange_rate'];
-            } else {
-                // Use system default rate
-                $exchangeRate = $this->getExchangeRate($originalCurrency);
+            // Exchange rate (for display: 1 USD = X currency)
+            $exchangeRate = floatval($contract['contract_exchange_rate'] ?? 0);
+            if ($exchangeRate <= 0) {
+                // Default exchange rates for display
+                $defaultRates = ['IDR' => 15900, 'MYR' => 4.76, 'SGD' => 1.35, 'USD' => 1];
+                $exchangeRate = $defaultRates[$originalCurrency] ?? 1;
             }
             
-            // Calculate deductions in original currency
-            $deductions = $this->query(
-                "SELECT deduction_type, SUM(amount) as total 
-                 FROM contract_deductions 
-                 WHERE contract_id = ? AND is_active = 1 AND is_recurring = 1
-                 GROUP BY deduction_type",
-                [$contract['id']], 'i'
-            );
+            // Salary values in ORIGINAL currency (no USD conversion)
+            $basicSalary = floatval($contract['basic_salary'] ?? 0);
+            $overtime = floatval($contract['overtime_allowance'] ?? 0);
+            $leavePay = floatval($contract['leave_pay'] ?? 0);
+            $bonus = floatval($contract['bonus'] ?? 0);
+            $otherAllowance = floatval($contract['other_allowance'] ?? 0);
+            $grossSalary = $totalMonthly > 0 ? $totalMonthly : ($basicSalary + $overtime + $leavePay + $bonus + $otherAllowance);
             
+            // Calculate deductions (try/catch in case table doesn't exist)
             $insurance = 0;
             $medical = 0;
             $advance = 0;
-            $other = 0;
+            $otherDed = 0;
             
-            foreach ($deductions as $ded) {
-                switch ($ded['deduction_type']) {
-                    case 'insurance': $insurance = $ded['total']; break;
-                    case 'medical': $medical = $ded['total']; break;
-                    case 'advance': $advance = $ded['total']; break;
-                    default: $other += $ded['total'];
+            try {
+                $deductions = $this->query(
+                    "SELECT deduction_type, SUM(amount) as total 
+                     FROM contract_deductions 
+                     WHERE contract_id = ? AND is_active = 1 AND is_recurring = 1
+                     GROUP BY deduction_type",
+                    [$contract['id']], 'i'
+                );
+                
+                foreach ($deductions as $ded) {
+                    switch ($ded['deduction_type']) {
+                        case 'insurance': $insurance = floatval($ded['total']); break;
+                        case 'medical': $medical = floatval($ded['total']); break;
+                        case 'advance': $advance = floatval($ded['total']); break;
+                        default: $otherDed += floatval($ded['total']);
+                    }
                 }
+            } catch (\Exception $e) {
+                // contract_deductions table may not exist in production
             }
             
-            // Original values in original currency
-            $originalGross = $contract['total_monthly'] ?? 0;
-            $originalBasic = $contract['basic_salary'] ?? 0;
-            $originalOvertime = $contract['overtime_allowance'] ?? 0;
-            $originalLeavePay = $contract['leave_pay'] ?? 0;
-            $originalBonus = $contract['bonus'] ?? 0;
-            $originalOther = $contract['other_allowance'] ?? 0;
+            $totalDeductions = $insurance + $medical + $advance + $otherDed;
             
-            // Convert all values to USD
-            $basicSalaryUSD = $originalBasic * $exchangeRate;
-            $overtimeUSD = $originalOvertime * $exchangeRate;
-            $leavePayUSD = $originalLeavePay * $exchangeRate;
-            $bonusUSD = $originalBonus * $exchangeRate;
-            $otherAllowanceUSD = $originalOther * $exchangeRate;
-            $grossSalaryUSD = $originalGross * $exchangeRate;
+            // Calculate tax
+            $taxRate = floatval($contract['tax_rate'] ?? 2.5);
+            $taxBase = $grossSalary - $totalDeductions;
+            $taxAmount = $taxBase > 0 ? $taxBase * ($taxRate / 100) : 0;
             
-            // Convert deductions to USD
-            $insuranceUSD = $insurance * $exchangeRate;
-            $medicalUSD = $medical * $exchangeRate;
-            $advanceUSD = $advance * $exchangeRate;
-            $otherDeductionsUSD = $other * $exchangeRate;
-            $totalDeductionsUSD = ($insurance + $medical + $advance + $other) * $exchangeRate;
-            
-            // Calculate tax in USD
-            $taxRate = $contract['tax_rate'] ?? 5;
-            $taxAmountUSD = ($grossSalaryUSD - $totalDeductionsUSD) * ($taxRate / 100);
-            
-            $netSalaryUSD = $grossSalaryUSD - $totalDeductionsUSD - $taxAmountUSD;
+            $netSalary = $grossSalary - $totalDeductions - $taxAmount;
             
             $payrollData = [
                 'payroll_period_id' => $periodId,
                 'contract_id' => $contract['id'],
                 'crew_name' => $contract['crew_name'],
-                'rank_name' => $contract['rank_name'],
-                'vessel_name' => $contract['vessel_name'],
-                'basic_salary' => round($basicSalaryUSD, 2),
-                'overtime' => round($overtimeUSD, 2),
-                'leave_pay' => round($leavePayUSD, 2),
-                'bonus' => round($bonusUSD, 2),
-                'other_allowance' => round($otherAllowanceUSD, 2),
-                'gross_salary' => round($grossSalaryUSD, 2),
-                'insurance' => round($insuranceUSD, 2),
-                'medical' => round($medicalUSD, 2),
-                'advance' => round($advanceUSD, 2),
-                'other_deductions' => round($otherDeductionsUSD, 2),
+                'rank_name' => $contract['rank_name'] ?? '',
+                'vessel_name' => $contract['vessel_name'] ?? '',
+                'basic_salary' => round($basicSalary, 2),
+                'overtime' => round($overtime, 2),
+                'leave_pay' => round($leavePay, 2),
+                'bonus' => round($bonus, 2),
+                'other_allowance' => round($otherAllowance, 2),
+                'gross_salary' => round($grossSalary, 2),
+                'insurance' => round($insurance, 2),
+                'medical' => round($medical, 2),
+                'advance' => round($advance, 2),
+                'other_deductions' => round($otherDed, 2),
                 'admin_bank_fee' => 0,
                 'reimbursement' => 0,
                 'loans' => 0,
-                'total_deductions' => round($totalDeductionsUSD, 2),
+                'total_deductions' => round($totalDeductions, 2),
                 'tax_type' => $contract['tax_type'] ?? 'pph21',
                 'tax_rate' => $taxRate,
-                'tax_amount' => round($taxAmountUSD, 2),
-                'net_salary' => round($netSalaryUSD, 2),
-                'currency_code' => 'USD',
+                'tax_amount' => round($taxAmount, 2),
+                'net_salary' => round($netSalary, 2),
+                'currency_code' => $originalCurrency,
                 'original_currency' => $originalCurrency,
-                'original_basic' => $originalBasic,
-                'original_overtime' => $originalOvertime,
-                'original_leave_pay' => $originalLeavePay,
-                'exchange_rate' => $exchangeRate > 0 ? (1 / $exchangeRate) : 0,
+                'original_basic' => $basicSalary,
+                'original_overtime' => $overtime,
+                'original_leave_pay' => $leavePay,
+                'exchange_rate' => $exchangeRate,
                 'payment_method' => 'bank_transfer',
                 'bank_name' => $contract['crew_bank_name'] ?? null,
                 'bank_account' => $contract['crew_bank_account'] ?? null,
@@ -247,7 +237,7 @@ class PayrollItemModel extends BaseModel
                 'status' => 'pending'
             ];
             
-            // Insert new or update existing
+            // Insert new or update existing (BaseModel filters out non-existent columns)
             if ($existingId) {
                 $this->update($existingId, $payrollData);
             } else {
