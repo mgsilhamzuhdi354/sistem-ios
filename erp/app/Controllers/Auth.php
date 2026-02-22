@@ -154,7 +154,7 @@ class Auth extends BaseController
             $errorDetail = !empty($mailerErrors) ? implode('; ', $mailerErrors) : 'Unknown SMTP error';
             error_log("[OTP SMTP ERROR] User: {$user['email']} - {$errorDetail}");
             
-            $this->loginHistoryModel->logAttempt($user['id'], 'failed', 'OTP Send Failed - ' . $errorDetail);
+            $this->loginHistoryModel->logAttempt($user['id'], 'failed', substr('OTP Send Failed - ' . $errorDetail, 0, 200));
             $this->setFlash('error', 'Gagal mengirim kode OTP. Sistem email sedang gangguan. Hubungi IT Support.');
             $this->redirect('auth/login');
             return;
