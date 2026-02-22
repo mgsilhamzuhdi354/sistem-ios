@@ -29,6 +29,22 @@ ini_set('session.cookie_path', '/');
 if ($isHttps) ini_set('session.cookie_secure', 1);
 session_start();
 
+// Debug endpoint - show session state (temporary)
+if (($_GET['action'] ?? '') === 'debug_session') {
+    header('Content-Type: application/json');
+    echo json_encode([
+        'session_id' => session_id(),
+        'session_keys' => array_keys($_SESSION),
+        'has_user' => isset($_SESSION['user']),
+        'has_user_id' => isset($_SESSION['user_id']),
+        'user_data' => isset($_SESSION['user']) ? $_SESSION['user'] : null,
+        'cookie_params' => session_get_cookie_params(),
+        'cookie_name' => session_name(),
+        'cookies_sent' => array_keys($_COOKIE),
+    ]);
+    exit;
+}
+
 // Must be logged in - Auth stores in $_SESSION['user']['id']
 if (empty($_SESSION['user']['id'])) {
     header('Content-Type: application/json');
