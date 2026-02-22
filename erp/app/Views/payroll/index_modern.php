@@ -1256,7 +1256,6 @@ $periodStatus = $period['status'] ?? 'draft';
                 formData.append('insurance', insurance);
                 formData.append('other_deductions', otherDeduct);
                 formData.append('tax_rate', taxRate);
-                formData.append('status', 'confirmed');
                 // Also save computed values to DB
                 formData.append('basic_salary', basic);
                 formData.append('overtime_allowance', overtime);
@@ -1266,7 +1265,7 @@ $periodStatus = $period['status'] ?? 'draft';
                 formData.append('total_deductions', totalDeduct + taxAmount);
                 formData.append('status', 'confirmed');
                 
-                const res = await fetch(PAYROLL_BASE + 'payroll/api-update-payslip', {
+                const res = await fetch(PAYROLL_BASE + 'api_payslip.php?action=update', {
                     method: 'POST',
                     body: formData,
                     credentials: 'same-origin'
@@ -1330,7 +1329,7 @@ $periodStatus = $period['status'] ?? 'draft';
                 formData.append('item_id', currentPayslipItemId);
                 formData.append('email', email);
                 
-                const res = await fetch(PAYROLL_BASE + 'payroll/send-payslip-email', {
+                const res = await fetch(PAYROLL_BASE + 'api_payslip.php?action=send_email', {
                     method: 'POST',
                     body: formData,
                     credentials: 'same-origin'
@@ -1509,7 +1508,7 @@ $periodStatus = $period['status'] ?? 'draft';
                 const formData = new FormData();
                 formData.append('payroll_day', day);
 
-                const res = await fetch(PAYROLL_BASE + 'payroll/update-payday', {
+                const res = await fetch(PAYROLL_BASE + 'api_payslip.php?action=update_payday', {
                     method: 'POST',
                     body: formData,
                     credentials: 'same-origin'

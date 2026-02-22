@@ -236,11 +236,20 @@ if ($action === 'get' && $id > 0) {
     
     $sql = "UPDATE payroll_items SET " . implode(', ', $setParts) . " WHERE id = ?";
     $stmt = $db->prepare($sql);
+    if (!$stmt) {
+        echo json_encode(['success' => false, 'message' => 'SQL prepare error: ' . $db->error, 'sql' => $sql]);
+        exit;
+    }
     $stmt->bind_param($types, ...$values);
     $result = $stmt->execute();
+    $execError = $stmt->error;
     $stmt->close();
     
-    echo json_encode(['success' => $result, 'message' => $result ? 'Data payslip berhasil disimpan' : 'Gagal menyimpan']);
+    if ($result) {
+        echo json_encode(['success' => true, 'message' => 'Data payslip berhasil disimpan', 'fields_updated' => count($fields)]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Gagal menyimpan: ' . $execError]);
+    }
 
 } elseif ($action === 'send_email' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $itemId = intval($_POST['item_id'] ?? 0);
@@ -272,6 +281,15 @@ if ($action === 'get' && $id > 0) {
     
     // Try to send email
     try {
+        // Load SMTP settings from DB for standalone API
+        $smtpSettings = [];
+        $smtpResult = $db->query("SELECT setting_key, setting_value FROM settings WHERE setting_group = 'email'");
+        if ($smtpResult) {
+            while ($sr = $smtpResult->fetch_assoc()) {
+                $smtpSettings[$sr['setting_key']] = $sr['setting_value'];
+            }
+        }
+        
         // Try Mailer class first
         $mailerSent = false;
         $mailerFile = APPPATH . 'Libraries/Mailer.php';
