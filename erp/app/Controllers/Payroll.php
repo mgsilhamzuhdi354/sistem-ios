@@ -452,7 +452,7 @@ class Payroll extends BaseController
                        COALESCE(pi.original_currency, cur.code, 'IDR') AS original_currency,
                        COALESCE(NULLIF(pi.original_basic, 0), cs.basic_salary, 0) AS original_basic,
                        COALESCE(NULLIF(pi.original_overtime, 0), cs.overtime_allowance, 0) AS original_overtime,
-                       COALESCE(NULLIF(pi.exchange_rate, 1), cs.exchange_rate, 1) AS exchange_rate,
+                       COALESCE(NULLIF(cs.exchange_rate, 0), IF(pi.exchange_rate > 0 AND pi.exchange_rate < 1, ROUND(1/pi.exchange_rate), pi.exchange_rate), 1) AS exchange_rate,
                        cs.leave_pay AS contract_leave_pay,
                        cs.bonus AS contract_bonus,
                        cs.other_allowance AS contract_other_allowance,
