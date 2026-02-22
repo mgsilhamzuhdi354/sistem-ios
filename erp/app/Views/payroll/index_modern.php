@@ -965,6 +965,10 @@ $periodStatus = $period['status'] ?? 'draft';
         const PAYROLL_BASE = '<?= BASE_URL ?>';
         let currentPayslipItemId = null;
         let currentPayslipData = null;
+        
+        // Preloaded payslip data from PHP (no API fetch needed)
+        const PAYSLIP_DATA_MAP = <?= json_encode($payslipDataMap ?? [], JSON_HEX_TAG | JSON_HEX_AMP) ?>;
+        const CURRENT_PERIOD = <?= json_encode($period ?? [], JSON_HEX_TAG | JSON_HEX_AMP) ?>;
 
         function openPayslipBook(itemId, crewName) {
             currentPayslipItemId = itemId;
@@ -1001,82 +1005,68 @@ $periodStatus = $period['status'] ?? 'draft';
             }, 400);
         }
 
-        async function loadPayslipData(itemId) {
-            const fetchUrl = PAYROLL_BASE + 'api_payslip.php?action=get&id=' + itemId;
-            console.log('[Payslip] Fetching:', fetchUrl);
-            try {
-                const res = await fetch(fetchUrl);
-                console.log('[Payslip] Response status:', res.status);
-                if (!res.ok) {
-                    const errText = await res.text();
-                    console.error('[Payslip] Error response:', errText);
-                    alert('API Error ' + res.status + ': ' + errText.substring(0, 200));
-                    return;
-                }
-                const data = await res.json();
-                console.log('[Payslip] Data:', data);
-                if (data.success) {
-                    currentPayslipData = data;
-                    const item = data.item;
-                    const period = data.period;
-                    
-                    // Crew info
-                    document.getElementById('slipCrewName').textContent = (item.crew_name || '-').toUpperCase();
-                    document.getElementById('slipVessel').textContent = (item.vessel_name || '-').toUpperCase();
-                    document.getElementById('slipRank').textContent = (item.rank_name || '-').toUpperCase();
-                    
-                    const monthNames = ['','JAN','FEB','MAR','APR','MEI','JUN','JUL','AGU','SEP','OKT','NOV','DES'];
-                    document.getElementById('slipPeriod').textContent = (monthNames[period.period_month] || '') + ' ' + period.period_year;
-                    
-                    // Original currency from contract data
-                    const origCur = (item.original_currency || 'IDR').toUpperCase();
-                    document.getElementById('slipOrigCurLabel1').textContent = origCur;
-                    document.getElementById('slipOrigCurLabel2').textContent = origCur;
-                    document.getElementById('slipOrigCurLabel3').textContent = origCur;
-                    
-                    // Dynamic Kurs conversion label (e.g. "1 RM =")
-                    document.getElementById('slipKursLabel').textContent = 'Rp';
-                    
-                    // Payment method badge
-                    const payMethod = (item.payment_method || 'bank_transfer').replace(/_/g, ' ').toUpperCase();
-                    document.getElementById('slipPaymentMethod').textContent = payMethod;
-                    
-                    // Fill editable fields
-                    document.getElementById('slipOrigBasic').value = parseFloat(item.original_basic || 0);
-                    document.getElementById('slipOrigOvertime').value = parseFloat(item.original_overtime || 0);
-                    document.getElementById('slipReimbursement').value = parseFloat(item.reimbursement || 0);
-                    document.getElementById('slipLoans').value = parseFloat(item.loans || 0);
-                    document.getElementById('slipKurs').value = parseFloat(item.exchange_rate || 0);
-                    document.getElementById('slipAdminBank').value = parseFloat(item.admin_bank_fee || 0);
-                    document.getElementById('slipInsurance').value = parseFloat(item.insurance || 0);
-                    document.getElementById('slipOtherDeduct').value = parseFloat(item.other_deductions || 0);
-                    document.getElementById('slipTaxRate').value = parseFloat(item.tax_rate || 2.5);
-                    
-                    // Bank info
-                    document.getElementById('slipBankHolder').textContent = (item.bank_holder || item.crew_name || '-').toUpperCase();
-                    document.getElementById('slipBankAccount').textContent = item.bank_account || '-';
-                    document.getElementById('slipBankName').textContent = (item.bank_name || '-').toUpperCase();
-                    
-                    // Email
-                    document.getElementById('emailCrewName').textContent = item.full_name || item.crew_name;
-                    document.getElementById('emailCrewAvatar').textContent = ((item.full_name || item.crew_name || '--').substring(0, 2)).toUpperCase();
-                    document.getElementById('emailCrewDetail').textContent = (item.rank_name || '') + ' • ' + (item.vessel_name || '');
-                    
-                    if (item.email) {
-                        document.getElementById('emailTo').value = item.email;
-                    } else {
-                        document.getElementById('emailNoEmail').classList.remove('hidden');
-                    }
-                    
-                    // Recalculate
-                    recalcPayslip();
-                } else {
-                    alert('API Error: ' + (data.message || 'Unknown'));
-                }
-            } catch (e) {
-                console.error('Failed to load payslip data:', e);
-                alert('Gagal memuat data payslip: ' + e.message);
+        function loadPayslipData(itemId) {
+            // Read from preloaded data (no API call needed)
+            const item = PAYSLIP_DATA_MAP[itemId];
+            const period = CURRENT_PERIOD;
+            
+            if (!item) {
+                alert('Data payslip tidak ditemukan untuk item ID: ' + itemId);
+                return;
             }
+            
+            currentPayslipData = { success: true, item: item, period: period };
+            
+            // Crew info
+            document.getElementById('slipCrewName').textContent = (item.crew_name || '-').toUpperCase();
+            document.getElementById('slipVessel').textContent = (item.vessel_name || '-').toUpperCase();
+            document.getElementById('slipRank').textContent = (item.rank_name || '-').toUpperCase();
+            
+            const monthNames = ['','JAN','FEB','MAR','APR','MEI','JUN','JUL','AGU','SEP','OKT','NOV','DES'];
+            document.getElementById('slipPeriod').textContent = (monthNames[period.period_month] || '') + ' ' + period.period_year;
+            
+            // Original currency from contract data
+            const origCur = (item.original_currency || 'IDR').toUpperCase();
+            document.getElementById('slipOrigCurLabel1').textContent = origCur;
+            document.getElementById('slipOrigCurLabel2').textContent = origCur;
+            document.getElementById('slipOrigCurLabel3').textContent = origCur;
+            
+            // Dynamic Kurs conversion label
+            document.getElementById('slipKursLabel').textContent = 'Rp';
+            
+            // Payment method badge
+            const payMethod = (item.payment_method || 'bank_transfer').replace(/_/g, ' ').toUpperCase();
+            document.getElementById('slipPaymentMethod').textContent = payMethod;
+            
+            // Fill editable fields
+            document.getElementById('slipOrigBasic').value = parseFloat(item.original_basic || 0);
+            document.getElementById('slipOrigOvertime').value = parseFloat(item.original_overtime || 0);
+            document.getElementById('slipReimbursement').value = parseFloat(item.reimbursement || 0);
+            document.getElementById('slipLoans').value = parseFloat(item.loans || 0);
+            document.getElementById('slipKurs').value = parseFloat(item.exchange_rate || 0);
+            document.getElementById('slipAdminBank').value = parseFloat(item.admin_bank_fee || 0);
+            document.getElementById('slipInsurance').value = parseFloat(item.insurance || 0);
+            document.getElementById('slipOtherDeduct').value = parseFloat(item.other_deductions || 0);
+            document.getElementById('slipTaxRate').value = parseFloat(item.tax_rate || 2.5);
+            
+            // Bank info
+            document.getElementById('slipBankHolder').textContent = (item.bank_holder || item.crew_name || '-').toUpperCase();
+            document.getElementById('slipBankAccount').textContent = item.bank_account || '-';
+            document.getElementById('slipBankName').textContent = (item.bank_name || '-').toUpperCase();
+            
+            // Email
+            document.getElementById('emailCrewName').textContent = item.full_name || item.crew_name;
+            document.getElementById('emailCrewAvatar').textContent = ((item.full_name || item.crew_name || '--').substring(0, 2)).toUpperCase();
+            document.getElementById('emailCrewDetail').textContent = (item.rank_name || '') + ' • ' + (item.vessel_name || '');
+            
+            if (item.email) {
+                document.getElementById('emailTo').value = item.email;
+            } else {
+                document.getElementById('emailNoEmail').classList.remove('hidden');
+            }
+            
+            // Recalculate
+            recalcPayslip();
         }
 
         function fmtNum(val) {
