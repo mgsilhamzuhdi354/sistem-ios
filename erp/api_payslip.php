@@ -162,6 +162,14 @@ if ($action === 'get' && $id > 0) {
         'tax_rate' => floatval($_POST['tax_rate'] ?? 0),
     ];
     
+    // Handle status + confirmed_at
+    if (!empty($_POST['status'])) {
+        $allFields['status'] = $_POST['status'];
+        if ($_POST['status'] === 'confirmed') {
+            $allFields['confirmed_at'] = date('Y-m-d H:i:s');
+        }
+    }
+    
     // Filter to only columns that exist in DB
     $dbCols = getTableColumns($db, 'payroll_items');
     $fields = [];
@@ -179,9 +187,10 @@ if ($action === 'get' && $id > 0) {
     $setParts = [];
     $types = '';
     $values = [];
+    $stringCols = ['status', 'confirmed_at', 'email_status', 'email_sent_at'];
     foreach ($fields as $col => $val) {
         $setParts[] = "$col = ?";
-        $types .= 'd';
+        $types .= in_array($col, $stringCols) ? 's' : 'd';
         $values[] = $val;
     }
     $types .= 'i';

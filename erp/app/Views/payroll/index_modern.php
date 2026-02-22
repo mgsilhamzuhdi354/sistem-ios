@@ -477,15 +477,31 @@ $periodStatus = $period['status'] ?? 'draft';
                                             <td class="px-6 py-4 text-center">
                                                 <?php
                                                 $statusClass = 'bg-slate-100 text-slate-600';
-                                                if ($item['status'] === 'paid') {
+                                                $statusIcon = '';
+                                                if ($item['status'] === 'confirmed' || $item['status'] === 'paid') {
                                                     $statusClass = 'bg-emerald-50 text-emerald-700';
+                                                    $statusIcon = '<span class="material-icons" style="font-size:10px">check_circle</span>';
                                                 } elseif ($item['status'] === 'pending') {
                                                     $statusClass = 'bg-amber-50 text-amber-700';
+                                                    $statusIcon = '<span class="material-icons" style="font-size:10px">schedule</span>';
                                                 }
+                                                $emailSent = !empty($item['email_sent_at']);
                                                 ?>
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase <?= $statusClass ?>">
-                                                    <?= strtoupper($item['status'] ?? 'DRAFT') ?>
-                                                </span>
+                                                <div class="flex flex-col items-center gap-1">
+                                                    <span class="inline-flex items-center gap-0.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase <?= $statusClass ?>">
+                                                        <?= $statusIcon ?> <?= strtoupper($item['status'] ?? 'DRAFT') ?>
+                                                    </span>
+                                                    <?php if ($item['status'] === 'confirmed' || $item['status'] === 'paid'): ?>
+                                                        <span class="inline-flex items-center gap-0.5 text-[9px] text-emerald-500">
+                                                            <span class="material-icons" style="font-size:9px">save</span> Tersimpan
+                                                        </span>
+                                                    <?php endif; ?>
+                                                    <?php if ($emailSent): ?>
+                                                        <span class="inline-flex items-center gap-0.5 text-[9px] text-blue-500">
+                                                            <span class="material-icons" style="font-size:9px">mark_email_read</span> Terkirim
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </div>
                                             </td>
                                             <!-- Action -->
                                             <td class="px-6 py-4 text-center">
@@ -936,12 +952,22 @@ $periodStatus = $period['status'] ?? 'draft';
                                     <span class="material-icons text-sm">check_circle</span>
                                     OK / Simpan Slip Gaji
                                 </button>
+                                <div id="savedIndicator" class="hidden flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+                                    <span class="material-icons text-emerald-500" style="font-size:14px">verified</span>
+                                    <span class="text-[10px] font-bold text-emerald-700">TERSIMPAN</span>
+                                    <span id="savedTime" class="text-[9px] text-emerald-500 ml-auto"></span>
+                                </div>
                                 <!-- Send Email -->
                                 <button id="btnSendPayslip" onclick="sendPayslipEmail()" 
                                     class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all">
                                     <span class="material-icons text-sm">send</span>
                                     Kirim via Email
                                 </button>
+                                <div id="emailedIndicator" class="hidden flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <span class="material-icons text-blue-500" style="font-size:14px">mark_email_read</span>
+                                    <span class="text-[10px] font-bold text-blue-700">EMAIL TERKIRIM</span>
+                                    <span id="emailedTime" class="text-[9px] text-blue-500 ml-auto"></span>
+                                </div>
                                 <!-- Print/PDF -->
                                 <a id="btnDownloadPayslip" href="#" target="_blank"
                                     class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-all">
@@ -1122,6 +1148,29 @@ $periodStatus = $period['status'] ?? 'draft';
             
             // Recalculate
             recalcPayslip();
+            
+            // Show status indicators based on saved data
+            const savedInd = document.getElementById('savedIndicator');
+            const emailedInd = document.getElementById('emailedIndicator');
+            const itemStatus = (item.status || '').toLowerCase();
+            
+            // Reset indicators
+            savedInd.classList.add('hidden');
+            emailedInd.classList.add('hidden');
+            
+            // Show saved badge if confirmed/paid
+            if (itemStatus === 'confirmed' || itemStatus === 'paid') {
+                savedInd.classList.remove('hidden');
+                savedInd.classList.add('flex');
+                document.getElementById('savedTime').textContent = item.confirmed_at ? formatDateShort(item.confirmed_at) : '';
+            }
+            
+            // Show emailed badge
+            if (item.email_sent_at) {
+                emailedInd.classList.remove('hidden');
+                emailedInd.classList.add('flex');
+                document.getElementById('emailedTime').textContent = formatDateShort(item.email_sent_at);
+            }
         }
 
         function fmtNum(val) {
@@ -1189,6 +1238,7 @@ $periodStatus = $period['status'] ?? 'draft';
                 formData.append('insurance', document.getElementById('slipInsurance').value);
                 formData.append('other_deductions', document.getElementById('slipOtherDeduct').value);
                 formData.append('tax_rate', document.getElementById('slipTaxRate').value);
+                formData.append('status', 'confirmed');
                 
                 const res = await fetch(PAYROLL_BASE + 'api_payslip.php?action=update', {
                     method: 'POST',
@@ -1202,6 +1252,15 @@ $periodStatus = $period['status'] ?? 'draft';
                     btn.innerHTML = '<span class="material-icons text-sm">check_circle</span> Tersimpan!';
                     btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
                     btn.classList.add('bg-emerald-500');
+                    
+                    // Show persistent saved indicator
+                    const savedInd = document.getElementById('savedIndicator');
+                    savedInd.classList.remove('hidden');
+                    savedInd.classList.add('flex');
+                    document.getElementById('savedTime').textContent = 'Baru saja';
+                    
+                    // Update table row status
+                    updateTableRowStatus(currentPayslipItemId, 'confirmed', false);
                 } else {
                     statusContent.innerHTML = '<span class="material-icons text-red-500" style="font-size:16px">error</span><span class="text-xs text-red-600">' + (data.message || 'Gagal menyimpan') + '</span>';
                 }
@@ -1250,6 +1309,15 @@ $periodStatus = $period['status'] ?? 'draft';
                     btn.innerHTML = '<span class="material-icons text-sm">check</span> Terkirim!';
                     btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
                     btn.classList.add('bg-emerald-600');
+                    
+                    // Show persistent emailed indicator
+                    const emailedInd = document.getElementById('emailedIndicator');
+                    emailedInd.classList.remove('hidden');
+                    emailedInd.classList.add('flex');
+                    document.getElementById('emailedTime').textContent = 'Baru saja';
+                    
+                    // Update table row status
+                    updateTableRowStatus(currentPayslipItemId, null, true);
                 } else {
                     statusContent.innerHTML = '<span class="material-icons text-red-500" style="font-size:16px">error</span><span class="text-xs text-red-600">' + (data.message || 'Gagal mengirim') + '</span>';
                     btn.innerHTML = '<span class="material-icons text-sm">send</span> Kirim via Email';
@@ -1267,6 +1335,61 @@ $periodStatus = $period['status'] ?? 'draft';
                 btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
                 btn.innerHTML = '<span class="material-icons text-sm">send</span> Kirim via Email';
             }, 5000);
+        }
+
+        // === Helper: format date for indicators ===
+        function formatDateShort(dateStr) {
+            if (!dateStr) return '';
+            try {
+                const d = new Date(dateStr);
+                const dd = String(d.getDate()).padStart(2, '0');
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const hh = String(d.getHours()).padStart(2, '0');
+                const mi = String(d.getMinutes()).padStart(2, '0');
+                return dd + '/' + mm + ' ' + hh + ':' + mi;
+            } catch(e) { return dateStr; }
+        }
+
+        // === Helper: update table row status badges live ===
+        function updateTableRowStatus(itemId, newStatus, emailSent) {
+            const row = document.querySelector('tr[data-item-id="' + itemId + '"]');
+            if (!row) return;
+            const statusTd = row.querySelector('td:nth-last-child(2)'); // Status column
+            if (!statusTd) return;
+            
+            let statusDiv = statusTd.querySelector('.flex.flex-col');
+            if (!statusDiv) {
+                statusDiv = document.createElement('div');
+                statusDiv.className = 'flex flex-col items-center gap-1';
+                statusTd.innerHTML = '';
+                statusTd.appendChild(statusDiv);
+            }
+            
+            if (newStatus === 'confirmed') {
+                // Update main badge
+                const mainBadge = statusDiv.querySelector('span.inline-flex:first-child');
+                if (mainBadge) {
+                    mainBadge.className = 'inline-flex items-center gap-0.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700';
+                    mainBadge.innerHTML = '<span class="material-icons" style="font-size:10px">check_circle</span> CONFIRMED';
+                }
+                // Add saved sub-badge if not exists
+                if (!statusDiv.querySelector('.text-emerald-500')) {
+                    const savedSpan = document.createElement('span');
+                    savedSpan.className = 'inline-flex items-center gap-0.5 text-[9px] text-emerald-500';
+                    savedSpan.innerHTML = '<span class="material-icons" style="font-size:9px">save</span> Tersimpan';
+                    statusDiv.appendChild(savedSpan);
+                }
+            }
+            
+            if (emailSent) {
+                // Add emailed sub-badge if not exists
+                if (!statusDiv.querySelector('.text-blue-500')) {
+                    const emailSpan = document.createElement('span');
+                    emailSpan.className = 'inline-flex items-center gap-0.5 text-[9px] text-blue-500';
+                    emailSpan.innerHTML = '<span class="material-icons" style="font-size:9px">mark_email_read</span> Terkirim';
+                    statusDiv.appendChild(emailSpan);
+                }
+            }
         }
 
         // === Change Payroll Date Modal ===
