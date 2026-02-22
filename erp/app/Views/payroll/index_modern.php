@@ -737,8 +737,8 @@ $periodStatus = $period['status'] ?? 'draft';
                     </div>
                     <div class="relative flex items-center justify-between">
                         <div class="flex items-center gap-3">
-                            <div class="h-11 w-11 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                                <span class="material-icons text-white text-xl">receipt_long</span>
+                            <div class="h-11 w-11 rounded-xl bg-white flex items-center justify-center p-1 shadow-sm">
+                                <img src="<?= BASE_URL ?>assets/images/logo.png" alt="Logo" class="h-9 w-9 object-contain">
                             </div>
                             <div>
                                 <h3 id="payslipBookTitle" class="text-base font-bold text-white">Slip Gaji</h3>
