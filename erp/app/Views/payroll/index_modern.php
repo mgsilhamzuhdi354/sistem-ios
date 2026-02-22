@@ -1002,9 +1002,19 @@ $periodStatus = $period['status'] ?? 'draft';
         }
 
         async function loadPayslipData(itemId) {
+            const fetchUrl = PAYROLL_BASE + 'payroll/apiGetPayslipData/' + itemId;
+            console.log('[Payslip] Fetching:', fetchUrl);
             try {
-                const res = await fetch(PAYROLL_BASE + 'payroll/apiGetPayslipData/' + itemId);
+                const res = await fetch(fetchUrl);
+                console.log('[Payslip] Response status:', res.status);
+                if (!res.ok) {
+                    const errText = await res.text();
+                    console.error('[Payslip] Error response:', errText);
+                    alert('API Error ' + res.status + ': ' + errText.substring(0, 200));
+                    return;
+                }
                 const data = await res.json();
+                console.log('[Payslip] Data:', data);
                 if (data.success) {
                     currentPayslipData = data;
                     const item = data.item;
@@ -1060,9 +1070,12 @@ $periodStatus = $period['status'] ?? 'draft';
                     
                     // Recalculate
                     recalcPayslip();
+                } else {
+                    alert('API Error: ' + (data.message || 'Unknown'));
                 }
             } catch (e) {
                 console.error('Failed to load payslip data:', e);
+                alert('Gagal memuat data payslip: ' + e.message);
             }
         }
 
