@@ -1043,7 +1043,12 @@ $periodStatus = $period['status'] ?? 'draft';
             document.getElementById('slipOrigOvertime').value = parseFloat(item.original_overtime || 0);
             document.getElementById('slipReimbursement').value = parseFloat(item.reimbursement || 0);
             document.getElementById('slipLoans').value = parseFloat(item.loans || 0);
-            document.getElementById('slipKurs').value = parseFloat(item.exchange_rate || 0);
+            
+            // If currency is IDR, kurs should be 1 (no conversion needed)
+            const origCurForKurs = (item.original_currency || 'IDR').toUpperCase();
+            const rawKurs = parseFloat(item.exchange_rate || 0);
+            document.getElementById('slipKurs').value = (origCurForKurs === 'IDR') ? 1 : rawKurs;
+            
             document.getElementById('slipAdminBank').value = parseFloat(item.admin_bank_fee || 0);
             document.getElementById('slipInsurance').value = parseFloat(item.insurance || 0);
             document.getElementById('slipOtherDeduct').value = parseFloat(item.other_deductions || 0);
@@ -1076,8 +1081,8 @@ $periodStatus = $period['status'] ?? 'draft';
         function recalcPayslip() {
             const origBasic = parseFloat(document.getElementById('slipOrigBasic').value) || 0;
             const origOvertime = parseFloat(document.getElementById('slipOrigOvertime').value) || 0;
-            const actualy = origBasic - origOvertime;
-            const kurs = parseFloat(document.getElementById('slipKurs').value) || 0;
+            const actualy = origBasic + origOvertime; // Basic + Overtime = Total original salary
+            const kurs = parseFloat(document.getElementById('slipKurs').value) || 1;
             const reimbursement = parseFloat(document.getElementById('slipReimbursement').value) || 0;
             const loans = parseFloat(document.getElementById('slipLoans').value) || 0;
             const adminBank = parseFloat(document.getElementById('slipAdminBank').value) || 0;

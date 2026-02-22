@@ -12,6 +12,7 @@ class BaseModel
     protected $table;
     protected $primaryKey = 'id';
     protected $allowedFields = [];
+    protected static $tableColumnsCache = [];
     
     public function __construct($db)
     {
@@ -73,9 +74,32 @@ class BaseModel
         return $result->fetch_all(MYSQLI_ASSOC);
     }
     
+    /**
+     * Get actual columns from DB table (cached)
+     */
+    protected function getTableColumns()
+    {
+        if (!isset(self::$tableColumnsCache[$this->table])) {
+            $result = $this->db->query("SHOW COLUMNS FROM {$this->table}");
+            $cols = [];
+            if ($result) {
+                while ($row = $result->fetch_assoc()) {
+                    $cols[] = $row['Field'];
+                }
+            }
+            self::$tableColumnsCache[$this->table] = $cols;
+        }
+        return self::$tableColumnsCache[$this->table];
+    }
+    
     public function insert($data)
     {
         $fields = array_intersect_key($data, array_flip($this->allowedFields));
+        // Filter out columns that don't exist in DB table
+        $dbCols = $this->getTableColumns();
+        if (!empty($dbCols)) {
+            $fields = array_intersect_key($fields, array_flip($dbCols));
+        }
         $columns = implode(', ', array_keys($fields));
         $placeholders = implode(', ', array_fill(0, count($fields), '?'));
         
@@ -108,6 +132,11 @@ class BaseModel
     public function update($id, $data)
     {
         $fields = array_intersect_key($data, array_flip($this->allowedFields));
+        // Filter out columns that don't exist in DB table
+        $dbCols = $this->getTableColumns();
+        if (!empty($dbCols)) {
+            $fields = array_intersect_key($fields, array_flip($dbCols));
+        }
         $setClauses = [];
         $types = '';
         $values = [];
