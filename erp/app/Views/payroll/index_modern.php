@@ -320,7 +320,7 @@ $periodStatus = $period['status'] ?? 'draft';
                                     <span class="material-icons-outlined text-amber-600">paid</span>
                                 </div>
                             </div>
-                            <p class="text-2xl font-bold text-slate-800">$<?= number_format($totalGross, 2) ?></p>
+                            <p class="text-2xl font-bold text-slate-800"><?= number_format($totalGross, 2) ?></p>
                             <p class="text-xs font-medium text-slate-400 mt-1"><?= __('payroll.gross_salary') ?></p>
                         </div>
 
@@ -331,7 +331,7 @@ $periodStatus = $period['status'] ?? 'draft';
                                     <span class="material-icons-outlined text-red-600">percent</span>
                                 </div>
                             </div>
-                            <p class="text-2xl font-bold text-slate-800">$<?= number_format($totalTax, 2) ?></p>
+                            <p class="text-2xl font-bold text-slate-800"><?= number_format($totalTax, 2) ?></p>
                             <p class="text-xs font-medium text-slate-400 mt-1"><?= __('payroll.total_tax') ?></p>
                         </div>
 
@@ -342,7 +342,7 @@ $periodStatus = $period['status'] ?? 'draft';
                                     <span class="material-icons-outlined text-emerald-600">check_circle</span>
                                 </div>
                             </div>
-                            <p class="text-2xl font-bold text-emerald-600">$<?= number_format($totalNet, 2) ?></p>
+                            <p class="text-2xl font-bold text-emerald-600"><?= number_format($totalNet, 2) ?></p>
                             <p class="text-xs font-medium text-slate-400 mt-1"><?= __('payroll.net_payable') ?></p>
                         </div>
                     </div>
@@ -357,7 +357,7 @@ $periodStatus = $period['status'] ?? 'draft';
                             <canvas id="payrollTrendChart"></canvas>
                         </div>
                         <div class="flex justify-between items-center text-xs text-slate-400 mt-3 pt-3 border-t border-slate-100">
-                            <span>Current: $<?= number_format($totalGross, 2) ?></span>
+                            <span>Current: <?= number_format($totalGross, 2) ?></span>
                             <span class="text-emerald-500 font-semibold flex items-center gap-1">
                                 <span class="material-icons text-xs">trending_up</span>
                                 Period <?= $months[$month] ?>
@@ -431,6 +431,8 @@ $periodStatus = $period['status'] ?? 'draft';
                                         $netSalary = (float)$item['net_salary'];
                                         $totalAllowances = $overtime + $leavePay + $bonus + $otherAllowance;
                                         $crewInitials = strtoupper(substr($item['crew_name'] ?? 'C', 0, 2));
+                                        $currCode = $item['currency_code'] ?? $item['original_currency'] ?? 'IDR';
+                                        $currSymbol = ($currCode === 'USD') ? '$' : (($currCode === 'MYR') ? 'RM ' : 'Rp ');
                                     ?>
                                         <tr class="hover:bg-blue-50/60 transition-colors group crew-row cursor-pointer"
                                             data-name="<?= strtolower(htmlspecialchars($item['crew_name'] ?? '')) ?>"
@@ -462,17 +464,17 @@ $periodStatus = $period['status'] ?? 'draft';
                                                 </span>
                                             </td>
                                             <!-- Basic -->
-                                            <td class="px-6 py-4 text-right font-medium text-slate-800">$<?= number_format($basicSalary, 2) ?></td>
+                                            <td class="px-6 py-4 text-right font-medium text-slate-800"><?= $currSymbol ?><?= number_format($basicSalary, 2) ?></td>
                                             <!-- Allowances -->
                                             <td class="px-6 py-4 text-right <?= $totalAllowances > 0 ? 'text-slate-600' : 'text-slate-300' ?>">
-                                                $<?= number_format($totalAllowances, 2) ?>
+                                                <?= $currSymbol ?><?= number_format($totalAllowances, 2) ?>
                                             </td>
                                             <!-- Gross -->
-                                            <td class="px-6 py-4 text-right font-semibold text-slate-800">$<?= number_format($grossSalary, 2) ?></td>
+                                            <td class="px-6 py-4 text-right font-semibold text-slate-800"><?= $currSymbol ?><?= number_format($grossSalary, 2) ?></td>
                                             <!-- Tax -->
-                                            <td class="px-6 py-4 text-right font-medium text-red-500">-$<?= number_format($taxAmount, 2) ?></td>
+                                            <td class="px-6 py-4 text-right font-medium text-red-500">-<?= $currSymbol ?><?= number_format($taxAmount, 2) ?></td>
                                             <!-- Net -->
-                                            <td class="px-6 py-4 text-right font-bold text-emerald-600">$<?= number_format($netSalary, 2) ?></td>
+                                            <td class="px-6 py-4 text-right font-bold text-emerald-600"><?= $currSymbol ?><?= number_format($netSalary, 2) ?></td>
                                             <!-- Status -->
                                             <td class="px-6 py-4 text-center">
                                                 <?php
