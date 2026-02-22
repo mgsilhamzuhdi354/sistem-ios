@@ -122,6 +122,32 @@ class Auth extends BaseController
         // Password correct! Now send OTP for 2FA
         $this->userModel->resetLoginAttempts($user['id']);
         
+        // Cek apakah OTP di-skip via environment variable (DARURAT SAJA)
+        $skipOtp = ($_ENV['SKIP_OTP'] ?? getenv('SKIP_OTP') ?? 'false') === 'true';
+        
+        if ($skipOtp) {
+            // SKIP OTP - Login langsung (untuk darurat jika SMTP bermasalah)
+            $this->loginHistoryModel->logAttempt($user['id'], 'success', 'OTP skipped (SKIP_OTP env)');
+            
+            session_regenerate_id(true);
+            $_SESSION['user'] = [
+                'id' => $user['id'],
+                'username' => $user['username'],
+                'email' => $user['email'],
+                'role' => $user['role'],
+                'full_name' => $user['full_name'],
+                'avatar' => $user['avatar'] ?? null
+            ];
+            $_SESSION['login_time'] = time();
+            $_SESSION['last_activity'] = time();
+            $_SESSION['ui_mode'] = 'modern';
+            
+            $this->activityModel->log($user['id'], 'login', 'user', $user['id'], 'Login tanpa OTP (SKIP_OTP)');
+            $this->setFlash('warning', 'Login berhasil tanpa OTP. Aktifkan kembali OTP setelah SMTP diperbaiki.');
+            $this->redirect('');
+            return;
+        }
+        
         // Generate OTP
         $otpModel = new OtpModel($this->db);
         $otpCode = $otpModel->generate($user['id'], 'login', 5); // 5 minutes expiry

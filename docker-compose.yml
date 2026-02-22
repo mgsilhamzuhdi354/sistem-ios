@@ -16,7 +16,7 @@ services:
     networks:
       - indoocean_network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -39,6 +39,13 @@ services:
       RECRUITMENT_DB_NAME: ${RECRUITMENT_DB_NAME}
       APP_ENV: ${APP_ENV}
       APP_DEBUG: ${APP_DEBUG}
+      # SMTP Configuration
+      SMTP_HOST: ${SMTP_HOST:-indooceancrew.co.id}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_USER: ${SMTP_USER:-ios@indooceancrew.co.id}
+      SMTP_PASS: ${SMTP_PASS:-Oceancrew1!}
+      # OTP: set true untuk skip OTP sementara (darurat)
+      SKIP_OTP: ${SKIP_OTP:-false}
     volumes:
       - ./uploads:/var/www/html/uploads
       - ./logs:/var/www/html/logs
@@ -47,7 +54,7 @@ services:
     networks:
       - indoocean_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
+      test: [ "CMD", "curl", "-f", "http://localhost/" ]
       interval: 30s
       timeout: 10s
       retries: 3
