@@ -432,4 +432,120 @@ class Payroll extends BaseController
             exit;
         }
     }
+
+    /**
+     * API: Get full payslip data for editable modal
+     */
+    public function apiGetPayslipData($itemId)
+    {
+        $this->requireAuth();
+        
+        $sql = "SELECT pi.*, c.contract_no, c.crew_id,
+                       cr.email, cr.full_name, cr.bank_holder, cr.bank_account, cr.bank_name
+                FROM payroll_items pi
+                LEFT JOIN contracts c ON pi.contract_id = c.id
+                LEFT JOIN crews cr ON c.crew_id = cr.id
+                WHERE pi.id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param('i', $itemId);
+        $stmt->execute();
+        $item = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        
+        if (!$item) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Item not found']);
+            exit;
+        }
+        
+        $period = $this->periodModel->find($item['payroll_period_id']);
+        
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'item' => $item,
+            'period' => $period
+        ]);
+        exit;
+    }
+
+    /**
+     * API: Update payslip values (from editable modal)
+     */
+    public function apiUpdatePayslip()
+    {
+        $this->requireAuth();
+        
+        $itemId = (int) $this->input('item_id');
+        if (!$itemId) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Item ID diperlukan']);
+            exit;
+        }
+        
+        // Collect all editable fields
+        $updateData = [];
+        $editableFields = [
+            'basic_salary', 'overtime', 'leave_pay', 'bonus', 'other_allowance',
+            'insurance', 'medical', 'advance', 'other_deductions',
+            'admin_bank_fee', 'reimbursement', 'loans',
+            'tax_rate', 'tax_amount',
+            'original_basic', 'original_overtime', 'original_leave_pay',
+            'exchange_rate', 'original_currency'
+        ];
+        
+        foreach ($editableFields as $field) {
+            $val = $this->input($field);
+            if ($val !== null && $val !== '') {
+                if ($field === 'original_currency') {
+                    $updateData[$field] = trim($val);
+                } else {
+                    $updateData[$field] = (float) $val;
+                }
+            }
+        }
+        
+        // Recalculate totals
+        $existing = $this->itemModel->find($itemId);
+        if (!$existing) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Item tidak ditemukan']);
+            exit;
+        }
+        
+        // Merge with existing to compute new totals
+        $merged = array_merge($existing, $updateData);
+        
+        $grossSalary = (float)$merged['basic_salary'] + (float)$merged['overtime'] + (float)$merged['leave_pay'] + (float)$merged['bonus'] + (float)$merged['other_allowance'];
+        $totalDeductions = (float)$merged['insurance'] + (float)$merged['medical'] + (float)$merged['advance'] + (float)$merged['other_deductions'] + (float)$merged['admin_bank_fee'];
+        
+        // PPH 21 recalculation
+        $taxRate = (float)($merged['tax_rate'] ?? 2.5);
+        $taxAmount = ($grossSalary - $totalDeductions) * ($taxRate / 100);
+        
+        $netSalary = $grossSalary - $totalDeductions - $taxAmount;
+        
+        $updateData['gross_salary'] = round($grossSalary, 2);
+        $updateData['total_deductions'] = round($totalDeductions, 2);
+        $updateData['tax_amount'] = round($taxAmount, 2);
+        $updateData['net_salary'] = round($netSalary, 2);
+        
+        $this->itemModel->update($itemId, $updateData);
+        
+        // Update period totals
+        $this->periodModel->updateTotals($existing['payroll_period_id']);
+        
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'message' => 'Slip gaji berhasil disimpan',
+            'data' => [
+                'gross_salary' => $updateData['gross_salary'],
+                'total_deductions' => $updateData['total_deductions'],
+                'tax_amount' => $updateData['tax_amount'],
+                'net_salary' => $updateData['net_salary']
+            ]
+        ]);
+        exit;
+    }
 }

@@ -722,7 +722,7 @@ $periodStatus = $period['status'] ?? 'draft';
         }
     </script>
 
-    <!-- Payslip Book Modal -->
+    <!-- Payslip Book Modal (Editable) -->
     <div id="payslipBookModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onclick="if(event.target===this) closePayslipBook()">
         <div class="flex items-stretch w-full max-w-5xl mx-4" style="max-height:92vh">
             <!-- Book Spine -->
@@ -742,7 +742,7 @@ $periodStatus = $period['status'] ?? 'draft';
                             </div>
                             <div>
                                 <h3 id="payslipBookTitle" class="text-base font-bold text-white">Slip Gaji</h3>
-                                <p id="payslipBookSubtitle" class="text-blue-200 text-xs">Lihat & Kirim via Email</p>
+                                <p class="text-blue-200 text-xs">Edit, Review & Kirim via Email</p>
                             </div>
                         </div>
                         <button onclick="closePayslipBook()" class="p-2 hover:bg-white/10 rounded-full transition-colors">
@@ -753,26 +753,146 @@ $periodStatus = $period['status'] ?? 'draft';
                 
                 <!-- Book Body: Two Column Layout -->
                 <div class="flex flex-1 overflow-hidden">
-                    <!-- Left: Payslip Preview -->
-                    <div class="flex-1 bg-gray-100 overflow-hidden">
-                        <iframe id="payslipFrame" src="" class="w-full h-full border-0" style="min-height:500px"></iframe>
+                    <!-- Left: Editable Payslip Form -->
+                    <div class="flex-1 overflow-y-auto p-5 custom-scrollbar" style="max-height:calc(92vh - 70px)">
+                        <!-- Crew Info -->
+                        <div class="bg-blue-50 rounded-xl p-4 mb-4">
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div><span class="font-bold text-slate-600">NAME:</span> <span id="slipCrewName" class="text-slate-800 font-semibold">-</span></div>
+                                <div><span class="font-bold text-slate-600">SHIP:</span> <span id="slipVessel" class="text-slate-800">-</span></div>
+                                <div><span class="font-bold text-slate-600">RANK:</span> <span id="slipRank" class="text-slate-800">-</span></div>
+                                <div><span class="font-bold text-slate-600">PERIODE:</span> <span id="slipPeriod" class="text-slate-800">-</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Salary Table -->
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <!-- INCOME -->
+                            <div>
+                                <h4 class="text-xs font-bold text-blue-800 uppercase mb-2 tracking-wider">Income</h4>
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-1">
+                                        <label class="text-[10px] text-slate-600 w-24 flex-shrink-0">Basic Salary</label>
+                                        <span class="text-[10px] font-bold text-slate-500 w-6" id="slipOrigCurLabel1">RM</span>
+                                        <input type="number" id="slipOrigBasic" onchange="recalcPayslip()" step="0.01"
+                                            class="flex-1 px-2 py-1 border border-slate-200 rounded-lg text-xs text-right focus:ring-1 focus:ring-blue-400 focus:border-blue-400">
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <label class="text-[10px] text-slate-600 w-24 flex-shrink-0">Advance Salary</label>
+                                        <span class="text-[10px] font-bold text-slate-500 w-6" id="slipOrigCurLabel2">RM</span>
+                                        <input type="number" id="slipOrigOvertime" onchange="recalcPayslip()" step="0.01"
+                                            class="flex-1 px-2 py-1 border border-slate-200 rounded-lg text-xs text-right focus:ring-1 focus:ring-blue-400 focus:border-blue-400">
+                                    </div>
+                                    <div class="flex items-center gap-1 bg-blue-50/50 rounded-lg px-1 py-0.5">
+                                        <label class="text-[10px] text-blue-700 font-semibold w-24 flex-shrink-0">Actualy Salary</label>
+                                        <span class="text-[10px] font-bold text-blue-500 w-6" id="slipOrigCurLabel3">RM</span>
+                                        <span id="slipActualySalary" class="flex-1 text-xs text-right font-bold text-blue-700 pr-2">0</span>
+                                    </div>
+                                    <hr class="border-slate-200">
+                                    <div class="flex items-center gap-1">
+                                        <label class="text-[10px] text-slate-600 w-24 flex-shrink-0">Reimbursement</label>
+                                        <span class="text-[10px] font-bold text-slate-500 w-6">Rp</span>
+                                        <input type="number" id="slipReimbursement" onchange="recalcPayslip()" step="1"
+                                            class="flex-1 px-2 py-1 border border-slate-200 rounded-lg text-xs text-right focus:ring-1 focus:ring-blue-400 focus:border-blue-400">
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <label class="text-[10px] text-slate-600 w-24 flex-shrink-0">Loans To IOS</label>
+                                        <span class="text-[10px] font-bold text-slate-500 w-6">Rp</span>
+                                        <input type="number" id="slipLoans" onchange="recalcPayslip()" step="1"
+                                            class="flex-1 px-2 py-1 border border-slate-200 rounded-lg text-xs text-right focus:ring-1 focus:ring-blue-400 focus:border-blue-400">
+                                    </div>
+                                    <hr class="border-slate-200">
+                                    <div class="flex items-center gap-1">
+                                        <label class="text-[10px] text-slate-600 w-24 flex-shrink-0">Kurs</label>
+                                        <span class="text-[10px] font-bold text-slate-500 w-6">Rp</span>
+                                        <input type="number" id="slipKurs" onchange="recalcPayslip()" step="1"
+                                            class="flex-1 px-2 py-1 border border-amber-300 bg-amber-50 rounded-lg text-xs text-right focus:ring-1 focus:ring-amber-400 focus:border-amber-400">
+                                    </div>
+                                    <div class="flex items-center gap-1 bg-emerald-50/50 rounded-lg px-1 py-0.5">
+                                        <label class="text-[10px] text-emerald-700 font-semibold w-24 flex-shrink-0">IDR</label>
+                                        <span class="text-[10px] font-bold text-emerald-500 w-6">Rp</span>
+                                        <span id="slipIDR" class="flex-1 text-xs text-right font-bold text-emerald-700 pr-2">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- DEDUCTION -->
+                            <div>
+                                <h4 class="text-xs font-bold text-red-700 uppercase mb-2 tracking-wider">Deduction</h4>
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-1">
+                                        <label class="text-[10px] text-slate-600 w-24 flex-shrink-0">Admin Bank</label>
+                                        <span class="text-[10px] font-bold text-slate-500 w-6">Rp</span>
+                                        <input type="number" id="slipAdminBank" onchange="recalcPayslip()" step="1"
+                                            class="flex-1 px-2 py-1 border border-slate-200 rounded-lg text-xs text-right focus:ring-1 focus:ring-red-400 focus:border-red-400">
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <label class="text-[10px] text-slate-600 w-24 flex-shrink-0">Insurance</label>
+                                        <span class="text-[10px] font-bold text-slate-500 w-6">Rp</span>
+                                        <input type="number" id="slipInsurance" onchange="recalcPayslip()" step="1"
+                                            class="flex-1 px-2 py-1 border border-slate-200 rounded-lg text-xs text-right focus:ring-1 focus:ring-red-400 focus:border-red-400">
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <label class="text-[10px] text-slate-600 w-24 flex-shrink-0">Other Deductions</label>
+                                        <span class="text-[10px] font-bold text-slate-500 w-6">Rp</span>
+                                        <input type="number" id="slipOtherDeduct" onchange="recalcPayslip()" step="1"
+                                            class="flex-1 px-2 py-1 border border-slate-200 rounded-lg text-xs text-right focus:ring-1 focus:ring-red-400 focus:border-red-400">
+                                    </div>
+                                    <hr class="border-slate-200">
+                                    <div class="flex items-center gap-1 bg-red-50 rounded-lg px-2 py-1.5">
+                                        <label class="text-[10px] text-red-700 font-semibold w-16 flex-shrink-0">PPH 21</label>
+                                        <input type="number" id="slipTaxRate" onchange="recalcPayslip()" step="0.1" min="0" max="100"
+                                            class="w-14 px-1 py-0.5 border border-red-300 bg-white rounded text-[10px] text-center font-bold focus:ring-1 focus:ring-red-400">
+                                        <span class="text-[10px] text-red-600 font-bold">%</span>
+                                        <span class="text-[10px] text-red-500 mx-1">=</span>
+                                        <span class="text-[10px] font-bold text-red-500 w-4">Rp</span>
+                                        <span id="slipTaxAmount" class="flex-1 text-xs text-right font-bold text-red-600">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Totals -->
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div class="bg-blue-50 rounded-xl p-3 text-center">
+                                <p class="text-[10px] font-bold text-blue-600 uppercase">Gross</p>
+                                <p class="text-sm font-black text-blue-800">Rp <span id="slipGross">0</span></p>
+                            </div>
+                            <div class="bg-red-50 rounded-xl p-3 text-center">
+                                <p class="text-[10px] font-bold text-red-600 uppercase">Total Deductions</p>
+                                <p class="text-sm font-black text-red-700">Rp <span id="slipTotalDeduct">0</span></p>
+                            </div>
+                        </div>
+
+                        <!-- NET PAY -->
+                        <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl p-4 text-center shadow-lg shadow-emerald-500/20">
+                            <p class="text-emerald-100 text-xs font-semibold uppercase tracking-wider">Net Take-Home Pay</p>
+                            <p class="text-2xl font-black text-white mt-1">Rp <span id="slipNetPay">0</span></p>
+                        </div>
+                        
+                        <!-- Bank Info -->
+                        <div class="mt-4 bg-slate-50 rounded-xl p-3 text-xs text-slate-600">
+                            <p class="font-bold text-slate-700 mb-1">Paid By Bank Transfer</p>
+                            <p>Acc. Holder : <span id="slipBankHolder" class="font-semibold text-slate-800">-</span></p>
+                            <p>Acc. No &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span id="slipBankAccount" class="font-semibold text-slate-800">-</span></p>
+                            <p>Bank &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span id="slipBankName" class="font-semibold text-slate-800">-</span></p>
+                        </div>
                     </div>
                     
-                    <!-- Right: Email Panel -->
-                    <div class="w-80 bg-white border-l border-slate-200 flex flex-col overflow-y-auto">
+                    <!-- Right: Email + Actions Panel -->
+                    <div class="w-72 bg-white border-l border-slate-200 flex flex-col overflow-y-auto">
                         <!-- Email Header -->
-                        <div class="px-5 py-4 border-b border-slate-100 bg-slate-50">
+                        <div class="px-4 py-3 border-b border-slate-100 bg-slate-50">
                             <div class="flex items-center gap-2">
                                 <span class="material-icons text-blue-600 text-lg">email</span>
                                 <h4 class="font-bold text-slate-800 text-sm">Kirim Slip Gaji</h4>
                             </div>
-                            <p class="text-[10px] text-slate-400 mt-1">Kirim slip gaji ke email kru secara otomatis</p>
                         </div>
                         
                         <!-- Email Form -->
-                        <div class="p-5 flex-1 space-y-4">
+                        <div class="p-4 flex-1 space-y-3">
                             <!-- Crew Info Card -->
-                            <div id="emailCrewInfo" class="bg-blue-50 rounded-xl p-3">
+                            <div class="bg-blue-50 rounded-xl p-3">
                                 <div class="flex items-center gap-3">
                                     <div id="emailCrewAvatar" class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">--</div>
                                     <div class="min-w-0">
@@ -784,43 +904,50 @@ $periodStatus = $period['status'] ?? 'draft';
                             
                             <!-- To Email -->
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1.5">Kepada (Email)</label>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Kepada (Email)</label>
                                 <div class="relative">
-                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-icons" style="font-size:16px">email</span>
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-icons" style="font-size:14px">email</span>
                                     <input type="email" id="emailTo" placeholder="crew@email.com" 
-                                        class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                        class="w-full pl-8 pr-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                                 </div>
                                 <p id="emailNoEmail" class="hidden text-[10px] text-amber-600 mt-1 flex items-center gap-1">
                                     <span class="material-icons" style="font-size:12px">warning</span>
-                                    Email kru belum terdaftar. Masukkan manual.
+                                    Email kru belum terdaftar
                                 </p>
                             </div>
                             
                             <!-- Net Salary Display -->
                             <div class="bg-emerald-50 rounded-xl p-3">
-                                <p class="text-[10px] font-medium text-emerald-600 mb-1">Net Take-Home Pay</p>
-                                <p id="emailNetSalary" class="text-lg font-bold text-emerald-700">$0</p>
+                                <p class="text-[10px] font-medium text-emerald-600 mb-0.5">Net Take-Home Pay</p>
+                                <p id="emailNetSalary" class="text-base font-bold text-emerald-700">Rp 0</p>
                             </div>
                             
                             <!-- Actions -->
-                            <div class="space-y-2 pt-2">
-                                <button id="btnSendPayslip" onclick="sendPayslipEmail()" 
-                                    class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-500/20">
-                                    <span class="material-icons text-sm">send</span>
-                                    Kirim Slip Gaji
+                            <div class="space-y-2 pt-1">
+                                <!-- Save Button -->
+                                <button id="btnSavePayslip" onclick="savePayslip()"
+                                    class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-500/20">
+                                    <span class="material-icons text-sm">check_circle</span>
+                                    OK / Simpan Slip Gaji
                                 </button>
+                                <!-- Send Email -->
+                                <button id="btnSendPayslip" onclick="sendPayslipEmail()" 
+                                    class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all">
+                                    <span class="material-icons text-sm">send</span>
+                                    Kirim via Email
+                                </button>
+                                <!-- Print/PDF -->
                                 <a id="btnDownloadPayslip" href="#" target="_blank"
-                                    class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-sm font-semibold transition-all">
-                                    <span class="material-icons text-sm">picture_as_pdf</span>
-                                    Buka Slip (Print/PDF)
+                                    class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-all">
+                                    <span class="material-icons text-sm">print</span>
+                                    Print / Save PDF
                                 </a>
                             </div>
                         </div>
                         
-                        <!-- Send Status -->
-                        <div id="emailSendStatus" class="hidden px-5 py-3 border-t border-slate-100">
-                            <div id="emailStatusContent" class="flex items-center gap-2">
-                            </div>
+                        <!-- Status -->
+                        <div id="emailSendStatus" class="hidden px-4 py-3 border-t border-slate-100">
+                            <div id="emailStatusContent" class="flex items-center gap-2"></div>
                         </div>
                     </div>
                 </div>
@@ -831,6 +958,7 @@ $periodStatus = $period['status'] ?? 'draft';
     <script>
         const PAYROLL_BASE = '<?= BASE_URL ?>';
         let currentPayslipItemId = null;
+        let currentPayslipData = null;
 
         function openPayslipBook(itemId, crewName) {
             currentPayslipItemId = itemId;
@@ -838,25 +966,24 @@ $periodStatus = $period['status'] ?? 'draft';
             const content = document.getElementById('payslipBookContent');
             
             document.getElementById('payslipBookTitle').textContent = 'Slip Gaji: ' + crewName;
-            document.getElementById('payslipFrame').src = PAYROLL_BASE + 'payroll/payslip/' + itemId;
             document.getElementById('btnDownloadPayslip').href = PAYROLL_BASE + 'payroll/payslip/' + itemId;
             
-            // Reset email panel
+            // Reset
             document.getElementById('emailTo').value = '';
             document.getElementById('emailNoEmail').classList.add('hidden');
             document.getElementById('emailSendStatus').classList.add('hidden');
             document.getElementById('emailCrewName').textContent = crewName;
             document.getElementById('emailCrewAvatar').textContent = crewName.substring(0, 2).toUpperCase();
             document.getElementById('emailCrewDetail').textContent = '';
-            document.getElementById('emailNetSalary').textContent = '$0';
+            document.getElementById('emailNetSalary').textContent = 'Rp 0';
             
-            // Show modal
+            // Show modal with book animation
             modal.classList.remove('hidden');
             content.classList.remove('book-modal-closing');
             content.classList.add('book-modal');
             
-            // Load crew email via API
-            loadCrewEmail(itemId);
+            // Load full payslip data
+            loadPayslipData(itemId);
         }
 
         function closePayslipBook() {
@@ -865,31 +992,159 @@ $periodStatus = $period['status'] ?? 'draft';
             content.classList.add('book-modal-closing');
             setTimeout(() => {
                 modal.classList.add('hidden');
-                document.getElementById('payslipFrame').src = '';
             }, 400);
         }
 
-        async function loadCrewEmail(itemId) {
+        async function loadPayslipData(itemId) {
             try {
-                const res = await fetch(PAYROLL_BASE + 'payroll/apiCrewEmail/' + itemId);
+                const res = await fetch(PAYROLL_BASE + 'payroll/apiGetPayslipData/' + itemId);
                 const data = await res.json();
                 if (data.success) {
-                    document.getElementById('emailCrewName').textContent = data.crew_name;
-                    document.getElementById('emailCrewAvatar').textContent = (data.crew_name || '--').substring(0, 2).toUpperCase();
-                    document.getElementById('emailCrewDetail').textContent = (data.rank || '') + ' • ' + (data.vessel || '');
+                    currentPayslipData = data;
+                    const item = data.item;
+                    const period = data.period;
                     
-                    const cur = data.currency === 'USD' ? '$' : (data.currency === 'IDR' ? 'Rp ' : (data.currency + ' '));
-                    document.getElementById('emailNetSalary').textContent = cur + Number(data.net_salary).toLocaleString('id-ID');
+                    // Crew info
+                    document.getElementById('slipCrewName').textContent = (item.crew_name || '-').toUpperCase();
+                    document.getElementById('slipVessel').textContent = (item.vessel_name || '-').toUpperCase();
+                    document.getElementById('slipRank').textContent = (item.rank_name || '-').toUpperCase();
                     
-                    if (data.email) {
-                        document.getElementById('emailTo').value = data.email;
+                    const monthNames = ['','JAN','FEB','MAR','APR','MEI','JUN','JUL','AGU','SEP','OKT','NOV','DES'];
+                    document.getElementById('slipPeriod').textContent = (monthNames[period.period_month] || '') + ' ' + period.period_year;
+                    
+                    // Original currency
+                    const origCur = (item.original_currency || 'RM').toUpperCase();
+                    document.getElementById('slipOrigCurLabel1').textContent = origCur;
+                    document.getElementById('slipOrigCurLabel2').textContent = origCur;
+                    document.getElementById('slipOrigCurLabel3').textContent = origCur;
+                    
+                    // Fill editable fields
+                    document.getElementById('slipOrigBasic').value = parseFloat(item.original_basic || 0);
+                    document.getElementById('slipOrigOvertime').value = parseFloat(item.original_overtime || 0);
+                    document.getElementById('slipReimbursement').value = parseFloat(item.reimbursement || 0);
+                    document.getElementById('slipLoans').value = parseFloat(item.loans || 0);
+                    document.getElementById('slipKurs').value = parseFloat(item.exchange_rate || 0);
+                    document.getElementById('slipAdminBank').value = parseFloat(item.admin_bank_fee || 0);
+                    document.getElementById('slipInsurance').value = parseFloat(item.insurance || 0);
+                    document.getElementById('slipOtherDeduct').value = parseFloat(item.other_deductions || 0);
+                    document.getElementById('slipTaxRate').value = parseFloat(item.tax_rate || 2.5);
+                    
+                    // Bank info
+                    document.getElementById('slipBankHolder').textContent = (item.bank_holder || item.crew_name || '-').toUpperCase();
+                    document.getElementById('slipBankAccount').textContent = item.bank_account || '-';
+                    document.getElementById('slipBankName').textContent = (item.bank_name || '-').toUpperCase();
+                    
+                    // Email
+                    document.getElementById('emailCrewName').textContent = item.full_name || item.crew_name;
+                    document.getElementById('emailCrewAvatar').textContent = ((item.full_name || item.crew_name || '--').substring(0, 2)).toUpperCase();
+                    document.getElementById('emailCrewDetail').textContent = (item.rank_name || '') + ' • ' + (item.vessel_name || '');
+                    
+                    if (item.email) {
+                        document.getElementById('emailTo').value = item.email;
                     } else {
                         document.getElementById('emailNoEmail').classList.remove('hidden');
                     }
+                    
+                    // Recalculate
+                    recalcPayslip();
                 }
             } catch (e) {
-                console.error('Failed to load crew email:', e);
+                console.error('Failed to load payslip data:', e);
             }
+        }
+
+        function fmtNum(val) {
+            return Math.round(val).toLocaleString('id-ID');
+        }
+
+        function recalcPayslip() {
+            const origBasic = parseFloat(document.getElementById('slipOrigBasic').value) || 0;
+            const origOvertime = parseFloat(document.getElementById('slipOrigOvertime').value) || 0;
+            const actualy = origBasic - origOvertime;
+            const kurs = parseFloat(document.getElementById('slipKurs').value) || 0;
+            const reimbursement = parseFloat(document.getElementById('slipReimbursement').value) || 0;
+            const loans = parseFloat(document.getElementById('slipLoans').value) || 0;
+            const adminBank = parseFloat(document.getElementById('slipAdminBank').value) || 0;
+            const insurance = parseFloat(document.getElementById('slipInsurance').value) || 0;
+            const otherDeduct = parseFloat(document.getElementById('slipOtherDeduct').value) || 0;
+            const taxRate = parseFloat(document.getElementById('slipTaxRate').value) || 0;
+            
+            // Actualy Salary display
+            document.getElementById('slipActualySalary').textContent = fmtNum(actualy);
+            
+            // IDR = Actualy Salary * Kurs
+            const idr = actualy * kurs;
+            document.getElementById('slipIDR').textContent = fmtNum(idr);
+            
+            // Gross = IDR + Reimbursement - Loans
+            const gross = idr + reimbursement - loans;
+            document.getElementById('slipGross').textContent = fmtNum(gross);
+            
+            // Total Deductions = Admin Bank + Insurance + Other
+            const totalDeduct = adminBank + insurance + otherDeduct;
+            
+            // PPH 21 = (Gross - totalDeduct) * taxRate%
+            const taxBase = gross - totalDeduct;
+            const taxAmount = taxBase > 0 ? taxBase * (taxRate / 100) : 0;
+            document.getElementById('slipTaxAmount').textContent = fmtNum(taxAmount);
+            
+            // Total deductions including tax
+            const totalDeductWithTax = totalDeduct + taxAmount;
+            document.getElementById('slipTotalDeduct').textContent = fmtNum(totalDeductWithTax);
+            
+            // Net = Gross - totalDeductWithTax
+            const net = gross - totalDeductWithTax;
+            document.getElementById('slipNetPay').textContent = fmtNum(net);
+            document.getElementById('emailNetSalary').textContent = 'Rp ' + fmtNum(net);
+        }
+
+        async function savePayslip() {
+            const btn = document.getElementById('btnSavePayslip');
+            const statusEl = document.getElementById('emailSendStatus');
+            const statusContent = document.getElementById('emailStatusContent');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-spin material-icons text-sm">refresh</span> Menyimpan...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('item_id', currentPayslipItemId);
+                formData.append('original_basic', document.getElementById('slipOrigBasic').value);
+                formData.append('original_overtime', document.getElementById('slipOrigOvertime').value);
+                formData.append('reimbursement', document.getElementById('slipReimbursement').value);
+                formData.append('loans', document.getElementById('slipLoans').value);
+                formData.append('exchange_rate', document.getElementById('slipKurs').value);
+                formData.append('admin_bank_fee', document.getElementById('slipAdminBank').value);
+                formData.append('insurance', document.getElementById('slipInsurance').value);
+                formData.append('other_deductions', document.getElementById('slipOtherDeduct').value);
+                formData.append('tax_rate', document.getElementById('slipTaxRate').value);
+                
+                const res = await fetch(PAYROLL_BASE + 'payroll/apiUpdatePayslip', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                
+                statusEl.classList.remove('hidden');
+                if (data.success) {
+                    statusContent.innerHTML = '<span class="material-icons text-emerald-500" style="font-size:16px">check_circle</span><span class="text-xs text-emerald-600">' + data.message + '</span>';
+                    btn.innerHTML = '<span class="material-icons text-sm">check_circle</span> Tersimpan!';
+                    btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+                    btn.classList.add('bg-emerald-500');
+                } else {
+                    statusContent.innerHTML = '<span class="material-icons text-red-500" style="font-size:16px">error</span><span class="text-xs text-red-600">' + (data.message || 'Gagal menyimpan') + '</span>';
+                }
+            } catch (e) {
+                statusEl.classList.remove('hidden');
+                statusContent.innerHTML = '<span class="material-icons text-red-500" style="font-size:16px">error</span><span class="text-xs text-red-600">Error: ' + e.message + '</span>';
+            }
+            
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.classList.remove('bg-emerald-500');
+                btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+                btn.innerHTML = '<span class="material-icons text-sm">check_circle</span> OK / Simpan Slip Gaji';
+            }, 3000);
         }
 
         async function sendPayslipEmail() {
@@ -903,7 +1158,6 @@ $periodStatus = $period['status'] ?? 'draft';
             const statusEl = document.getElementById('emailSendStatus');
             const statusContent = document.getElementById('emailStatusContent');
             
-            // Sending state
             btn.disabled = true;
             btn.innerHTML = '<span class="animate-spin material-icons text-sm">refresh</span> Mengirim...';
             statusEl.classList.remove('hidden');
@@ -927,21 +1181,20 @@ $periodStatus = $period['status'] ?? 'draft';
                     btn.classList.add('bg-emerald-600');
                 } else {
                     statusContent.innerHTML = '<span class="material-icons text-red-500" style="font-size:16px">error</span><span class="text-xs text-red-600">' + (data.message || 'Gagal mengirim') + '</span>';
-                    btn.innerHTML = '<span class="material-icons text-sm">send</span> Kirim Slip Gaji';
+                    btn.innerHTML = '<span class="material-icons text-sm">send</span> Kirim via Email';
                     btn.disabled = false;
                 }
             } catch (e) {
                 statusContent.innerHTML = '<span class="material-icons text-red-500" style="font-size:16px">error</span><span class="text-xs text-red-600">Gagal mengirim email</span>';
-                btn.innerHTML = '<span class="material-icons text-sm">send</span> Kirim Slip Gaji';
+                btn.innerHTML = '<span class="material-icons text-sm">send</span> Kirim via Email';
                 btn.disabled = false;
             }
             
-            // Reset button after 5s
             setTimeout(() => {
                 btn.disabled = false;
                 btn.classList.remove('bg-emerald-600');
                 btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                btn.innerHTML = '<span class="material-icons text-sm">send</span> Kirim Slip Gaji';
+                btn.innerHTML = '<span class="material-icons text-sm">send</span> Kirim via Email';
             }, 5000);
         }
     </script>

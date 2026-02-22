@@ -302,20 +302,21 @@
                                     <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Rincian Per Mata Uang</p>
                                     <?php
                                     $byCurrency = $monthlyCost['by_currency'] ?? [];
+                                    $byCurrencyUsd = $monthlyCost['by_currency_usd'] ?? [];
                                     $symbols = $monthlyCost['symbols'] ?? [];
                                     if (!empty($byCurrency)):
-                                        $maxAmount = max($byCurrency);
                                         foreach ($byCurrency as $currCode => $amount):
-                                            $pct = $maxAmount > 0 ? round(($amount / $maxAmount) * 100) : 0;
+                                            $usdVal = $byCurrencyUsd[$currCode] ?? 0;
+                                            $pct = $totalCostUSD > 0 ? round(($usdVal / $totalCostUSD) * 100) : 0;
                                             $sym = $symbols[$currCode] ?? $currCode;
                                     ?>
                                         <div>
                                             <div class="flex justify-between text-xs font-medium mb-1.5">
-                                                <span class="text-slate-600"><?= $currCode ?></span>
+                                                <span class="text-slate-600"><?= $currCode ?> <span class="text-slate-400 font-normal">(<?= $pct ?>%)</span></span>
                                                 <span class="text-navy font-semibold"><?= $sym ?> <?= number_format($amount, 0, ',', '.') ?></span>
                                             </div>
                                             <div class="w-full bg-slate-100 rounded-full h-2">
-                                                <div class="bg-primary h-2 rounded-full transition-all" style="width: <?= $pct ?>%"></div>
+                                                <div class="bg-primary h-2 rounded-full transition-all" style="width: <?= max($pct, 2) ?>%"></div>
                                             </div>
                                         </div>
                                     <?php endforeach; ?>

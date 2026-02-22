@@ -79,9 +79,9 @@ class PayrollItemModel extends BaseModel
     protected $allowedFields = [
         'payroll_period_id', 'contract_id', 'crew_name', 'rank_name', 'vessel_name',
         'basic_salary', 'overtime', 'leave_pay', 'bonus', 'other_allowance', 'gross_salary',
-        'insurance', 'medical', 'advance', 'other_deductions', 'total_deductions',
-        'tax_type', 'tax_amount', 'net_salary', 'currency_code',
-        // 'original_currency', 'original_gross', 'exchange_rate',
+        'insurance', 'medical', 'advance', 'other_deductions', 'admin_bank_fee', 'reimbursement', 'loans', 'total_deductions',
+        'tax_type', 'tax_rate', 'tax_amount', 'net_salary', 'currency_code',
+        'original_currency', 'original_basic', 'original_overtime', 'original_leave_pay', 'exchange_rate',
         'status', 'payment_date', 'payment_reference', 'notes',
         'email_sent_at', 'email_status', 'email_failure_reason'
     ];
@@ -223,15 +223,20 @@ class PayrollItemModel extends BaseModel
                 'medical' => round($medicalUSD, 2),
                 'advance' => round($advanceUSD, 2),
                 'other_deductions' => round($otherDeductionsUSD, 2),
+                'admin_bank_fee' => 0,
+                'reimbursement' => 0,
+                'loans' => 0,
                 'total_deductions' => round($totalDeductionsUSD, 2),
                 'tax_type' => $contract['tax_type'] ?? 'pph21',
+                'tax_rate' => $taxRate,
                 'tax_amount' => round($taxAmountUSD, 2),
                 'net_salary' => round($netSalaryUSD, 2),
-                'net_salary' => round($netSalaryUSD, 2),
-                'currency_code' => 'USD', // Always USD after conversion
-                // 'original_currency' => $originalCurrency,
-                // 'original_gross' => $originalGross,
-                // 'exchange_rate' => $exchangeRate,
+                'currency_code' => 'USD',
+                'original_currency' => $originalCurrency,
+                'original_basic' => $originalBasic,
+                'original_overtime' => $originalOvertime,
+                'original_leave_pay' => $originalLeavePay,
+                'exchange_rate' => $exchangeRate > 0 ? (1 / $exchangeRate) : 0,
                 'status' => 'pending'
             ];
             

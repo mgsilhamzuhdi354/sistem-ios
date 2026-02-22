@@ -313,6 +313,7 @@ class ClientModel extends BaseModel
         ];
 
         $byCurrency = [];
+        $byCurrencyUsd = [];
         $symbols = [];
         $totalUsd = 0;
 
@@ -333,22 +334,27 @@ class ClientModel extends BaseModel
 
             if (!isset($byCurrency[$currency])) {
                 $byCurrency[$currency] = 0;
+                $byCurrencyUsd[$currency] = 0;
                 $symbols[$currency] = $symbol ?? $currency;
             }
             $byCurrency[$currency] += $amount;
 
             // Convert to USD
+            $amountUsd = 0;
             if ($currency === 'USD') {
-                $totalUsd += $amount;
+                $amountUsd = $amount;
             } elseif ($contractRate > 0) {
-                $totalUsd += $amount / $contractRate;
+                $amountUsd = $amount / $contractRate;
             } else {
-                $totalUsd += $amount * ($defaultRates[$currency] ?? 0.000063);
+                $amountUsd = $amount * ($defaultRates[$currency] ?? 0.000063);
             }
+            $totalUsd += $amountUsd;
+            $byCurrencyUsd[$currency] += $amountUsd;
         }
 
         return [
             'by_currency' => $byCurrency,
+            'by_currency_usd' => $byCurrencyUsd,
             'symbols' => $symbols,
             'total_usd' => round($totalUsd, 2),
         ];
