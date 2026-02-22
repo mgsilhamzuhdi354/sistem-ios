@@ -106,6 +106,16 @@ class PayrollItemModel extends BaseModel
      */
     public function generateForPeriod($periodId)
     {
+        // Auto-fix exchange_rate column if too small for IDR kurs values
+        $colInfo = $this->db->query("SHOW COLUMNS FROM payroll_items WHERE Field = 'exchange_rate'");
+        if ($colInfo && $row = $colInfo->fetch_assoc()) {
+            if (preg_match('/decimal\((\d+),(\d+)\)/i', $row['Type'], $m)) {
+                if ((intval($m[1]) - intval($m[2])) < 6) {
+                    $this->db->query("ALTER TABLE payroll_items MODIFY COLUMN exchange_rate DECIMAL(15,4) DEFAULT 0");
+                }
+            }
+        }
+        
         // Get active contracts with currency info
         $sql = "SELECT c.id, c.crew_name, c.crew_id,
                     r.name AS rank_name,

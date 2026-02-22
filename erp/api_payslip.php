@@ -56,7 +56,7 @@ if ($db->connect_error) {
 }
 $db->set_charset('utf8mb4');
 
-// Auto-migrate: ensure required columns exist
+// Auto-migrate: ensure required columns exist and correct types
 $migrateCols = [
     'confirmed_at' => 'DATETIME NULL',
     'email_sent_at' => 'DATETIME NULL',
@@ -65,7 +65,20 @@ $migrateCols = [
 $existing = [];
 $colCheck = $db->query("SHOW COLUMNS FROM payroll_items");
 if ($colCheck) {
-    while ($r = $colCheck->fetch_assoc()) $existing[] = $r['Field'];
+    while ($r = $colCheck->fetch_assoc()) {
+        $existing[] = $r['Field'];
+        // Fix exchange_rate column if it's too small for kurs values like 15900
+        if ($r['Field'] === 'exchange_rate' && strpos(strtolower($r['Type']), 'decimal') !== false) {
+            if (preg_match('/decimal\((\d+),(\d+)\)/i', $r['Type'], $m)) {
+                $precision = intval($m[1]);
+                $scale = intval($m[2]);
+                // If integer digits (precision-scale) < 6, column can't hold 15900
+                if (($precision - $scale) < 6) {
+                    $db->query("ALTER TABLE payroll_items MODIFY COLUMN exchange_rate DECIMAL(15,4) DEFAULT 0");
+                }
+            }
+        }
+    }
 }
 foreach ($migrateCols as $col => $def) {
     if (!in_array($col, $existing)) {
