@@ -148,11 +148,11 @@ class PayrollItemModel extends BaseModel
                 $originalCurrency = 'IDR';
             }
             
-            // Exchange rate (for display: 1 USD = X currency)
+            // Exchange rate = Kurs (1 unit original currency = X IDR)
             $exchangeRate = floatval($contract['contract_exchange_rate'] ?? 0);
             if ($exchangeRate <= 0) {
-                // Default exchange rates for display
-                $defaultRates = ['IDR' => 15900, 'MYR' => 4.76, 'SGD' => 1.35, 'USD' => 1];
+                // Default IDR rates: 1 USD = 15900 IDR, 1 MYR = 3500 IDR, etc.
+                $defaultRates = ['IDR' => 1, 'USD' => 15900, 'MYR' => 3500, 'SGD' => 11800, 'EUR' => 17000];
                 $exchangeRate = $defaultRates[$originalCurrency] ?? 1;
             }
             

@@ -1086,10 +1086,18 @@ $periodStatus = $period['status'] ?? 'draft';
             document.getElementById('slipReimbursement').value = parseFloat(item.reimbursement || 0);
             document.getElementById('slipLoans').value = parseFloat(item.loans || 0);
             
-            // If currency is IDR, kurs should be 1 (no conversion needed)
+            // Kurs = how many IDR per 1 unit of original currency
             const origCurForKurs = (item.original_currency || 'IDR').toUpperCase();
             const rawKurs = parseFloat(item.exchange_rate || 0);
-            document.getElementById('slipKurs').value = (origCurForKurs === 'IDR') ? 1 : rawKurs;
+            if (origCurForKurs === 'IDR') {
+                document.getElementById('slipKurs').value = 1;
+            } else if (rawKurs > 1) {
+                document.getElementById('slipKurs').value = rawKurs;
+            } else {
+                // Default IDR rates per currency
+                const defaultKurs = {'USD': 15900, 'MYR': 3500, 'SGD': 11800, 'EUR': 17000};
+                document.getElementById('slipKurs').value = defaultKurs[origCurForKurs] || 15900;
+            }
             
             document.getElementById('slipAdminBank').value = parseFloat(item.admin_bank_fee || 0);
             document.getElementById('slipInsurance').value = parseFloat(item.insurance || 0);

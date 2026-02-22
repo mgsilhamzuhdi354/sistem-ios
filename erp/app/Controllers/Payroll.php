@@ -79,13 +79,18 @@ class Payroll extends BaseController
                 $fullItem['original_currency'] = $fullItem['display_original_currency'];
                 $fullItem['original_basic'] = $fullItem['contract_basic_salary'];
                 $fullItem['original_overtime'] = $fullItem['contract_overtime'];
-                // Exchange rate: prefer contract rate, fallback to pi rate
+                // Exchange rate = kurs (1 original_currency = X IDR)
+                $origCur = strtoupper($fullItem['original_currency'] ?? 'IDR');
                 $cRate = floatval($fullItem['contract_exchange_rate']);
                 $pRate = floatval($fullItem['exchange_rate'] ?? 0);
                 if ($cRate > 0) {
                     $fullItem['exchange_rate'] = $cRate;
-                } elseif ($pRate > 0 && $pRate < 1) {
-                    $fullItem['exchange_rate'] = round(1 / $pRate);
+                } elseif ($pRate > 1) {
+                    $fullItem['exchange_rate'] = $pRate;
+                } else {
+                    // Default IDR kurs per currency
+                    $defaultKurs = ['IDR' => 1, 'USD' => 15900, 'MYR' => 3500, 'SGD' => 11800, 'EUR' => 17000];
+                    $fullItem['exchange_rate'] = $defaultKurs[$origCur] ?? 1;
                 }
                 $payslipDataMap[$item['id']] = $fullItem;
             }
