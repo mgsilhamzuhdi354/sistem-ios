@@ -1018,8 +1018,8 @@ $periodStatus = $period['status'] ?? 'draft';
                     const monthNames = ['','JAN','FEB','MAR','APR','MEI','JUN','JUL','AGU','SEP','OKT','NOV','DES'];
                     document.getElementById('slipPeriod').textContent = (monthNames[period.period_month] || '') + ' ' + period.period_year;
                     
-                    // Original currency
-                    const origCur = (item.original_currency || 'RM').toUpperCase();
+                    // Original currency from contract data
+                    const origCur = (item.original_currency || 'IDR').toUpperCase();
                     document.getElementById('slipOrigCurLabel1').textContent = origCur;
                     document.getElementById('slipOrigCurLabel2').textContent = origCur;
                     document.getElementById('slipOrigCurLabel3').textContent = origCur;

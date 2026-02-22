@@ -440,14 +440,30 @@ class Payroll extends BaseController
     {
         $this->requireAuth();
         
-        $sql = "SELECT pi.*, c.contract_no, c.crew_id,
+        $sql = "SELECT pi.*, 
+                       c.contract_no, c.crew_id, c.crew_name AS contract_crew_name,
                        cr.email, cr.full_name,
-                       COALESCE(pi.bank_holder, cr.bank_holder) AS bank_holder,
+                       COALESCE(pi.crew_name, c.crew_name, cr.full_name) AS crew_name,
+                       COALESCE(pi.rank_name, r.name) AS rank_name,
+                       COALESCE(pi.vessel_name, v.name) AS vessel_name,
+                       COALESCE(pi.bank_holder, cr.bank_holder, c.crew_name) AS bank_holder,
                        COALESCE(pi.bank_account, cr.bank_account) AS bank_account,
-                       COALESCE(pi.bank_name, cr.bank_name) AS bank_name
+                       COALESCE(pi.bank_name, cr.bank_name) AS bank_name,
+                       COALESCE(pi.original_currency, cur.code, 'IDR') AS original_currency,
+                       COALESCE(NULLIF(pi.original_basic, 0), cs.basic_salary, 0) AS original_basic,
+                       COALESCE(NULLIF(pi.original_overtime, 0), cs.overtime_allowance, 0) AS original_overtime,
+                       COALESCE(NULLIF(pi.exchange_rate, 1), cs.exchange_rate, 1) AS exchange_rate,
+                       cs.leave_pay AS contract_leave_pay,
+                       cs.bonus AS contract_bonus,
+                       cs.other_allowance AS contract_other_allowance,
+                       cs.total_monthly AS contract_total_monthly
                 FROM payroll_items pi
                 LEFT JOIN contracts c ON pi.contract_id = c.id
                 LEFT JOIN crews cr ON c.crew_id = cr.id
+                LEFT JOIN ranks r ON c.rank_id = r.id
+                LEFT JOIN vessels v ON c.vessel_id = v.id
+                LEFT JOIN contract_salaries cs ON c.id = cs.contract_id
+                LEFT JOIN currencies cur ON cs.currency_id = cur.id
                 WHERE pi.id = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param('i', $itemId);
