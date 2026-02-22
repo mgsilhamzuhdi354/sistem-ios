@@ -39,11 +39,11 @@ services:
       RECRUITMENT_DB_NAME: ${RECRUITMENT_DB_NAME}
       APP_ENV: ${APP_ENV}
       APP_DEBUG: ${APP_DEBUG}
-      # SMTP Configuration
-      SMTP_HOST: ${SMTP_HOST:-indooceancrew.co.id}
-      SMTP_PORT: ${SMTP_PORT:-465}
-      SMTP_USER: ${SMTP_USER:-ios@indooceancrew.co.id}
-      SMTP_PASS: ${SMTP_PASS:-Oceancrew1!}
+      # SMTP Configuration (Gmail)
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-indooceancrewservice@gmail.com}
+      SMTP_PASS: ${SMTP_PASS:-kabpgxlpzqkznnla}
       # OTP: set true untuk skip OTP sementara (darurat)
       SKIP_OTP: ${SKIP_OTP:-false}
     volumes:
