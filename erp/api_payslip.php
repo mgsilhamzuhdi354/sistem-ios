@@ -289,23 +289,19 @@ if ($action === 'get' && $id > 0) {
     
     // Try to send email
     try {
-        // Load SMTP settings from DB for standalone API
-        $smtpSettings = [];
-        $smtpResult = $db->query("SELECT setting_key, setting_value FROM settings WHERE setting_group = 'email'");
-        if ($smtpResult) {
-            while ($sr = $smtpResult->fetch_assoc()) {
-                $smtpSettings[$sr['setting_key']] = $sr['setting_value'];
-            }
-        }
-        
         // Try Mailer class first
         $mailerSent = false;
+        $mailerErrors = '';
         $mailerFile = APPPATH . 'Libraries/Mailer.php';
         if (file_exists($mailerFile)) {
             require_once $mailerFile;
-            if (class_exists('\\App\\Libraries\\Mailer')) {
+            if (class_exists('App\\Libraries\\Mailer')) {
                 $mailer = new \App\Libraries\Mailer();
                 $mailerSent = $mailer->sendPayslip($email, $item['crew_name'], $period, $item);
+                if (!$mailerSent) {
+                    $mailerErrors = implode('; ', $mailer->getErrors());
+                    error_log("[PAYSLIP_EMAIL] SMTP failed for {$email}: {$mailerErrors}");
+                }
             }
         }
         
@@ -325,7 +321,7 @@ if ($action === 'get' && $id > 0) {
             $headers = "From: PT Indo Oceancrew Services <ios@indooceancrew.co.id>\r\n";
             $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
             
-            mail($email, $subject, $body, $headers);
+            $mailerSent = @mail($email, $subject, $body, $headers);
         }
         
         // Update status (only if column exists)
@@ -337,9 +333,9 @@ if ($action === 'get' && $id > 0) {
         if (in_array('email_status', $dbCols)) {
             $updateParts[] = "email_status = ?";
             $updateTypes .= 's';
-            $updateValues[] = 'sent';
+            $updateValues[] = $mailerSent ? 'sent' : 'failed';
         }
-        if (in_array('email_sent_at', $dbCols)) {
+        if ($mailerSent && in_array('email_sent_at', $dbCols)) {
             $updateParts[] = "email_sent_at = ?";
             $updateTypes .= 's';
             $updateValues[] = date('Y-m-d H:i:s');
@@ -355,7 +351,11 @@ if ($action === 'get' && $id > 0) {
             $ustmt->close();
         }
         
-        echo json_encode(['success' => true, 'message' => 'Slip gaji berhasil dikirim ke ' . $email]);
+        if ($mailerSent) {
+            echo json_encode(['success' => true, 'message' => 'Slip gaji berhasil dikirim ke ' . $email]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Gagal mengirim email ke ' . $email . ($mailerErrors ? ': ' . $mailerErrors : '. Periksa konfigurasi SMTP.')]);
+        }
         
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => 'Gagal mengirim email: ' . $e->getMessage()]);

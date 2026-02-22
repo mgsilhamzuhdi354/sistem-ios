@@ -129,6 +129,9 @@ class Contract extends BaseController
                 c.full_name, 
                 c.email, 
                 c.phone,
+                c.gender,
+                c.birth_date,
+                c.nationality,
                 c.current_rank_id,
                 c.approved_at,
                 c.source,
@@ -156,6 +159,47 @@ class Contract extends BaseController
         }
 
         return $crews;
+    }
+
+    /**
+     * AJAX: Get full crew detail for contract auto-fill
+     */
+    public function crewDetail($id)
+    {
+        $id = (int) $id;
+        $query = "
+            SELECT 
+                c.id, c.employee_id, c.full_name, c.nickname,
+                c.gender, c.birth_date, c.birth_place,
+                c.nationality, c.religion, c.marital_status,
+                c.email, c.phone, c.whatsapp,
+                c.address, c.city, c.province, c.postal_code,
+                c.bank_name, c.bank_account, c.bank_holder,
+                c.emergency_name, c.emergency_relation, c.emergency_phone,
+                c.current_rank_id, c.years_experience, c.total_sea_time_months,
+                c.photo, c.source,
+                r.name as rank_name
+            FROM crews c
+            LEFT JOIN ranks r ON c.current_rank_id = r.id
+            WHERE c.id = ?
+            LIMIT 1
+        ";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $crew = $result->fetch_assoc();
+        $stmt->close();
+
+        if (!$crew) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Crew not found']);
+            return;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'data' => $crew]);
     }
 
     /**
@@ -229,11 +273,11 @@ class Contract extends BaseController
             'currency_id' => $this->input('currency_id', 1),
             'exchange_rate' => !empty($exchangeRate) ? floatval($exchangeRate) : null,
             'client_rate' => !empty($clientRate) ? floatval($clientRate) : null,
-            'basic_salary' => floatval(str_replace(',', '', $this->input('basic_salary', 0))),
-            'overtime_allowance' => floatval(str_replace(',', '', $this->input('overtime_allowance', 0))),
-            'leave_pay' => floatval(str_replace(',', '', $this->input('leave_pay', 0))),
-            'bonus' => floatval(str_replace(',', '', $this->input('bonus', 0))),
-            'other_allowance' => floatval(str_replace(',', '', $this->input('other_allowance', 0))),
+            'basic_salary' => floatval(str_replace([',', '.'], '', $this->input('basic_salary', 0))),
+            'overtime_allowance' => floatval(str_replace([',', '.'], '', $this->input('overtime_allowance', 0))),
+            'leave_pay' => floatval(str_replace([',', '.'], '', $this->input('leave_pay', 0))),
+            'bonus' => floatval(str_replace([',', '.'], '', $this->input('bonus', 0))),
+            'other_allowance' => floatval(str_replace([',', '.'], '', $this->input('other_allowance', 0))),
         ];
 
         // Tax data (Feature 5)
@@ -421,10 +465,10 @@ class Contract extends BaseController
             'currency_id' => $this->input('currency_id', 1),
             'exchange_rate' => !empty($exchangeRate) ? floatval($exchangeRate) : null,
             'client_rate' => !empty($clientRate) ? floatval($clientRate) : null,
-            'basic_salary' => floatval(str_replace(',', '', $this->input('basic_salary', 0))),
-            'overtime_allowance' => floatval(str_replace(',', '', $this->input('overtime_allowance', 0))),
-            'leave_pay' => floatval(str_replace(',', '', $this->input('leave_pay', 0))),
-            'bonus' => floatval(str_replace(',', '', $this->input('bonus', 0))),
+            'basic_salary' => floatval(str_replace([',', '.'], '', $this->input('basic_salary', 0))),
+            'overtime_allowance' => floatval(str_replace([',', '.'], '', $this->input('overtime_allowance', 0))),
+            'leave_pay' => floatval(str_replace([',', '.'], '', $this->input('leave_pay', 0))),
+            'bonus' => floatval(str_replace([',', '.'], '', $this->input('bonus', 0))),
         ];
 
         if ($existingSalary) {
