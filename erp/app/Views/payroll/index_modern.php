@@ -1265,7 +1265,7 @@ $periodStatus = $period['status'] ?? 'draft';
                 formData.append('net_salary', net);
                 formData.append('total_deductions', totalDeduct + taxAmount);
                 
-                const res = await fetch(PAYROLL_BASE + 'api_payslip.php?action=update', {
+                const res = await fetch(PAYROLL_BASE + 'payroll/api-update-payslip', {
                     method: 'POST',
                     body: formData
                 });
@@ -1324,7 +1324,7 @@ $periodStatus = $period['status'] ?? 'draft';
                 formData.append('item_id', currentPayslipItemId);
                 formData.append('email', email);
                 
-                const res = await fetch(PAYROLL_BASE + 'api_payslip.php?action=send_email', {
+                const res = await fetch(PAYROLL_BASE + 'payroll/send-payslip-email', {
                     method: 'POST',
                     body: formData
                 });
@@ -1498,7 +1498,7 @@ $periodStatus = $period['status'] ?? 'draft';
                 const formData = new FormData();
                 formData.append('payroll_day', day);
 
-                const res = await fetch(PAYROLL_BASE + 'api_payslip.php?action=update_payday', {
+                const res = await fetch(PAYROLL_BASE + 'payroll/update-payday', {
                     method: 'POST',
                     body: formData
                 });

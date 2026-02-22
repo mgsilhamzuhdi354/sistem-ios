@@ -557,23 +557,53 @@ class Payroll extends BaseController
     public function apiUpdatePayslip()
     {
         $this->requireAuth();
+        header('Content-Type: application/json');
         
         $itemId = (int) $this->input('item_id');
         if (!$itemId) {
-            header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Item ID diperlukan']);
             exit;
         }
         
+        // Auto-fix exchange_rate column if too small
+        try {
+            $colInfo = $this->db->query("SHOW COLUMNS FROM payroll_items WHERE Field = 'exchange_rate'");
+            if ($colInfo && $row = $colInfo->fetch_assoc()) {
+                if (preg_match('/decimal\((\d+),(\d+)\)/i', $row['Type'], $m)) {
+                    if ((intval($m[1]) - intval($m[2])) < 6) {
+                        $this->db->query("ALTER TABLE payroll_items MODIFY COLUMN exchange_rate DECIMAL(15,4) DEFAULT 0");
+                    }
+                }
+            }
+            // Ensure status columns exist
+            $migrateCols = [
+                'confirmed_at' => 'DATETIME NULL',
+                'email_sent_at' => 'DATETIME NULL',
+                'email_status' => "VARCHAR(20) DEFAULT 'pending'",
+                'status' => "VARCHAR(20) DEFAULT 'pending'",
+            ];
+            $existing = [];
+            $colCheck = $this->db->query("SHOW COLUMNS FROM payroll_items");
+            if ($colCheck) {
+                while ($r = $colCheck->fetch_assoc()) $existing[] = $r['Field'];
+            }
+            foreach ($migrateCols as $col => $def) {
+                if (!in_array($col, $existing)) {
+                    $this->db->query("ALTER TABLE payroll_items ADD COLUMN $col $def");
+                }
+            }
+        } catch (\Exception $e) {}
+        
         // Collect all editable fields
         $updateData = [];
         $editableFields = [
-            'basic_salary', 'overtime', 'leave_pay', 'bonus', 'other_allowance',
+            'basic_salary', 'overtime', 'overtime_allowance', 'leave_pay', 'bonus', 'other_allowance',
             'insurance', 'medical', 'advance', 'other_deductions',
             'admin_bank_fee', 'reimbursement', 'loans',
             'tax_rate', 'tax_amount',
             'original_basic', 'original_overtime', 'original_leave_pay',
-            'exchange_rate', 'original_currency'
+            'exchange_rate', 'original_currency',
+            'gross_salary', 'net_salary', 'total_deductions'
         ];
         
         foreach ($editableFields as $field) {
@@ -587,47 +617,153 @@ class Payroll extends BaseController
             }
         }
         
-        // Recalculate totals
-        $existing = $this->itemModel->find($itemId);
-        if (!$existing) {
-            header('Content-Type: application/json');
+        // Handle status
+        $status = $this->input('status');
+        if ($status) {
+            $updateData['status'] = $status;
+            if ($status === 'confirmed') {
+                $updateData['confirmed_at'] = date('Y-m-d H:i:s');
+            }
+        }
+        
+        // If computed values not provided, recalculate
+        $existingItem = $this->itemModel->find($itemId);
+        if (!$existingItem) {
             echo json_encode(['success' => false, 'message' => 'Item tidak ditemukan']);
             exit;
         }
         
-        // Merge with existing to compute new totals
-        $merged = array_merge($existing, $updateData);
+        // Merge with existing to compute new totals if not provided
+        $merged = array_merge($existingItem, $updateData);
         
-        $grossSalary = (float)$merged['basic_salary'] + (float)$merged['overtime'] + (float)$merged['leave_pay'] + (float)$merged['bonus'] + (float)$merged['other_allowance'];
-        $totalDeductions = (float)$merged['insurance'] + (float)$merged['medical'] + (float)$merged['advance'] + (float)$merged['other_deductions'] + (float)$merged['admin_bank_fee'];
-        
-        // PPH 21 recalculation
-        $taxRate = (float)($merged['tax_rate'] ?? 2.5);
-        $taxAmount = ($grossSalary - $totalDeductions) * ($taxRate / 100);
-        
-        $netSalary = $grossSalary - $totalDeductions - $taxAmount;
-        
-        $updateData['gross_salary'] = round($grossSalary, 2);
-        $updateData['total_deductions'] = round($totalDeductions, 2);
-        $updateData['tax_amount'] = round($taxAmount, 2);
-        $updateData['net_salary'] = round($netSalary, 2);
+        if (!isset($updateData['gross_salary'])) {
+            $grossSalary = (float)$merged['basic_salary'] + (float)($merged['overtime'] ?? 0) + (float)($merged['leave_pay'] ?? 0) + (float)($merged['bonus'] ?? 0) + (float)($merged['other_allowance'] ?? 0);
+            $totalDeductions = (float)($merged['insurance'] ?? 0) + (float)($merged['medical'] ?? 0) + (float)($merged['advance'] ?? 0) + (float)($merged['other_deductions'] ?? 0) + (float)($merged['admin_bank_fee'] ?? 0);
+            $taxRate = (float)($merged['tax_rate'] ?? 2.5);
+            $taxAmount = ($grossSalary - $totalDeductions) * ($taxRate / 100);
+            $netSalary = $grossSalary - $totalDeductions - $taxAmount;
+            
+            $updateData['gross_salary'] = round($grossSalary, 2);
+            $updateData['total_deductions'] = round($totalDeductions, 2);
+            $updateData['tax_amount'] = round($taxAmount, 2);
+            $updateData['net_salary'] = round($netSalary, 2);
+        }
         
         $this->itemModel->update($itemId, $updateData);
         
         // Update period totals
-        $this->periodModel->updateTotals($existing['payroll_period_id']);
+        $this->periodModel->updateTotals($existingItem['payroll_period_id']);
         
-        header('Content-Type: application/json');
         echo json_encode([
             'success' => true,
             'message' => 'Slip gaji berhasil disimpan',
             'data' => [
-                'gross_salary' => $updateData['gross_salary'],
-                'total_deductions' => $updateData['total_deductions'],
-                'tax_amount' => $updateData['tax_amount'],
-                'net_salary' => $updateData['net_salary']
+                'gross_salary' => $updateData['gross_salary'] ?? 0,
+                'total_deductions' => $updateData['total_deductions'] ?? 0,
+                'tax_amount' => $updateData['tax_amount'] ?? 0,
+                'net_salary' => $updateData['net_salary'] ?? 0
             ]
         ]);
         exit;
     }
+
+    /**
+     * API: Send payslip via email
+     */
+    public function sendPayslipEmail()
+    {
+        $this->requireAuth();
+        header('Content-Type: application/json');
+        
+        $itemId = (int) $this->input('item_id');
+        $email = trim($this->input('email') ?? '');
+        
+        if (!$itemId || !$email) {
+            echo json_encode(['success' => false, 'message' => 'Item ID dan email diperlukan']);
+            exit;
+        }
+        
+        // Get payroll item
+        $stmt = $this->db->prepare("SELECT pi.*, c.crew_id FROM payroll_items pi LEFT JOIN contracts c ON pi.contract_id = c.id WHERE pi.id = ?");
+        $stmt->bind_param('i', $itemId);
+        $stmt->execute();
+        $item = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        
+        if (!$item) {
+            echo json_encode(['success' => false, 'message' => 'Payroll item tidak ditemukan']);
+            exit;
+        }
+        
+        // Get period
+        $period = $this->periodModel->find($item['payroll_period_id']);
+        
+        // Try to send email
+        try {
+            $mailerSent = false;
+            $mailerFile = APPPATH . 'Libraries/Mailer.php';
+            if (file_exists($mailerFile)) {
+                require_once $mailerFile;
+                if (class_exists('\\App\\Libraries\\Mailer')) {
+                    $mailer = new \App\Libraries\Mailer();
+                    $mailerSent = $mailer->sendPayslip($email, $item['crew_name'], $period, $item);
+                }
+            }
+            
+            if (!$mailerSent) {
+                // Fallback: use PHP mail()
+                $monthNames = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                $periodText = ($monthNames[$period['period_month']] ?? '') . ' ' . $period['period_year'];
+                $subject = "Slip Gaji - {$item['crew_name']} - {$periodText}";
+                $body = "Slip gaji Anda untuk periode {$periodText} telah tersedia.\n\n";
+                $body .= "Nama: {$item['crew_name']}\n";
+                $body .= "Kapal: {$item['vessel_name']}\n";
+                $body .= "Gaji Bersih: Rp " . number_format($item['net_salary'] ?? 0, 0, ',', '.') . "\n\n";
+                $body .= "Silakan login ke ERP untuk melihat detail slip gaji.\n";
+                $body .= "Link: " . BASE_URL . "payroll/payslip/{$itemId}\n\n";
+                $body .= "PT. Indo Oceancrew Services";
+                
+                $headers = "From: PT Indo Oceancrew Services <ios@indooceancrew.co.id>\r\n";
+                $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+                
+                mail($email, $subject, $body, $headers);
+            }
+            
+            // Update status to paid + email_sent_at
+            $updateData = [
+                'status' => 'paid',
+                'email_sent_at' => date('Y-m-d H:i:s'),
+                'email_status' => 'sent'
+            ];
+            $this->itemModel->update($itemId, $updateData);
+            
+            echo json_encode(['success' => true, 'message' => 'Slip gaji berhasil dikirim ke ' . $email]);
+            
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Gagal mengirim email: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+
+    /**
+     * API: Update payday setting
+     */
+    public function updatePayday()
+    {
+        $this->requireAuth();
+        header('Content-Type: application/json');
+        
+        $day = (int) $this->input('payroll_day');
+        if ($day < 1 || $day > 28) {
+            echo json_encode(['success' => false, 'message' => 'Tanggal harus antara 1 - 28']);
+            exit;
+        }
+        
+        $settingsModel = new SettingsModel($this->db);
+        $settingsModel->set('payroll_day', (string)$day);
+        
+        echo json_encode(['success' => true, 'message' => 'Tanggal gajian berhasil diubah ke tanggal ' . $day]);
+        exit;
+    }
 }
+
