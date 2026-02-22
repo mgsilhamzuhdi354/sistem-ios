@@ -78,12 +78,12 @@ class PayrollItemModel extends BaseModel
     protected $primaryKey = 'id';
     protected $allowedFields = [
         'payroll_period_id', 'contract_id', 'crew_name', 'rank_name', 'vessel_name',
-        'basic_salary', 'overtime', 'leave_pay', 'bonus', 'other_allowance', 'gross_salary',
+        'basic_salary', 'overtime', 'overtime_allowance', 'leave_pay', 'bonus', 'other_allowance', 'gross_salary',
         'insurance', 'medical', 'advance', 'other_deductions', 'admin_bank_fee', 'reimbursement', 'loans', 'total_deductions',
         'tax_type', 'tax_rate', 'tax_amount', 'net_salary', 'currency_code',
         'original_currency', 'original_basic', 'original_overtime', 'original_leave_pay', 'exchange_rate',
         'payment_method', 'bank_name', 'bank_account', 'bank_holder',
-        'status', 'payment_date', 'payment_reference', 'notes',
+        'status', 'confirmed_at', 'payment_date', 'payment_reference', 'notes',
         'email_sent_at', 'email_status', 'email_failure_reason'
     ];
     

@@ -245,15 +245,29 @@ class BaseController
     }
     
     /**
-     * Require authentication - redirect to login if not logged in
-     */
-    protected function requireAuth()
-    {
-        if (!$this->isLoggedIn()) {
-            $this->setFlash('error', 'Silakan login terlebih dahulu');
-            $this->redirect('auth/login');
+ * Require authentication - redirect to login if not logged in
+ * For AJAX/API requests: return JSON error instead of redirect
+ */
+protected function requireAuth()
+{
+    if (!$this->isLoggedIn()) {
+        // Check if this is an API/AJAX request
+        $isApi = $this->isAjax() 
+            || (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') !== false)
+            || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false)
+            || $_SERVER['REQUEST_METHOD'] === 'POST';
+        
+        if ($isApi) {
+            header('Content-Type: application/json');
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+            exit;
         }
+        
+        $this->setFlash('error', 'Silakan login terlebih dahulu');
+        $this->redirect('auth/login');
     }
+}
     
     /**
      * Require permission for module/action

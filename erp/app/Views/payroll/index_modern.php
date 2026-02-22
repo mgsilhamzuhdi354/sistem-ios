@@ -1264,11 +1264,17 @@ $periodStatus = $period['status'] ?? 'draft';
                 formData.append('tax_amount', taxAmount);
                 formData.append('net_salary', net);
                 formData.append('total_deductions', totalDeduct + taxAmount);
+                formData.append('status', 'confirmed');
                 
                 const res = await fetch(PAYROLL_BASE + 'payroll/api-update-payslip', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    credentials: 'same-origin'
                 });
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error('Server error ' + res.status + ': ' + errText.substring(0, 200));
+                }
                 const data = await res.json();
                 
                 statusEl.classList.remove('hidden');
@@ -1326,8 +1332,13 @@ $periodStatus = $period['status'] ?? 'draft';
                 
                 const res = await fetch(PAYROLL_BASE + 'payroll/send-payslip-email', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    credentials: 'same-origin'
                 });
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error('Server error ' + res.status + ': ' + errText.substring(0, 200));
+                }
                 const data = await res.json();
                 
                 if (data.success) {
@@ -1500,8 +1511,13 @@ $periodStatus = $period['status'] ?? 'draft';
 
                 const res = await fetch(PAYROLL_BASE + 'payroll/update-payday', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    credentials: 'same-origin'
                 });
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error('Server error ' + res.status + ': ' + errText.substring(0, 200));
+                }
                 const data = await res.json();
 
                 statusEl.classList.remove('hidden');
