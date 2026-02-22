@@ -63,17 +63,26 @@
         }
 
         .sidebar-header {
-            padding: 20px;
+            padding: 16px 20px;
             border-bottom: 1px solid var(--border-color);
+            text-align: center;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 18px;
+            gap: 10px;
+            font-size: 16px;
             font-weight: 700;
             color: var(--accent-gold);
+        }
+
+        .logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent-gold);
         }
 
         .logo i {
@@ -1310,7 +1319,10 @@
             <i class="fas fa-times"></i>
         </button>
         <div class="sidebar-header">
-            <div class="logo"><i class="fas fa-anchor"></i><span>IndoOcean ERP</span></div>
+            <div class="logo">
+                <img src="<?= BASE_URL ?>assets/images/logo.png" alt="Logo">
+                <span>IndoOcean ERP</span>
+            </div>
         </div>
         <nav class="sidebar-nav">
             <!-- Dashboard -->
