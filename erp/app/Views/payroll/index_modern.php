@@ -1002,7 +1002,7 @@ $periodStatus = $period['status'] ?? 'draft';
         }
 
         async function loadPayslipData(itemId) {
-            const fetchUrl = PAYROLL_BASE + 'index.php?url=payroll/apiGetPayslipData/' + itemId;
+            const fetchUrl = PAYROLL_BASE + 'api_payslip.php?action=get&id=' + itemId;
             console.log('[Payslip] Fetching:', fetchUrl);
             try {
                 const res = await fetch(fetchUrl);
@@ -1145,7 +1145,7 @@ $periodStatus = $period['status'] ?? 'draft';
                 formData.append('other_deductions', document.getElementById('slipOtherDeduct').value);
                 formData.append('tax_rate', document.getElementById('slipTaxRate').value);
                 
-                const res = await fetch(PAYROLL_BASE + 'index.php?url=payroll/apiUpdatePayslip', {
+                const res = await fetch(PAYROLL_BASE + 'api_payslip.php?action=update', {
                     method: 'POST',
                     body: formData
                 });
