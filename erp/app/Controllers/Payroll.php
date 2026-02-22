@@ -37,19 +37,28 @@ class Payroll extends BaseController
         // Preload full payslip data for all items (avoids separate API call)
         $payslipDataMap = [];
         foreach ($items as $item) {
-            $sql = "SELECT pi.*, 
+            // Safe query: only reference guaranteed base columns from pi
+            // All extra data comes from JOINed tables
+            $sql = "SELECT pi.id, pi.payroll_period_id, pi.contract_id, 
+                           pi.crew_name, pi.rank_name, pi.vessel_name,
+                           pi.basic_salary, pi.overtime, pi.leave_pay, pi.bonus,
+                           pi.other_allowance, pi.gross_salary, pi.insurance, pi.medical,
+                           pi.advance, pi.other_deductions, pi.admin_bank_fee, 
+                           pi.reimbursement, pi.loans, pi.total_deductions,
+                           pi.tax_type, pi.tax_rate, pi.tax_amount, pi.net_salary,
+                           pi.currency_code, pi.exchange_rate, pi.payment_method, pi.status,
                            c.contract_no, c.crew_id, c.crew_name AS contract_crew_name,
                            cr.email, cr.full_name,
-                           COALESCE(pi.crew_name, c.crew_name, cr.full_name) AS crew_name,
-                           COALESCE(pi.rank_name, r.name) AS rank_name,
-                           COALESCE(pi.vessel_name, v.name) AS vessel_name,
+                           COALESCE(pi.crew_name, c.crew_name, cr.full_name) AS display_crew_name,
+                           COALESCE(pi.rank_name, r.name) AS display_rank_name,
+                           COALESCE(pi.vessel_name, v.name) AS display_vessel_name,
                            COALESCE(cr.bank_holder, c.crew_name) AS bank_holder,
                            cr.bank_account AS bank_account,
                            cr.bank_name AS bank_name,
-                           COALESCE(pi.original_currency, cur.code, 'IDR') AS original_currency,
-                           COALESCE(NULLIF(pi.original_basic, 0), cs.basic_salary, 0) AS original_basic,
-                           COALESCE(NULLIF(pi.original_overtime, 0), cs.overtime_allowance, 0) AS original_overtime,
-                           COALESCE(NULLIF(cs.exchange_rate, 0), IF(pi.exchange_rate > 0 AND pi.exchange_rate < 1, ROUND(1/pi.exchange_rate), pi.exchange_rate), 1) AS exchange_rate,
+                           COALESCE(cur.code, 'IDR') AS original_currency,
+                           COALESCE(cs.basic_salary, 0) AS original_basic,
+                           COALESCE(cs.overtime_allowance, 0) AS original_overtime,
+                           COALESCE(NULLIF(cs.exchange_rate, 0), IF(pi.exchange_rate > 0 AND pi.exchange_rate < 1, ROUND(1/pi.exchange_rate), pi.exchange_rate), 1) AS display_exchange_rate,
                            cs.leave_pay AS contract_leave_pay,
                            cs.bonus AS contract_bonus,
                            cs.other_allowance AS contract_other_allowance,
@@ -68,6 +77,11 @@ class Payroll extends BaseController
             $fullItem = $stmt->get_result()->fetch_assoc();
             $stmt->close();
             if ($fullItem) {
+                // Map display names for JS
+                $fullItem['crew_name'] = $fullItem['display_crew_name'];
+                $fullItem['rank_name'] = $fullItem['display_rank_name'];
+                $fullItem['vessel_name'] = $fullItem['display_vessel_name'];
+                $fullItem['exchange_rate'] = $fullItem['display_exchange_rate'];
                 $payslipDataMap[$item['id']] = $fullItem;
             }
         }
