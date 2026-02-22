@@ -82,6 +82,7 @@ class PayrollItemModel extends BaseModel
         'insurance', 'medical', 'advance', 'other_deductions', 'admin_bank_fee', 'reimbursement', 'loans', 'total_deductions',
         'tax_type', 'tax_rate', 'tax_amount', 'net_salary', 'currency_code',
         'original_currency', 'original_basic', 'original_overtime', 'original_leave_pay', 'exchange_rate',
+        'payment_method', 'bank_name', 'bank_account', 'bank_holder',
         'status', 'payment_date', 'payment_reference', 'notes',
         'email_sent_at', 'email_status', 'email_failure_reason'
     ];
@@ -106,19 +107,21 @@ class PayrollItemModel extends BaseModel
     public function generateForPeriod($periodId)
     {
         // Get active contracts with currency info
-        $sql = "SELECT c.id, c.crew_name, 
+        $sql = "SELECT c.id, c.crew_name, c.crew_id,
                     r.name AS rank_name,
                     v.name AS vessel_name,
                     cs.basic_salary, cs.overtime_allowance, cs.leave_pay, cs.bonus, cs.other_allowance,
                     cs.total_monthly, cs.exchange_rate AS contract_exchange_rate,
                     cur.code AS currency_code,
-                    ct.tax_type, ct.tax_rate
+                    ct.tax_type, ct.tax_rate,
+                    cr.bank_name AS crew_bank_name, cr.bank_account AS crew_bank_account, cr.bank_holder AS crew_bank_holder
                 FROM contracts c
                 LEFT JOIN ranks r ON c.rank_id = r.id
                 LEFT JOIN vessels v ON c.vessel_id = v.id
                 LEFT JOIN contract_salaries cs ON c.id = cs.contract_id
                 LEFT JOIN currencies cur ON cs.currency_id = cur.id
                 LEFT JOIN contract_taxes ct ON c.id = ct.contract_id
+                LEFT JOIN crews cr ON c.crew_id = cr.id
                 WHERE c.status IN ('active', 'onboard')";
         
         $contracts = $this->query($sql);
@@ -237,6 +240,10 @@ class PayrollItemModel extends BaseModel
                 'original_overtime' => $originalOvertime,
                 'original_leave_pay' => $originalLeavePay,
                 'exchange_rate' => $exchangeRate > 0 ? (1 / $exchangeRate) : 0,
+                'payment_method' => 'bank_transfer',
+                'bank_name' => $contract['crew_bank_name'] ?? null,
+                'bank_account' => $contract['crew_bank_account'] ?? null,
+                'bank_holder' => $contract['crew_bank_holder'] ?? $contract['crew_name'],
                 'status' => 'pending'
             ];
             
@@ -281,6 +288,7 @@ class PayrollItemModel extends BaseModel
             'IDR' => 0.000063,  // 1 IDR = 0.000063 USD (approx 1 USD = 15900 IDR)
             'SGD' => 0.74,      // 1 SGD = 0.74 USD
             'EUR' => 1.05,      // 1 EUR = 1.05 USD
+            'MYR' => 0.21,      // 1 MYR = 0.21 USD (approx 1 USD = 4.76 MYR)
         ];
         
         return $defaultRates[$currencyCode] ?? 1.0;

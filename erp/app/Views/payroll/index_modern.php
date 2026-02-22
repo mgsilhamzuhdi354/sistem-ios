@@ -804,7 +804,7 @@ $periodStatus = $period['status'] ?? 'draft';
                                     <hr class="border-slate-200">
                                     <div class="flex items-center gap-1">
                                         <label class="text-[10px] text-slate-600 w-24 flex-shrink-0">Kurs</label>
-                                        <span class="text-[10px] font-bold text-slate-500 w-6">Rp</span>
+                                        <span class="text-[10px] font-bold text-slate-500 w-6" id="slipKursLabel">Rp</span>
                                         <input type="number" id="slipKurs" onchange="recalcPayslip()" step="1"
                                             class="flex-1 px-2 py-1 border border-amber-300 bg-amber-50 rounded-lg text-xs text-right focus:ring-1 focus:ring-amber-400 focus:border-amber-400">
                                     </div>
@@ -872,7 +872,13 @@ $periodStatus = $period['status'] ?? 'draft';
                         
                         <!-- Bank Info -->
                         <div class="mt-4 bg-slate-50 rounded-xl p-3 text-xs text-slate-600">
-                            <p class="font-bold text-slate-700 mb-1">Paid By Bank Transfer</p>
+                            <div class="flex items-center justify-between mb-1">
+                                <p class="font-bold text-slate-700">Paid By Bank Transfer</p>
+                                <span id="slipPaymentBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">
+                                    <span class="material-icons" style="font-size:10px">account_balance</span>
+                                    <span id="slipPaymentMethod">BANK TRANSFER</span>
+                                </span>
+                            </div>
                             <p>Acc. Holder : <span id="slipBankHolder" class="font-semibold text-slate-800">-</span></p>
                             <p>Acc. No &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span id="slipBankAccount" class="font-semibold text-slate-800">-</span></p>
                             <p>Bank &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span id="slipBankName" class="font-semibold text-slate-800">-</span></p>
@@ -1017,6 +1023,13 @@ $periodStatus = $period['status'] ?? 'draft';
                     document.getElementById('slipOrigCurLabel1').textContent = origCur;
                     document.getElementById('slipOrigCurLabel2').textContent = origCur;
                     document.getElementById('slipOrigCurLabel3').textContent = origCur;
+                    
+                    // Dynamic Kurs conversion label (e.g. "1 RM =")
+                    document.getElementById('slipKursLabel').textContent = 'Rp';
+                    
+                    // Payment method badge
+                    const payMethod = (item.payment_method || 'bank_transfer').replace(/_/g, ' ').toUpperCase();
+                    document.getElementById('slipPaymentMethod').textContent = payMethod;
                     
                     // Fill editable fields
                     document.getElementById('slipOrigBasic').value = parseFloat(item.original_basic || 0);

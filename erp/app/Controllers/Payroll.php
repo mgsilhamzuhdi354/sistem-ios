@@ -441,7 +441,10 @@ class Payroll extends BaseController
         $this->requireAuth();
         
         $sql = "SELECT pi.*, c.contract_no, c.crew_id,
-                       cr.email, cr.full_name, cr.bank_holder, cr.bank_account, cr.bank_name
+                       cr.email, cr.full_name,
+                       COALESCE(pi.bank_holder, cr.bank_holder) AS bank_holder,
+                       COALESCE(pi.bank_account, cr.bank_account) AS bank_account,
+                       COALESCE(pi.bank_name, cr.bank_name) AS bank_name
                 FROM payroll_items pi
                 LEFT JOIN contracts c ON pi.contract_id = c.id
                 LEFT JOIN crews cr ON c.crew_id = cr.id
