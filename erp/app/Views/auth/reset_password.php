@@ -72,7 +72,7 @@
         <div class="login-card">
             <div class="login-header">
                 <div class="login-logo">
-                    <img src="<?= BASE_URL ?>assets/images/logo.jpg" alt="PT Indo Oceancrew Services">
+                    <img src="<?= BASE_URL ?>assets/images/logo.png" alt="PT Indo Oceancrew Services">
                 </div>
                 <h1>Reset Password</h1>
                 <p>Masukkan password baru Anda</p>
