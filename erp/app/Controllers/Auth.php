@@ -131,27 +131,30 @@ class Auth extends BaseController
         $emailSent = $mailer->sendOtpCode($user['email'], $otpCode, $user['full_name']);
         
         if (!$emailSent) {
-            // Check if local environment
-            $isLocal = ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?? 'production') === 'local' || 
-                       ($_SERVER['HTTP_HOST'] === 'localhost') ||
-                       (strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false);
+            // Cek apakah benar-benar di localhost (HANYA cek HTTP_HOST, bukan APP_ENV)
+            $host = $_SERVER['HTTP_HOST'] ?? '';
+            $hostOnly = explode(':', $host)[0];
+            $isLocal = in_array($hostOnly, ['localhost', '127.0.0.1', '::1']);
             
             if ($isLocal) {
-                // LOCAL DEV: Tetap pakai OTP, tapi tampilkan kode di layar
-                // (karena SMTP tidak berfungsi di localhost)
+                // LOCAL DEV: Tetap pakai OTP, tampilkan kode di layar
                 $_SESSION['pending_login'] = [
                     'user_id' => $user['id'],
                     'email' => $user['email'],
                     'expires' => time() + 300
                 ];
                 
-                $this->setFlash('warning', "⚠️ SMTP tidak aktif (Mode Local). Kode OTP Anda: <strong style='font-size:1.5em; letter-spacing:3px;'>{$otpCode}</strong>");
+                $this->setFlash('warning', "SMTP belum aktif (Localhost). Kode OTP: <strong style='font-size:1.5em; letter-spacing:3px;'>{$otpCode}</strong>");
                 $this->redirect('auth/verify-otp');
                 return;
             }
             
-            // PRODUCTION: Tolak login kalau OTP gagal dikirim
-            $this->loginHistoryModel->logAttempt($user['id'], 'failed', 'OTP Send Failed - SMTP Error');
+            // PRODUCTION: Log error dan tolak login
+            $mailerErrors = $mailer->getErrors();
+            $errorDetail = !empty($mailerErrors) ? implode('; ', $mailerErrors) : 'Unknown SMTP error';
+            error_log("[OTP SMTP ERROR] User: {$user['email']} - {$errorDetail}");
+            
+            $this->loginHistoryModel->logAttempt($user['id'], 'failed', 'OTP Send Failed - ' . $errorDetail);
             $this->setFlash('error', 'Gagal mengirim kode OTP. Sistem email sedang gangguan. Hubungi IT Support.');
             $this->redirect('auth/login');
             return;

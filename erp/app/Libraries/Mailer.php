@@ -93,7 +93,8 @@ class Mailer
             'ssl' => [
                 'verify_peer' => false,
                 'verify_peer_name' => false,
-                'allow_self_signed' => true
+                'allow_self_signed' => true,
+                'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_SSLv23_CLIENT
             ]
         ]);
         
@@ -111,9 +112,13 @@ class Mailer
         );
         
         if (!$socket) {
-            $this->errors[] = "Failed to connect to SMTP server ({$protocol}): {$errstr}";
+            $this->errors[] = "SMTP connect failed ({$protocol}): [{$errno}] {$errstr}";
+            error_log("[MAILER] SMTP connect failed to {$protocol}: [{$errno}] {$errstr}");
             return false;
         }
+        
+        // Set stream timeout
+        stream_set_timeout($socket, 15);
         
         // Read greeting
         $this->smtpRead($socket);
