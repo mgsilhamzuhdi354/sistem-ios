@@ -285,9 +285,9 @@ class Payroll extends BaseController
         $period = $this->periodModel->find($item['payroll_period_id']);
         
         // Get crew bank details
-        $crew = ['bank_account_name' => '', 'bank_account_number' => '', 'bank_name' => ''];
+        $crew = ['bank_holder' => '', 'bank_account' => '', 'bank_name' => ''];
         if (!empty($item['crew_id'])) {
-            $crewStmt = $this->db->prepare("SELECT full_name, bank_account_name, bank_account_number, bank_name, email FROM crews WHERE id = ?");
+            $crewStmt = $this->db->prepare("SELECT full_name, bank_holder, bank_account, bank_name, email FROM crews WHERE id = ?");
             $crewStmt->bind_param('i', $item['crew_id']);
             $crewStmt->execute();
             $crewData = $crewStmt->get_result()->fetch_assoc();
@@ -412,7 +412,7 @@ class Payroll extends BaseController
             $body .= "Link: " . BASE_URL . "payroll/payslip/{$itemId}\n\n";
             $body .= "PT. Indo Oceancrew Services";
             
-            $headers = "From: noreply@indooceancrewservice.com\r\n";
+            $headers = "From: PT Indo Oceancrew Services <ios@indooceancrew.co.id>\r\n";
             $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
             
             mail($email, $subject, $body, $headers);

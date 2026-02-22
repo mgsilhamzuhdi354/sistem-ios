@@ -329,8 +329,8 @@
         <div class="footer-grid">
             <div class="footer-left">
                 <p>Paid By Bank Transfer</p>
-                <p>Acc. Holder : <?= htmlspecialchars(strtoupper($crew['bank_account_name'] ?? $crewName)) ?></p>
-                <p>Acc. No &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <?= htmlspecialchars($crew['bank_account_number'] ?? '-') ?></p>
+                <p>Acc. Holder : <?= htmlspecialchars(strtoupper($crew['bank_holder'] ?? $crewName)) ?></p>
+                <p>Acc. No &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <?= htmlspecialchars($crew['bank_account'] ?? '-') ?></p>
                 <p>Bank &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <?= htmlspecialchars(strtoupper($crew['bank_name'] ?? '-')) ?></p>
             </div>
             <div class="footer-right">

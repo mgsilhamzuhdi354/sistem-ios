@@ -1,23 +1,24 @@
 <?php
 /**
  * Email Configuration for PT Indo Ocean ERP
+ * SMTP via Domainesia - ios@indooceancrew.co.id
  * File ini berisi kredensial SMTP - JANGAN commit ke Git!
  */
 
 return [
-    // SMTP Server Gmail
-    'smtp_host' => 'smtp.gmail.com',
-    'smtp_port' => 587,
-    'smtp_secure' => 'tls',
+    // SMTP Server Domainesia
+    'smtp_host' => 'indooceancrew.co.id',
+    'smtp_port' => 465,
+    'smtp_secure' => 'ssl',
     
-    // Kredensial Gmail - indooceancrewservice@gmail.com
-    'smtp_user' => 'indooceancrewservice@gmail.com',   // Email SMTP
-    'smtp_pass' => 'kabpgxlpzqkznnla',                  // App Password Gmail (tanpa spasi)
+    // Kredensial Domainesia
+    'smtp_user' => 'ios@indooceancrew.co.id',
+    'smtp_pass' => 'Oceancrew1!',
     
     // Sender Info
-    'from_email' => 'indooceancrewservice@gmail.com',  // Email pengirim
-    'from_name'  => 'PT Indo Ocean ERP',
+    'from_email' => 'ios@indooceancrew.co.id',
+    'from_name'  => 'PT Indo Oceancrew Services',
     
-    // Debug mode - set true untuk melihat error SMTP
-    'debug' => true,
+    // Debug mode - set true untuk melihat error SMTP di log
+    'debug' => false,
 ];

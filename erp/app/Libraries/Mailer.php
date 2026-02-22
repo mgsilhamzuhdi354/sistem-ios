@@ -86,8 +86,9 @@ class Mailer
         $pass = $this->config['smtp_pass'];
         $from = $this->config['from_email'];
         $fromName = $this->config['from_name'];
+        $secure = $this->config['smtp_secure'] ?? 'tls';
         
-        // Connect to SMTP server with TLS
+        // Build SSL context
         $context = stream_context_create([
             'ssl' => [
                 'verify_peer' => false,
@@ -96,8 +97,12 @@ class Mailer
             ]
         ]);
         
+        // For SSL (port 465): connect with ssl:// prefix directly
+        // For TLS (port 587): connect with tcp:// then upgrade via STARTTLS
+        $protocol = ($secure === 'ssl') ? "ssl://{$host}:{$port}" : "tcp://{$host}:{$port}";
+        
         $socket = @stream_socket_client(
-            "tcp://{$host}:{$port}",
+            $protocol,
             $errno,
             $errstr,
             30,
@@ -106,7 +111,7 @@ class Mailer
         );
         
         if (!$socket) {
-            $this->errors[] = "Failed to connect to SMTP server: {$errstr}";
+            $this->errors[] = "Failed to connect to SMTP server ({$protocol}): {$errstr}";
             return false;
         }
         
@@ -117,26 +122,28 @@ class Mailer
         $this->smtpWrite($socket, "EHLO localhost\r\n");
         $this->smtpRead($socket);
         
-        // STARTTLS
-        $this->smtpWrite($socket, "STARTTLS\r\n");
-        $response = $this->smtpRead($socket);
-        
-        if (strpos($response, '220') === false) {
-            $this->errors[] = "STARTTLS failed";
-            fclose($socket);
-            return false;
+        // STARTTLS only for TLS mode (port 587), skip for SSL (port 465)
+        if ($secure !== 'ssl') {
+            $this->smtpWrite($socket, "STARTTLS\r\n");
+            $response = $this->smtpRead($socket);
+            
+            if (strpos($response, '220') === false) {
+                $this->errors[] = "STARTTLS failed";
+                fclose($socket);
+                return false;
+            }
+            
+            // Enable TLS encryption
+            if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                $this->errors[] = "Failed to enable TLS";
+                fclose($socket);
+                return false;
+            }
+            
+            // EHLO again after TLS
+            $this->smtpWrite($socket, "EHLO localhost\r\n");
+            $this->smtpRead($socket);
         }
-        
-        // Enable TLS encryption
-        if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
-            $this->errors[] = "Failed to enable TLS";
-            fclose($socket);
-            return false;
-        }
-        
-        // EHLO again after TLS
-        $this->smtpWrite($socket, "EHLO localhost\r\n");
-        $this->smtpRead($socket);
         
         // AUTH LOGIN
         $this->smtpWrite($socket, "AUTH LOGIN\r\n");
