@@ -254,8 +254,8 @@ $periodStatus = $period['status'] ?? 'draft';
                                 </div>
                                 <p class="text-sm font-bold text-slate-800">Tanggal Gajian Kru</p>
                                 <p class="text-xs text-slate-500 mt-0.5"><?= $payDayName ?>, <?= $pDay ?> <?= $monthNames[$month] ?> <?= $year ?></p>
-                                <a href="<?= BASE_URL ?>settings" class="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-800 font-medium mt-2">
-                                    <span class="material-icons" style="font-size:12px">settings</span> Ubah Tanggal
+                                <a href="javascript:void(0)" onclick="openChangeDateModal()" class="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-800 font-medium mt-2 cursor-pointer group">
+                                    <span class="material-icons group-hover:rotate-90 transition-transform" style="font-size:12px">edit_calendar</span> Ubah Tanggal
                                 </a>
                             </div>
                         </div>
@@ -961,6 +961,48 @@ $periodStatus = $period['status'] ?? 'draft';
         </div>
     </div>
 
+    <!-- Change Payroll Date Modal -->
+    <div id="changeDateModal" class="fixed inset-0 z-[200] hidden items-center justify-center" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+        <div id="changeDateContent" class="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-sm mx-4" style="transform: perspective(800px) rotateY(-90deg); opacity:0; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-5 text-white text-center">
+                <span class="material-icons text-4xl mb-2 animate-bounce" style="animation-delay: 0.3s">edit_calendar</span>
+                <h3 class="text-lg font-bold">Ubah Tanggal Gajian</h3>
+                <p class="text-xs opacity-80 mt-1">Pilih tanggal gajian kru setiap bulan</p>
+            </div>
+            <!-- Body -->
+            <div class="p-6">
+                <div class="text-center mb-4">
+                    <label class="text-sm font-semibold text-slate-600 mb-2 block">Tanggal Gajian Bulanan</label>
+                    <div class="flex items-center justify-center gap-3">
+                        <button onclick="adjustPayDay(-1)" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-600 flex items-center justify-center transition-all shadow-sm hover:shadow-md">
+                            <span class="material-icons">remove</span>
+                        </button>
+                        <input type="number" id="newPayrollDay" min="1" max="28" value="<?= $pDay ?>" 
+                               class="w-20 h-16 text-center text-3xl font-black text-blue-600 border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all">
+                        <button onclick="adjustPayDay(1)" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-600 flex items-center justify-center transition-all shadow-sm hover:shadow-md">
+                            <span class="material-icons">add</span>
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-2">Rentang: 1 - 28 setiap bulan</p>
+                </div>
+                <div id="changeDatePreview" class="bg-blue-50 rounded-xl p-3 text-center mb-4">
+                    <p class="text-xs text-blue-600 font-medium">Preview bulan ini:</p>
+                    <p id="changeDatePreviewText" class="text-sm font-bold text-blue-800 mt-1"></p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="closeChangeDateModal()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-all text-sm">
+                        Batal
+                    </button>
+                    <button onclick="savePayrollDay()" id="btnSavePayDay" class="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl transition-all text-sm shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                        <span class="material-icons text-sm">save</span> Simpan
+                    </button>
+                </div>
+                <div id="changeDateStatus" class="text-center text-xs mt-3 hidden"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const PAYROLL_BASE = '<?= BASE_URL ?>';
         let currentPayslipItemId = null;
@@ -1217,6 +1259,95 @@ $periodStatus = $period['status'] ?? 'draft';
                 btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
                 btn.innerHTML = '<span class="material-icons text-sm">send</span> Kirim via Email';
             }, 5000);
+        }
+
+        // === Change Payroll Date Modal ===
+        function openChangeDateModal() {
+            const modal = document.getElementById('changeDateModal');
+            const content = document.getElementById('changeDateContent');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            updateDatePreview();
+            setTimeout(() => {
+                content.style.transform = 'perspective(800px) rotateY(0deg)';
+                content.style.opacity = '1';
+            }, 50);
+        }
+
+        function closeChangeDateModal() {
+            const content = document.getElementById('changeDateContent');
+            content.style.transform = 'perspective(800px) rotateY(90deg)';
+            content.style.opacity = '0';
+            setTimeout(() => {
+                const modal = document.getElementById('changeDateModal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 400);
+        }
+
+        function adjustPayDay(delta) {
+            const input = document.getElementById('newPayrollDay');
+            let val = parseInt(input.value) + delta;
+            if (val < 1) val = 1;
+            if (val > 28) val = 28;
+            input.value = val;
+            updateDatePreview();
+        }
+
+        function updateDatePreview() {
+            const day = parseInt(document.getElementById('newPayrollDay').value) || 15;
+            const monthNames = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+            const period = CURRENT_PERIOD;
+            const m = period.period_month || new Date().getMonth() + 1;
+            const y = period.period_year || new Date().getFullYear();
+            const dt = new Date(y, m - 1, day);
+            const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+            document.getElementById('changeDatePreviewText').textContent = 
+                days[dt.getDay()] + ', ' + day + ' ' + monthNames[m] + ' ' + y;
+        }
+
+        // Listen for input changes
+        document.getElementById('newPayrollDay')?.addEventListener('input', updateDatePreview);
+
+        async function savePayrollDay() {
+            const day = parseInt(document.getElementById('newPayrollDay').value);
+            if (day < 1 || day > 28) {
+                alert('Tanggal harus antara 1 - 28');
+                return;
+            }
+
+            const btn = document.getElementById('btnSavePayDay');
+            const statusEl = document.getElementById('changeDateStatus');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-spin material-icons text-sm">refresh</span> Menyimpan...';
+
+            try {
+                const formData = new FormData();
+                formData.append('payroll_day', day);
+
+                const res = await fetch(PAYROLL_BASE + 'api_payslip.php?action=update_payday', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                statusEl.classList.remove('hidden');
+                if (data.success) {
+                    statusEl.innerHTML = '<span class="text-emerald-600">✅ ' + data.message + '</span>';
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    statusEl.innerHTML = '<span class="text-red-600">❌ ' + (data.message || 'Gagal menyimpan') + '</span>';
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="material-icons text-sm">save</span> Simpan';
+                }
+            } catch (e) {
+                statusEl.classList.remove('hidden');
+                statusEl.innerHTML = '<span class="text-red-600">❌ Error: ' + e.message + '</span>';
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-icons text-sm">save</span> Simpan';
+            }
         }
     </script>
 

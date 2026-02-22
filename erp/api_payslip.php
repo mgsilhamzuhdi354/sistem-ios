@@ -288,8 +288,33 @@ if ($action === 'get' && $id > 0) {
         echo json_encode(['success' => false, 'message' => 'Gagal mengirim email: ' . $e->getMessage()]);
     }
 
+} elseif ($action === 'update_payday' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $day = intval($_POST['payroll_day'] ?? 0);
+    if ($day < 1 || $day > 28) {
+        echo json_encode(['success' => false, 'message' => 'Tanggal harus antara 1 - 28']);
+        exit;
+    }
+    
+    // Check if settings table exists and has payroll_day
+    $check = $db->query("SELECT id FROM settings WHERE setting_key = 'payroll_day' LIMIT 1");
+    if ($check && $check->num_rows > 0) {
+        $stmt = $db->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'payroll_day'");
+        $dayStr = (string)$day;
+        $stmt->bind_param('s', $dayStr);
+        $result = $stmt->execute();
+        $stmt->close();
+    } else {
+        $stmt = $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('payroll_day', ?)");
+        $dayStr = (string)$day;
+        $stmt->bind_param('s', $dayStr);
+        $result = $stmt->execute();
+        $stmt->close();
+    }
+    
+    echo json_encode(['success' => $result, 'message' => $result ? 'Tanggal gajian berhasil diubah ke tanggal ' . $day : 'Gagal menyimpan']);
+
 } else {
-    echo json_encode(['success' => false, 'message' => 'Invalid action. Use ?action=get&id=X, POST action=update, or POST action=send_email']);
+    echo json_encode(['success' => false, 'message' => 'Invalid action. Use ?action=get&id=X, POST action=update, POST action=send_email, or POST action=update_payday']);
 }
 
 $db->close();
