@@ -75,6 +75,7 @@ function getDB() {
             ];
             $hostsToTry = array_unique($hostsToTry);
             
+            $connectionErrors = [];
             foreach ($hostsToTry as $host) {
                 try {
                     $conn = @new mysqli(
@@ -88,12 +89,20 @@ function getDB() {
                         $conn->set_charset($config['charset']);
                         $conn->options(MYSQLI_OPT_CONNECT_TIMEOUT, 10);
                         return $conn;
+                    } else {
+                        $connectionErrors[$host] = $conn->connect_error;
                     }
                 } catch (\Exception $e) {
+                    $connectionErrors[$host] = $e->getMessage();
                     continue;
                 }
             }
-            die("Database connection failed: Could not connect to MariaDB on any host. Tried: " . implode(', ', $hostsToTry));
+            
+            $errorDetails = '';
+            foreach ($connectionErrors as $h => $err) {
+                $errorDetails .= "[$h: $err] ";
+            }
+            die("Database connection failed: Could not connect to MariaDB on any host.<br>Details: " . $errorDetails);
         } else {
             $conn = @new mysqli(
                 $config['hostname'],

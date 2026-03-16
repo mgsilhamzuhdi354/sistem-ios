@@ -139,6 +139,7 @@ class BaseController
             ];
             $hostsToTry = array_unique($hostsToTry);
             
+            $connectionErrors = [];
             foreach ($hostsToTry as $host) {
                 try {
                     $conn = @new \mysqli(
@@ -152,14 +153,21 @@ class BaseController
                         $conn->set_charset($config['charset']);
                         $conn->options(MYSQLI_OPT_CONNECT_TIMEOUT, 10);
                         return $conn;
+                    } else {
+                        $connectionErrors[$host] = $conn->connect_error;
                     }
                 } catch (\Exception $e) {
+                    $connectionErrors[$host] = $e->getMessage();
                     // Try next host
                     continue;
                 }
             }
             // All hosts failed
-            die('Database connection failed: Could not connect to MariaDB on any host. Tried: ' . implode(', ', $hostsToTry));
+            $errorDetails = '';
+            foreach ($connectionErrors as $h => $err) {
+                $errorDetails .= "[$h: $err] ";
+            }
+            die('Database connection failed: Could not connect to MariaDB on any host.<br>Details: ' . $errorDetails);
         }
         
         // Windows/Laragon: direct connection
