@@ -1,0 +1,1241 @@
+-- MySQL dump 10.13  Distrib 8.4.3, for Win64 (x86_64)
+--
+-- Host: localhost    Database: erp_db
+-- ------------------------------------------------------
+-- Server version	8.4.3
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `activity_logs`
+--
+
+DROP TABLE IF EXISTS `activity_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `activity_logs` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int DEFAULT NULL,
+  `action` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `entity_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `entity_id` int DEFAULT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `old_values` json DEFAULT NULL,
+  `new_values` json DEFAULT NULL,
+  `ip_address` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `activity_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=63 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `activity_logs`
+--
+
+LOCK TABLES `activity_logs` WRITE;
+/*!40000 ALTER TABLE `activity_logs` DISABLE KEYS */;
+INSERT INTO `activity_logs` VALUES (1,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36','2026-01-20 05:14:56'),(2,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36','2026-01-20 05:19:04'),(3,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36','2026-01-20 05:22:31'),(4,5,'login','user',5,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0','2026-01-25 20:11:27'),(5,5,'login','user',5,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0','2026-01-28 14:56:19'),(6,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-01-30 20:52:16'),(7,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-01-30 20:52:47'),(8,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-01-31 03:50:37'),(9,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-01-31 03:50:55'),(10,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-01-31 06:05:12'),(11,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-01-31 06:31:44'),(12,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-01 12:58:18'),(13,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-01 16:12:43'),(14,1,'create','crew',1,'Created crew: cvghj',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-01 16:41:14'),(15,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-02 04:17:18'),(16,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-02 05:47:20'),(17,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-02 06:33:10'),(18,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-02 14:29:38'),(19,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-02 15:25:50'),(20,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-02 20:55:49'),(21,1,'logout','user',1,'User logged out',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-02 21:20:03'),(22,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-02 21:20:29'),(23,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-03 03:15:03'),(24,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-03 11:54:08'),(25,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-03 13:29:22'),(26,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-03 13:29:52'),(27,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-03 14:55:35'),(28,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-03 16:27:25'),(29,1,'login','user',1,'User logged in (OTP bypassed - Local Mode)',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-03 22:15:41'),(30,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-03 22:42:16'),(31,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-04 02:55:01'),(32,1,'create','crew',2,'Created crew: hgchg',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-04 03:04:21'),(33,1,'crew_skill_added','Added skill \'Navigation\' to crew cvghj',NULL,NULL,NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-04 04:45:07'),(34,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-04 06:36:25'),(35,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-04 06:59:22'),(36,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-04 07:49:22'),(37,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-04 09:56:36'),(38,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-04 09:57:07'),(39,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0','2026-02-06 18:15:22'),(40,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0','2026-02-07 00:40:48'),(41,1,'login','user',1,'Dev Bypass Login (localhost)',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-10 03:04:26'),(42,1,'login','user',1,'Dev Bypass Login (localhost)',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-10 03:05:15'),(43,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-10 03:56:14'),(44,1,'login','user',1,'Dev Bypass Login (localhost)',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-10 04:00:53'),(45,1,'login','user',1,'Dev Bypass Login (localhost)',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-10 04:01:15'),(46,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-10 07:21:18'),(47,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-10 07:49:33'),(48,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-10 10:03:52'),(49,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-10 13:27:50'),(50,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-10 15:10:41'),(51,1,'login','user',1,'User logged in (OTP bypassed - Local Mode)',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-10 23:16:52'),(52,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0','2026-02-11 03:16:18'),(53,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-11 03:27:00'),(54,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-11 06:24:58'),(55,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-15 17:25:52'),(56,1,'approve_candidate',NULL,NULL,'Approved candidate: vfdbd (Crew ID: 4)',NULL,NULL,'127.0.0.1',NULL,'2026-02-15 18:27:44'),(57,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-16 06:47:05'),(58,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-18 04:00:49'),(59,NULL,'approve_candidate',NULL,NULL,'Approved candidate: fgfg (Crew ID: 6)',NULL,NULL,'127.0.0.1',NULL,'2026-02-18 04:04:56'),(60,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-18 04:40:47'),(61,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-18 23:36:56'),(62,1,'login','user',1,'User logged in with 2FA',NULL,NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','2026-02-18 23:37:23');
+/*!40000 ALTER TABLE `activity_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `clients`
+--
+
+DROP TABLE IF EXISTS `clients`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `clients` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `short_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `country` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `city` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `postal_code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `website` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `contact_person` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `contact_email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `contact_phone` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `client_rate` decimal(10,2) DEFAULT '0.00',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `clients`
+--
+
+LOCK TABLES `clients` WRITE;
+/*!40000 ALTER TABLE `clients` DISABLE KEYS */;
+INSERT INTO `clients` VALUES (1,'PT PANAMA','zuhdizuhdi-test','indonesia','rfvbfbfbf','palembang',NULL,'','','','','','',1,'2026-01-20 05:39:02','2026-02-04 04:27:40',NULL,0.00),(2,'Test Client CorpIndonesia','info@testclient.com','','Jl. Sudirman No. 1','',NULL,'','','','','','',1,'2026-02-03 05:50:22','2026-02-03 05:50:22',NULL,0.00),(3,'Full Test ClientSingapore','info@ftc.com','','Orchard Roadhttps://ftc.com','',NULL,'','','','','','john@ftc.com',1,'2026-02-03 05:55:30','2026-02-03 05:55:30',NULL,0.00),(4,'Test Client','','Indonesia','','',NULL,'test@example.com','','','','','',1,'2026-02-03 05:58:23','2026-02-03 05:58:23',NULL,0.00),(5,'Contact Test Client','','Singapore','','',NULL,'','','','John Doe','john@example.com','',1,'2026-02-03 06:02:07','2026-02-03 06:02:07',NULL,0.00);
+/*!40000 ALTER TABLE `clients` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `contract_approvals`
+--
+
+DROP TABLE IF EXISTS `contract_approvals`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `contract_approvals` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `contract_id` int NOT NULL,
+  `approval_level` enum('crewing','hr','director') NOT NULL,
+  `status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `approver_id` int DEFAULT NULL,
+  `approver_name` varchar(100) DEFAULT NULL,
+  `approved_at` timestamp NULL DEFAULT NULL,
+  `notes` text,
+  `rejection_reason` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `contract_id` (`contract_id`),
+  CONSTRAINT `contract_approvals_ibfk_1` FOREIGN KEY (`contract_id`) REFERENCES `contracts` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `contract_approvals`
+--
+
+LOCK TABLES `contract_approvals` WRITE;
+/*!40000 ALTER TABLE `contract_approvals` DISABLE KEYS */;
+INSERT INTO `contract_approvals` VALUES (1,1,'crewing','approved',5,'Admin','2026-01-25 13:20:15',NULL,NULL,'2026-01-25 20:19:56'),(2,3,'crewing','approved',1,'Admin','2026-02-02 08:33:21',NULL,NULL,'2026-02-02 08:32:45'),(3,4,'crewing','approved',1,'Admin','2026-02-06 17:50:54',NULL,NULL,'2026-02-07 00:50:39');
+/*!40000 ALTER TABLE `contract_approvals` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `contract_deductions`
+--
+
+DROP TABLE IF EXISTS `contract_deductions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `contract_deductions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `contract_id` int NOT NULL,
+  `deduction_type` enum('insurance','medical','training','advance','loan','other') NOT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `amount` decimal(12,2) NOT NULL,
+  `currency_id` int DEFAULT '1',
+  `is_recurring` tinyint(1) DEFAULT '1' COMMENT '1=monthly, 0=one-time',
+  `recurring_months` int DEFAULT NULL COMMENT 'Number of months to deduct',
+  `deducted_count` int DEFAULT '0',
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `contract_id` (`contract_id`),
+  KEY `currency_id` (`currency_id`),
+  CONSTRAINT `contract_deductions_ibfk_1` FOREIGN KEY (`contract_id`) REFERENCES `contracts` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `contract_deductions_ibfk_2` FOREIGN KEY (`currency_id`) REFERENCES `currencies` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `contract_deductions`
+--
+
+LOCK TABLES `contract_deductions` WRITE;
+/*!40000 ALTER TABLE `contract_deductions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `contract_deductions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `contract_documents`
+--
+
+DROP TABLE IF EXISTS `contract_documents`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `contract_documents` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `contract_id` int NOT NULL,
+  `document_type` enum('contract','amendment','termination','other') DEFAULT 'contract',
+  `language` enum('id','en') DEFAULT 'id',
+  `file_name` varchar(255) NOT NULL,
+  `file_path` varchar(500) NOT NULL,
+  `file_size` int DEFAULT NULL,
+  `is_signed` tinyint(1) DEFAULT '0',
+  `signed_at` timestamp NULL DEFAULT NULL,
+  `signature_type` enum('manual','digital') DEFAULT 'manual',
+  `generated_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `contract_id` (`contract_id`),
+  CONSTRAINT `contract_documents_ibfk_1` FOREIGN KEY (`contract_id`) REFERENCES `contracts` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `contract_documents`
+--
+
+LOCK TABLES `contract_documents` WRITE;
+/*!40000 ALTER TABLE `contract_documents` DISABLE KEYS */;
+/*!40000 ALTER TABLE `contract_documents` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `contract_logs`
+--
+
+DROP TABLE IF EXISTS `contract_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `contract_logs` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `contract_id` int NOT NULL,
+  `action` varchar(50) NOT NULL COMMENT 'created, updated, status_changed, approved, etc',
+  `field_changed` varchar(100) DEFAULT NULL,
+  `old_value` text,
+  `new_value` text,
+  `user_id` int DEFAULT NULL,
+  `user_name` varchar(100) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `contract_id` (`contract_id`),
+  CONSTRAINT `contract_logs_ibfk_1` FOREIGN KEY (`contract_id`) REFERENCES `contracts` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `contract_logs`
+--
+
+LOCK TABLES `contract_logs` WRITE;
+/*!40000 ALTER TABLE `contract_logs` DISABLE KEYS */;
+INSERT INTO `contract_logs` VALUES (1,1,'created',NULL,NULL,NULL,5,'System','::1','2026-01-25 20:19:56'),(2,1,'approved','approval_level',NULL,'crewing',NULL,NULL,'::1','2026-01-25 20:20:15'),(3,1,'renewed','new_contract_id',NULL,'2',NULL,NULL,'::1','2026-01-25 20:34:27'),(4,2,'created_from_renewal','previous_contract_id',NULL,'1',NULL,NULL,'::1','2026-01-25 20:34:27'),(5,3,'created',NULL,NULL,NULL,1,'System','::1','2026-02-02 08:32:45'),(6,3,'approved','approval_level',NULL,'crewing',NULL,NULL,'127.0.0.1','2026-02-02 15:33:21'),(7,2,'updated',NULL,NULL,NULL,1,'System','127.0.0.1','2026-02-03 15:31:05'),(8,2,'updated',NULL,NULL,NULL,1,'System','127.0.0.1','2026-02-03 15:45:43'),(9,4,'created',NULL,NULL,NULL,1,'System','::1','2026-02-07 00:50:39'),(10,4,'approved','approval_level',NULL,'crewing',NULL,NULL,'::1','2026-02-07 00:50:54');
+/*!40000 ALTER TABLE `contract_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `contract_salaries`
+--
+
+DROP TABLE IF EXISTS `contract_salaries`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `contract_salaries` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `contract_id` int NOT NULL,
+  `currency_id` int NOT NULL DEFAULT '1',
+  `exchange_rate` decimal(15,4) DEFAULT '1.0000',
+  `basic_salary` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `overtime_allowance` decimal(12,2) DEFAULT '0.00',
+  `leave_pay` decimal(12,2) DEFAULT '0.00',
+  `bonus` decimal(12,2) DEFAULT '0.00',
+  `other_allowance` decimal(12,2) DEFAULT '0.00',
+  `total_monthly` decimal(12,2) GENERATED ALWAYS AS (((((`basic_salary` + `overtime_allowance`) + `leave_pay`) + `bonus`) + `other_allowance`)) STORED,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `client_rate` decimal(12,2) DEFAULT '0.00' COMMENT 'Rate charged to client',
+  PRIMARY KEY (`id`),
+  KEY `contract_id` (`contract_id`),
+  KEY `currency_id` (`currency_id`),
+  CONSTRAINT `contract_salaries_ibfk_1` FOREIGN KEY (`contract_id`) REFERENCES `contracts` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `contract_salaries_ibfk_2` FOREIGN KEY (`currency_id`) REFERENCES `currencies` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `contract_salaries`
+--
+
+LOCK TABLES `contract_salaries` WRITE;
+/*!40000 ALTER TABLE `contract_salaries` DISABLE KEYS */;
+INSERT INTO `contract_salaries` (`id`, `contract_id`, `currency_id`, `exchange_rate`, `basic_salary`, `overtime_allowance`, `leave_pay`, `bonus`, `other_allowance`, `notes`, `created_at`, `updated_at`, `client_rate`) VALUES (1,1,2,15000.0000,3000000.00,0.00,0.00,0.00,0.00,NULL,'2026-01-25 20:19:56','2026-01-25 20:19:56',5000000.00),(2,2,2,15000.0000,3000000.00,0.00,0.00,0.00,0.00,NULL,'2026-01-25 20:34:27','2026-02-03 15:45:43',10000000.00),(3,3,2,12000.0000,22222.00,0.00,0.00,0.00,0.00,NULL,'2026-02-02 08:32:45','2026-02-02 08:32:45',2222222.00),(4,4,2,15000.0000,5000000.00,0.00,0.00,0.00,0.00,NULL,'2026-02-07 00:50:39','2026-02-07 00:50:39',10000000.00);
+/*!40000 ALTER TABLE `contract_salaries` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `contract_taxes`
+--
+
+DROP TABLE IF EXISTS `contract_taxes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `contract_taxes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `contract_id` int NOT NULL,
+  `tax_type` enum('pph21','pph21_non_npwp','exempt','foreign') DEFAULT 'pph21',
+  `npwp_number` varchar(30) DEFAULT NULL,
+  `tax_rate` decimal(5,2) DEFAULT '5.00',
+  `monthly_tax_amount` decimal(12,2) DEFAULT '0.00',
+  `effective_from` date DEFAULT NULL,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `contract_id` (`contract_id`),
+  CONSTRAINT `contract_taxes_ibfk_1` FOREIGN KEY (`contract_id`) REFERENCES `contracts` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `contract_taxes`
+--
+
+LOCK TABLES `contract_taxes` WRITE;
+/*!40000 ALTER TABLE `contract_taxes` DISABLE KEYS */;
+INSERT INTO `contract_taxes` VALUES (1,1,'pph21_non_npwp','',6.00,0.00,'2026-01-26',NULL,'2026-01-25 20:19:56'),(2,2,'pph21_non_npwp','',6.00,0.00,NULL,NULL,'2026-01-25 20:34:27'),(3,3,'pph21','',5.00,0.00,'2026-02-02',NULL,'2026-02-02 08:32:45'),(4,4,'pph21_non_npwp','',6.00,0.00,'2026-02-07',NULL,'2026-02-07 00:50:39');
+/*!40000 ALTER TABLE `contract_taxes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `contracts`
+--
+
+DROP TABLE IF EXISTS `contracts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `contracts` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `contract_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `crew_id` int NOT NULL,
+  `crew_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `vessel_id` int NOT NULL,
+  `client_id` int NOT NULL,
+  `rank_id` int NOT NULL,
+  `contract_type` enum('temporary','fixed','permanent') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'fixed',
+  `status` enum('draft','pending_approval','active','onboard','completed','terminated','cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'draft',
+  `sign_on_date` date DEFAULT NULL,
+  `sign_off_date` date DEFAULT NULL,
+  `duration_months` int DEFAULT NULL,
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `actual_sign_off_date` date DEFAULT NULL,
+  `embarkation_port` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `disembarkation_port` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_renewal` tinyint(1) DEFAULT '0',
+  `previous_contract_id` int DEFAULT NULL,
+  `termination_reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `updated_by` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `contract_no` (`contract_no`),
+  KEY `rank_id` (`rank_id`),
+  KEY `idx_contracts_crew` (`crew_id`),
+  KEY `idx_contracts_vessel` (`vessel_id`),
+  KEY `idx_contracts_client` (`client_id`),
+  KEY `idx_contracts_status` (`status`),
+  KEY `idx_contracts_dates` (`sign_on_date`,`sign_off_date`),
+  CONSTRAINT `contracts_ibfk_1` FOREIGN KEY (`vessel_id`) REFERENCES `vessels` (`id`),
+  CONSTRAINT `contracts_ibfk_2` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`),
+  CONSTRAINT `contracts_ibfk_3` FOREIGN KEY (`rank_id`) REFERENCES `ranks` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `contracts`
+--
+
+LOCK TABLES `contracts` WRITE;
+/*!40000 ALTER TABLE `contracts` DISABLE KEYS */;
+INSERT INTO `contracts` VALUES (1,'CTR-2026-0001',123344,'ilham',1,1,13,'temporary','completed','2026-01-26','2026-04-26',2,'',5,'2026-01-25 20:19:56','2026-01-25 20:34:27',NULL,'palembang ',NULL,0,NULL,NULL,NULL),(2,'CTR-2026-0002',123344,'ilham',1,1,13,'temporary','draft','2026-04-26','2026-06-26',2,'',5,'2026-01-25 20:34:27','2026-02-03 15:31:05',NULL,NULL,NULL,1,1,NULL,1),(3,'CTR-2026-0003',43243,'3232',2,1,19,'fixed','active','2026-02-02','2026-10-02',9,'',1,'2026-02-02 08:32:45','2026-02-02 15:33:21',NULL,'nbvc',NULL,0,NULL,NULL,NULL),(4,'CTR-2026-0004',43213,'gerry',2,5,10,'fixed','active','2026-02-07','2026-04-07',2,'',1,'2026-02-07 00:50:39','2026-02-07 00:50:54',NULL,'jakarta',NULL,0,NULL,NULL,NULL);
+/*!40000 ALTER TABLE `contracts` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `crew_documents`
+--
+
+DROP TABLE IF EXISTS `crew_documents`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `crew_documents` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `crew_id` int unsigned NOT NULL COMMENT 'FK to crews.id',
+  `document_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'FK to document_types.code',
+  `document_name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `document_number` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `file_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `file_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `file_size` int DEFAULT NULL COMMENT 'in bytes',
+  `mime_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `issue_date` date DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL,
+  `issuing_authority` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `issuing_place` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('valid','expiring_soon','expired','pending') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `verified_by` int DEFAULT NULL COMMENT 'FK to users.id',
+  `verified_at` timestamp NULL DEFAULT NULL,
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `uploaded_by` int DEFAULT NULL COMMENT 'FK to users.id',
+  PRIMARY KEY (`id`),
+  KEY `idx_crew_id` (`crew_id`),
+  KEY `idx_document_type` (`document_type`),
+  KEY `idx_expiry_date` (`expiry_date`),
+  KEY `idx_status` (`status`),
+  KEY `fk_crew_documents_verifier` (`verified_by`),
+  KEY `fk_crew_documents_uploader` (`uploaded_by`),
+  CONSTRAINT `fk_crew_documents_crew` FOREIGN KEY (`crew_id`) REFERENCES `crews` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_crew_documents_uploader` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_crew_documents_verifier` FOREIGN KEY (`verified_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `crew_documents`
+--
+
+LOCK TABLES `crew_documents` WRITE;
+/*!40000 ALTER TABLE `crew_documents` DISABLE KEYS */;
+INSERT INTO `crew_documents` VALUES (1,4,'OTHER','Photo','','uploads/crew_documents/4/doc_7_1771167259_da737533.jpeg','doc_7_1771167259_da737533.jpeg',34687,'0',NULL,NULL,NULL,NULL,'pending',NULL,NULL,NULL,'2026-02-15 17:52:57','2026-02-15 17:52:57',NULL),(4,5,'OTHER','Photo','','uploads/crew_documents/5/doc_7_1771188951_985fc9fa.jpeg','doc_7_1771188951_985fc9fa.jpeg',124487,'0',NULL,NULL,NULL,NULL,'pending',NULL,NULL,NULL,'2026-02-15 20:59:43','2026-02-15 20:59:43',NULL);
+/*!40000 ALTER TABLE `crew_documents` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `crew_experiences`
+--
+
+DROP TABLE IF EXISTS `crew_experiences`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `crew_experiences` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `crew_id` int unsigned NOT NULL COMMENT 'FK to crews.id',
+  `vessel_name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `vessel_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'e.g. Tanker, Container, Bulk Carrier',
+  `vessel_flag` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `gross_tonnage` int DEFAULT NULL,
+  `engine_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `company_name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `rank_position` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `reason_leaving` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `reference_contact` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_crew_id` (`crew_id`),
+  KEY `idx_dates` (`start_date`,`end_date`),
+  CONSTRAINT `fk_crew_experiences_crew` FOREIGN KEY (`crew_id`) REFERENCES `crews` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `crew_experiences`
+--
+
+LOCK TABLES `crew_experiences` WRITE;
+/*!40000 ALTER TABLE `crew_experiences` DISABLE KEYS */;
+/*!40000 ALTER TABLE `crew_experiences` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `crew_skills`
+--
+
+DROP TABLE IF EXISTS `crew_skills`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `crew_skills` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `crew_id` int unsigned NOT NULL COMMENT 'FK to crews.id',
+  `skill_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'e.g. Navigation, Engineering, Safety',
+  `skill_level` enum('basic','intermediate','advanced','expert') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'basic',
+  `certificate_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Certificate number if applicable',
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_crew_id` (`crew_id`),
+  KEY `idx_skill_name` (`skill_name`),
+  CONSTRAINT `fk_crew_skills_crew` FOREIGN KEY (`crew_id`) REFERENCES `crews` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `crew_skills`
+--
+
+LOCK TABLES `crew_skills` WRITE;
+/*!40000 ALTER TABLE `crew_skills` DISABLE KEYS */;
+INSERT INTO `crew_skills` VALUES (1,1,'Navigation','advanced','NAV-2024-001',NULL,'2026-02-04 04:45:07');
+/*!40000 ALTER TABLE `crew_skills` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `crews`
+--
+
+DROP TABLE IF EXISTS `crews`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `crews` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `employee_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Format: IO20260001',
+  `full_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nickname` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `gender` enum('male','female') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `birth_date` date DEFAULT NULL,
+  `birth_place` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nationality` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'Indonesia',
+  `religion` varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `marital_status` enum('single','married','divorced','widowed') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'single',
+  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `whatsapp` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `city` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `province` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `postal_code` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `emergency_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `emergency_relation` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `emergency_phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `bank_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `bank_account` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `bank_holder` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `current_rank_id` int DEFAULT NULL COMMENT 'FK to ranks.id',
+  `years_experience` int DEFAULT '0',
+  `total_sea_time_months` int DEFAULT '0',
+  `status` enum('available','onboard','standby','terminated','pending_approval','rejected','contracted') COLLATE utf8mb4_unicode_ci DEFAULT 'available',
+  `source` enum('manual','recruitment') COLLATE utf8mb4_unicode_ci DEFAULT 'manual',
+  `candidate_id` int DEFAULT NULL,
+  `approved_at` timestamp NULL DEFAULT NULL,
+  `photo` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` int DEFAULT NULL COMMENT 'FK to users.id',
+  `approved_by` int DEFAULT NULL,
+  `rejected_at` timestamp NULL DEFAULT NULL,
+  `rejected_by` int DEFAULT NULL,
+  `rejection_reason` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `employee_id` (`employee_id`),
+  KEY `idx_employee_id` (`employee_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_rank` (`current_rank_id`),
+  KEY `idx_full_name` (`full_name`),
+  KEY `fk_crews_creator` (`created_by`),
+  KEY `idx_source` (`source`),
+  KEY `idx_candidate_id` (`candidate_id`),
+  CONSTRAINT `fk_crews_creator` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_crews_rank` FOREIGN KEY (`current_rank_id`) REFERENCES `ranks` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `crews`
+--
+
+LOCK TABLES `crews` WRITE;
+/*!40000 ALTER TABLE `crews` DISABLE KEYS */;
+INSERT INTO `crews` VALUES (1,'IO20260001','cvghj','vbnbn','male','2026-02-01','fghjgvbhj','Indonesia','Islam','married','','','','','','','','','','','fghjfgh','567567','ghjkfghj',NULL,0,0,'available','manual',NULL,NULL,'uploads/crews/crew_1769964074_697f822aecd75.png','','2026-02-01 16:41:14','2026-02-01 16:41:14',1,NULL,NULL,NULL,NULL),(2,'IO202660002','hgchg','hghg','male','2000-07-11','jakarta','Indonesia','Buddha','single','vfcgvfcd@gmail.com','65454','5454','gfvgf','gfgvf','gvfcvfc','30128','gfdbvc','gvcvgf','65454','bca','54543','vcvc',NULL,1,0,'standby','manual',NULL,NULL,'uploads/crews/crew_1770174261_6982b735ded12.png','gbvfcg','2026-02-04 03:04:21','2026-02-04 03:04:21',1,NULL,NULL,NULL,NULL),(4,'IO20260215432','vfdbd',NULL,'male','2026-02-15','palembang','Indonesia','',NULL,'mgsilhamz@gmail.com','55555555555555',NULL,'bfb','bgbfb','','4444','555fff','Saudara','0',NULL,NULL,NULL,1,0,0,'available','recruitment',18,'2026-02-15 18:27:44','uploads/crew_photos/crew_4_1771178548.jpeg','Recruited for: gbbg','2026-02-15 17:51:42','2026-02-15 18:27:44',NULL,1,NULL,NULL,NULL),(5,'IO20260215558','dfff',NULL,'male',NULL,'','Indonesia','',NULL,'mgsilhamzuhdi354@gmail.com','55555',NULL,'','','','','','','',NULL,NULL,NULL,16,0,0,'pending_approval','recruitment',19,NULL,'uploads/crew_photos/crew_5_1771189183.jpeg','Recruited for: gbbg','2026-02-15 20:56:57','2026-02-15 20:59:43',NULL,NULL,NULL,NULL,NULL),(6,'IO20260216233','fgfg',NULL,'male',NULL,'','Indonesia','',NULL,'ayambakar@gmail.com','55555',NULL,'','','','','','','',NULL,NULL,NULL,16,0,0,'available','recruitment',21,'2026-02-18 04:04:56',NULL,'fff\n[APPROVED] ggg','2026-02-16 07:39:12','2026-02-18 04:04:56',NULL,1,NULL,NULL,NULL);
+/*!40000 ALTER TABLE `crews` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `currencies`
+--
+
+DROP TABLE IF EXISTS `currencies`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `currencies` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `code` varchar(3) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `symbol` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `code` (`code`)
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `currencies`
+--
+
+LOCK TABLES `currencies` WRITE;
+/*!40000 ALTER TABLE `currencies` DISABLE KEYS */;
+INSERT INTO `currencies` VALUES (1,'USD','US Dollar','$',1,'2026-01-16 09:13:43'),(2,'IDR','Indonesian Rupiah','Rp',1,'2026-01-16 09:13:43'),(3,'SGD','Singapore Dollar','S$',1,'2026-01-16 09:13:43'),(4,'EUR','Euro','€',1,'2026-01-16 09:13:43');
+/*!40000 ALTER TABLE `currencies` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `document_types`
+--
+
+DROP TABLE IF EXISTS `document_types`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `document_types` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'e.g. PASSPORT, COC, BST',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'English name',
+  `name_id` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Indonesian name',
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `is_mandatory` tinyint(1) DEFAULT '0' COMMENT '1 = mandatory for seafarers',
+  `validity_years` int DEFAULT NULL COMMENT 'Standard validity period in years',
+  `reminder_days` int DEFAULT '90' COMMENT 'Days before expiry to send reminder',
+  `category` enum('identity','seafarer','medical','training','visa','other') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'other',
+  `sort_order` int DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `code` (`code`),
+  KEY `idx_code` (`code`),
+  KEY `idx_category` (`category`),
+  KEY `idx_sort_order` (`sort_order`)
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `document_types`
+--
+
+LOCK TABLES `document_types` WRITE;
+/*!40000 ALTER TABLE `document_types` DISABLE KEYS */;
+INSERT INTO `document_types` VALUES (1,'KTP','National ID Card','KTP','Kartu Tanda Penduduk Indonesia',1,5,180,'identity',10,1,'2026-01-30 21:37:37'),(2,'PASSPORT','Passport','Paspor','International passport',1,5,180,'identity',20,1,'2026-01-30 21:37:37'),(3,'KK','Family Card','Kartu Keluarga','Kartu Keluarga Indonesia',0,NULL,NULL,'identity',30,1,'2026-01-30 21:37:37'),(4,'SEAMAN_BOOK','Seaman Book','Buku Pelaut','Seafarer identification and discharge book',1,5,180,'seafarer',100,1,'2026-01-30 21:37:37'),(5,'COC','Certificate of Competency','Sertifikat Kecakapan (COC)','Professional competency certificate for ship officers',1,5,180,'seafarer',110,1,'2026-01-30 21:37:37'),(6,'COE','Certificate of Endorsement','Sertifikat Endorsement (COE)','Indonesian endorsement of COC',1,5,180,'seafarer',120,1,'2026-01-30 21:37:37'),(7,'SID','Seafarer Identity Document','SID','International seafarer identity document',1,5,180,'seafarer',130,1,'2026-01-30 21:37:37'),(8,'MEDICAL','Medical Certificate','Sertifikat Kesehatan','Seafarer medical fitness certificate',1,1,60,'medical',200,1,'2026-01-30 21:37:37'),(9,'YELLOW_FEVER','Yellow Fever Vaccination','Vaksinasi Yellow Fever','Yellow fever vaccination certificate',0,10,365,'medical',210,1,'2026-01-30 21:37:37'),(10,'COVID_VAX','COVID-19 Vaccination','Vaksinasi COVID-19','COVID-19 vaccination certificate',1,NULL,NULL,'medical',220,1,'2026-01-30 21:37:37'),(11,'BST','Basic Safety Training','BST','STCW Basic Safety Training',1,5,180,'training',300,1,'2026-01-30 21:37:37'),(12,'AFF','Advanced Fire Fighting','AFF','STCW Advanced Fire Fighting',0,5,180,'training',310,1,'2026-01-30 21:37:37'),(13,'PST','Proficiency in Survival Craft','PST','STCW Proficiency in Survival Craft and Rescue Boats',0,5,180,'training',320,1,'2026-01-30 21:37:37'),(14,'MFA','Medical First Aid','MFA/MEFA','STCW Medical First Aid',0,5,180,'training',330,1,'2026-01-30 21:37:37'),(15,'GMDSS','GMDSS Radio Operator','GMDSS','Global Maritime Distress Safety System operator certificate',0,5,180,'training',340,1,'2026-01-30 21:37:37'),(16,'RADAR','Radar Navigation','Radar Navigation','Radar observer and navigation',0,5,180,'training',350,1,'2026-01-30 21:37:37'),(17,'ARPA','ARPA Training','ARPA','Automatic Radar Plotting Aid',0,5,180,'training',360,1,'2026-01-30 21:37:37'),(18,'ECDIS','ECDIS Training','ECDIS','Electronic Chart Display and Information System',0,5,180,'training',370,1,'2026-01-30 21:37:37'),(19,'SSO','Ship Security Officer','SSO','Ship Security Officer training',0,5,180,'training',380,1,'2026-01-30 21:37:37'),(20,'HAZMAT','Dangerous Goods Training','Dangerous Goods','Handling and transport of dangerous goods',0,5,180,'training',390,1,'2026-01-30 21:37:37'),(21,'US_VISA','US C1/D Visa','Visa Amerika (C1/D)','United States C1/D seafarer visa',0,10,180,'visa',400,1,'2026-01-30 21:37:37'),(22,'SCHENGEN','Schengen Visa','Visa Schengen','Schengen area visa',0,5,90,'visa',410,1,'2026-01-30 21:37:37'),(23,'SG_VISA','Singapore Visa','Visa Singapura','Singapore visa',0,2,90,'visa',420,1,'2026-01-30 21:37:37'),(24,'UK_VISA','UK Visa','Visa Inggris','United Kingdom visa',0,10,180,'visa',430,1,'2026-01-30 21:37:37');
+/*!40000 ALTER TABLE `document_types` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `erp_settings`
+--
+
+DROP TABLE IF EXISTS `erp_settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `erp_settings` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `setting_key` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `setting_value` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `setting_type` enum('string','number','boolean','json') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'string',
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `setting_key` (`setting_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `erp_settings`
+--
+
+LOCK TABLES `erp_settings` WRITE;
+/*!40000 ALTER TABLE `erp_settings` DISABLE KEYS */;
+/*!40000 ALTER TABLE `erp_settings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `flag_states`
+--
+
+DROP TABLE IF EXISTS `flag_states`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `flag_states` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `code` varchar(3) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `emoji` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `flag_states`
+--
+
+LOCK TABLES `flag_states` WRITE;
+/*!40000 ALTER TABLE `flag_states` DISABLE KEYS */;
+INSERT INTO `flag_states` VALUES (1,'ID','Indonesia',NULL,1),(2,'SG','Singapore',NULL,1),(3,'PA','Panama',NULL,1),(4,'LR','Liberia',NULL,1),(5,'ID','Indonesia',NULL,1),(6,'SG','Singapore',NULL,1),(7,'PA','Panama',NULL,1),(8,'LR','Liberia',NULL,1),(9,'ID','Indonesia',NULL,1),(10,'SG','Singapore',NULL,1),(11,'PA','Panama',NULL,1),(12,'LR','Liberia',NULL,1),(13,'ID','Indonesia',NULL,1),(14,'SG','Singapore',NULL,1),(15,'PA','Panama',NULL,1),(16,'LR','Liberia',NULL,1),(17,'ID','Indonesia',NULL,1),(18,'SG','Singapore',NULL,1),(19,'PA','Panama',NULL,1),(20,'LR','Liberia',NULL,1);
+/*!40000 ALTER TABLE `flag_states` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `hris_karyawan`
+--
+
+DROP TABLE IF EXISTS `hris_karyawan`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `hris_karyawan` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `hris_id` int NOT NULL COMMENT 'ID from HRIS system',
+  `nik` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nama_lengkap` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `jabatan` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `departemen` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status_karyawan` enum('aktif','resign','cuti') COLLATE utf8mb4_unicode_ci DEFAULT 'aktif',
+  `tanggal_bergabung` date DEFAULT NULL,
+  `synced_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `hris_id` (`hris_id`),
+  KEY `idx_hris_id` (`hris_id`),
+  KEY `idx_status` (`status_karyawan`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `hris_karyawan`
+--
+
+LOCK TABLES `hris_karyawan` WRITE;
+/*!40000 ALTER TABLE `hris_karyawan` DISABLE KEYS */;
+/*!40000 ALTER TABLE `hris_karyawan` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `integration_logs`
+--
+
+DROP TABLE IF EXISTS `integration_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `integration_logs` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `source_system` enum('erp','hris','recruitment','company_profile') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `action` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `entity_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `entity_id` int DEFAULT NULL,
+  `details` json DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_system` (`source_system`),
+  KEY `idx_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `integration_logs`
+--
+
+LOCK TABLES `integration_logs` WRITE;
+/*!40000 ALTER TABLE `integration_logs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `integration_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `login_history`
+--
+
+DROP TABLE IF EXISTS `login_history`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `login_history` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int DEFAULT NULL,
+  `login_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `ip_address` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `status` enum('success','failed') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'success',
+  `failure_reason` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `login_history_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=116 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `login_history`
+--
+
+LOCK TABLES `login_history` WRITE;
+/*!40000 ALTER TABLE `login_history` DISABLE KEYS */;
+INSERT INTO `login_history` VALUES (1,1,'2026-01-20 04:35:52','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36','failed','Wrong password'),(2,1,'2026-01-20 05:14:56','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36','success',NULL),(3,1,'2026-01-20 05:19:04','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36','success',NULL),(4,1,'2026-01-20 05:22:31','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36','success',NULL),(5,1,'2026-01-25 05:18:14','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0','failed','Wrong password'),(6,1,'2026-01-25 05:19:49','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0','failed','Wrong password'),(7,1,'2026-01-25 20:00:51','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0','failed','Wrong password'),(8,1,'2026-01-25 20:01:03','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0','failed','Wrong password'),(9,1,'2026-01-25 20:04:48','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0','failed','Wrong password'),(10,5,'2026-01-25 20:11:27','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0','success',NULL),(11,5,'2026-01-28 14:56:19','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0','success',NULL),(12,1,'2026-01-30 20:52:16','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(13,1,'2026-01-30 20:52:47','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(14,1,'2026-01-31 03:50:37','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(15,1,'2026-01-31 03:50:55','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(16,1,'2026-01-31 06:05:12','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(17,1,'2026-01-31 06:31:44','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(18,1,'2026-02-01 12:54:19','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(19,1,'2026-02-01 12:58:18','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(20,1,'2026-02-01 14:05:58','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(21,1,'2026-02-01 14:06:21','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(22,1,'2026-02-01 15:58:51','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(23,1,'2026-02-01 15:59:32','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(24,1,'2026-02-01 16:01:49','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(25,1,'2026-02-01 16:03:49','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Account locked'),(26,1,'2026-02-01 16:11:55','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(27,5,'2026-02-01 16:12:11','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(28,1,'2026-02-01 16:12:43','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(29,1,'2026-02-02 04:17:18','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(30,1,'2026-02-02 05:47:20','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(31,1,'2026-02-02 06:33:10','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(32,1,'2026-02-02 14:29:38','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(33,1,'2026-02-02 15:25:50','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(34,1,'2026-02-02 20:55:49','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(35,1,'2026-02-02 21:20:29','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(36,1,'2026-02-03 03:15:03','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(37,1,'2026-02-03 11:54:08','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(38,1,'2026-02-03 13:29:22','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(39,1,'2026-02-03 13:29:52','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(40,1,'2026-02-03 14:55:35','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(41,1,'2026-02-03 16:04:59','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(42,1,'2026-02-03 16:05:32','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(43,1,'2026-02-03 16:06:42','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(44,1,'2026-02-03 16:07:15','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(45,1,'2026-02-03 16:07:49','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(46,1,'2026-02-03 16:10:00','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Account locked'),(47,1,'2026-02-03 16:17:02','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Account locked'),(48,1,'2026-02-03 16:20:04','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Account locked'),(49,1,'2026-02-03 16:21:11','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Account locked'),(50,1,'2026-02-03 16:22:25','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Account locked'),(51,1,'2026-02-03 16:27:25','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(52,1,'2026-02-03 22:15:41','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success','OTP bypassed - Local Dev Mode'),(53,1,'2026-02-03 22:42:16','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(54,1,'2026-02-04 02:55:01','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(55,1,'2026-02-04 06:36:25','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(56,1,'2026-02-04 06:57:48','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(57,1,'2026-02-04 06:58:33','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(58,1,'2026-02-04 06:59:22','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(59,1,'2026-02-04 07:49:22','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(60,1,'2026-02-04 09:56:36','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(61,1,'2026-02-04 09:57:07','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(62,1,'2026-02-06 18:15:22','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0','success',NULL),(63,1,'2026-02-06 18:35:30','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(64,1,'2026-02-06 18:36:35','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(65,1,'2026-02-07 00:40:48','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0','success',NULL),(66,1,'2026-02-07 00:43:54','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(67,1,'2026-02-07 00:45:38','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(68,1,'2026-02-07 00:46:21','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(69,1,'2026-02-07 00:52:55','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(70,1,'2026-02-07 00:53:53','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(71,1,'2026-02-10 02:52:17','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(72,1,'2026-02-10 02:52:32','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Account locked'),(73,1,'2026-02-10 02:59:28','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Account locked'),(74,1,'2026-02-10 03:04:26','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success','Dev Bypass Login'),(75,1,'2026-02-10 03:05:15','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success','Dev Bypass Login'),(76,1,'2026-02-10 03:55:09','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(77,1,'2026-02-10 03:56:14','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(78,1,'2026-02-10 04:00:53','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success','Dev Bypass Login'),(79,1,'2026-02-10 04:01:15','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success','Dev Bypass Login'),(80,1,'2026-02-10 07:21:18','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(81,1,'2026-02-10 07:49:33','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(82,1,'2026-02-10 10:03:52','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(83,1,'2026-02-10 13:27:50','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(84,1,'2026-02-10 15:10:41','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(85,1,'2026-02-10 23:16:52','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success','OTP bypassed - Local Dev Mode'),(86,1,'2026-02-11 03:16:18','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0','success',NULL),(87,1,'2026-02-11 03:27:00','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(88,1,'2026-02-11 06:24:58','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(89,1,'2026-02-11 08:55:52','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(90,1,'2026-02-11 09:09:56','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(91,1,'2026-02-11 09:10:47','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(92,1,'2026-02-11 09:11:52','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(93,1,'2026-02-11 09:13:20','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(94,1,'2026-02-11 09:16:04','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(95,1,'2026-02-11 09:26:10','::1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Account locked'),(96,1,'2026-02-13 07:25:16','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(97,1,'2026-02-13 11:51:54','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(98,1,'2026-02-15 17:25:09','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(99,1,'2026-02-15 17:25:52','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(100,1,'2026-02-15 18:59:24','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(101,1,'2026-02-16 06:47:05','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(102,1,'2026-02-17 09:57:07','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(103,1,'2026-02-17 11:37:20','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(104,1,'2026-02-18 03:59:48','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(105,1,'2026-02-18 04:00:49','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(106,1,'2026-02-18 04:38:42','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(107,1,'2026-02-18 04:39:00','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(108,1,'2026-02-18 04:39:20','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(109,1,'2026-02-18 04:39:43','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(110,1,'2026-02-18 04:40:47','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(111,1,'2026-02-18 23:36:56','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(112,1,'2026-02-18 23:37:23','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','success',NULL),(113,1,'2026-02-19 00:09:46','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(114,1,'2026-02-19 00:10:28','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password'),(115,1,'2026-02-19 00:11:03','127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36','failed','Wrong password');
+/*!40000 ALTER TABLE `login_history` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `notifications`
+--
+
+DROP TABLE IF EXISTS `notifications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `notifications` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int DEFAULT NULL,
+  `type` varchar(50) NOT NULL DEFAULT 'info',
+  `title` varchar(255) NOT NULL,
+  `message` text,
+  `link` varchar(500) DEFAULT NULL,
+  `data` json DEFAULT NULL,
+  `is_read` tinyint(1) DEFAULT '0',
+  `read_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `notifications`
+--
+
+LOCK TABLES `notifications` WRITE;
+/*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
+INSERT INTO `notifications` VALUES (1,NULL,'success','Kandidat Disetujui: vfdbd','Pengajuan untuk vfdbd - Captain sudah di-approve. Silahkan lakukan pembuatan kontrak.','contracts/create?crew_id=4',NULL,1,'2026-02-16 00:09:50','2026-02-15 18:27:44'),(2,NULL,'success','Kandidat Disetujui: fgfg','Pengajuan untuk fgfg - 2nd Engineer sudah di-approve. Silahkan lakukan pembuatan kontrak.','contracts/create?crew_id=6',NULL,0,NULL,'2026-02-18 04:04:56');
+/*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `otp_codes`
+--
+
+DROP TABLE IF EXISTS `otp_codes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `otp_codes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `code` varchar(10) NOT NULL,
+  `type` enum('login','password_reset','verification') DEFAULT 'login',
+  `expires_at` datetime NOT NULL,
+  `attempts` int DEFAULT '0',
+  `used` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `otp_codes_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=83 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `otp_codes`
+--
+
+LOCK TABLES `otp_codes` WRITE;
+/*!40000 ALTER TABLE `otp_codes` DISABLE KEYS */;
+INSERT INTO `otp_codes` VALUES (1,1,'376924','login','2026-01-16 09:27:49',0,1,'2026-01-16 09:22:49'),(2,1,'623930','login','2026-01-16 09:48:30',0,1,'2026-01-16 09:43:30'),(3,1,'791484','login','2026-01-20 05:19:12',0,1,'2026-01-20 05:14:12'),(4,1,'488500','login','2026-01-20 05:23:13',0,1,'2026-01-20 05:18:13'),(5,1,'660313','login','2026-01-20 05:23:36',1,1,'2026-01-20 05:18:36'),(6,1,'720324','login','2026-01-20 05:26:47',0,1,'2026-01-20 05:21:47'),(7,5,'518732','login','2026-01-25 20:14:44',0,1,'2026-01-25 20:09:44'),(8,5,'999645','login','2026-01-28 15:00:23',0,1,'2026-01-28 14:55:23'),(9,1,'506372','login','2026-01-30 20:56:11',0,1,'2026-01-30 20:51:11'),(10,1,'721365','login','2026-01-30 20:57:23',0,1,'2026-01-30 20:52:23'),(11,1,'814580','login','2026-01-31 03:54:35',0,1,'2026-01-31 03:49:35'),(12,1,'937918','login','2026-01-31 03:54:41',0,1,'2026-01-31 03:49:41'),(13,1,'805203','login','2026-01-31 03:55:40',0,1,'2026-01-31 03:50:40'),(14,1,'202614','login','2026-01-31 06:04:18',0,1,'2026-01-31 05:59:18'),(15,1,'742911','login','2026-01-31 06:09:20',0,1,'2026-01-31 06:04:20'),(16,1,'527390','login','2026-01-31 06:36:01',0,1,'2026-01-31 06:31:01'),(17,1,'061702','login','2026-02-01 08:58:39',0,1,'2026-02-01 08:53:39'),(18,1,'047521','login','2026-02-01 13:02:34',0,1,'2026-02-01 12:57:34'),(19,1,'992392','login','2026-02-01 16:16:16',1,1,'2026-02-01 16:11:16'),(20,1,'557379','login','2026-02-01 16:17:25',0,1,'2026-02-01 16:12:25'),(21,1,'665919','login','2026-02-02 04:21:30',0,1,'2026-02-02 04:16:30'),(22,1,'671873','login','2026-02-02 04:21:42',0,1,'2026-02-02 04:16:42'),(23,1,'950951','login','2026-02-02 05:51:41',0,1,'2026-02-02 05:46:41'),(24,1,'590340','login','2026-02-02 05:52:32',0,1,'2026-02-02 05:47:32'),(25,1,'955189','login','2026-02-02 06:37:20',0,1,'2026-02-02 06:32:20'),(26,1,'980802','login','2026-02-02 06:37:23',0,1,'2026-02-02 06:32:23'),(27,1,'858514','login','2026-02-02 06:37:27',0,1,'2026-02-02 06:32:27'),(28,1,'504189','login','2026-02-02 06:37:31',0,1,'2026-02-02 06:32:31'),(29,1,'848179','login','2026-02-02 06:37:35',0,1,'2026-02-02 06:32:35'),(30,1,'749797','login','2026-02-02 06:37:41',1,1,'2026-02-02 06:32:41'),(31,1,'127141','login','2026-02-02 14:14:29',0,1,'2026-02-02 14:09:29'),(32,1,'725571','login','2026-02-02 14:31:44',0,1,'2026-02-02 14:26:44'),(33,1,'878288','login','2026-02-02 15:30:34',0,1,'2026-02-02 15:25:34'),(34,1,'792497','login','2026-02-02 20:59:31',0,1,'2026-02-02 20:54:31'),(35,1,'961702','login','2026-02-02 21:25:12',0,1,'2026-02-02 21:20:12'),(36,1,'993771','login','2026-02-03 03:18:03',0,1,'2026-02-03 03:13:03'),(37,1,'340496','login','2026-02-03 11:57:58',0,1,'2026-02-03 11:52:58'),(38,1,'189613','login','2026-02-03 13:34:05',0,1,'2026-02-03 13:29:05'),(39,1,'989188','login','2026-02-03 13:34:35',0,1,'2026-02-03 13:29:35'),(40,1,'190285','login','2026-02-03 15:00:14',0,1,'2026-02-03 14:55:14'),(41,1,'776915','login','2026-02-03 16:28:44',2,1,'2026-02-03 16:23:44'),(42,1,'841992','login','2026-02-03 16:31:56',0,1,'2026-02-03 16:26:56'),(43,1,'487456','login','2026-02-03 22:20:41',0,1,'2026-02-03 22:15:41'),(44,1,'547682','login','2026-02-03 22:46:46',0,1,'2026-02-03 22:41:46'),(45,1,'749758','login','2026-02-04 02:59:23',0,1,'2026-02-04 02:54:23'),(46,1,'341701','login','2026-02-04 06:40:27',0,1,'2026-02-04 06:35:27'),(47,1,'082974','login','2026-02-04 06:40:41',0,1,'2026-02-04 06:35:41'),(48,1,'192614','login','2026-02-04 07:03:59',0,1,'2026-02-04 06:58:59'),(49,1,'997625','login','2026-02-04 07:53:39',0,1,'2026-02-04 07:48:39'),(50,1,'717490','login','2026-02-04 09:52:55',1,1,'2026-02-04 09:47:55'),(51,1,'492760','login','2026-02-04 09:58:31',0,1,'2026-02-04 09:53:31'),(52,1,'602225','login','2026-02-04 10:01:42',0,1,'2026-02-04 09:56:42'),(53,1,'848993','login','2026-02-04 10:01:45',0,1,'2026-02-04 09:56:45'),(54,1,'214996','login','2026-02-04 10:01:47',0,1,'2026-02-04 09:56:47'),(55,1,'515009','login','2026-02-04 10:01:51',0,1,'2026-02-04 09:56:51'),(56,1,'519478','login','2026-02-06 18:19:49',0,1,'2026-02-06 18:14:49'),(57,1,'158053','login','2026-02-06 19:47:25',0,1,'2026-02-06 19:42:25'),(58,1,'257855','login','2026-02-07 00:44:35',0,1,'2026-02-07 00:39:35'),(59,1,'671947','login','2026-02-10 04:00:24',0,1,'2026-02-10 03:55:24'),(60,1,'016741','login','2026-02-10 06:07:44',0,1,'2026-02-10 06:02:44'),(61,1,'162850','login','2026-02-10 07:26:03',0,1,'2026-02-10 07:21:03'),(62,1,'703160','login','2026-02-10 07:45:27',0,1,'2026-02-10 07:40:27'),(63,1,'223951','login','2026-02-10 07:54:18',0,1,'2026-02-10 07:49:18'),(64,1,'385815','login','2026-02-10 10:08:28',0,1,'2026-02-10 10:03:28'),(65,1,'217226','login','2026-02-10 13:32:18',0,1,'2026-02-10 13:27:18'),(66,1,'054683','login','2026-02-10 15:15:09',0,1,'2026-02-10 15:10:09'),(67,1,'736282','login','2026-02-10 23:21:52',0,1,'2026-02-10 23:16:52'),(68,1,'743549','login','2026-02-11 03:20:51',0,1,'2026-02-11 03:15:51'),(69,1,'579986','login','2026-02-11 03:31:44',0,1,'2026-02-11 03:26:44'),(70,1,'634430','login','2026-02-11 06:22:07',0,1,'2026-02-11 06:17:07'),(71,1,'955605','login','2026-02-11 06:29:25',0,1,'2026-02-11 06:24:25'),(72,1,'709244','login','2026-02-11 09:12:24',0,1,'2026-02-11 09:07:24'),(73,1,'290128','login','2026-02-13 09:02:36',0,1,'2026-02-13 08:57:36'),(74,1,'832167','login','2026-02-15 17:27:55',1,1,'2026-02-15 17:22:55'),(75,1,'170982','login','2026-02-15 17:30:26',0,1,'2026-02-15 17:25:26'),(76,1,'801906','login','2026-02-16 06:51:35',0,1,'2026-02-16 06:46:35'),(77,1,'232175','login','2026-02-18 04:05:02',0,1,'2026-02-18 04:00:02'),(78,1,'157515','login','2026-02-18 04:45:13',0,1,'2026-02-18 04:40:13'),(79,1,'876998','login','2026-02-18 06:14:54',0,1,'2026-02-18 06:09:54'),(80,1,'235056','login','2026-02-18 23:41:14',0,1,'2026-02-18 23:36:14'),(81,1,'480557','login','2026-02-18 23:42:08',0,1,'2026-02-18 23:37:08'),(82,1,'680543','login','2026-02-19 00:16:27',1,0,'2026-02-19 00:11:27');
+/*!40000 ALTER TABLE `otp_codes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `payroll_items`
+--
+
+DROP TABLE IF EXISTS `payroll_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `payroll_items` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `payroll_period_id` int NOT NULL,
+  `contract_id` int NOT NULL,
+  `crew_name` varchar(100) DEFAULT NULL,
+  `rank_name` varchar(100) DEFAULT NULL,
+  `vessel_name` varchar(200) DEFAULT NULL,
+  `basic_salary` decimal(12,2) DEFAULT '0.00',
+  `overtime` decimal(12,2) DEFAULT '0.00',
+  `leave_pay` decimal(12,2) DEFAULT '0.00',
+  `bonus` decimal(12,2) DEFAULT '0.00',
+  `other_allowance` decimal(12,2) DEFAULT '0.00',
+  `gross_salary` decimal(12,2) DEFAULT '0.00',
+  `insurance` decimal(12,2) DEFAULT '0.00',
+  `medical` decimal(12,2) DEFAULT '0.00',
+  `advance` decimal(12,2) DEFAULT '0.00',
+  `other_deductions` decimal(12,2) DEFAULT '0.00',
+  `total_deductions` decimal(12,2) DEFAULT '0.00',
+  `tax_type` varchar(20) DEFAULT NULL,
+  `tax_amount` decimal(12,2) DEFAULT '0.00',
+  `net_salary` decimal(12,2) DEFAULT '0.00',
+  `currency_code` varchar(3) DEFAULT 'USD',
+  `original_currency` varchar(3) DEFAULT 'USD',
+  `original_gross` decimal(15,2) DEFAULT '0.00',
+  `exchange_rate` decimal(10,6) DEFAULT '1.000000',
+  `status` enum('pending','paid','cancelled') DEFAULT 'pending',
+  `payment_date` date DEFAULT NULL,
+  `payment_reference` varchar(100) DEFAULT NULL,
+  `notes` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `payroll_period_id` (`payroll_period_id`),
+  KEY `contract_id` (`contract_id`),
+  CONSTRAINT `payroll_items_ibfk_1` FOREIGN KEY (`payroll_period_id`) REFERENCES `payroll_periods` (`id`),
+  CONSTRAINT `payroll_items_ibfk_2` FOREIGN KEY (`contract_id`) REFERENCES `contracts` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `payroll_items`
+--
+
+LOCK TABLES `payroll_items` WRITE;
+/*!40000 ALTER TABLE `payroll_items` DISABLE KEYS */;
+INSERT INTO `payroll_items` VALUES (1,1,1,'ilham','Captain','tongkang',200.00,0.00,0.00,0.00,0.00,200.00,0.00,0.00,0.00,0.00,0.00,'pph21_non_npwp',12.00,188.00,'USD','IDR',3000000.00,0.000067,'pending',NULL,NULL,NULL,'2026-01-25 20:32:57'),(2,2,3,'3232','Chief Engineer','dreger',1.85,0.00,0.00,0.00,0.00,1.85,0.00,0.00,0.00,0.00,0.00,'pph21',0.09,1.76,'USD','USD',0.00,1.000000,'paid','2026-02-10',NULL,NULL,'2026-02-03 03:50:51'),(3,2,4,'gerry','Chief Officer','dreger',333.33,0.00,0.00,0.00,0.00,333.33,0.00,0.00,0.00,0.00,0.00,'pph21_non_npwp',20.00,313.33,'USD','USD',0.00,1.000000,'paid','2026-02-10',NULL,NULL,'2026-02-10 08:03:54');
+/*!40000 ALTER TABLE `payroll_items` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `payroll_periods`
+--
+
+DROP TABLE IF EXISTS `payroll_periods`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `payroll_periods` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `period_month` int NOT NULL,
+  `period_year` int NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `status` enum('draft','processing','completed','locked') DEFAULT 'draft',
+  `total_crew` int DEFAULT '0',
+  `total_gross` decimal(15,2) DEFAULT '0.00',
+  `total_deductions` decimal(15,2) DEFAULT '0.00',
+  `total_tax` decimal(15,2) DEFAULT '0.00',
+  `total_net` decimal(15,2) DEFAULT '0.00',
+  `processed_by` int DEFAULT NULL,
+  `processed_at` timestamp NULL DEFAULT NULL,
+  `locked_by` int DEFAULT NULL,
+  `locked_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_period` (`period_month`,`period_year`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `payroll_periods`
+--
+
+LOCK TABLES `payroll_periods` WRITE;
+/*!40000 ALTER TABLE `payroll_periods` DISABLE KEYS */;
+INSERT INTO `payroll_periods` VALUES (1,1,2026,'2026-01-01','2026-01-31','processing',1,200.00,0.00,12.00,188.00,1,'2026-01-30 20:58:17',NULL,NULL,'2026-01-20 05:19:17'),(2,2,2026,'2026-02-01','2026-02-28','completed',2,335.18,0.00,20.09,315.09,1,'2026-02-10 01:53:05',NULL,NULL,'2026-02-01 13:15:19');
+/*!40000 ALTER TABLE `payroll_periods` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `ranks`
+--
+
+DROP TABLE IF EXISTS `ranks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ranks` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `department` enum('deck','engine','catering','other') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `level` int DEFAULT '0',
+  `is_officer` tinyint(1) DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ranks`
+--
+
+LOCK TABLES `ranks` WRITE;
+/*!40000 ALTER TABLE `ranks` DISABLE KEYS */;
+INSERT INTO `ranks` VALUES (1,'Captain','deck',1,1,1,'2026-01-16 09:13:43'),(2,'Chief Officer','deck',2,1,1,'2026-01-16 09:13:43'),(3,'Chief Engineer','engine',1,1,1,'2026-01-16 09:13:43'),(4,'2nd Engineer','engine',2,1,1,'2026-01-16 09:13:43'),(5,'Captain','deck',1,1,1,'2026-01-16 09:19:44'),(6,'Chief Officer','deck',2,1,1,'2026-01-16 09:19:44'),(7,'Chief Engineer','engine',1,1,1,'2026-01-16 09:19:44'),(8,'2nd Engineer','engine',2,1,1,'2026-01-16 09:19:44'),(9,'Captain','deck',1,1,1,'2026-01-16 09:23:11'),(10,'Chief Officer','deck',2,1,1,'2026-01-16 09:23:11'),(11,'Chief Engineer','engine',1,1,1,'2026-01-16 09:23:11'),(12,'2nd Engineer','engine',2,1,1,'2026-01-16 09:23:11'),(13,'Captain','deck',1,1,1,'2026-01-16 09:31:23'),(14,'Chief Officer','deck',2,1,1,'2026-01-16 09:31:23'),(15,'Chief Engineer','engine',1,1,1,'2026-01-16 09:31:23'),(16,'2nd Engineer','engine',2,1,1,'2026-01-16 09:31:23'),(17,'Captain','deck',1,1,1,'2026-01-28 14:41:13'),(18,'Chief Officer','deck',2,1,1,'2026-01-28 14:41:13'),(19,'Chief Engineer','engine',1,1,1,'2026-01-28 14:41:13'),(20,'2nd Engineer','engine',2,1,1,'2026-01-28 14:41:13');
+/*!40000 ALTER TABLE `ranks` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `recruitment_sync`
+--
+
+DROP TABLE IF EXISTS `recruitment_sync`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `recruitment_sync` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `recruitment_applicant_id` int NOT NULL,
+  `crew_id` int DEFAULT NULL,
+  `contract_id` int DEFAULT NULL,
+  `sync_status` enum('pending','synced','onboarded','failed') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `synced_at` timestamp NULL DEFAULT NULL,
+  `error_message` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_applicant` (`recruitment_applicant_id`),
+  KEY `idx_status` (`sync_status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `recruitment_sync`
+--
+
+LOCK TABLES `recruitment_sync` WRITE;
+/*!40000 ALTER TABLE `recruitment_sync` DISABLE KEYS */;
+/*!40000 ALTER TABLE `recruitment_sync` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `role_permissions`
+--
+
+DROP TABLE IF EXISTS `role_permissions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `role_permissions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `role` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `module` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `can_view` tinyint(1) DEFAULT '0',
+  `can_create` tinyint(1) DEFAULT '0',
+  `can_edit` tinyint(1) DEFAULT '0',
+  `can_delete` tinyint(1) DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_role_module` (`role`,`module`)
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `role_permissions`
+--
+
+LOCK TABLES `role_permissions` WRITE;
+/*!40000 ALTER TABLE `role_permissions` DISABLE KEYS */;
+INSERT INTO `role_permissions` VALUES (1,'super_admin','dashboard',1,1,1,1),(2,'super_admin','contracts',1,1,1,1),(3,'super_admin','vessels',1,1,1,1),(4,'super_admin','clients',1,1,1,1),(5,'super_admin','payroll',1,1,1,1),(6,'super_admin','reports',1,1,1,1),(7,'super_admin','settings',1,1,1,1),(8,'super_admin','users',1,1,1,1);
+/*!40000 ALTER TABLE `role_permissions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `settings`
+--
+
+DROP TABLE IF EXISTS `settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `settings` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `setting_key` varchar(100) NOT NULL,
+  `setting_value` text,
+  `setting_group` varchar(50) DEFAULT 'general',
+  `description` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `setting_key` (`setting_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `settings`
+--
+
+LOCK TABLES `settings` WRITE;
+/*!40000 ALTER TABLE `settings` DISABLE KEYS */;
+/*!40000 ALTER TABLE `settings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `user_sessions`
+--
+
+DROP TABLE IF EXISTS `user_sessions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `user_sessions` (
+  `id` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_id` int NOT NULL,
+  `ip_address` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `payload` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `last_activity` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `user_sessions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user_sessions`
+--
+
+LOCK TABLES `user_sessions` WRITE;
+/*!40000 ALTER TABLE `user_sessions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `user_sessions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `users`
+--
+
+DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `users` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `role` enum('super_admin','admin','hr','finance','manager','viewer') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'viewer',
+  `full_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `last_login` datetime DEFAULT NULL,
+  `login_attempts` int DEFAULT '0',
+  `locked_until` datetime DEFAULT NULL,
+  `password_reset_token` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `password_reset_expires` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `two_factor_enabled` tinyint(1) DEFAULT '0',
+  `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `users`
+--
+
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,'admin','admin@ptindoocean.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','super_admin','Super Administrator',NULL,NULL,1,'2026-02-19 00:11:27',0,NULL,NULL,NULL,'2026-01-16 09:13:43','2026-02-19 00:11:27',0,'active'),(5,'masteradmin','masteradmin@indoceancrew.com','$2y$12$5sOq2Z4UtO5I8Z.GvAgZ4OgSqz4M9BC/U9aLXYpRbiQcBeG1e9sJe','admin','Master Administrator',NULL,NULL,1,'2026-01-28 14:55:23',1,NULL,NULL,NULL,'2026-01-25 20:09:16','2026-02-01 16:12:11',0,'active');
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `vessel_types`
+--
+
+DROP TABLE IF EXISTS `vessel_types`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `vessel_types` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `vessel_types`
+--
+
+LOCK TABLES `vessel_types` WRITE;
+/*!40000 ALTER TABLE `vessel_types` DISABLE KEYS */;
+INSERT INTO `vessel_types` VALUES (1,'Container Ship',NULL,1,'2026-01-16 09:13:43'),(2,'Bulk Carrier',NULL,1,'2026-01-16 09:13:43'),(3,'Oil Tanker',NULL,1,'2026-01-16 09:13:43'),(4,'LNG Carrier',NULL,1,'2026-01-16 09:13:43'),(5,'Cargo Ship',NULL,1,'2026-01-16 09:13:43'),(6,'Cruise Ship',NULL,1,'2026-01-16 09:13:43'),(7,'Offshore Vessel',NULL,1,'2026-01-16 09:13:43'),(8,'Passenger Ship',NULL,1,'2026-01-16 09:13:43'),(9,'Container Ship',NULL,1,'2026-01-16 09:19:44'),(10,'Bulk Carrier',NULL,1,'2026-01-16 09:19:44'),(11,'Oil Tanker',NULL,1,'2026-01-16 09:19:44'),(12,'LNG Carrier',NULL,1,'2026-01-16 09:19:44'),(13,'Cargo Ship',NULL,1,'2026-01-16 09:19:44'),(14,'Cruise Ship',NULL,1,'2026-01-16 09:19:44'),(15,'Offshore Vessel',NULL,1,'2026-01-16 09:19:44'),(16,'Passenger Ship',NULL,1,'2026-01-16 09:19:44'),(17,'Container Ship',NULL,1,'2026-01-16 09:23:11'),(18,'Bulk Carrier',NULL,1,'2026-01-16 09:23:11'),(19,'Oil Tanker',NULL,1,'2026-01-16 09:23:11'),(20,'LNG Carrier',NULL,1,'2026-01-16 09:23:11'),(21,'Cargo Ship',NULL,1,'2026-01-16 09:23:11'),(22,'Cruise Ship',NULL,1,'2026-01-16 09:23:11'),(23,'Offshore Vessel',NULL,1,'2026-01-16 09:23:11'),(24,'Passenger Ship',NULL,1,'2026-01-16 09:23:11'),(25,'Container Ship',NULL,1,'2026-01-16 09:31:23'),(26,'Bulk Carrier',NULL,1,'2026-01-16 09:31:23'),(27,'Oil Tanker',NULL,1,'2026-01-16 09:31:23'),(28,'LNG Carrier',NULL,1,'2026-01-16 09:31:23'),(29,'Cargo Ship',NULL,1,'2026-01-16 09:31:23'),(30,'Cruise Ship',NULL,1,'2026-01-16 09:31:23'),(31,'Offshore Vessel',NULL,1,'2026-01-16 09:31:23'),(32,'Passenger Ship',NULL,1,'2026-01-16 09:31:23'),(33,'Container Ship',NULL,1,'2026-01-28 14:41:13'),(34,'Bulk Carrier',NULL,1,'2026-01-28 14:41:13'),(35,'Oil Tanker',NULL,1,'2026-01-28 14:41:13'),(36,'LNG Carrier',NULL,1,'2026-01-28 14:41:13'),(37,'Cargo Ship',NULL,1,'2026-01-28 14:41:13'),(38,'Cruise Ship',NULL,1,'2026-01-28 14:41:13'),(39,'Offshore Vessel',NULL,1,'2026-01-28 14:41:13'),(40,'Passenger Ship',NULL,1,'2026-01-28 14:41:13');
+/*!40000 ALTER TABLE `vessel_types` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `vessels`
+--
+
+DROP TABLE IF EXISTS `vessels`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `vessels` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `imo_number` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `vessel_type_id` int DEFAULT NULL,
+  `flag_state_id` int DEFAULT NULL,
+  `client_id` int DEFAULT NULL,
+  `status` enum('active','maintenance','laid_up','sold') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `gross_tonnage` decimal(12,2) DEFAULT NULL,
+  `dwt` decimal(12,2) DEFAULT NULL,
+  `year_built` int DEFAULT NULL,
+  `call_sign` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `mmsi` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `engine_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `crew_capacity` int DEFAULT '25',
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `image_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'URL path to vessel photo',
+  PRIMARY KEY (`id`),
+  KEY `vessel_type_id` (`vessel_type_id`),
+  KEY `flag_state_id` (`flag_state_id`),
+  KEY `client_id` (`client_id`),
+  CONSTRAINT `vessels_ibfk_1` FOREIGN KEY (`vessel_type_id`) REFERENCES `vessel_types` (`id`),
+  CONSTRAINT `vessels_ibfk_2` FOREIGN KEY (`flag_state_id`) REFERENCES `flag_states` (`id`),
+  CONSTRAINT `vessels_ibfk_3` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `vessels`
+--
+
+LOCK TABLES `vessels` WRITE;
+/*!40000 ALTER TABLE `vessels` DISABLE KEYS */;
+INSERT INTO `vessels` VALUES (1,'tongkang','4433',10,5,1,'active',1,'2026-01-25 20:12:24','2026-01-25 20:12:24',0.04,3333.00,2026,'44444',NULL,NULL,25,NULL,NULL),(2,'dreger','5432',2,1,1,'active',1,'2026-02-02 08:31:35','2026-02-04 03:36:28',6543.00,654.00,2014,'543',NULL,NULL,25,NULL,'public/uploads/vessels/vessel_2_1770073976.png');
+/*!40000 ALTER TABLE `vessels` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `visitor_logs`
+--
+
+DROP TABLE IF EXISTS `visitor_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `visitor_logs` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` text COLLATE utf8mb4_unicode_ci,
+  `page_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `referrer` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `country` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `city` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `device_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `browser` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `visit_duration` int DEFAULT '0' COMMENT 'in seconds',
+  `visited_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_visited_at` (`visited_at`),
+  KEY `idx_ip` (`ip_address`),
+  KEY `idx_country` (`country`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `visitor_logs`
+--
+
+LOCK TABLES `visitor_logs` WRITE;
+/*!40000 ALTER TABLE `visitor_logs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `visitor_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2026-02-19  9:28:32

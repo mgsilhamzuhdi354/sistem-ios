@@ -1,0 +1,1367 @@
+-- MySQL dump 10.13  Distrib 8.4.3, for Win64 (x86_64)
+--
+-- Host: localhost    Database: recruitment_db
+-- ------------------------------------------------------
+-- Server version	8.4.3
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `admin_profiles`
+--
+
+DROP TABLE IF EXISTS `admin_profiles`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `admin_profiles` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `employee_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `department` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `position` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone_extension` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `bio` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_id` (`user_id`),
+  CONSTRAINT `admin_profiles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `admin_profiles`
+--
+
+LOCK TABLES `admin_profiles` WRITE;
+/*!40000 ALTER TABLE `admin_profiles` DISABLE KEYS */;
+/*!40000 ALTER TABLE `admin_profiles` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `applicant_profiles`
+--
+
+DROP TABLE IF EXISTS `applicant_profiles`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `applicant_profiles` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `profile_photo` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `date_of_birth` date DEFAULT NULL,
+  `gender` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nationality` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `place_of_birth` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `city` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `country` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `postal_code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `seaman_book_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `seaman_book_expiry` date DEFAULT NULL,
+  `passport_no` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `passport_expiry` date DEFAULT NULL,
+  `height_cm` int DEFAULT NULL,
+  `weight_kg` int DEFAULT NULL,
+  `shoe_size` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `overall_size` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `blood_type` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `emergency_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `emergency_phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `emergency_relation` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `total_sea_service_months` int DEFAULT '0',
+  `last_vessel_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_vessel_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_rank` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_sign_off` date DEFAULT NULL,
+  `profile_completion` int DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_id` (`user_id`),
+  CONSTRAINT `applicant_profiles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `applicant_profiles`
+--
+
+LOCK TABLES `applicant_profiles` WRITE;
+/*!40000 ALTER TABLE `applicant_profiles` DISABLE KEYS */;
+INSERT INTO `applicant_profiles` VALUES (1,12,NULL,'2026-02-14','male','Indonesia','palembang','cxfssff','dsfsf','Indonesia','333','55555','2027-07-22','55555','2027-07-30',170,70,'42','0','A','bgbd','0','Anak',21,'feb','ngfnf','bdgbg','2026-02-13',0,'2026-02-14 05:34:40','2026-02-14 05:44:11'),(3,18,'uploads/documents/18/doc_7_1771167259_da737533.jpeg','2026-02-15','Male','Indonesia','palembang','bfb','bgbfb','Indonesia','4444','4444','2026-02-27','55555','2026-02-28',55,55,'55','055','O','555fff','0','Saudara',0,'dreger','fdfd','fdfd','2026-02-15',0,'2026-02-15 05:12:18','2026-02-15 16:08:38'),(4,19,'uploads/documents/19/doc_7_1771188951_985fc9fa.jpeg',NULL,NULL,'Indonesia','','','','Indonesia','','',NULL,'',NULL,NULL,NULL,'','0',NULL,'','','',0,'','','',NULL,0,'2026-02-15 20:55:51','2026-02-15 20:55:51'),(5,20,'uploads/documents/20/doc_7_1771209568_e27f7e32.jpeg',NULL,'Male','Indonesia','palembang','','','Indonesia','','',NULL,'',NULL,NULL,NULL,'','0','B','','','',0,'','','',NULL,0,'2026-02-16 02:39:28','2026-02-16 02:39:28'),(6,21,'uploads/documents/21/doc_7_1771317056_4daec02c.jpg',NULL,'Male','Indonesia','','','','Indonesia','','',NULL,'',NULL,NULL,NULL,'','0','AB','','0','',0,'','','',NULL,0,'2026-02-16 06:17:27','2026-02-17 08:30:57'),(7,22,'profile_22_1771295737.jpeg',NULL,'','','','','','','','333',NULL,'33333',NULL,NULL,NULL,'','','','','','',0,'','','',NULL,0,'2026-02-16 07:43:58','2026-02-17 09:24:35'),(8,23,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,NULL,NULL,0,'2026-02-17 11:35:50','2026-02-17 11:35:50');
+/*!40000 ALTER TABLE `applicant_profiles` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `application_assignments`
+--
+
+DROP TABLE IF EXISTS `application_assignments`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `application_assignments` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `application_id` int NOT NULL,
+  `assigned_to` int NOT NULL,
+  `assigned_by` int NOT NULL,
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `status` enum('active','transferred','completed') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'active',
+  `assigned_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `completed_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `application_assignments`
+--
+
+LOCK TABLES `application_assignments` WRITE;
+/*!40000 ALTER TABLE `application_assignments` DISABLE KEYS */;
+INSERT INTO `application_assignments` VALUES (1,1,5,5,'Manual entry - bgfsngfs','active','2026-02-14 05:34:40',NULL),(3,3,13,13,'Manual entry','active','2026-02-15 05:12:18',NULL),(4,4,13,13,'Manual entry','active','2026-02-15 20:55:51',NULL),(5,5,13,13,'Manual entry','transferred','2026-02-16 02:39:28',NULL),(6,6,13,13,'Manual entry','active','2026-02-16 06:17:27',NULL),(7,5,15,11,'Assigned by Master Admin','transferred','2026-02-16 06:33:57',NULL),(8,5,13,11,'Assigned by Master Admin','active','2026-02-16 06:34:17',NULL),(9,8,14,14,'Assigned based on applicant preference','transferred','2026-02-16 08:21:57',NULL),(10,7,14,11,'Approved claim request','active','2026-02-16 08:30:40',NULL),(11,9,15,15,'Assigned based on applicant preference','active','2026-02-17 02:35:03',NULL),(12,8,13,14,'','active','2026-02-17 03:55:10',NULL);
+/*!40000 ALTER TABLE `application_assignments` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `application_status_history`
+--
+
+DROP TABLE IF EXISTS `application_status_history`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `application_status_history` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `application_id` int NOT NULL,
+  `from_status_id` int DEFAULT NULL,
+  `to_status_id` int NOT NULL,
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `changed_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `application_id` (`application_id`),
+  KEY `from_status_id` (`from_status_id`),
+  KEY `to_status_id` (`to_status_id`),
+  KEY `changed_by` (`changed_by`),
+  CONSTRAINT `application_status_history_ibfk_1` FOREIGN KEY (`application_id`) REFERENCES `applications` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `application_status_history_ibfk_2` FOREIGN KEY (`from_status_id`) REFERENCES `application_statuses` (`id`),
+  CONSTRAINT `application_status_history_ibfk_3` FOREIGN KEY (`to_status_id`) REFERENCES `application_statuses` (`id`),
+  CONSTRAINT `application_status_history_ibfk_4` FOREIGN KEY (`changed_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `application_status_history`
+--
+
+LOCK TABLES `application_status_history` WRITE;
+/*!40000 ALTER TABLE `application_status_history` DISABLE KEYS */;
+INSERT INTO `application_status_history` VALUES (1,8,NULL,1,'Application submitted',NULL,'2026-02-16 08:21:57'),(2,9,NULL,1,'Application submitted',NULL,'2026-02-17 02:35:03');
+/*!40000 ALTER TABLE `application_status_history` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `application_statuses`
+--
+
+DROP TABLE IF EXISTS `application_statuses`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `application_statuses` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `color` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sort_order` int DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `application_statuses`
+--
+
+LOCK TABLES `application_statuses` WRITE;
+/*!40000 ALTER TABLE `application_statuses` DISABLE KEYS */;
+INSERT INTO `application_statuses` VALUES (1,'Pending',NULL,NULL,'#ffc107',1),(2,'Review',NULL,NULL,'#17a2b8',2),(3,'Interview',NULL,NULL,'#6f42c1',3),(4,'Medical',NULL,NULL,'#fd7e14',4),(5,'Final Review',NULL,NULL,'#20c997',5),(6,'Approved',NULL,NULL,'#28a745',6),(7,'Rejected',NULL,NULL,'#dc3545',7);
+/*!40000 ALTER TABLE `application_statuses` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `applications`
+--
+
+DROP TABLE IF EXISTS `applications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `applications` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `vacancy_id` int NOT NULL,
+  `status_id` int NOT NULL DEFAULT '1',
+  `cover_letter` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `expected_salary` decimal(10,2) DEFAULT NULL,
+  `available_date` date DEFAULT NULL,
+  `document_score` int DEFAULT NULL,
+  `interview_score` int DEFAULT NULL,
+  `overall_score` int DEFAULT NULL,
+  `admin_notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `rejection_reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `submitted_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `entry_source` enum('online','manual','import') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'online',
+  `entered_by` int DEFAULT NULL,
+  `current_crewing_id` int DEFAULT NULL,
+  `preferred_recruiter_id` int DEFAULT NULL,
+  `recruiter_assignment_type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'auto',
+  `reviewed_at` timestamp NULL DEFAULT NULL,
+  `is_synced_to_erp` tinyint(1) DEFAULT '0' COMMENT 'Whether candidate has been imported to ERP',
+  `synced_at` datetime DEFAULT NULL COMMENT 'When candidate was synced to ERP',
+  `erp_employee_id` int DEFAULT NULL COMMENT 'Employee ID in ERP system',
+  `reviewed_by` int DEFAULT NULL,
+  `status_updated_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `sent_to_erp_at` timestamp NULL DEFAULT NULL,
+  `erp_crew_id` int DEFAULT NULL,
+  `medical_email_sent_at` datetime DEFAULT NULL,
+  `is_archived` tinyint(1) DEFAULT '0',
+  `archived_at` datetime DEFAULT NULL,
+  `archived_by` int DEFAULT NULL,
+  `is_new_alert` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_application` (`user_id`,`vacancy_id`),
+  KEY `reviewed_by` (`reviewed_by`),
+  KEY `idx_applications_user` (`user_id`),
+  KEY `idx_applications_vacancy` (`vacancy_id`),
+  KEY `idx_applications_status` (`status_id`),
+  KEY `idx_is_synced` (`is_synced_to_erp`),
+  KEY `idx_sent_to_erp` (`sent_to_erp_at`),
+  KEY `idx_erp_crew_id` (`erp_crew_id`),
+  CONSTRAINT `applications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `applications_ibfk_2` FOREIGN KEY (`vacancy_id`) REFERENCES `job_vacancies` (`id`),
+  CONSTRAINT `applications_ibfk_3` FOREIGN KEY (`status_id`) REFERENCES `application_statuses` (`id`),
+  CONSTRAINT `applications_ibfk_4` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `applications`
+--
+
+LOCK TABLES `applications` WRITE;
+/*!40000 ALTER TABLE `applications` DISABLE KEYS */;
+INSERT INTO `applications` VALUES (1,12,2,4,'ccc',5555.00,'2026-02-14',NULL,NULL,NULL,NULL,NULL,'2026-02-14 05:34:40','manual',5,5,5,'manual',NULL,0,NULL,NULL,NULL,NULL,'2026-02-14 05:34:40','2026-02-14 05:36:09',NULL,NULL,NULL,0,NULL,NULL,1),(3,18,2,6,'bfdb',5555.00,'2026-02-15',NULL,NULL,NULL,NULL,NULL,'2026-02-15 05:12:18','manual',13,13,13,'manual',NULL,0,NULL,NULL,NULL,NULL,'2026-02-15 05:12:18','2026-02-16 02:31:40','2026-02-15 18:02:28',4,NULL,1,'2026-02-16 09:31:40',13,1),(4,19,2,6,'555',55555.00,NULL,NULL,NULL,NULL,NULL,NULL,'2026-02-15 20:55:51','manual',13,13,13,'manual',NULL,0,NULL,NULL,NULL,NULL,'2026-02-15 20:55:51','2026-02-16 02:31:26','2026-02-15 20:59:43',5,NULL,1,'2026-02-16 09:31:26',13,1),(5,20,2,1,'ggg',555555.00,'2026-02-16',NULL,NULL,NULL,NULL,NULL,'2026-02-16 02:39:28','manual',13,13,13,'manual',NULL,0,NULL,NULL,NULL,NULL,'2026-02-16 02:39:28','2026-02-16 02:39:28',NULL,NULL,NULL,0,NULL,NULL,1),(6,21,4,6,'',NULL,'2026-02-12',NULL,NULL,NULL,NULL,NULL,'2026-02-16 06:17:27','manual',13,13,13,'manual',NULL,0,NULL,NULL,NULL,NULL,'2026-02-16 06:17:27','2026-02-17 08:29:54','2026-02-16 07:39:12',6,NULL,0,NULL,NULL,1),(7,22,2,6,'dfghjk',10000.00,'2026-02-16',NULL,NULL,NULL,NULL,NULL,'2026-02-16 08:20:08','online',NULL,14,14,'preferred',NULL,0,NULL,NULL,NULL,'2026-02-16 08:20:08','2026-02-16 08:20:08','2026-02-17 05:38:47',NULL,NULL,NULL,0,NULL,NULL,0),(8,22,1,6,'gfdg',10000.00,'2026-02-16',NULL,NULL,NULL,NULL,NULL,'2026-02-16 08:21:57','online',NULL,13,14,'preferred',NULL,0,NULL,NULL,NULL,'2026-02-16 08:21:57','2026-02-16 08:21:57','2026-02-18 23:35:28',NULL,NULL,NULL,0,NULL,NULL,0),(9,22,4,1,'hhh',500.00,'2026-02-17',NULL,NULL,NULL,NULL,NULL,'2026-02-17 02:35:03','online',NULL,15,15,'preferred',NULL,0,NULL,NULL,NULL,'2026-02-17 02:35:03','2026-02-17 02:35:03','2026-02-17 02:35:03',NULL,NULL,NULL,0,NULL,NULL,1);
+/*!40000 ALTER TABLE `applications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `archived_applications`
+--
+
+DROP TABLE IF EXISTS `archived_applications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `archived_applications` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `application_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `vacancy_id` int NOT NULL,
+  `status_id` int NOT NULL,
+  `final_status` enum('hired','rejected','withdrawn','expired') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `archived_by` int NOT NULL,
+  `archived_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `application_data` json DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `archived_applications`
+--
+
+LOCK TABLES `archived_applications` WRITE;
+/*!40000 ALTER TABLE `archived_applications` DISABLE KEYS */;
+/*!40000 ALTER TABLE `archived_applications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `audit_logs`
+--
+
+DROP TABLE IF EXISTS `audit_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `audit_logs` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int DEFAULT NULL,
+  `action` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `table_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `record_id` int DEFAULT NULL,
+  `old_values` json DEFAULT NULL,
+  `new_values` json DEFAULT NULL,
+  `ip_address` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `audit_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `audit_logs`
+--
+
+LOCK TABLES `audit_logs` WRITE;
+/*!40000 ALTER TABLE `audit_logs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `audit_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `automation_logs`
+--
+
+DROP TABLE IF EXISTS `automation_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `automation_logs` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `target_table` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `target_id` int DEFAULT NULL,
+  `action` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `details` json DEFAULT NULL,
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `created_by` (`created_by`),
+  CONSTRAINT `automation_logs_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `automation_logs`
+--
+
+LOCK TABLES `automation_logs` WRITE;
+/*!40000 ALTER TABLE `automation_logs` DISABLE KEYS */;
+INSERT INTO `automation_logs` VALUES (1,'manual_entry','applications',1,'create','{\"entered_by\": 5, \"vacancy_id\": \"2\", \"candidate_name\": \"ddddd\"}',5,'2026-02-14 05:34:40'),(2,'manual_entry','applications',3,'create','{\"entered_by\": 13, \"vacancy_id\": \"2\", \"candidate_name\": \"vfdbd\"}',13,'2026-02-15 05:12:18'),(3,'manual_entry','applications',4,'create','{\"entered_by\": 13, \"vacancy_id\": \"2\", \"candidate_name\": \"dfff\"}',13,'2026-02-15 20:55:51'),(4,'manual_entry','applications',5,'create','{\"entered_by\": 13, \"vacancy_id\": \"2\", \"candidate_name\": \"rgegr\"}',13,'2026-02-16 02:39:28'),(5,'manual_entry','applications',6,'create','{\"entered_by\": 13, \"vacancy_id\": \"2\", \"candidate_name\": \"fgfg\"}',13,'2026-02-16 06:17:27'),(6,'assignment','applications',8,'manual_assign','{\"notes\": \"\", \"assigned_by\": 14, \"assigned_to\": 13}',14,'2026-02-17 03:55:10');
+/*!40000 ALTER TABLE `automation_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `crewing_profiles`
+--
+
+DROP TABLE IF EXISTS `crewing_profiles`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `crewing_profiles` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `employee_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `photo` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `bio` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `max_applications` int DEFAULT '50',
+  `department` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `is_pic` tinyint(1) DEFAULT '0',
+  `specialization` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `rank` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `company` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `leader_id` int DEFAULT NULL,
+  `department_ids` json DEFAULT NULL,
+  `can_assign_to` json DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_id` (`user_id`),
+  CONSTRAINT `crewing_profiles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `crewing_profiles`
+--
+
+LOCK TABLES `crewing_profiles` WRITE;
+/*!40000 ALTER TABLE `crewing_profiles` DISABLE KEYS */;
+INSERT INTO `crewing_profiles` VALUES (1,13,'081234567890','recruiter_13_1771167202.jpeg',NULL,50,NULL,'2026-02-14 08:27:11','2026-02-17 08:45:12',0,'',NULL,NULL,NULL,NULL,NULL),(2,14,NULL,NULL,NULL,50,NULL,'2026-02-14 08:27:38',NULL,0,NULL,NULL,NULL,NULL,NULL,NULL),(3,15,NULL,NULL,NULL,50,NULL,'2026-02-14 08:27:38',NULL,0,NULL,NULL,NULL,NULL,NULL,NULL),(4,16,NULL,NULL,NULL,50,NULL,'2026-02-14 08:27:38',NULL,0,NULL,NULL,NULL,NULL,NULL,NULL);
+/*!40000 ALTER TABLE `crewing_profiles` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `crewing_ratings`
+--
+
+DROP TABLE IF EXISTS `crewing_ratings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `crewing_ratings` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `crewing_id` int NOT NULL,
+  `applicant_id` int NOT NULL,
+  `application_id` int NOT NULL,
+  `rating` tinyint NOT NULL,
+  `comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `crewing_ratings`
+--
+
+LOCK TABLES `crewing_ratings` WRITE;
+/*!40000 ALTER TABLE `crewing_ratings` DISABLE KEYS */;
+/*!40000 ALTER TABLE `crewing_ratings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `departments`
+--
+
+DROP TABLE IF EXISTS `departments`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `departments` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name_id` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `icon` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `color` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `departments`
+--
+
+LOCK TABLES `departments` WRITE;
+/*!40000 ALTER TABLE `departments` DISABLE KEYS */;
+INSERT INTO `departments` VALUES (1,'dreger',NULL,NULL,NULL,NULL,1,'2026-02-14 00:23:52'),(2,'KAPAL',NULL,NULL,NULL,NULL,1,'2026-02-17 12:25:37');
+/*!40000 ALTER TABLE `departments` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `document_types`
+--
+
+DROP TABLE IF EXISTS `document_types`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `document_types` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name_id` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_required` tinyint(1) DEFAULT '0',
+  `sort_order` int DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_unique_name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `document_types`
+--
+
+LOCK TABLES `document_types` WRITE;
+/*!40000 ALTER TABLE `document_types` DISABLE KEYS */;
+INSERT INTO `document_types` VALUES (1,'CV / Resume','CV / Resume',0,1),(2,'Passport','Paspor',0,2),(3,'Seaman Book','Buku Pelaut',0,3),(4,'COC Certificate','Sertifikat COC',0,4),(5,'COP / STCW Certificates','Sertifikat COP / STCW',0,5),(6,'Medical Certificate','Sertifikat Medis',0,6),(7,'Photo','Foto',0,7),(8,'Other Certificates','Sertifikat Lainnya',0,8);
+/*!40000 ALTER TABLE `document_types` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `documents`
+--
+
+DROP TABLE IF EXISTS `documents`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `documents` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `document_type_id` int NOT NULL,
+  `file_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `original_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_size` int DEFAULT NULL,
+  `file_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `document_number` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `issue_date` date DEFAULT NULL,
+  `expiry_date` date DEFAULT NULL,
+  `issued_by` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `verification_status` enum('pending','verified','rejected') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `verified_by` int DEFAULT NULL,
+  `verified_at` timestamp NULL DEFAULT NULL,
+  `rejection_reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `document_type_id` (`document_type_id`),
+  KEY `verified_by` (`verified_by`),
+  KEY `idx_documents_user` (`user_id`),
+  CONSTRAINT `documents_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `documents_ibfk_2` FOREIGN KEY (`document_type_id`) REFERENCES `document_types` (`id`),
+  CONSTRAINT `documents_ibfk_3` FOREIGN KEY (`verified_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `documents`
+--
+
+LOCK TABLES `documents` WRITE;
+/*!40000 ALTER TABLE `documents` DISABLE KEYS */;
+INSERT INTO `documents` VALUES (2,18,7,'doc_7_1771167259_da737533.jpeg','ilham.jpeg','uploads/documents/18/doc_7_1771167259_da737533.jpeg',NULL,NULL,'',NULL,NULL,NULL,'pending',NULL,NULL,NULL,'2026-02-15 14:54:19','2026-02-15 14:54:19'),(3,18,1,'doc_1_1771170807_bd6b2783.pdf','Invoice-5223934.pdf','uploads/documents/18/doc_1_1771170807_bd6b2783.pdf',NULL,NULL,'',NULL,NULL,NULL,'pending',NULL,NULL,NULL,'2026-02-15 15:53:27','2026-02-15 15:53:27'),(4,19,7,'doc_7_1771188951_985fc9fa.jpeg','foto crew.jpeg','uploads/documents/19/doc_7_1771188951_985fc9fa.jpeg',NULL,NULL,'',NULL,NULL,NULL,'pending',NULL,NULL,NULL,'2026-02-15 20:55:51','2026-02-15 20:55:51'),(5,20,7,'doc_7_1771209568_e27f7e32.jpeg','kevin.jpeg','uploads/documents/20/doc_7_1771209568_e27f7e32.jpeg',NULL,NULL,'',NULL,NULL,NULL,'pending',NULL,NULL,NULL,'2026-02-16 02:39:28','2026-02-16 02:39:28'),(8,21,7,'doc_7_1771317056_4daec02c.jpg','WhatsApp-Image-2026-02-09-at-11.26.55-_2_.jpg','uploads/documents/21/doc_7_1771317056_4daec02c.jpg',NULL,NULL,'',NULL,NULL,NULL,'pending',NULL,NULL,NULL,'2026-02-17 08:30:57','2026-02-17 08:30:57'),(9,21,1,'doc_1_1771317057_1ff62bde.pdf','Invoice-5223934 (3).pdf','uploads/documents/21/doc_1_1771317057_1ff62bde.pdf',NULL,NULL,'',NULL,NULL,NULL,'pending',NULL,NULL,NULL,'2026-02-17 08:30:57','2026-02-17 08:30:57'),(10,22,1,'doc_699433d329897_1771320275.pdf','SEAMAN BOOK RAFI.pdf','uploads/documents/22/doc_699433d329897_1771320275.pdf',499892,'application/pdf','111',NULL,'2026-02-17',NULL,'pending',NULL,NULL,NULL,'2026-02-17 09:24:35','2026-02-17 09:24:35');
+/*!40000 ALTER TABLE `documents` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `email_archive`
+--
+
+DROP TABLE IF EXISTS `email_archive`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `email_archive` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `to_email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `subject` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `body` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('pending','sent','failed') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `error_message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `sent_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `email_archive`
+--
+
+LOCK TABLES `email_archive` WRITE;
+/*!40000 ALTER TABLE `email_archive` DISABLE KEYS */;
+/*!40000 ALTER TABLE `email_archive` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `email_logs`
+--
+
+DROP TABLE IF EXISTS `email_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `email_logs` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `template_id` int DEFAULT NULL,
+  `application_id` int DEFAULT NULL,
+  `to_email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `to_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `subject` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `body` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('pending','sent','failed','bounced') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `sent_at` datetime DEFAULT NULL,
+  `error_message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `metadata` json DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_application_id` (`application_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `email_logs`
+--
+
+LOCK TABLES `email_logs` WRITE;
+/*!40000 ALTER TABLE `email_logs` DISABLE KEYS */;
+INSERT INTO `email_logs` VALUES (33,NULL,NULL,'ilhamasad346@gmail.com','rgegr','HALO','TES','sent','2026-02-17 12:27:16',NULL,NULL,'2026-02-17 12:27:16'),(34,NULL,4,'mgsilhamzuhdi354@gmail.com','dfff','vvvv','vvv','sent','2026-02-17 12:28:58',NULL,NULL,'2026-02-17 12:28:57');
+/*!40000 ALTER TABLE `email_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `email_templates`
+--
+
+DROP TABLE IF EXISTS `email_templates`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `email_templates` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `subject` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `body` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `variables` json DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `is_auto_send` tinyint(1) DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `slug` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `email_templates`
+--
+
+LOCK TABLES `email_templates` WRITE;
+/*!40000 ALTER TABLE `email_templates` DISABLE KEYS */;
+/*!40000 ALTER TABLE `email_templates` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `handler_transfers`
+--
+
+DROP TABLE IF EXISTS `handler_transfers`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `handler_transfers` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `application_id` int NOT NULL,
+  `from_crewing_id` int NOT NULL,
+  `to_crewing_id` int NOT NULL,
+  `transferred_by` int NOT NULL,
+  `reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `handler_transfers`
+--
+
+LOCK TABLES `handler_transfers` WRITE;
+/*!40000 ALTER TABLE `handler_transfers` DISABLE KEYS */;
+/*!40000 ALTER TABLE `handler_transfers` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `interview_answers`
+--
+
+DROP TABLE IF EXISTS `interview_answers`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `interview_answers` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `session_id` int NOT NULL,
+  `question_id` int NOT NULL,
+  `answer_text` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `video_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `video_duration_seconds` int DEFAULT NULL,
+  `selected_option` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ai_score` int DEFAULT NULL,
+  `keyword_matches` json DEFAULT NULL,
+  `relevance_score` int DEFAULT NULL,
+  `completeness_score` int DEFAULT NULL,
+  `ai_feedback` text COLLATE utf8mb4_unicode_ci,
+  `time_taken_seconds` int DEFAULT NULL,
+  `answered_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `session_id` (`session_id`),
+  KEY `question_id` (`question_id`),
+  CONSTRAINT `interview_answers_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `interview_sessions` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `interview_answers_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `interview_questions` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `interview_answers`
+--
+
+LOCK TABLES `interview_answers` WRITE;
+/*!40000 ALTER TABLE `interview_answers` DISABLE KEYS */;
+/*!40000 ALTER TABLE `interview_answers` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `interview_question_banks`
+--
+
+DROP TABLE IF EXISTS `interview_question_banks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `interview_question_banks` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `department_id` int DEFAULT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `department_id` (`department_id`),
+  KEY `created_by` (`created_by`),
+  CONSTRAINT `interview_question_banks_ibfk_1` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`),
+  CONSTRAINT `interview_question_banks_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `interview_question_banks`
+--
+
+LOCK TABLES `interview_question_banks` WRITE;
+/*!40000 ALTER TABLE `interview_question_banks` DISABLE KEYS */;
+/*!40000 ALTER TABLE `interview_question_banks` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `interview_questions`
+--
+
+DROP TABLE IF EXISTS `interview_questions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `interview_questions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `question_bank_id` int NOT NULL,
+  `question_text` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `question_text_id` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `question_type` enum('multiple_choice','text','video') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'text',
+  `options` json DEFAULT NULL,
+  `correct_answer` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `expected_keywords` json DEFAULT NULL,
+  `min_word_count` int DEFAULT '50',
+  `time_limit_seconds` int DEFAULT '180',
+  `max_score` int DEFAULT '100',
+  `weight` decimal(3,2) DEFAULT '1.00',
+  `sort_order` int DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `question_bank_id` (`question_bank_id`),
+  CONSTRAINT `interview_questions_ibfk_1` FOREIGN KEY (`question_bank_id`) REFERENCES `interview_question_banks` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `interview_questions`
+--
+
+LOCK TABLES `interview_questions` WRITE;
+/*!40000 ALTER TABLE `interview_questions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `interview_questions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `interview_sessions`
+--
+
+DROP TABLE IF EXISTS `interview_sessions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `interview_sessions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `application_id` int NOT NULL,
+  `question_bank_id` int NOT NULL,
+  `status` enum('pending','in_progress','completed','expired') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `started_at` timestamp NULL DEFAULT NULL,
+  `completed_at` timestamp NULL DEFAULT NULL,
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `total_score` int DEFAULT NULL,
+  `ai_recommendation` enum('pass','review','fail') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `admin_override_score` int DEFAULT NULL,
+  `admin_notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `retry_count` int DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `application_id` (`application_id`),
+  KEY `question_bank_id` (`question_bank_id`),
+  CONSTRAINT `interview_sessions_ibfk_1` FOREIGN KEY (`application_id`) REFERENCES `applications` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `interview_sessions_ibfk_2` FOREIGN KEY (`question_bank_id`) REFERENCES `interview_question_banks` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `interview_sessions`
+--
+
+LOCK TABLES `interview_sessions` WRITE;
+/*!40000 ALTER TABLE `interview_sessions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `interview_sessions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `job_claim_requests`
+--
+
+DROP TABLE IF EXISTS `job_claim_requests`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `job_claim_requests` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `application_id` int NOT NULL,
+  `requested_by` int NOT NULL,
+  `current_handler_id` int DEFAULT NULL,
+  `reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `status` enum('pending','approved','rejected') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `response_notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `responded_by` int DEFAULT NULL,
+  `responded_at` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `reviewed_by` int DEFAULT NULL,
+  `reviewed_at` datetime DEFAULT NULL,
+  `review_notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `job_claim_requests`
+--
+
+LOCK TABLES `job_claim_requests` WRITE;
+/*!40000 ALTER TABLE `job_claim_requests` DISABLE KEYS */;
+INSERT INTO `job_claim_requests` VALUES (1,7,14,NULL,'dd','approved',NULL,NULL,NULL,'2026-02-16 08:30:23','2026-02-16 08:30:40',11,'2026-02-16 15:30:40','');
+/*!40000 ALTER TABLE `job_claim_requests` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `job_vacancies`
+--
+
+DROP TABLE IF EXISTS `job_vacancies`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `job_vacancies` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `department_id` int NOT NULL,
+  `vessel_type_id` int DEFAULT NULL,
+  `ship_photo` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `title` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `title_id` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `slug` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `salary_min` decimal(10,2) DEFAULT NULL,
+  `salary_max` decimal(10,2) DEFAULT NULL,
+  `salary_currency` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'USD',
+  `contract_duration_months` int DEFAULT NULL,
+  `joining_date` date DEFAULT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `description_id` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `requirements` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `requirements_id` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `min_experience_months` int DEFAULT '0',
+  `min_age` int DEFAULT NULL,
+  `max_age` int DEFAULT NULL,
+  `required_certificates` text COLLATE utf8mb4_unicode_ci,
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'draft',
+  `is_featured` tinyint(1) DEFAULT '0',
+  `application_deadline` date DEFAULT NULL,
+  `views_count` int DEFAULT '0',
+  `applications_count` int DEFAULT '0',
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `slug` (`slug`),
+  KEY `vessel_type_id` (`vessel_type_id`),
+  KEY `created_by` (`created_by`),
+  KEY `idx_vacancies_status` (`status`),
+  KEY `idx_vacancies_department` (`department_id`),
+  CONSTRAINT `job_vacancies_ibfk_1` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`),
+  CONSTRAINT `job_vacancies_ibfk_2` FOREIGN KEY (`vessel_type_id`) REFERENCES `vessel_types` (`id`),
+  CONSTRAINT `job_vacancies_ibfk_3` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `job_vacancies`
+--
+
+LOCK TABLES `job_vacancies` WRITE;
+/*!40000 ALTER TABLE `job_vacancies` DISABLE KEYS */;
+INSERT INTO `job_vacancies` VALUES (1,1,3,'uploads/ships/ship_1771231915_6992daab24f33.png','Marine Engineer Test','','marine-engineer-test-1771029265',1500.00,2500.00,'USD',2,NULL,'Testing vacancy creation','','','0',NULL,NULL,NULL,NULL,'0',0,NULL,0,1,11,'2026-02-14 00:34:25','2026-02-16 08:51:55'),(2,1,1,'uploads/ships/ship_1771231835_6992da5b8e092.png','gbbg','','gbbg-1771046429',2000.00,2000.00,'USD',2,NULL,' gf  g ','','brbr','0',NULL,NULL,NULL,NULL,'0',0,NULL,11,1,11,'2026-02-14 05:20:29','2026-02-16 08:50:35'),(3,1,1,NULL,'eeeee','','eeeee-1771227646',NULL,NULL,'USD',NULL,NULL,'ege','','','0',NULL,NULL,NULL,NULL,'0',0,NULL,0,0,11,'2026-02-16 07:40:46','2026-02-17 11:40:23'),(4,1,3,'uploads/ships/ship_1771232277_6992dc150f8a5.png','fghjk','','fghjk-1771232277',123.00,12345.00,'USD',NULL,'2029-06-16','ghjkfghj','','','0',NULL,NULL,NULL,NULL,'published',0,'2026-02-16',2,1,5,'2026-02-16 08:57:57','2026-02-17 08:08:01');
+/*!40000 ALTER TABLE `job_vacancies` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `leader_profiles`
+--
+
+DROP TABLE IF EXISTS `leader_profiles`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `leader_profiles` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `employee_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `department` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `max_team_members` int DEFAULT '10',
+  `can_create_crewing` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_id` (`user_id`),
+  CONSTRAINT `leader_profiles_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `leader_profiles`
+--
+
+LOCK TABLES `leader_profiles` WRITE;
+/*!40000 ALTER TABLE `leader_profiles` DISABLE KEYS */;
+/*!40000 ALTER TABLE `leader_profiles` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `medical_checkups`
+--
+
+DROP TABLE IF EXISTS `medical_checkups`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `medical_checkups` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `application_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `scheduled_date` date DEFAULT NULL,
+  `scheduled_time` time DEFAULT NULL,
+  `hospital_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `hospital_address` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `status` enum('scheduled','completed','cancelled','no_show') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'scheduled',
+  `result` enum('fit','unfit','conditional') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `result_notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `result_document_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `valid_until` date DEFAULT NULL,
+  `processed_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `application_id` (`application_id`),
+  KEY `user_id` (`user_id`),
+  KEY `processed_by` (`processed_by`),
+  CONSTRAINT `medical_checkups_ibfk_1` FOREIGN KEY (`application_id`) REFERENCES `applications` (`id`),
+  CONSTRAINT `medical_checkups_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `medical_checkups_ibfk_3` FOREIGN KEY (`processed_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `medical_checkups`
+--
+
+LOCK TABLES `medical_checkups` WRITE;
+/*!40000 ALTER TABLE `medical_checkups` DISABLE KEYS */;
+/*!40000 ALTER TABLE `medical_checkups` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `notifications`
+--
+
+DROP TABLE IF EXISTS `notifications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `notifications` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` enum('info','success','warning','error') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'info',
+  `action_url` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_read` tinyint(1) DEFAULT '0',
+  `read_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_notifications_user` (`user_id`,`is_read`),
+  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `notifications`
+--
+
+LOCK TABLES `notifications` WRITE;
+/*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
+INSERT INTO `notifications` VALUES (1,11,'Approval Needed: Status Change','A Crewing staff has requested to change an applicant status.','warning','/recruitment/public/master-admin/requests',0,NULL,'2026-02-14 05:35:43'),(2,5,'Status Change Approved','Your status change request has been approved.','success','/recruitment/public/crewing/pipeline',0,NULL,'2026-02-14 05:36:09'),(3,11,'Approval Needed: Status Change','A Crewing staff has requested to change an applicant status.','warning','/recruitment/public/master-admin/requests',0,NULL,'2026-02-15 05:12:49'),(4,13,'Status Change Approved','Your status change request has been approved.','success','/recruitment/public/crewing/pipeline',0,NULL,'2026-02-15 05:13:18'),(5,11,'Approval Needed: Status Change','A Crewing staff has requested to change an applicant status.','warning','/recruitment/public/master-admin/requests',0,NULL,'2026-02-15 11:42:54'),(6,13,'Status Change Approved','Your status change request has been approved.','success','/recruitment/public/crewing/pipeline',0,NULL,'2026-02-15 15:55:42'),(7,11,'Approval Needed: Status Change','A Crewing staff has requested to change an applicant status.','warning','/recruitment/public/master-admin/requests',0,NULL,'2026-02-15 20:56:13'),(8,13,'Status Change Approved','Your status change request has been approved.','success','/recruitment/public/crewing/pipeline',0,NULL,'2026-02-15 20:56:29'),(9,11,'Approval Needed: Status Change','A Crewing staff has requested to change an applicant status.','warning','/recruitment/public/master-admin/requests',0,NULL,'2026-02-16 06:32:20'),(10,13,'Status Change Approved','Your status change request has been approved.','success','/recruitment/public/crewing/pipeline',0,NULL,'2026-02-16 06:33:14'),(11,22,'Application Submitted','Your application for Marine Engineer Test has been received.','success','/recruitment/public/applicant/applications/8',0,NULL,'2026-02-16 08:21:57'),(12,11,'New Job Claim Request','A crewing staff has requested to claim an application. Please review.','info','/recruitment/public/master-admin/requests',0,NULL,'2026-02-16 08:30:23'),(13,14,'Claim Request Approved!','Your request to handle an application has been approved. You can now manage this applicant.','success','/recruitment/public/crewing/pipeline?view=my',0,NULL,'2026-02-16 08:30:40'),(14,22,'Application Submitted','Your application for fghjk has been received.','success','/recruitment/public/applicant/applications/9',0,NULL,'2026-02-17 02:35:03'),(15,11,'Approval Needed: Status Change','A Crewing staff has requested to change an applicant status.','warning','/recruitment/public/master-admin/requests',0,NULL,'2026-02-17 03:52:58'),(16,13,'Application Assigned to You','An application has been assigned to you by Vania Ulina Meinarti Ritonga. Notes: No notes','info','/recruitment/public/crewing/applications/8',0,NULL,'2026-02-17 03:55:10'),(17,11,'Approval Needed: Status Change','A Crewing staff has requested to change an applicant status.','warning','/recruitment/public/master-admin/requests',0,NULL,'2026-02-17 05:01:15'),(18,14,'Status Change Approved','Your status change request has been approved.','success','/recruitment/public/crewing/pipeline',0,NULL,'2026-02-17 05:38:47'),(19,14,'Status Change Approved','Your status change request has been approved.','success','/recruitment/public/crewing/pipeline',0,NULL,'2026-02-17 05:38:48'),(20,11,'Approval Needed: Status Change','A Crewing staff has requested to change an applicant status.','warning','/recruitment/public/master-admin/requests',0,NULL,'2026-02-17 07:57:35'),(21,13,'Status Change Approved','Your status change request has been approved.','success','/recruitment/public/crewing/pipeline',0,NULL,'2026-02-17 11:46:36'),(22,11,'Approval Needed: Status Change','A Crewing staff has requested to change an applicant status.','warning','/recruitment/public/master-admin/requests',0,NULL,'2026-02-18 23:35:01'),(23,13,'Status Change Approved','Your status change request has been approved.','success','/recruitment/public/crewing/pipeline',0,NULL,'2026-02-18 23:35:28');
+/*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `password_resets`
+--
+
+DROP TABLE IF EXISTS `password_resets`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `password_resets` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `password_resets`
+--
+
+LOCK TABLES `password_resets` WRITE;
+/*!40000 ALTER TABLE `password_resets` DISABLE KEYS */;
+/*!40000 ALTER TABLE `password_resets` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `permissions`
+--
+
+DROP TABLE IF EXISTS `permissions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `permissions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `display_name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sort_order` int DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=59 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `permissions`
+--
+
+LOCK TABLES `permissions` WRITE;
+/*!40000 ALTER TABLE `permissions` DISABLE KEYS */;
+INSERT INTO `permissions` VALUES (1,'view_dashboard','View Dashboard','Access to view dashboard','dashboard',0,'2026-02-14 05:21:04'),(2,'view_analytics','View Analytics','Access to view detailed analytics','dashboard',0,'2026-02-14 05:21:04'),(3,'view_vacancies','View Vacancies','View job vacancies list','vacancies',0,'2026-02-14 05:21:04'),(4,'create_vacancy','Create Vacancy','Create new job vacancies','vacancies',0,'2026-02-14 05:21:04'),(5,'edit_vacancy','Edit Vacancy','Edit existing vacancies','vacancies',0,'2026-02-14 05:21:04'),(6,'delete_vacancy','Delete Vacancy','Delete job vacancies','vacancies',0,'2026-02-14 05:21:04'),(7,'publish_vacancy','Publish Vacancy','Publish job vacancies','vacancies',0,'2026-02-14 05:21:04'),(8,'view_applicants','View Applicants','View applicants list','applicants',0,'2026-02-14 05:21:04'),(9,'view_applicant_details','View Applicant Details','View detailed applicant information','applicants',0,'2026-02-14 05:21:04'),(10,'edit_applicant','Edit Applicant','Edit applicant information','applicants',0,'2026-02-14 05:21:04'),(11,'delete_applicant','Delete Applicant','Delete applicants','applicants',0,'2026-02-14 05:21:04'),(12,'assign_applicant','Assign Applicant','Assign applicants to crewing staff','applicants',0,'2026-02-14 05:21:04'),(13,'export_applicants','Export Applicants','Export applicants data','applicants',0,'2026-02-14 05:21:04'),(14,'view_applications','View Applications','View job applications','applications',0,'2026-02-14 05:21:04'),(15,'update_application_status','Update Application Status','Change application status','applications',0,'2026-02-14 05:21:04'),(16,'assign_to_self','Assign to Self','Assign applications to self','applications',0,'2026-02-14 05:21:04'),(17,'reassign_application','Reassign Application','Reassign applications to others','applications',0,'2026-02-14 05:21:04'),(18,'view_interviews','View Interviews','View interview schedules','interviews',0,'2026-02-14 05:21:04'),(19,'schedule_interview','Schedule Interview','Schedule new interviews','interviews',0,'2026-02-14 05:21:04'),(20,'conduct_interview','Conduct Interview','Conduct AI interviews','interviews',0,'2026-02-14 05:21:04'),(21,'view_interview_results','View Interview Results','View interview results and recordings','interviews',0,'2026-02-14 05:21:04'),(22,'view_documents','View Documents','View applicant documents','documents',0,'2026-02-14 05:21:04'),(23,'upload_document','Upload Document','Upload new documents','documents',0,'2026-02-14 05:21:04'),(24,'download_document','Download Document','Download documents','documents',0,'2026-02-14 05:21:04'),(25,'delete_document','Delete Document','Delete documents','documents',0,'2026-02-14 05:21:04'),(26,'verify_document','Verify Document','Verify document authenticity','documents',0,'2026-02-14 05:21:04'),(27,'view_medical','View Medical Records','View medical examination records','medical',0,'2026-02-14 05:21:04'),(28,'create_medical','Create Medical Record','Create new medical records','medical',0,'2026-02-14 05:21:04'),(29,'edit_medical','Edit Medical Record','Edit medical records','medical',0,'2026-02-14 05:21:04'),(30,'approve_medical','Approve Medical','Approve medical examination results','medical',0,'2026-02-14 05:21:04'),(31,'view_email','View Email Center','Access email center','email',0,'2026-02-14 05:21:04'),(32,'send_email','Send Email','Send emails to applicants','email',0,'2026-02-14 05:21:04'),(33,'view_email_templates','View Email Templates','View email templates','email',0,'2026-02-14 05:21:04'),(34,'edit_email_templates','Edit Email Templates','Edit email templates','email',0,'2026-02-14 05:21:04'),(35,'view_email_logs','View Email Logs','View email sending logs','email',0,'2026-02-14 05:21:04'),(36,'view_reports','View Reports','View system reports','reports',0,'2026-02-14 05:21:04'),(37,'generate_reports','Generate Reports','Generate custom reports','reports',0,'2026-02-14 05:21:04'),(38,'export_reports','Export Reports','Export reports to Excel/PDF','reports',0,'2026-02-14 05:21:04'),(39,'view_users','View Users','View system users','users',0,'2026-02-14 05:21:04'),(40,'create_user','Create User','Create new users','users',0,'2026-02-14 05:21:04'),(41,'edit_user','Edit User','Edit user information','users',0,'2026-02-14 05:21:04'),(42,'delete_user','Delete User','Delete users','users',0,'2026-02-14 05:21:04'),(43,'assign_role','Assign Role','Assign roles to users','users',0,'2026-02-14 05:21:04'),(44,'view_settings','View Settings','View system settings','settings',0,'2026-02-14 05:21:04'),(45,'edit_settings','Edit Settings','Edit system settings','settings',0,'2026-02-14 05:21:04'),(46,'view_permissions','View Permissions','View role permissions','settings',0,'2026-02-14 05:21:04'),(47,'edit_permissions','Edit Permissions','Edit role permissions','settings',0,'2026-02-14 05:21:04'),(48,'view_crewing','View Crewing Staff','View crewing staff list','crewing',0,'2026-02-14 05:21:04'),(49,'manage_workload','Manage Workload','Manage team workload distribution','crewing',0,'2026-02-14 05:21:04'),(50,'view_team_stats','View Team Statistics','View crewing team statistics','crewing',0,'2026-02-14 05:21:04'),(51,'view_pipeline','View Pipeline','View recruitment pipeline','pipeline',0,'2026-02-14 05:21:04'),(52,'move_pipeline_stage','Move Pipeline Stage','Move applicants between pipeline stages','pipeline',0,'2026-02-14 05:21:04'),(53,'edit_pipeline_config','Edit Pipeline Config','Configure pipeline stages','pipeline',0,'2026-02-14 05:21:04'),(54,'create_manual_entry','Create Manual Entry','Create manual applicant entries','manual_entry',0,'2026-02-14 05:21:04'),(55,'view_manual_entries','View Manual Entries','View manual entry list','manual_entry',0,'2026-02-14 05:21:04'),(56,'edit_manual_entry','Edit Manual Entry','Edit manual entries','manual_entry',0,'2026-02-14 05:21:04'),(57,'delete_manual_entry','Delete Manual Entry','Delete manual entries','manual_entry',0,'2026-02-14 05:21:04');
+/*!40000 ALTER TABLE `permissions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pipeline_requests`
+--
+
+DROP TABLE IF EXISTS `pipeline_requests`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `pipeline_requests` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `application_id` int NOT NULL,
+  `requested_by` int NOT NULL,
+  `assigned_to` int NOT NULL,
+  `from_status_id` int NOT NULL,
+  `to_status_id` int NOT NULL,
+  `reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `status` enum('pending','approved','rejected') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `response_notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `responded_by` int DEFAULT NULL,
+  `responded_at` datetime DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pipeline_requests`
+--
+
+LOCK TABLES `pipeline_requests` WRITE;
+/*!40000 ALTER TABLE `pipeline_requests` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pipeline_requests` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `role_permissions`
+--
+
+DROP TABLE IF EXISTS `role_permissions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `role_permissions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `role_id` int NOT NULL,
+  `permission_id` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_role_permission` (`role_id`,`permission_id`),
+  KEY `permission_id` (`permission_id`),
+  CONSTRAINT `role_permissions_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `role_permissions_ibfk_2` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=234 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `role_permissions`
+--
+
+LOCK TABLES `role_permissions` WRITE;
+/*!40000 ALTER TABLE `role_permissions` DISABLE KEYS */;
+INSERT INTO `role_permissions` VALUES (1,1,30,'2026-02-14 05:22:09'),(2,1,12,'2026-02-14 05:22:09'),(3,1,43,'2026-02-14 05:22:09'),(4,1,16,'2026-02-14 05:22:09'),(5,1,20,'2026-02-14 05:22:09'),(6,1,54,'2026-02-14 05:22:09'),(7,1,28,'2026-02-14 05:22:09'),(8,1,40,'2026-02-14 05:22:09'),(9,1,4,'2026-02-14 05:22:09'),(10,1,11,'2026-02-14 05:22:09'),(11,1,25,'2026-02-14 05:22:09'),(12,1,57,'2026-02-14 05:22:09'),(13,1,42,'2026-02-14 05:22:09'),(14,1,6,'2026-02-14 05:22:09'),(15,1,24,'2026-02-14 05:22:09'),(16,1,10,'2026-02-14 05:22:09'),(17,1,34,'2026-02-14 05:22:09'),(18,1,56,'2026-02-14 05:22:09'),(19,1,29,'2026-02-14 05:22:09'),(20,1,47,'2026-02-14 05:22:09'),(21,1,53,'2026-02-14 05:22:09'),(22,1,45,'2026-02-14 05:22:09'),(23,1,41,'2026-02-14 05:22:09'),(24,1,5,'2026-02-14 05:22:09'),(25,1,13,'2026-02-14 05:22:09'),(26,1,38,'2026-02-14 05:22:09'),(27,1,37,'2026-02-14 05:22:09'),(28,1,49,'2026-02-14 05:22:09'),(29,1,52,'2026-02-14 05:22:09'),(30,1,7,'2026-02-14 05:22:09'),(31,1,17,'2026-02-14 05:22:09'),(32,1,19,'2026-02-14 05:22:09'),(33,1,32,'2026-02-14 05:22:09'),(34,1,15,'2026-02-14 05:22:09'),(35,1,23,'2026-02-14 05:22:09'),(36,1,26,'2026-02-14 05:22:09'),(37,1,2,'2026-02-14 05:22:09'),(38,1,9,'2026-02-14 05:22:09'),(39,1,8,'2026-02-14 05:22:09'),(40,1,14,'2026-02-14 05:22:09'),(41,1,48,'2026-02-14 05:22:09'),(42,1,1,'2026-02-14 05:22:09'),(43,1,22,'2026-02-14 05:22:09'),(44,1,31,'2026-02-14 05:22:09'),(45,1,35,'2026-02-14 05:22:09'),(46,1,33,'2026-02-14 05:22:09'),(47,1,21,'2026-02-14 05:22:09'),(48,1,18,'2026-02-14 05:22:09'),(49,1,55,'2026-02-14 05:22:09'),(50,1,27,'2026-02-14 05:22:09'),(51,1,46,'2026-02-14 05:22:09'),(52,1,51,'2026-02-14 05:22:09'),(53,1,36,'2026-02-14 05:22:09'),(54,1,44,'2026-02-14 05:22:09'),(55,1,50,'2026-02-14 05:22:09'),(56,1,39,'2026-02-14 05:22:09'),(57,1,3,'2026-02-14 05:22:09'),(64,2,1,'2026-02-14 05:22:09'),(65,2,2,'2026-02-14 05:22:09'),(66,2,3,'2026-02-14 05:22:09'),(67,2,4,'2026-02-14 05:22:09'),(68,2,5,'2026-02-14 05:22:09'),(69,2,6,'2026-02-14 05:22:09'),(70,2,7,'2026-02-14 05:22:09'),(71,2,8,'2026-02-14 05:22:09'),(72,2,9,'2026-02-14 05:22:09'),(73,2,10,'2026-02-14 05:22:09'),(74,2,11,'2026-02-14 05:22:09'),(75,2,12,'2026-02-14 05:22:09'),(76,2,13,'2026-02-14 05:22:09'),(77,2,14,'2026-02-14 05:22:09'),(78,2,15,'2026-02-14 05:22:09'),(79,2,16,'2026-02-14 05:22:09'),(80,2,17,'2026-02-14 05:22:09'),(81,2,18,'2026-02-14 05:22:09'),(82,2,19,'2026-02-14 05:22:09'),(83,2,20,'2026-02-14 05:22:09'),(84,2,21,'2026-02-14 05:22:09'),(85,2,22,'2026-02-14 05:22:09'),(86,2,23,'2026-02-14 05:22:09'),(87,2,24,'2026-02-14 05:22:09'),(88,2,25,'2026-02-14 05:22:09'),(89,2,26,'2026-02-14 05:22:09'),(90,2,27,'2026-02-14 05:22:09'),(91,2,28,'2026-02-14 05:22:09'),(92,2,29,'2026-02-14 05:22:09'),(93,2,30,'2026-02-14 05:22:09'),(94,2,31,'2026-02-14 05:22:09'),(95,2,32,'2026-02-14 05:22:09'),(96,2,33,'2026-02-14 05:22:09'),(97,2,34,'2026-02-14 05:22:09'),(98,2,35,'2026-02-14 05:22:09'),(99,2,36,'2026-02-14 05:22:09'),(100,2,37,'2026-02-14 05:22:09'),(101,2,38,'2026-02-14 05:22:09'),(102,2,44,'2026-02-14 05:22:09'),(103,2,48,'2026-02-14 05:22:09'),(104,2,49,'2026-02-14 05:22:09'),(105,2,50,'2026-02-14 05:22:09'),(106,2,51,'2026-02-14 05:22:09'),(107,2,52,'2026-02-14 05:22:09'),(108,2,53,'2026-02-14 05:22:09'),(109,2,54,'2026-02-14 05:22:09'),(110,2,55,'2026-02-14 05:22:09'),(111,2,56,'2026-02-14 05:22:09'),(112,2,57,'2026-02-14 05:22:09'),(158,11,8,'2026-02-14 05:27:21'),(159,11,9,'2026-02-14 05:27:21'),(160,11,10,'2026-02-14 05:27:21'),(161,11,11,'2026-02-14 05:27:21'),(162,11,12,'2026-02-14 05:27:21'),(163,11,13,'2026-02-14 05:27:21'),(164,11,15,'2026-02-14 05:27:21'),(165,11,14,'2026-02-14 05:27:21'),(166,11,16,'2026-02-14 05:27:21'),(167,11,17,'2026-02-14 05:27:21'),(168,11,48,'2026-02-14 05:27:21'),(169,11,50,'2026-02-14 05:27:21'),(170,11,49,'2026-02-14 05:27:21'),(171,11,2,'2026-02-14 05:27:21'),(172,11,1,'2026-02-14 05:27:21'),(173,11,22,'2026-02-14 05:27:21'),(174,11,23,'2026-02-14 05:27:21'),(175,11,24,'2026-02-14 05:27:21'),(176,11,25,'2026-02-14 05:27:21'),(177,11,26,'2026-02-14 05:27:21'),(178,11,35,'2026-02-14 05:27:21'),(179,11,34,'2026-02-14 05:27:21'),(180,11,33,'2026-02-14 05:27:21'),(181,11,32,'2026-02-14 05:27:21'),(182,11,31,'2026-02-14 05:27:21'),(183,11,18,'2026-02-14 05:27:21'),(184,11,19,'2026-02-14 05:27:21'),(185,11,20,'2026-02-14 05:27:21'),(186,11,21,'2026-02-14 05:27:21'),(187,11,57,'2026-02-14 05:27:21'),(188,11,54,'2026-02-14 05:27:21'),(189,11,55,'2026-02-14 05:27:21'),(190,11,56,'2026-02-14 05:27:21'),(191,11,30,'2026-02-14 05:27:21'),(192,11,29,'2026-02-14 05:27:21'),(193,11,28,'2026-02-14 05:27:21'),(194,11,27,'2026-02-14 05:27:21'),(195,11,51,'2026-02-14 05:27:21'),(196,11,52,'2026-02-14 05:27:21'),(197,11,53,'2026-02-14 05:27:21'),(198,11,36,'2026-02-14 05:27:21'),(199,11,37,'2026-02-14 05:27:21'),(200,11,38,'2026-02-14 05:27:21'),(201,11,44,'2026-02-14 05:27:21'),(202,11,45,'2026-02-14 05:27:21'),(203,11,46,'2026-02-14 05:27:21'),(204,11,47,'2026-02-14 05:27:21'),(205,11,39,'2026-02-14 05:27:21'),(206,11,40,'2026-02-14 05:27:21'),(207,11,41,'2026-02-14 05:27:21'),(208,11,42,'2026-02-14 05:27:21'),(209,11,43,'2026-02-14 05:27:21'),(210,11,6,'2026-02-14 05:27:21'),(211,11,5,'2026-02-14 05:27:21'),(212,11,4,'2026-02-14 05:27:21'),(213,11,3,'2026-02-14 05:27:21'),(214,11,7,'2026-02-14 05:27:21'),(215,3,8,'2026-02-14 05:29:38'),(216,3,9,'2026-02-14 05:29:38'),(217,3,10,'2026-02-14 05:29:38'),(218,3,12,'2026-02-14 05:29:38'),(219,3,13,'2026-02-14 05:29:38'),(220,3,15,'2026-02-14 05:29:38'),(221,3,14,'2026-02-14 05:29:38'),(222,3,16,'2026-02-14 05:29:38'),(223,3,17,'2026-02-14 05:29:38'),(224,3,2,'2026-02-14 05:29:38'),(225,3,1,'2026-02-14 05:29:38'),(226,3,22,'2026-02-14 05:29:38'),(227,3,23,'2026-02-14 05:29:38'),(228,3,24,'2026-02-14 05:29:38'),(229,3,25,'2026-02-14 05:29:38'),(230,3,26,'2026-02-14 05:29:38'),(231,3,18,'2026-02-14 05:29:38'),(232,3,19,'2026-02-14 05:29:38'),(233,3,21,'2026-02-14 05:29:38');
+/*!40000 ALTER TABLE `role_permissions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `roles`
+--
+
+DROP TABLE IF EXISTS `roles`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `roles` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `roles`
+--
+
+LOCK TABLES `roles` WRITE;
+/*!40000 ALTER TABLE `roles` DISABLE KEYS */;
+INSERT INTO `roles` VALUES (1,'Admin','System Administrator','2026-02-13 23:43:10'),(2,'HR Staff','Human Resources Staff','2026-02-13 23:43:10'),(3,'Applicant','Job Applicant','2026-02-13 23:43:10'),(4,'Leader','Department Leader','2026-02-13 23:43:10'),(5,'Crewing','Crewing Staff','2026-02-13 23:43:10'),(11,'Master Admin','Master Administrator','2026-02-13 23:43:10');
+/*!40000 ALTER TABLE `roles` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `settings`
+--
+
+DROP TABLE IF EXISTS `settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `settings` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `setting_key` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `setting_value` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `setting_type` enum('string','number','boolean','json') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'string',
+  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `setting_key` (`setting_key`)
+) ENGINE=InnoDB AUTO_INCREMENT=138 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `settings`
+--
+
+LOCK TABLES `settings` WRITE;
+/*!40000 ALTER TABLE `settings` DISABLE KEYS */;
+INSERT INTO `settings` VALUES (1,'email_enabled','1','string','Enable/disable email sending system-wide','2026-02-14 05:22:11'),(2,'email_queue_enabled','0','string','Enable email queue processing','2026-02-14 05:22:11'),(3,'email_daily_limit','500','string','Maximum emails to send per day','2026-02-14 05:22:11'),(4,'auto_assign_enabled','0','string','Enable automatic applicant assignment to crewing','2026-02-14 05:22:11'),(5,'auto_assign_algorithm','round_robin','string','Algorithm for auto-assignment: round_robin, least_workload','2026-02-14 05:22:11'),(6,'auto_email_application_received','1','string','Send automatic email when application received','2026-02-14 05:22:11'),(7,'auto_email_status_change','1','string','Send automatic email when application status changes','2026-02-14 05:22:11'),(8,'interview_ai_enabled','1','string','Enable AI-powered interviews','2026-02-14 05:22:11'),(9,'interview_default_duration','30','string','Default interview duration in minutes','2026-02-14 05:22:11'),(10,'interview_questions_per_session','5','string','Number of questions per interview session','2026-02-14 05:22:11'),(11,'interview_passing_score','70','string','Minimum passing score percentage','2026-02-14 05:22:11'),(12,'notification_email_admin','1','string','Email notifications to admin','2026-02-14 05:22:11'),(13,'notification_email_crewing','1','string','Email notifications to crewing staff','2026-02-14 05:22:11'),(14,'notification_slack_enabled','0','string','Enable Slack notifications','2026-02-14 05:22:11'),(15,'notification_sms_enabled','0','string','Enable SMS notifications','2026-02-14 05:22:11'),(16,'application_deadline_warning_days','7','string','Days before deadline to show warning','2026-02-14 05:22:11'),(17,'application_auto_close_expired','1','string','Automatically close expired vacancies','2026-02-14 05:22:11'),(18,'application_require_cv','1','string','Require CV upload for applications','2026-02-14 05:22:11'),(19,'application_require_certificates','0','string','Require certificate uploads','2026-02-14 05:22:11'),(20,'document_max_size_mb','10','string','Maximum document upload size in MB','2026-02-14 05:22:11'),(21,'document_allowed_types','pdf,doc,docx,jpg,jpeg,png','string','Allowed document file types','2026-02-14 05:22:11'),(22,'document_retention_days','730','string','Days to retain applicant documents (2 years)','2026-02-14 05:22:11'),(23,'system_maintenance_mode','0','string','Enable maintenance mode','2026-02-14 05:22:11'),(24,'system_timezone','Asia/Jakarta','string','System timezone','2026-02-14 05:22:11'),(25,'system_date_format','d/m/Y','string','Date display format','2026-02-14 05:22:11'),(26,'system_pagination_limit','20','string','Default items per page','2026-02-14 05:22:11'),(27,'system_session_timeout','1440','string','Session timeout in minutes (24 hours)','2026-02-14 05:22:11'),(28,'privacy_data_retention_days','365','string','Days to retain applicant data','2026-02-14 05:22:11'),(29,'privacy_auto_delete_rejected','0','string','Auto-delete rejected applications after retention period','2026-02-14 05:22:11'),(30,'privacy_consent_required','1','string','Require privacy consent from applicants','2026-02-14 05:22:11'),(31,'smtp_host','mail.indooceancrew.co.id','string',NULL,'2026-02-14 05:42:12'),(32,'smtp_port','465','string',NULL,'2026-02-14 06:24:18'),(33,'smtp_username','ricky@indooceancrew.co.id','string',NULL,'2026-02-14 09:28:06'),(34,'smtp_encryption','','string',NULL,'2026-02-14 08:39:32'),(35,'smtp_from_email','ricky@indooceancrew.co.id','string',NULL,'2026-02-14 09:28:06'),(36,'smtp_from_name','PT Indo Ocean Crew Services','string',NULL,'2026-02-14 05:42:12'),(37,'smtp_password','(Ricky1!)','string',NULL,'2026-02-14 09:28:06');
+/*!40000 ALTER TABLE `settings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `status_change_requests`
+--
+
+DROP TABLE IF EXISTS `status_change_requests`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `status_change_requests` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `application_id` int NOT NULL,
+  `requested_by` int NOT NULL,
+  `from_status_id` int NOT NULL,
+  `to_status_id` int NOT NULL,
+  `status` enum('pending','approved','rejected') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `review_notes` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `reviewed_by` int DEFAULT NULL,
+  `reviewed_at` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `application_id` (`application_id`),
+  KEY `requested_by` (`requested_by`),
+  CONSTRAINT `status_change_requests_ibfk_1` FOREIGN KEY (`application_id`) REFERENCES `applications` (`id`),
+  CONSTRAINT `status_change_requests_ibfk_2` FOREIGN KEY (`requested_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `status_change_requests`
+--
+
+LOCK TABLES `status_change_requests` WRITE;
+/*!40000 ALTER TABLE `status_change_requests` DISABLE KEYS */;
+INSERT INTO `status_change_requests` VALUES (1,1,5,1,4,'approved','cdc',11,'2026-02-14 12:36:09','2026-02-14 12:35:43','2026-02-14 12:36:09'),(2,3,13,1,3,'approved','mantap',11,'2026-02-15 12:13:18','2026-02-15 12:12:49','2026-02-15 12:13:18'),(3,3,13,3,6,'approved','',11,'2026-02-15 22:55:42','2026-02-15 18:42:54','2026-02-15 22:55:42'),(4,4,13,1,6,'approved','',11,'2026-02-16 03:56:29','2026-02-16 03:56:13','2026-02-16 03:56:29'),(5,6,13,1,6,'approved','ok',11,'2026-02-16 13:33:14','2026-02-16 13:32:20','2026-02-16 13:33:14'),(6,8,14,1,3,'approved','',11,'2026-02-17 12:38:48','2026-02-17 10:52:58','2026-02-17 12:38:48'),(7,7,14,1,6,'approved','',11,'2026-02-17 12:38:47','2026-02-17 12:01:15','2026-02-17 12:38:47'),(8,8,13,3,4,'approved','',11,'2026-02-17 18:46:36','2026-02-17 14:57:35','2026-02-17 18:46:36'),(9,8,13,4,6,'approved','oke',11,'2026-02-19 06:35:28','2026-02-19 06:35:01','2026-02-19 06:35:28');
+/*!40000 ALTER TABLE `status_change_requests` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `user_smtp_configs`
+--
+
+DROP TABLE IF EXISTS `user_smtp_configs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `user_smtp_configs` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `smtp_host` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'SMTP server hostname (e.g., smtp.gmail.com)',
+  `smtp_port` int DEFAULT '465' COMMENT 'SMTP port (465 for SSL, 587 for TLS)',
+  `smtp_username` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'SMTP authentication username',
+  `smtp_password` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Encrypted SMTP password',
+  `smtp_encryption` enum('ssl','tls') COLLATE utf8mb4_unicode_ci DEFAULT 'ssl' COMMENT 'Encryption type',
+  `smtp_from_email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'From email address',
+  `smtp_from_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'From name displayed in emails',
+  `is_active` tinyint(1) DEFAULT '1' COMMENT 'Enable/disable without deleting',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_user` (`user_id`),
+  KEY `idx_user_active` (`user_id`,`is_active`),
+  CONSTRAINT `user_smtp_configs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Per-user SMTP email configurations';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user_smtp_configs`
+--
+
+LOCK TABLES `user_smtp_configs` WRITE;
+/*!40000 ALTER TABLE `user_smtp_configs` DISABLE KEYS */;
+INSERT INTO `user_smtp_configs` VALUES (4,13,'mail.indooceancrew.co.id',465,'oriza@indooceancrew.co.id','(Oriza1!)','ssl','oriza@indooceancrew.co.id','PT Indo Ocean Crew Services',1,'2026-02-14 08:27:37','2026-02-15 04:18:43'),(5,14,'mail.indooceancrew.co.id',465,'vania@indooceancrew.co.id','(Vania1!)','ssl','vania@indooceancrew.co.id','PT Indo Ocean Crew Services',1,'2026-02-14 08:27:38','2026-02-14 08:27:38'),(6,15,'mail.indooceancrew.co.id',465,'ricky@indooceancrew.co.id','(Ricky1!)','ssl','ricky@indooceancrew.co.id','PT Indo Ocean Crew Services',1,'2026-02-14 08:27:38','2026-02-14 08:27:38'),(7,16,'mail.indooceancrew.co.id',465,'kevin@indooceancrew.co.id','(Kevin1!)','ssl','kevin@indooceancrew.co.id','PT Indo Ocean Crew Services',1,'2026-02-14 08:27:38','2026-02-14 08:27:38');
+/*!40000 ALTER TABLE `user_smtp_configs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `users`
+--
+
+DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `users` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `role_id` int NOT NULL DEFAULT '3',
+  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `full_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email_verified_at` timestamp NULL DEFAULT NULL,
+  `remember_token` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `is_manual_entry` tinyint(1) DEFAULT '0',
+  `requires_activation` tinyint(1) DEFAULT '0',
+  `is_online` tinyint(1) DEFAULT '0',
+  `last_activity` datetime DEFAULT NULL,
+  `last_login` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `ui_scale` decimal(3,2) DEFAULT '1.00' COMMENT 'UI Scale preference (0.75 to 1.20)',
+  `language` varchar(5) COLLATE utf8mb4_unicode_ci DEFAULT 'id',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `role_id` (`role_id`),
+  CONSTRAINT `users_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `users`
+--
+
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,1,'admin@indoceancrew.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','Admin',NULL,NULL,NULL,NULL,1,0,0,0,'2026-02-16 01:54:21',NULL,'2026-02-13 23:43:10','2026-02-15 18:54:21',1.00,'id'),(2,2,'hr@indoceancrew.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','HR Staff',NULL,NULL,NULL,NULL,1,0,0,0,NULL,NULL,'2026-02-13 23:43:10','2026-02-13 23:43:10',1.00,'id'),(3,3,'applicant@example.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','Applicant',NULL,NULL,NULL,NULL,1,0,0,0,NULL,NULL,'2026-02-13 23:43:10','2026-02-13 23:43:10',1.00,'id'),(4,4,'leader@indoceancrew.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','Leader',NULL,NULL,NULL,NULL,1,0,0,0,NULL,NULL,'2026-02-13 23:43:10','2026-02-13 23:43:10',1.00,'id'),(5,5,'crewing@indoceancrew.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','Crewing',NULL,NULL,NULL,NULL,1,0,0,0,'2026-02-17 16:25:54','2026-02-17 09:24:56','2026-02-13 23:43:10','2026-02-17 09:25:54',1.00,'id'),(11,11,'master@indoceancrew.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','Master Admin',NULL,NULL,NULL,NULL,1,0,0,0,'2026-02-19 09:18:26','2026-02-19 02:16:13','2026-02-13 23:43:10','2026-02-19 02:18:26',1.00,'id'),(12,3,'mgsilhamz@mail.com','$2y$10$G0/TMP1KG6bFle.OHWToFOlQA.rgWJFamkVaD8cEVEwnGVItbTddC','ddddd','444444',NULL,NULL,NULL,1,1,1,0,NULL,NULL,'2026-02-14 05:34:40','2026-02-14 05:44:51',1.00,'id'),(13,5,'oriza@indooceancrew.co.id','$2y$10$RNVRRBS/fZpG6c2d6JPRvuv/W/hxPdlDuGTJeRaPhz4i/H2qBGsyC','Oriza Sativa Hadi','','uploads/recruiters/recruiter_13_1771167202.jpeg',NULL,NULL,1,0,0,0,'2026-02-19 09:15:59','2026-02-19 02:13:58','2026-02-14 08:27:11','2026-02-19 02:15:59',1.00,'id'),(14,5,'vania@indooceancrew.co.id','$2y$10$rPMtqjbOWPPwnNpNNAwPEul15c1a3m2bVGcUIctWbBQ0x/ojpxs9y','Vania Ulina Meinarti Ritonga',NULL,NULL,NULL,NULL,1,0,0,0,'2026-02-17 19:21:27','2026-02-17 12:21:00','2026-02-14 08:27:38','2026-02-17 12:21:27',1.00,'id'),(15,5,'ricky@indooceancrew.co.id','$2y$10$9ADMqyNk4LSeX36Ti3WJYuYcVvD0J2sWVISqLlqu9WItQ0azp741e','Ricky Yohanes Pardede',NULL,NULL,NULL,NULL,1,0,0,0,'2026-02-18 18:25:34','2026-02-18 11:25:29','2026-02-14 08:27:38','2026-02-18 11:25:34',1.00,'id'),(16,5,'kevin@indooceancrew.co.id','$2y$10$N5lVCnQoEyaty4ZbLEHnrORT/6ZHl3gZf85rbfNMkcoAAKjN7NeYa','Kevin Gabriel Surbakti',NULL,NULL,NULL,NULL,1,0,0,0,NULL,NULL,'2026-02-14 08:27:38','2026-02-14 08:27:38',1.00,'id'),(18,3,'mgsilhamz@gmail.com','$2y$10$erdGjZL0h4d2HiHOeWlFVuiM/Q94Bv0QEuG7hR8l94XHItmIUOypS','vfdbd','55555555555555','uploads/documents/18/doc_7_1771167259_da737533.jpeg',NULL,NULL,1,1,1,0,NULL,NULL,'2026-02-15 05:12:18','2026-02-15 14:54:19',1.00,'id'),(19,3,'mgsilhamzuhdi354@gmail.com','$2y$10$9DvYg8mGhrD5M8h1rZ/rmOsBPhrYU6Yjy51j3RLmuNkFRnQLpPE2e','dfff','55555','uploads/documents/19/doc_7_1771188951_985fc9fa.jpeg',NULL,NULL,1,1,1,0,NULL,NULL,'2026-02-15 20:55:51','2026-02-15 20:55:51',1.00,'id'),(20,3,'ilhamasad346@gmail.com','$2y$10$wrKLLeInKCIdx/gntpJaX.pF4rtLiZ8AjhXTs1ArQJhek6EXw/sPG','rgegr','5555555','uploads/documents/20/doc_7_1771209568_e27f7e32.jpeg',NULL,NULL,1,1,1,0,NULL,NULL,'2026-02-16 02:39:28','2026-02-16 02:39:28',1.00,'id'),(21,3,'ayambakar@gmail.com','$2y$10$RIIqKNcaTjWnjBrhr2e4SeCHE1easwCbkVLOimQLwlaUo58ZWRR6K','nopal','55555','uploads/documents/21/doc_7_1771317056_4daec02c.jpg',NULL,NULL,1,1,1,0,NULL,NULL,'2026-02-16 06:17:27','2026-02-17 08:30:57',1.00,'id'),(22,3,'kandidat@gmail.com','$2y$10$j9ZZnGDabGTMWcQmmXg/0.c5Lz63nwCNjxh5LSS241529wPZK1/YG','gerry','08993388460',NULL,NULL,NULL,1,0,0,0,'2026-02-17 18:39:21','2026-02-17 11:38:45','2026-02-16 07:43:58','2026-02-17 11:39:21',1.00,'id'),(23,3,'test@test.com','$2y$10$75A8xGMZKVhbFff4jIbjqOpwmhs/iz6t/kMo45JLhG69ILw5vQQhy','Test User','08123456789',NULL,NULL,NULL,1,0,0,0,'2026-02-17 18:38:41',NULL,'2026-02-17 11:35:50','2026-02-17 11:38:41',1.00,'id');
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `vacancy_shares`
+--
+
+DROP TABLE IF EXISTS `vacancy_shares`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `vacancy_shares` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `vacancy_id` int NOT NULL,
+  `shared_by` int NOT NULL COMMENT 'Crewing user_id',
+  `share_method` enum('link','whatsapp','email','qr') COLLATE utf8mb4_unicode_ci DEFAULT 'link',
+  `share_url` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_vacancy` (`vacancy_id`),
+  KEY `idx_crewing` (`shared_by`),
+  CONSTRAINT `vacancy_shares_ibfk_1` FOREIGN KEY (`vacancy_id`) REFERENCES `job_vacancies` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `vacancy_shares_ibfk_2` FOREIGN KEY (`shared_by`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `vacancy_shares`
+--
+
+LOCK TABLES `vacancy_shares` WRITE;
+/*!40000 ALTER TABLE `vacancy_shares` DISABLE KEYS */;
+INSERT INTO `vacancy_shares` VALUES (1,4,13,'whatsapp','/recruitment/public/jobs/4?ref=crewing&recruiter_id=13','2026-02-17 08:29:54'),(2,4,13,'link','/recruitment/public/jobs/4?ref=crewing&recruiter_id=13','2026-02-17 08:30:07'),(3,4,13,'whatsapp','/recruitment/public/jobs/4?ref=crewing&recruiter_id=13','2026-02-17 08:50:30');
+/*!40000 ALTER TABLE `vacancy_shares` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `vessel_types`
+--
+
+DROP TABLE IF EXISTS `vessel_types`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `vessel_types` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `is_active` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `vessel_types`
+--
+
+LOCK TABLES `vessel_types` WRITE;
+/*!40000 ALTER TABLE `vessel_types` DISABLE KEYS */;
+INSERT INTO `vessel_types` VALUES (1,'Bulk Carrier',NULL,1),(2,'Container Ship',NULL,1),(3,'ayam',NULL,1);
+/*!40000 ALTER TABLE `vessel_types` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2026-02-19  9:28:29
