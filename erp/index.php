@@ -25,9 +25,23 @@ if (file_exists(BASEPATH . 'vendor/autoload.php')) {
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 
-// Get relative base path dynamically
-$scriptDir = dirname($_SERVER['SCRIPT_NAME']);
-$scriptDir = str_replace('\\', '/', $scriptDir); // normalize windows paths
+// Get base path - handle Apache rewrite where SCRIPT_NAME may be the original URL
+$isWindows = (PHP_OS_FAMILY === 'Windows' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
+$scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+
+if (!$isWindows) {
+    // Docker/NAS: SCRIPT_NAME might show original URL, not rewritten file
+    // Use SCRIPT_FILENAME to get the real PHP file being executed
+    $scriptFile = $_SERVER['SCRIPT_FILENAME'] ?? '';
+    $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? '/var/www/html';
+    if (!empty($scriptFile) && !empty($docRoot)) {
+        $scriptName = str_replace($docRoot, '', $scriptFile);
+        $scriptName = '/' . ltrim(str_replace('\\', '/', $scriptName), '/');
+    }
+}
+
+$scriptDir = dirname($scriptName);
+$scriptDir = str_replace('\\', '/', $scriptDir);
 $basePath = rtrim($scriptDir, '/') . '/';
 
 define('BASE_URL', $protocol . '://' . $host . $basePath);
