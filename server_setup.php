@@ -1,31 +1,49 @@
 <?php
 /**
- * PT Indo Ocean - Server Setup Fix Script
- * Jalankan via: php /var/www/html/server_setup.php
- * Atau akses via browser: http://localhost/server_setup.php
+ * PT Indo Ocean - Server Setup Fix v2
+ * Fixes Apache rewrite by putting rules in VirtualHost (not Directory)
+ * Run: php /var/www/html/server_setup.php
  * HAPUS SETELAH SELESAI!
  */
 
-echo "<h2>PT Indo Ocean - Server Setup Fix</h2>\n";
+echo "=== PT Indo Ocean - Server Setup Fix v2 ===\n\n";
 
-// 1. Write Apache VirtualHost config
+// 1. Fix apache2.conf - AllowOverride None -> All
+$mainConfig = file_get_contents('/etc/apache2/apache2.conf');
+if (strpos($mainConfig, 'AllowOverride None') !== false) {
+    $mainConfig = str_replace('AllowOverride None', 'AllowOverride All', $mainConfig);
+    file_put_contents('/etc/apache2/apache2.conf', $mainConfig);
+    echo "[OK] Fixed AllowOverride None -> All in apache2.conf\n";
+} else {
+    echo "[OK] apache2.conf already has AllowOverride All\n";
+}
+
+// 2. Write VirtualHost config with rewrite rules OUTSIDE <Directory>
 $apacheConfig = '<VirtualHost *:80>
     DocumentRoot /var/www/html
+    ServerName localhost
+
+    # Rewrite rules at VirtualHost level (NOT inside Directory!)
+    RewriteEngine On
+
+    # Allow existing files and directories
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f [OR]
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -d
+    RewriteRule ^ - [L]
+
+    # ERP API files - direct access
+    RewriteRule ^/erp/api_.*\.php$ - [L]
+
+    # ERP routing
+    RewriteRule ^/erp/(.*)$ /erp/index.php?url=$1 [L,QSA]
+
+    # Recruitment routing  
+    RewriteRule ^/recruitment/(.*)$ /recruitment/public/index.php?url=$1 [L,QSA]
 
     <Directory /var/www/html>
         Options Indexes FollowSymLinks
         AllowOverride All
         Require all granted
-
-        RewriteEngine On
-
-        RewriteCond %{REQUEST_FILENAME} -f [OR]
-        RewriteCond %{REQUEST_FILENAME} -d
-        RewriteRule ^ - [L]
-
-        RewriteRule ^erp/api_.*\.php$ - [L]
-        RewriteRule ^erp/(.*)$ /erp/index.php?url=$1 [L,QSA]
-        RewriteRule ^recruitment/(.*)$ /recruitment/public/index.php?url=$1 [L,QSA]
     </Directory>
 
     <Directory /var/www/html/erp>
@@ -44,9 +62,9 @@ $apacheConfig = '<VirtualHost *:80>
 ';
 
 $wrote = file_put_contents('/etc/apache2/sites-available/000-default.conf', $apacheConfig);
-echo $wrote ? "✅ Apache config written ($wrote bytes)<br>\n" : "❌ Failed to write Apache config<br>\n";
+echo $wrote ? "[OK] Apache VHost config written ($wrote bytes)\n" : "[FAIL] Could not write Apache config\n";
 
-// 2. Write root .htaccess
+// 3. Write root .htaccess (backup)
 $htaccess = 'DirectoryIndex index.php index.html
 
 <IfModule mod_rewrite.c>
@@ -61,71 +79,35 @@ $htaccess = 'DirectoryIndex index.php index.html
     RewriteRule ^erp/(.*)$ erp/index.php?url=$1 [L,QSA]
     RewriteRule ^recruitment/(.*)$ recruitment/public/index.php?url=$1 [L,QSA]
 </IfModule>
-
-<FilesMatch "\.(env|log|sql|sh|git)$">
-    Require all denied
-</FilesMatch>
 ';
 
-$wrote = file_put_contents('/var/www/html/.htaccess', $htaccess);
-echo $wrote ? "✅ Root .htaccess written ($wrote bytes)<br>\n" : "❌ Failed to write .htaccess<br>\n";
+file_put_contents('/var/www/html/.htaccess', $htaccess);
+echo "[OK] .htaccess written\n";
 
-// 3. Enable required Apache modules
-echo "<br><h3>Apache Modules:</h3>\n";
-$modules = ['rewrite', 'headers'];
-foreach ($modules as $mod) {
-    $output = shell_exec("a2enmod $mod 2>&1");
-    echo "Module $mod: $output<br>\n";
-}
+// 4. Enable modules
+shell_exec("a2enmod rewrite headers 2>&1");
+echo "[OK] Modules enabled\n";
 
-// 4. Check if modules are actually loaded
-$loadedModules = shell_exec("apache2ctl -M 2>/dev/null");
-echo "<br><h3>Loaded Modules Check:</h3>\n";
-echo "rewrite_module: " . (strpos($loadedModules, 'rewrite') !== false ? '✅ LOADED' : '❌ NOT LOADED') . "<br>\n";
-echo "headers_module: " . (strpos($loadedModules, 'headers') !== false ? '✅ LOADED' : '❌ NOT LOADED') . "<br>\n";
+// 5. Fix permissions
+shell_exec("chown -R www-data:www-data /var/www/html 2>&1");
+shell_exec("chmod 644 /var/www/html/.htaccess 2>&1");
+echo "[OK] Permissions fixed\n";
 
-// 5. Check Apache main config for AllowOverride
-$mainConfig = file_get_contents('/etc/apache2/apache2.conf');
-echo "<br><h3>Main Apache Config Check:</h3>\n";
-if (strpos($mainConfig, 'AllowOverride None') !== false) {
-    echo "⚠️ Found 'AllowOverride None' in apache2.conf - Need to fix!<br>\n";
-    // Fix it: replace AllowOverride None with AllowOverride All
-    $mainConfig = str_replace('AllowOverride None', 'AllowOverride All', $mainConfig);
-    file_put_contents('/etc/apache2/apache2.conf', $mainConfig);
-    echo "✅ Changed all 'AllowOverride None' to 'AllowOverride All' in apache2.conf<br>\n";
-} else {
-    echo "✅ No 'AllowOverride None' found in apache2.conf<br>\n";
-}
-
-// 6. Show current apache2.conf Directory sections
-preg_match_all('/<Directory[^>]*>.*?<\/Directory>/s', $mainConfig, $matches);
-echo "<br><h3>Directory Configs in apache2.conf:</h3>\n";
-echo "<pre>" . htmlspecialchars(implode("\n\n", $matches[0])) . "</pre>\n";
-
-// 7. Show sites-enabled
-echo "<br><h3>Sites Enabled:</h3>\n";
-$sites = shell_exec("ls -la /etc/apache2/sites-enabled/ 2>&1");
-echo "<pre>$sites</pre>\n";
-
-// 8. Show current 000-default.conf
-echo "<br><h3>Current VHost Config:</h3>\n";
-$vhost = file_get_contents('/etc/apache2/sites-enabled/000-default.conf');
-echo "<pre>" . htmlspecialchars($vhost) . "</pre>\n";
-
-// 9. Restart Apache
-echo "<br><h3>Restarting Apache:</h3>\n";
+// 6. Restart Apache
 $restart = shell_exec("service apache2 restart 2>&1");
-echo "<pre>$restart</pre>\n";
+echo "[OK] Apache restarted: " . trim($restart) . "\n";
 
-// 10. Test internal URL access
-echo "<br><h3>Internal Test (after restart):</h3>\n";
-sleep(1); // Wait for Apache to restart
+// 7. Wait and test
+sleep(2);
+echo "\n=== Internal Tests ===\n";
 
 $tests = [
-    '/erp/index.php' => 'ERP direct file',
-    '/erp/auth/login' => 'ERP rewrite URL',
-    '/db_diagnose.php' => 'Diagnose page',
-    '/recruitment/public/login' => 'Recruitment login',
+    '/erp/index.php'           => 'ERP direct file',
+    '/erp/'                    => 'ERP root',
+    '/erp/auth/login'          => 'ERP auth/login (rewrite)',
+    '/db_diagnose.php'         => 'Diagnose page',
+    '/recruitment/public/login'=> 'Recruitment login (rewrite)',
+    '/index.html'              => 'Landing page',
 ];
 
 foreach ($tests as $url => $label) {
@@ -138,13 +120,8 @@ foreach ($tests as $url => $label) {
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
     
-    $status = ($httpCode >= 200 && $httpCode < 400) ? '✅' : '❌';
-    echo "$status $label ($url) → HTTP $httpCode<br>\n";
+    $ok = ($httpCode >= 200 && $httpCode < 400);
+    echo ($ok ? '[OK]  ' : '[FAIL]') . " $label ($url) -> HTTP $httpCode\n";
 }
 
-echo "<br><h3>Fix Permissions:</h3>\n";
-shell_exec("chown -R www-data:www-data /var/www/html 2>&1");
-shell_exec("chmod 644 /var/www/html/.htaccess 2>&1");
-echo "✅ Permissions fixed<br>\n";
-
-echo "<br><hr><p>⚠️ <strong>HAPUS FILE INI SETELAH SELESAI!</strong></p>\n";
+echo "\n=== DONE! Hapus file ini setelah selesai. ===\n";
