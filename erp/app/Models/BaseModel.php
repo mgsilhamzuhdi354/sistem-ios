@@ -208,6 +208,11 @@ class BaseModel
     public function query($sql, $params = [], $types = '')
     {
         $stmt = $this->db->prepare($sql);
+        if ($stmt === false) {
+            // prepare() failed - likely table doesn't exist
+            error_log("BaseModel::query prepare failed: " . ($this->db->error ?? 'unknown') . " SQL: " . substr($sql, 0, 100));
+            return [];
+        }
         if (!empty($params)) {
             $stmt->bind_param($types, ...$params);
         }
