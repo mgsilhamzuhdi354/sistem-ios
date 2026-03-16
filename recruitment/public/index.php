@@ -57,19 +57,56 @@ function getDB() {
     
     if ($conn === null) {
         $config = $dbConfig['default'];
-        $conn = new mysqli(
-            $config['hostname'],
-            $config['username'],
-            $config['password'],
-            $config['database'],
-            $config['port']
-        );
         
-        if ($conn->connect_error) {
-            die("Database connection failed: " . $conn->connect_error);
+        // Disable automatic exceptions for mysqli extension
+        mysqli_report(MYSQLI_REPORT_OFF);
+        
+        $isWindows = (PHP_OS_FAMILY === 'Windows' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
+        
+        if (!$isWindows) {
+            $hostsToTry = [
+                $config['hostname'],
+                '172.17.0.1', // Gateway / NAS Host
+                '172.17.0.2',
+                '172.17.0.3',
+                '172.17.0.4',
+                '172.17.0.5',
+            ];
+            $hostsToTry = array_unique($hostsToTry);
+            
+            foreach ($hostsToTry as $host) {
+                try {
+                    $conn = @new mysqli(
+                        $host,
+                        $config['username'],
+                        $config['password'],
+                        $config['database'],
+                        $config['port']
+                    );
+                    if (!$conn->connect_error) {
+                        $conn->set_charset($config['charset']);
+                        $conn->options(MYSQLI_OPT_CONNECT_TIMEOUT, 10);
+                        return $conn;
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+            die("Database connection failed: Could not connect to MariaDB on any host. Tried: " . implode(', ', $hostsToTry));
+        } else {
+            $conn = @new mysqli(
+                $config['hostname'],
+                $config['username'],
+                $config['password'],
+                $config['database'],
+                $config['port']
+            );
+            
+            if ($conn->connect_error) {
+                die("Database connection failed: " . $conn->connect_error);
+            }
+            $conn->set_charset($config['charset']);
         }
-        
-        $conn->set_charset($config['charset']);
     }
     
     return $conn;
