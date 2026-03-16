@@ -120,54 +120,68 @@ class BaseController
         // Store config for reconnection
         $this->dbConfig = $config;
         
-        // Enable auto-reconnect options
-        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-        
-        // On Linux/Docker: try multiple hosts if connection fails
         $isWindows = (PHP_OS_FAMILY === 'Windows' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
         
         if (!$isWindows) {
-            // Docker: try primary host first, then fallback IPs
-            $hostsToTry = [
-                $config['hostname'],  // Primary (from env or default)
-                'mariadb-1',          // Common NAS Docker container name
-                '172.17.0.1',         // Docker Gateway / NAS Host
+            // Docker/NAS: try multiple hosts AND credential sets
+            mysqli_report(MYSQLI_REPORT_OFF);
+            
+            $hostsToTry = array_unique([
+                $config['hostname'],   // Primary from config/env
+                'mariadb-1',           // UGOS Docker container name
+                'mysql',               // docker-compose service name
+                '192.168.18.44',       // NAS LAN IP
+                '172.17.0.1',          // Docker gateway
                 '172.17.0.2',
                 '172.17.0.3',
                 '172.17.0.4',
                 '172.17.0.5',
+            ]);
+            
+            // Credential sets to try (config first, then hardcoded fallbacks)
+            $credentialSets = [
+                ['user' => $config['username'], 'pass' => $config['password']],
+                ['user' => 'root', 'pass' => 'rahasia123'],
+                ['user' => 'indoocean', 'pass' => 'indoocean123'],
             ];
-            $hostsToTry = array_unique($hostsToTry);
+            // Remove duplicate credential sets
+            $uniqueCreds = [];
+            foreach ($credentialSets as $c) {
+                $key = $c['user'] . '|' . $c['pass'];
+                if (!isset($uniqueCreds[$key])) $uniqueCreds[$key] = $c;
+            }
             
             $connectionErrors = [];
             foreach ($hostsToTry as $host) {
-                try {
-                    $conn = @new \mysqli(
-                        $host,
-                        $config['username'],
-                        $config['password'],
-                        $config['database'],
-                        $config['port']
-                    );
-                    if (!$conn->connect_error) {
-                        $conn->set_charset($config['charset']);
-                        $conn->options(MYSQLI_OPT_CONNECT_TIMEOUT, 10);
-                        return $conn;
-                    } else {
-                        $connectionErrors[$host] = $conn->connect_error;
+                foreach ($uniqueCreds as $cred) {
+                    try {
+                        $conn = @new \mysqli(
+                            $host,
+                            $cred['user'],
+                            $cred['pass'],
+                            $config['database'],
+                            $config['port']
+                        );
+                        if (!$conn->connect_error) {
+                            $conn->set_charset($config['charset']);
+                            $conn->options(MYSQLI_OPT_CONNECT_TIMEOUT, 10);
+                            // Log successful connection for debugging
+                            error_log("DB connected: host=$host, user={$cred['user']}, db={$config['database']}");
+                            return $conn;
+                        } else {
+                            $connectionErrors[] = "$host ({$cred['user']}): " . $conn->connect_error;
+                        }
+                    } catch (\Exception $e) {
+                        $connectionErrors[] = "$host ({$cred['user']}): " . $e->getMessage();
+                        continue;
                     }
-                } catch (\Exception $e) {
-                    $connectionErrors[$host] = $e->getMessage();
-                    // Try next host
-                    continue;
                 }
             }
-            // All hosts failed
-            $errorDetails = '';
-            foreach ($connectionErrors as $h => $err) {
-                $errorDetails .= "[$h: $err] ";
-            }
-            die('Database connection failed: Could not connect to MariaDB on any host.<br>Details: ' . $errorDetails);
+            
+            // All hosts and credentials failed
+            $errorDetails = implode('<br>', $connectionErrors);
+            $triedHosts = implode(', ', array_values(array_unique(iterator_to_array((function() use ($hostsToTry) { foreach ($hostsToTry as $h) yield $h; })()))));
+            die("Database connection failed: Could not connect to MariaDB on any host.<br>Tried: $triedHosts<br><br>Details:<br>$errorDetails");
         }
         
         // Windows/Laragon: direct connection

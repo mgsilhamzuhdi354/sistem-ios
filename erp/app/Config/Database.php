@@ -1,30 +1,23 @@
 <?php
 /**
  * PT Indo Ocean - ERP System
- * Database Configuration (KHUSUS NAS DOCKER)
+ * Database Configuration (Environment Aware - Docker & Local)
+ * Supports: Docker ENV, .env file (via dotenv), or Laragon defaults
  */
-
-// Database Configuration (Environment Aware - Docker & Local)
-// Supports: Docker ENV, .env file (via dotenv), or Laragon defaults
-// Note: Docker uses DB_USER/DB_PASS, .env uses DB_USERNAME/DB_PASSWORD
 
 // Helper function to get env var from multiple sources
 if (!function_exists('getEnvVar')) {
-function getEnvVar($keys, $default = '') {
-    // $keys can be a string or array of possible key names
-    if (!is_array($keys)) $keys = [$keys];
-    
-    foreach ($keys as $key) {
-        // Check $_ENV (set by dotenv or Docker)
-        if (isset($_ENV[$key]) && $_ENV[$key] !== '') return $_ENV[$key];
-        // Check getenv() (Docker injects here)
-        $val = getenv($key);
-        if ($val !== false && $val !== '') return $val;
-        // Check $_SERVER (some setups put it here)
-        if (isset($_SERVER[$key]) && $_SERVER[$key] !== '') return $_SERVER[$key];
+    function getEnvVar($keys, $default = '') {
+        if (!is_array($keys)) $keys = [$keys];
+        
+        foreach ($keys as $key) {
+            if (isset($_ENV[$key]) && $_ENV[$key] !== '') return $_ENV[$key];
+            $val = getenv($key);
+            if ($val !== false && $val !== '') return $val;
+            if (isset($_SERVER[$key]) && $_SERVER[$key] !== '') return $_SERVER[$key];
+        }
+        return $default;
     }
-    return $default;
-}
 }
 
 // =====================================================
@@ -35,17 +28,16 @@ $isWindows = (PHP_OS_FAMILY === 'Windows' || strtoupper(substr(PHP_OS, 0, 3)) ==
 if (!$isWindows) {
     // =================================================
     // DOCKER / LINUX / NAS UGREEN
-    // Use Docker service name first, then fallback to env/hardcoded
     // =================================================
-    $nas_ip             = getEnvVar(['DB_HOST'], 'mysql');  // Docker service name
+    $nas_ip             = getEnvVar(['DB_HOST'], 'mariadb-1');
     $nas_user           = getEnvVar(['DB_USER', 'DB_USERNAME'], 'root');
-    $nas_password       = getEnvVar(['DB_PASS', 'DB_PASSWORD'], '');
+    $nas_password       = getEnvVar(['DB_PASS', 'DB_PASSWORD'], 'rahasia123');
     $nas_port           = (int) getEnvVar(['DB_PORT'], 3306);
     $nas_db_default     = getEnvVar(['ERP_DB_NAME', 'DB_DATABASE'], 'erp_db');
     $nas_db_recruitment = getEnvVar(['RECRUITMENT_DB_NAME', 'DB_DATABASE_RECRUITMENT'], 'recruitment_db');
 } else {
     // =================================================
-    // WINDOWS / LARAGON / XAMPP (baca dari .env)
+    // WINDOWS / LARAGON / XAMPP
     // =================================================
     $nas_ip             = getEnvVar(['DB_HOST'], 'localhost');
     $nas_user           = getEnvVar(['DB_USERNAME', 'DB_USER'], 'root');
@@ -61,7 +53,7 @@ return [
         'hostname' => $nas_ip,
         'username' => $nas_user,
         'password' => $nas_password,
-        'database' => $nas_db_default,      // Sambung ke database erp_db
+        'database' => $nas_db_default,
         'DBDriver' => 'MySQLi',
         'DBPrefix' => '',
         'pConnect' => false,
@@ -81,7 +73,7 @@ return [
         'hostname' => $nas_ip,
         'username' => $nas_user,
         'password' => $nas_password,
-        'database' => $nas_db_recruitment, // Sambung ke database recruitment_db
+        'database' => $nas_db_recruitment,
         'DBDriver' => 'MySQLi',
         'DBPrefix' => '',
         'pConnect' => false,
