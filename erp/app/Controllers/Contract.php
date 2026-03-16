@@ -11,6 +11,7 @@ require_once APPPATH . 'Models/VesselModel.php';
 require_once APPPATH . 'Models/ClientModel.php';
 require_once APPPATH . 'Models/RankModel.php';
 require_once APPPATH . 'Models/CrewModel.php';
+require_once APPPATH . 'Models/SettingsModel.php';
 
 use App\Models\ContractModel;
 use App\Models\ContractSalaryModel;
@@ -43,7 +44,7 @@ class Contract extends BaseController
     {
         $this->requirePermission('contracts', 'view');
         // Check UI mode from session (classic or modern)
-        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
 
         $page = (int) $this->input('page', 1);
         $filters = [
@@ -88,13 +89,16 @@ class Contract extends BaseController
         $crewModel = new CrewModel($this->db);
 
         // Check UI mode from session
-        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
 
         // Get all crews for dropdown
         $allCrews = $crewModel->getForDropdown();
 
         // Get recruitment crews separately (newly approved from recruitment)
         $recruitmentCrews = $this->getRecruitmentCrews();
+
+        // Auto-select crew if crew_id is passed via URL (from recruitment pipeline)
+        $preselectedCrewId = $_GET['crew_id'] ?? null;
 
         $data = [
             'title' => 'Create New Contract',
@@ -108,11 +112,57 @@ class Contract extends BaseController
             'contractTypes' => CONTRACT_TYPES,
             'taxTypes' => TAX_TYPES,
             'deductionTypes' => DEDUCTION_TYPES,
+            'preselectedCrewId' => $preselectedCrewId,
         ];
 
         // Route to appropriate view based on UI mode
         $view = $uiMode === 'modern' ? 'contracts/create_modern' : 'contracts/form';
         return $this->view($view, $data);
+    }
+
+    /**
+     * Server-side salary sanity check.
+     * Prevents saving contracts with unreasonable salary amounts for the selected currency.
+     * Returns error message string if invalid, or null if OK.
+     */
+    private function validateSalaryCurrency(float $basicSalary, int $currencyId): ?string
+    {
+        // Max reasonable monthly salary thresholds per currency (for maritime crew)
+        $maxThresholds = [
+            1 => ['code' => 'USD', 'max' => 25000],    // US Dollar
+            2 => ['code' => 'IDR', 'max' => 100000000], // Indonesian Rupiah
+            3 => ['code' => 'SGD', 'max' => 30000],    // Singapore Dollar
+            4 => ['code' => 'EUR', 'max' => 25000],    // Euro
+            15 => ['code' => 'MYR', 'max' => 50000],   // Malaysian Ringgit
+        ];
+
+        // Fallback: lookup currency code from DB if not in static map
+        $curInfo = $maxThresholds[$currencyId] ?? null;
+        if (!$curInfo) {
+            $stmt = $this->db->prepare("SELECT code FROM currencies WHERE id = ? LIMIT 1");
+            $stmt->bind_param('i', $currencyId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+            $stmt->close();
+            $curCode = $row['code'] ?? 'UNKNOWN';
+            $curInfo = ['code' => $curCode, 'max' => 50000]; // Default threshold
+        }
+
+        // Check 1: Salary exceeds reasonable max for this currency
+        if ($basicSalary > $curInfo['max']) {
+            return "PERINGATAN: Gaji pokok {$curInfo['code']} " . number_format($basicSalary, 0, ',', '.')
+                . " melebihi batas wajar ({$curInfo['code']} " . number_format($curInfo['max'], 0, ',', '.') . '/bulan).'
+                . " Pastikan mata uang dan nominal sudah benar.";
+        }
+
+        // Check 2: Non-IDR currency with suspiciously large amount (looks like IDR was entered)
+        if ($curInfo['code'] !== 'IDR' && $basicSalary >= 1000000) {
+            return "PERINGATAN: Nominal {$curInfo['code']} " . number_format($basicSalary, 0, ',', '.')
+                . " terlihat sangat besar. Mungkin seharusnya dalam IDR?";
+        }
+
+        return null; // All good
     }
 
     /**
@@ -140,7 +190,7 @@ class Contract extends BaseController
             FROM crews c
             LEFT JOIN ranks r ON c.current_rank_id = r.id
             WHERE c.source = 'recruitment'
-            AND c.status IN ('standby', 'available')
+            AND c.status IN ('standby', 'available', 'ready_operational', 'pending_checklist')
             AND c.id NOT IN (
                 SELECT crew_id FROM contracts
                 WHERE status IN ('active', 'pending_approval', 'draft', 'onboard')
@@ -280,6 +330,40 @@ class Contract extends BaseController
             'other_allowance' => floatval(str_replace([',', '.'], '', $this->input('other_allowance', 0))),
         ];
 
+        // Validate vessel-client match: vessel must belong to the selected client
+        $vesselId = (int) $contractData['vessel_id'];
+        $clientId = (int) $contractData['client_id'];
+        if ($vesselId > 0 && $clientId > 0) {
+            $vesselCheck = $this->db->prepare("SELECT id, name, client_id FROM vessels WHERE id = ? LIMIT 1");
+            $vesselCheck->bind_param('i', $vesselId);
+            $vesselCheck->execute();
+            $vesselRow = $vesselCheck->get_result()->fetch_assoc();
+            $vesselCheck->close();
+            if ($vesselRow && (int)$vesselRow['client_id'] !== $clientId) {
+                // Get the actual owner name for a clear error message
+                $ownerStmt = $this->db->prepare("SELECT name FROM clients WHERE id = ? LIMIT 1");
+                $ownerStmt->bind_param('i', $vesselRow['client_id']);
+                $ownerStmt->execute();
+                $ownerRow = $ownerStmt->get_result()->fetch_assoc();
+                $ownerStmt->close();
+                $ownerName = $ownerRow['name'] ?? 'Unknown';
+                $this->setFlash('error', 'Vessel "' . $vesselRow['name'] . '" milik client "' . $ownerName . '", tidak bisa digunakan untuk client lain. Pilih vessel yang sesuai.');
+                $this->redirect('contracts/create');
+                return;
+            }
+        }
+
+        // Server-side salary sanity check (prevents currency/amount mismatch)
+        $salaryWarning = $this->validateSalaryCurrency(
+            $salaryData['basic_salary'],
+            (int) $salaryData['currency_id']
+        );
+        if ($salaryWarning && empty($this->input('force_salary_override'))) {
+            $this->setFlash('error', $salaryWarning . ' Jika yakin benar, centang "Override" dan submit ulang.');
+            $this->redirect('contracts/create');
+            return;
+        }
+
         // Tax data (Feature 5)
         $taxData = [
             'tax_type' => $this->input('tax_type', TAX_TYPE_PPH21),
@@ -333,6 +417,28 @@ class Contract extends BaseController
             );
 
             $this->setFlash('success', 'Contract created successfully');
+            
+            // Send notification: New Contract Created (Crew Sign-On)
+            try {
+                $notifModel = new \App\Models\NotificationModel($this->db);
+                $crewName = $contractData['crew_name'] ?? 'Unknown';
+                $contractNo = $contractData['contract_no'] ?? '';
+                $signOn = $contractData['sign_on_date'] ? date('d M Y', strtotime($contractData['sign_on_date'])) : '-';
+                $signOff = $contractData['sign_off_date'] ? date('d M Y', strtotime($contractData['sign_off_date'])) : '-';
+                $duration = $contractData['duration_months'] ?? '-';
+                // Get vessel & rank names
+                $vesselName = '-'; $rankName = '-'; $clientName = '-';
+                $infoQ = $this->db->query("SELECT v.name as vessel_name, r.name as rank_name, cl.name as client_name FROM contracts c LEFT JOIN vessels v ON c.vessel_id=v.id LEFT JOIN ranks r ON c.rank_id=r.id LEFT JOIN clients cl ON c.client_id=cl.id WHERE c.id=" . intval($contractId) . " LIMIT 1");
+                if ($infoQ && $info = $infoQ->fetch_assoc()) { $vesselName = $info['vessel_name'] ?? '-'; $rankName = $info['rank_name'] ?? '-'; $clientName = $info['client_name'] ?? '-'; }
+                $msg = "📢 *KONTRAK BARU DIBUAT*\n━━━━━━━━━━━━━━━━━━\n\n"
+                     . "👤 *Crew:* {$crewName}\n🎖️ *Rank:* {$rankName}\n🚢 *Vessel:* {$vesselName}\n🏢 *Client:* {$clientName}\n"
+                     . "📋 *No. Kontrak:* {$contractNo}\n📅 *Sign On:* {$signOn}\n📅 *Sign Off:* {$signOff}\n⏱️ *Durasi:* {$duration} bulan\n\n"
+                     . "⏰ " . date('d M Y, H:i') . "\n━━━━━━━━━━━━━━━━━━\n— _IndoOcean ERP_ 🌊";
+                $notifModel->notify('info', 'Kontrak Baru Dibuat', $msg, 'contracts/' . $contractId);
+            } catch (\Exception $e) {
+                error_log('Contract notification failed: ' . $e->getMessage());
+            }
+            
             $this->redirect('contracts/' . $contractId);
 
         } catch (\Exception $e) {
@@ -453,6 +559,28 @@ class Contract extends BaseController
             'updated_by' => $this->getCurrentUser()['id'] ?? null,
         ];
 
+        // Validate vessel-client match: vessel must belong to the selected client
+        $vesselId = (int) $contractData['vessel_id'];
+        $clientId = (int) $contractData['client_id'];
+        if ($vesselId > 0 && $clientId > 0) {
+            $vesselCheck = $this->db->prepare("SELECT id, name, client_id FROM vessels WHERE id = ? LIMIT 1");
+            $vesselCheck->bind_param('i', $vesselId);
+            $vesselCheck->execute();
+            $vesselRow = $vesselCheck->get_result()->fetch_assoc();
+            $vesselCheck->close();
+            if ($vesselRow && (int)$vesselRow['client_id'] !== $clientId) {
+                $ownerStmt = $this->db->prepare("SELECT name FROM clients WHERE id = ? LIMIT 1");
+                $ownerStmt->bind_param('i', $vesselRow['client_id']);
+                $ownerStmt->execute();
+                $ownerRow = $ownerStmt->get_result()->fetch_assoc();
+                $ownerStmt->close();
+                $ownerName = $ownerRow['name'] ?? 'Unknown';
+                $this->setFlash('error', 'Vessel "' . $vesselRow['name'] . '" milik client "' . $ownerName . '", tidak bisa digunakan untuk client lain. Pilih vessel yang sesuai.');
+                $this->redirect('contracts/edit/' . $id);
+                return;
+            }
+        }
+
         $this->contractModel->update($id, $contractData);
 
         // Update salary
@@ -470,6 +598,17 @@ class Contract extends BaseController
             'leave_pay' => floatval(str_replace([',', '.'], '', $this->input('leave_pay', 0))),
             'bonus' => floatval(str_replace([',', '.'], '', $this->input('bonus', 0))),
         ];
+
+        // Server-side salary sanity check (prevents currency/amount mismatch)
+        $salaryWarning = $this->validateSalaryCurrency(
+            $salaryData['basic_salary'],
+            (int) $salaryData['currency_id']
+        );
+        if ($salaryWarning && empty($this->input('force_salary_override'))) {
+            $this->setFlash('error', $salaryWarning . ' Jika yakin benar, centang "Override" dan submit ulang.');
+            $this->redirect('contracts/edit/' . $id);
+            return;
+        }
 
         if ($existingSalary) {
             $salaryModel->update($existingSalary['id'], $salaryData);
@@ -550,6 +689,34 @@ class Contract extends BaseController
 
             if ($allApproved) {
                 $this->contractModel->update($id, ['status' => CONTRACT_STATUS_ACTIVE]);
+                
+                // Sync crew status to 'contracted'
+                $contract = $this->contractModel->find($id);
+                if (!empty($contract['crew_id'])) {
+                    $crewStmt = $this->db->prepare("UPDATE crews SET status = 'contracted', updated_at = NOW() WHERE id = ?");
+                    $crewStmt->bind_param('i', $contract['crew_id']);
+                    $crewStmt->execute();
+                    $crewStmt->close();
+                }
+                
+                // Notify: Crew ON Board
+                try {
+                    $notifModel = new \App\Models\NotificationModel($this->db);
+                    $crewName = $contract['crew_name'] ?? 'Unknown';
+                    $contractNo = $contract['contract_no'] ?? '';
+                    $vesselName = '-'; $rankName = '-';
+                    $infoQ = $this->db->query("SELECT v.name as vessel_name, r.name as rank_name FROM contracts c LEFT JOIN vessels v ON c.vessel_id=v.id LEFT JOIN ranks r ON c.rank_id=r.id WHERE c.id=" . intval($id) . " LIMIT 1");
+                    if ($infoQ && $info = $infoQ->fetch_assoc()) { $vesselName = $info['vessel_name'] ?? '-'; $rankName = $info['rank_name'] ?? '-'; }
+                    $signOn = !empty($contract['sign_on_date']) ? date('d M Y', strtotime($contract['sign_on_date'])) : date('d M Y');
+                    $msg = "✅ *CREW ON BOARD*\n━━━━━━━━━━━━━━━━━━\n\n"
+                         . "👤 *Crew:* {$crewName}\n🎖️ *Rank:* {$rankName}\n🚢 *Vessel:* {$vesselName}\n"
+                         . "📋 *Kontrak:* {$contractNo}\n📅 *Tanggal Aktif:* {$signOn}\n📊 *Status:* ACTIVE ✅\n\n"
+                         . "Kontrak telah disetujui semua pihak.\nCrew sudah ON BOARD.\n\n"
+                         . "⏰ " . date('d M Y, H:i') . "\n━━━━━━━━━━━━━━━━━━\n— _IndoOcean ERP_ 🌊";
+                    $notifModel->notify('success', 'Crew ON Board', $msg, 'contracts/' . $id);
+                } catch (\Exception $e) {
+                    error_log('Approve notification failed: ' . $e->getMessage());
+                }
             } else {
                 // Create next level approval
                 $nextLevel = $pending['approval_level'] === APPROVAL_CREWING ? APPROVAL_HR : APPROVAL_DIRECTOR;
@@ -605,6 +772,30 @@ class Contract extends BaseController
         }
 
         $this->setFlash('warning', 'Contract rejected');
+        
+        // Notify: Contract Rejected
+        try {
+            $contract = $this->contractModel->find($id);
+            $notifModel = new \App\Models\NotificationModel($this->db);
+            $crewName = $contract['crew_name'] ?? 'Unknown';
+            $contractNo = $contract['contract_no'] ?? '';
+            $reason = $this->input('reason') ?? '-';
+            $approverName = $this->getCurrentUser()['name'] ?? 'Admin';
+            $rankName = '-';
+            $infoQ = $this->db->query("SELECT r.name as rank_name FROM contracts c LEFT JOIN ranks r ON c.rank_id=r.id WHERE c.id=" . intval($id) . " LIMIT 1");
+            if ($infoQ && $info = $infoQ->fetch_assoc()) { $rankName = $info['rank_name'] ?? '-'; }
+            $msg = "\xe2\x9a\xa0\xef\xb8\x8f *KONTRAK DITOLAK*\n\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\n\n"
+                 . "\xf0\x9f\x91\xa4 *Crew:* {$crewName}\n\xf0\x9f\x8e\x96\xef\xb8\x8f *Rank:* {$rankName}\n\xf0\x9f\x93\x8b *Kontrak:* {$contractNo}\n"
+                 . "\xe2\x9d\x8c *Status:* REJECTED\n\n"
+                 . "\xf0\x9f\x93\x9d *Alasan Penolakan:*\n{$reason}\n\n"
+                 . "\xf0\x9f\x91\xa8\xe2\x80\x8d\xf0\x9f\x92\xbc *Ditolak oleh:* {$approverName}\n"
+                 . "\xf0\x9f\x93\x85 *Tanggal:* " . date('d M Y') . "\n\n"
+                 . "\xe2\x8f\xb0 " . date('d M Y, H:i') . "\n\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\n\xe2\x80\x94 _IndoOcean ERP_ \xf0\x9f\x8c\x8a";
+            $notifModel->notify('warning', 'Kontrak Ditolak', $msg, 'contracts/' . $id);
+        } catch (\Exception $e) {
+            error_log('Reject notification failed: ' . $e->getMessage());
+        }
+        
         $this->redirect('contracts/' . $id);
     }
 
@@ -638,9 +829,10 @@ class Contract extends BaseController
                 'created_by' => $this->getCurrentUser()['id'] ?? null,
             ];
 
-            // Copy salary
+            // Copy salary (preserve original currency, don't hardcode!)
             $salaryData = [
-                'currency_id' => 1,
+                'currency_id' => $oldContract['currency_id'] ?? 1,
+                'exchange_rate' => $oldContract['exchange_rate'] ?? null,
                 'basic_salary' => $oldContract['basic_salary'] ?? 0,
                 'overtime_allowance' => $oldContract['overtime_allowance'] ?? 0,
                 'leave_pay' => $oldContract['leave_pay'] ?? 0,
@@ -665,6 +857,27 @@ class Contract extends BaseController
             $logModel->log($newContractId, 'created_from_renewal', ['field' => 'previous_contract_id', 'new' => $id]);
 
             $this->setFlash('success', 'Contract renewed successfully');
+            
+            // Notify: Contract Renewed
+            try {
+                $notifModel = new \App\Models\NotificationModel($this->db);
+                $crewName = $oldContract['crew_name'] ?? 'Unknown';
+                $vesselName = $oldContract['vessel_name'] ?? '-';
+                $rankName = $oldContract['rank_name'] ?? '-';
+                $oldSignOff = !empty($oldContract['sign_off_date']) ? date('d M Y', strtotime($oldContract['sign_off_date'])) : '-';
+                $newSignOn = $this->input('sign_on_date') ? date('d M Y', strtotime($this->input('sign_on_date'))) : '-';
+                $newSignOff = $this->input('sign_off_date') ? date('d M Y', strtotime($this->input('sign_off_date'))) : '-';
+                $duration = $this->input('duration_months') ?? '-';
+                $msg = "\xf0\x9f\x94\x84 *KONTRAK DIPERPANJANG*\n\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\n\n"
+                     . "\xf0\x9f\x91\xa4 *Crew:* {$crewName}\n\xf0\x9f\x8e\x96\xef\xb8\x8f *Rank:* {$rankName}\n\xf0\x9f\x9a\xa2 *Vessel:* {$vesselName}\n\n"
+                     . "\xf0\x9f\x93\x8b *Kontrak Lama:* {$oldContract['contract_no']}\n   \xe2\x94\x94 Sign Off: {$oldSignOff}\n\n"
+                     . "\xf0\x9f\x93\x8b *Kontrak Baru:* {$newContractData['contract_no']}\n   \xe2\x94\x9c Sign On: {$newSignOn}\n   \xe2\x94\x9c Sign Off: {$newSignOff}\n   \xe2\x94\x94 Durasi: {$duration} bulan\n\n"
+                     . "\xe2\x8f\xb0 " . date('d M Y, H:i') . "\n\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\n\xe2\x80\x94 _IndoOcean ERP_ \xf0\x9f\x8c\x8a";
+                $notifModel->notify('info', 'Kontrak Diperpanjang', $msg, 'contracts/' . $newContractId);
+            } catch (\Exception $e) {
+                error_log('Renew notification failed: ' . $e->getMessage());
+            }
+            
             $this->redirect('contracts/' . $newContractId);
         }
 
@@ -704,6 +917,40 @@ class Contract extends BaseController
                 'updated_by' => $this->getCurrentUser()['id'] ?? null,
             ]);
 
+            // Update crew status back to available
+            if (!empty($contract['crew_id'])) {
+                $crewStmt = $this->db->prepare("UPDATE crews SET status = 'available', updated_at = NOW() WHERE id = ?");
+                $crewStmt->bind_param('i', $contract['crew_id']);
+                $crewStmt->execute();
+                $crewStmt->close();
+                
+                // Notify: Contract Activated (Crew ON-Board)
+                try {
+                    $notifModel = new \App\Models\NotificationModel($this->db);
+                    $crewName = $contract['crew_name'] ?? 'Unknown';
+                    $contractNo = $contract['contract_no'] ?? '';
+                    $notifModel->notify(
+                        'success',
+                        'Crew ON Board ✅',
+                        "Crew: {$crewName}\nKontrak {$contractNo} telah disetujui & aktif.\nStatus crew: Onboard",
+                        'contracts/' . $id
+                    );
+                } catch (\Exception $e) {
+                    error_log('Approve notification failed: ' . $e->getMessage());
+                }
+            }
+
+            // Cascade: cleanup pending payroll_items for terminated contract
+            $affectedPeriods = $this->db->query("SELECT DISTINCT payroll_period_id FROM payroll_items WHERE contract_id = " . intval($id) . " AND status IN ('pending', 'draft')");
+            $this->db->query("DELETE FROM payroll_items WHERE contract_id = " . intval($id) . " AND status IN ('pending', 'draft')");
+            if ($affectedPeriods) {
+                require_once APPPATH . 'Models/PayrollModel.php';
+                $periodModel = new \App\Models\PayrollPeriodModel($this->db);
+                while ($row = $affectedPeriods->fetch_assoc()) {
+                    $periodModel->updateTotals($row['payroll_period_id']);
+                }
+            }
+
             // Log
             $logModel = new ContractLogModel($this->db);
             $logModel->log($id, 'terminated', [
@@ -712,6 +959,31 @@ class Contract extends BaseController
             ]);
 
             $this->setFlash('warning', 'Contract terminated');
+            
+            // Notify: Contract Terminated (Crew OFF / Sign-Off)
+            try {
+                $notifModel = new \App\Models\NotificationModel($this->db);
+                $crewName = $contract['crew_name'] ?? 'Unknown';
+                $contractNo = $contract['contract_no'] ?? '';
+                $reason = $this->input('termination_reason') ?? '-';
+                $signOffDate = $this->input('actual_sign_off_date', date('Y-m-d'));
+                $signOffFormatted = date('d M Y', strtotime($signOffDate));
+                $vesselName = '-'; $rankName = '-'; $portName = '-';
+                $infoQ = $this->db->query("SELECT v.name as vessel_name, r.name as rank_name, c.disembarkation_port FROM contracts c LEFT JOIN vessels v ON c.vessel_id=v.id LEFT JOIN ranks r ON c.rank_id=r.id WHERE c.id=" . intval($id) . " LIMIT 1");
+                if ($infoQ && $info = $infoQ->fetch_assoc()) { $vesselName = $info['vessel_name'] ?? '-'; $rankName = $info['rank_name'] ?? '-'; $portName = $info['disembarkation_port'] ?? '-'; }
+                $msg = "\xe2\x9b\x94 *CREW OFF BOARD*\n\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\n\n"
+                     . "\xf0\x9f\x91\xa4 *Crew:* {$crewName}\n\xf0\x9f\x8e\x96\xef\xb8\x8f *Rank:* {$rankName}\n\xf0\x9f\x9a\xa2 *Vessel:* {$vesselName}\n"
+                     . "\xf0\x9f\x93\x8b *Kontrak:* {$contractNo}\n\n"
+                     . "\xe2\x9d\x8c *Status:* TERMINATED\n"
+                     . "\xf0\x9f\x93\x85 *Tanggal Sign Off:* {$signOffFormatted}\n"
+                     . "\xf0\x9f\x8f\x97\xef\xb8\x8f *Pelabuhan:* {$portName}\n\n"
+                     . "\xf0\x9f\x93\x9d *Alasan:*\n{$reason}\n\n"
+                     . "\xe2\x8f\xb0 " . date('d M Y, H:i') . "\n\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\n\xe2\x80\x94 _IndoOcean ERP_ \xf0\x9f\x8c\x8a";
+                $notifModel->notify('danger', 'Crew OFF Board', $msg, 'contracts/' . $id);
+            } catch (\Exception $e) {
+                error_log('Terminate notification failed: ' . $e->getMessage());
+            }
+            
             $this->redirect('contracts/' . $id);
         }
 
@@ -729,7 +1001,7 @@ class Contract extends BaseController
     public function expiring($days = null)
     {
         // Check UI mode from session
-        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
 
         $days = $days ?? (int) $this->input('days', 60);
         $contracts = $this->contractModel->getExpiring($days);
@@ -774,6 +1046,18 @@ class Contract extends BaseController
         $contract = $this->contractModel->find($id);
 
         if ($contract && $contract['status'] === CONTRACT_STATUS_DRAFT) {
+            // Cascade: cleanup related payroll_items before deleting contract
+            $affectedPeriods = $this->db->query("SELECT DISTINCT payroll_period_id FROM payroll_items WHERE contract_id = " . intval($id));
+            $this->db->query("DELETE FROM payroll_items WHERE contract_id = " . intval($id));
+            // Recalculate period totals for affected periods
+            if ($affectedPeriods) {
+                require_once APPPATH . 'Models/PayrollModel.php';
+                $periodModel = new \App\Models\PayrollPeriodModel($this->db);
+                while ($row = $affectedPeriods->fetch_assoc()) {
+                    $periodModel->updateTotals($row['payroll_period_id']);
+                }
+            }
+
             $this->contractModel->delete($id);
             $this->setFlash('success', 'Contract deleted');
         } else {
@@ -793,12 +1077,11 @@ class Contract extends BaseController
     }
 
     /**
-     * Toggle UI Mode between classic and modern
+     * Toggle UI Mode - LOCKED to modern
      */
     public function toggleMode()
     {
-        $mode = $this->input('mode', 'classic');
-        $_SESSION['ui_mode'] = in_array($mode, ['classic', 'modern']) ? $mode : 'classic';
+        $_SESSION['ui_mode'] = 'modern';
         return $this->redirect('contracts');
     }
 
@@ -903,5 +1186,110 @@ class Contract extends BaseController
         header('Content-Length: ' . filesize($filePath));
         readfile($filePath);
         exit;
+    }
+
+    /**
+     * Crew Movement Monitoring Timeline
+     * Shows all contract events: onboard, sign-off, renew, terminate
+     */
+    public function timeline()
+    {
+        $this->requireAuth();
+        $this->requirePermission('contracts', 'view');
+
+        $filterCrew = $this->input('crew');
+        $filterVessel = $this->input('vessel');
+        $filterType = $this->input('type');
+        $filterFrom = $this->input('from', date('Y-m-d', strtotime('-90 days')));
+        $filterTo = $this->input('to', date('Y-m-d'));
+
+        // Build timeline from contract_logs + contracts data
+        $sql = "
+            SELECT 
+                cl.id as log_id,
+                cl.contract_id,
+                cl.action,
+                cl.created_at as event_date,
+                cl.user_name,
+                c.contract_no,
+                c.crew_name,
+                c.crew_id,
+                c.status as contract_status,
+                c.sign_on_date,
+                c.sign_off_date,
+                c.actual_sign_off_date,
+                c.is_renewal,
+                c.previous_contract_id,
+                c.termination_reason,
+                v.name as vessel_name,
+                r.name as rank_name
+            FROM contract_logs cl
+            JOIN contracts c ON cl.contract_id = c.id
+            LEFT JOIN vessels v ON c.vessel_id = v.id
+            LEFT JOIN ranks r ON c.rank_id = r.id
+            WHERE cl.created_at BETWEEN ? AND ?
+        ";
+        
+        $params = [$filterFrom . ' 00:00:00', $filterTo . ' 23:59:59'];
+        $types = 'ss';
+
+        if ($filterCrew) {
+            $sql .= " AND c.crew_name LIKE ?";
+            $params[] = '%' . $filterCrew . '%';
+            $types .= 's';
+        }
+        if ($filterVessel) {
+            $sql .= " AND v.id = ?";
+            $params[] = (int)$filterVessel;
+            $types .= 'i';
+        }
+        if ($filterType) {
+            $sql .= " AND cl.action = ?";
+            $params[] = $filterType;
+            $types .= 's';
+        }
+
+        $sql .= " ORDER BY cl.created_at DESC LIMIT 100";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $events = [];
+        while ($row = $result->fetch_assoc()) {
+            $events[] = $row;
+        }
+        $stmt->close();
+
+        // Get stats
+        $statsQuery = $this->db->query("
+            SELECT 
+                SUM(CASE WHEN status IN ('active','onboard') THEN 1 ELSE 0 END) as active_count,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_count,
+                SUM(CASE WHEN status = 'terminated' THEN 1 ELSE 0 END) as terminated_count,
+                SUM(CASE WHEN is_renewal = 1 THEN 1 ELSE 0 END) as renewed_count
+            FROM contracts
+        ");
+        $stats = $statsQuery ? $statsQuery->fetch_assoc() : [];
+
+        // Vessels for filter dropdown
+        $vesselModel = new VesselModel($this->db);
+
+        $data = [
+            'title' => 'Crew Movement Monitoring',
+            'events' => $events,
+            'stats' => $stats,
+            'vessels' => $vesselModel->getForDropdown(),
+            'filters' => [
+                'crew' => $filterCrew,
+                'vessel' => $filterVessel,
+                'type' => $filterType,
+                'from' => $filterFrom,
+                'to' => $filterTo,
+            ],
+            'flash' => $this->getFlash()
+        ];
+
+        return $this->view('contracts/timeline_modern', $data);
     }
 }

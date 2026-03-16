@@ -26,7 +26,7 @@ class Dashboard extends BaseController
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
 
         // Get dashboard stats
         $contractModel = new ContractModel($this->db);
@@ -62,7 +62,13 @@ class Dashboard extends BaseController
 
         $result = $this->db->query($sql);
         $monthlyPayrollUsd = 0;
-        $defaultRates = ['USD' => 1.0, 'IDR' => 0.000063, 'SGD' => 0.74, 'EUR' => 1.05];
+
+        // Get USD rate from currencies table
+        $usdRateResult = $this->db->query("SELECT exchange_rate_to_idr FROM currencies WHERE code = 'USD' LIMIT 1");
+        $usdRate = 15800;
+        if ($usdRateResult && $row = $usdRateResult->fetch_assoc()) {
+            $usdRate = (float)($row['exchange_rate_to_idr'] ?: 15800);
+        }
 
         if ($result) {
             while ($row = $result->fetch_assoc()) {
@@ -75,13 +81,23 @@ class Dashboard extends BaseController
                     $currency = 'IDR';
                 }
 
-                // Calculate USD for this contract using ITS exchange rate
+                // Convert to USD using proper formula
                 if ($currency === 'USD') {
                     $monthlyPayrollUsd += $amount;
+                } elseif ($currency === 'IDR') {
+                    // IDR: always divide by USD rate from DB
+                    $monthlyPayrollUsd += $amount / $usdRate;
                 } elseif ($exchangeRate > 0) {
-                    $monthlyPayrollUsd += $amount / $exchangeRate;
+                    // Other currencies: convert to IDR first, then to USD
+                    $monthlyPayrollUsd += ($amount * $exchangeRate) / $usdRate;
                 } else {
-                    $monthlyPayrollUsd += $amount * ($defaultRates[$currency] ?? 0.000063);
+                    // Fallback: load rate from currencies table
+                    $curResult = $this->db->query("SELECT exchange_rate_to_idr FROM currencies WHERE code = '" . $this->db->real_escape_string($currency) . "' LIMIT 1");
+                    $curRate = 1;
+                    if ($curResult && $cr = $curResult->fetch_assoc()) {
+                        $curRate = (float)($cr['exchange_rate_to_idr'] ?: 1);
+                    }
+                    $monthlyPayrollUsd += ($amount * $curRate) / $usdRate;
                 }
             }
         }
@@ -93,7 +109,7 @@ class Dashboard extends BaseController
     }
 
     /**
-     * Toggle UI mode (classic/modern)
+     * Toggle UI mode - LOCKED to modern mode
      */
     public function toggleMode()
     {
@@ -101,13 +117,13 @@ class Dashboard extends BaseController
             session_start();
         }
 
-        $mode = $_POST['mode'] ?? $_GET['mode'] ?? 'classic';
-        $_SESSION['ui_mode'] = in_array($mode, ['classic', 'modern']) ? $mode : 'classic';
+        // Force modern mode - do not allow switching to classic
+        $_SESSION['ui_mode'] = 'modern';
 
         // If AJAX request, return JSON
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
             header('Content-Type: application/json');
-            echo json_encode(['success' => true, 'mode' => $_SESSION['ui_mode']]);
+            echo json_encode(['success' => true, 'mode' => 'modern']);
             exit;
         }
 

@@ -56,10 +56,13 @@ $currentPage = 'reports';
                                 <p class="text-xs text-slate-400 mt-0.5"><?= __('reports.active_contracts_desc') ?></p>
                             </div>
                             <div class="flex gap-2">
-                                <a href="<?= BASE_URL ?>reports/activeContracts" class="p-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors">
+                                <a href="<?= BASE_URL ?>reports/activeContracts" class="p-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors" title="View">
                                     <span class="material-icons text-lg">visibility</span>
                                 </a>
-                                <a href="<?= BASE_URL ?>reports/export/active" class="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors">
+                                <a href="<?= BASE_URL ?>reports/export-pdf/active" target="_blank" class="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors" title="Download PDF">
+                                    <span class="material-icons text-lg">picture_as_pdf</span>
+                                </a>
+                                <a href="<?= BASE_URL ?>reports/export/active" class="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors" title="Download CSV">
                                     <span class="material-icons text-lg">download</span>
                                 </a>
                             </div>
@@ -70,10 +73,13 @@ $currentPage = 'reports';
                                 <p class="text-xs text-slate-400 mt-0.5"><?= __('reports.expiring_contracts_desc') ?></p>
                             </div>
                             <div class="flex gap-2">
-                                <a href="<?= BASE_URL ?>reports/expiringContracts" class="p-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors">
+                                <a href="<?= BASE_URL ?>reports/expiringContracts" class="p-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors" title="View">
                                     <span class="material-icons text-lg">visibility</span>
                                 </a>
-                                <a href="<?= BASE_URL ?>reports/export/expiring" class="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors">
+                                <a href="<?= BASE_URL ?>reports/export-pdf/expiring" target="_blank" class="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors" title="Download PDF">
+                                    <span class="material-icons text-lg">picture_as_pdf</span>
+                                </a>
+                                <a href="<?= BASE_URL ?>reports/export/expiring" class="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors" title="Download CSV">
                                     <span class="material-icons text-lg">download</span>
                                 </a>
                             </div>
@@ -111,18 +117,28 @@ $currentPage = 'reports';
                                 <p class="text-sm font-semibold text-slate-800"><?= __('reports.payroll_summary') ?></p>
                                 <p class="text-xs text-slate-400 mt-0.5"><?= __('reports.payroll_summary_desc') ?></p>
                             </div>
-                            <a href="<?= BASE_URL ?>reports/payroll-summary" class="p-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors">
-                                <span class="material-icons text-lg">visibility</span>
-                            </a>
+                            <div class="flex gap-2">
+                                <a href="<?= BASE_URL ?>reports/payroll-summary" class="p-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors" title="View">
+                                    <span class="material-icons text-lg">visibility</span>
+                                </a>
+                                <a href="<?= BASE_URL ?>reports/export-pdf/payroll" target="_blank" class="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors" title="Download PDF">
+                                    <span class="material-icons text-lg">picture_as_pdf</span>
+                                </a>
+                            </div>
                         </div>
                         <div class="px-5 py-4 flex items-center justify-between hover:bg-blue-50/40 transition-colors">
                             <div>
                                 <p class="text-sm font-semibold text-slate-800"><?= __('reports.tax_report') ?></p>
                                 <p class="text-xs text-slate-400 mt-0.5"><?= __('reports.tax_report_desc') ?></p>
                             </div>
-                            <a href="<?= BASE_URL ?>reports/taxReport" class="p-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors">
-                                <span class="material-icons text-lg">visibility</span>
-                            </a>
+                            <div class="flex gap-2">
+                                <a href="<?= BASE_URL ?>reports/taxReport" class="p-2 rounded-lg bg-slate-100 hover:bg-blue-100 text-slate-500 hover:text-blue-600 transition-colors" title="View">
+                                    <span class="material-icons text-lg">visibility</span>
+                                </a>
+                                <a href="<?= BASE_URL ?>reports/export-pdf/tax" target="_blank" class="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors" title="Download PDF">
+                                    <span class="material-icons text-lg">picture_as_pdf</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -128,10 +128,10 @@ $stats = $stats ?? [];
     <div class="flex-1 px-8 pb-12">
         <div class="max-w-7xl mx-auto space-y-8">
 
-            <!-- KPI Cards -->
+            <!-- KPI Cards - Clickable -->
             <section class="grid grid-cols-1 md:grid-cols-4 gap-5">
                 <!-- Pending -->
-                <div class="bg-paper-light rounded-2xl p-6 shadow-soft border border-slate-100 flex items-center justify-between group hover:border-blue-100 transition-colors opacity-0 animate-fade-in">
+                <div onclick="openStatsModal('pending')" class="bg-paper-light rounded-2xl p-6 shadow-soft border border-slate-100 flex items-center justify-between group hover:border-blue-200 hover:shadow-md transition-all cursor-pointer opacity-0 animate-fade-in active:scale-[0.98]">
                     <div class="flex flex-col gap-1">
                         <span class="text-slate-500 text-sm font-medium"><?= __('recruitment.pending_approvals') ?></span>
                         <span class="text-3xl font-bold text-slate-900"><?= $stats['pending_count'] ?? 0 ?></span>
@@ -142,7 +142,7 @@ $stats = $stats ?? [];
                 </div>
 
                 <!-- Approved -->
-                <div class="bg-paper-light rounded-2xl p-6 shadow-soft border border-slate-100 flex items-center justify-between group hover:border-emerald-100 transition-colors opacity-0 animate-fade-in animate-fade-in-d1">
+                <div onclick="openStatsModal('approved')" class="bg-paper-light rounded-2xl p-6 shadow-soft border border-slate-100 flex items-center justify-between group hover:border-emerald-200 hover:shadow-md transition-all cursor-pointer opacity-0 animate-fade-in animate-fade-in-d1 active:scale-[0.98]">
                     <div class="flex flex-col gap-1">
                         <span class="text-slate-500 text-sm font-medium"><?= __('recruitment.approved_30d') ?></span>
                         <span class="text-3xl font-bold text-emerald-600"><?= $stats['approved_count'] ?? 0 ?></span>
@@ -153,7 +153,7 @@ $stats = $stats ?? [];
                 </div>
 
                 <!-- Rejected -->
-                <div class="bg-paper-light rounded-2xl p-6 shadow-soft border border-slate-100 flex items-center justify-between group hover:border-red-100 transition-colors opacity-0 animate-fade-in animate-fade-in-d2">
+                <div onclick="openStatsModal('rejected')" class="bg-paper-light rounded-2xl p-6 shadow-soft border border-slate-100 flex items-center justify-between group hover:border-red-200 hover:shadow-md transition-all cursor-pointer opacity-0 animate-fade-in animate-fade-in-d2 active:scale-[0.98]">
                     <div class="flex flex-col gap-1">
                         <span class="text-slate-500 text-sm font-medium"><?= __('recruitment.rejected_30d') ?></span>
                         <span class="text-3xl font-bold text-red-500"><?= $stats['rejected_count'] ?? 0 ?></span>
@@ -164,7 +164,7 @@ $stats = $stats ?? [];
                 </div>
 
                 <!-- Total Processed -->
-                <div class="bg-paper-light rounded-2xl p-6 shadow-soft border border-slate-100 flex items-center justify-between group hover:border-amber-100 transition-colors opacity-0 animate-fade-in animate-fade-in-d3">
+                <div onclick="openStatsModal('total')" class="bg-paper-light rounded-2xl p-6 shadow-soft border border-slate-100 flex items-center justify-between group hover:border-amber-200 hover:shadow-md transition-all cursor-pointer opacity-0 animate-fade-in animate-fade-in-d3 active:scale-[0.98]">
                     <div class="flex flex-col gap-1">
                         <span class="text-slate-500 text-sm font-medium"><?= __('recruitment.total_processed') ?></span>
                         <span class="text-3xl font-bold text-slate-900"><?= $stats['total_processed'] ?? 0 ?></span>
@@ -248,8 +248,9 @@ $stats = $stats ?? [];
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     <?php foreach ($pendingApprovals as $idx => $app): ?>
+                    <?php $isRecruitment = ($app['source_type'] ?? '') === 'recruitment'; ?>
                     <div class="bg-paper-light rounded-2xl shadow-card border border-slate-100 p-6 hover:shadow-soft hover:border-blue-100 transition-all group"
-                         id="card-<?= $app['id'] ?>">
+                         id="card-<?= $isRecruitment ? 'r-' . ($app['application_id'] ?? $idx) : $app['id'] ?>">
                         <!-- Header -->
                         <div class="flex items-start justify-between mb-4">
                             <div class="flex items-center gap-4">
@@ -264,7 +265,14 @@ $stats = $stats ?? [];
                                 <div>
                                     <h4 class="text-base font-bold text-slate-900"><?= htmlspecialchars($app['applicant_name'] ?? '') ?></h4>
                                     <p class="text-sm text-slate-500"><?= htmlspecialchars($app['rank_name'] ?? 'Rank belum ditentukan') ?></p>
-                                    <p class="text-xs text-slate-400 mt-0.5"><?= htmlspecialchars($app['employee_id'] ?? '') ?></p>
+                                    <?php if ($isRecruitment): ?>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 mt-1">
+                                            <span class="material-symbols-outlined text-[10px] mr-0.5">cloud</span>
+                                            Recruitment DB
+                                        </span>
+                                    <?php else: ?>
+                                        <p class="text-xs text-slate-400 mt-0.5"><?= htmlspecialchars($app['employee_id'] ?? '') ?></p>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700">
@@ -309,21 +317,36 @@ $stats = $stats ?? [];
 
                         <!-- Actions -->
                         <div class="flex items-center gap-2">
-                            <button onclick="viewDetail(<?= $app['id'] ?>)"
-                                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold rounded-xl transition-all">
-                                <span class="material-symbols-outlined text-[16px]">visibility</span>
-                                Detail
-                            </button>
-                            <button onclick="showApproveModal(<?= $app['id'] ?>, '<?= htmlspecialchars(addslashes($app['applicant_name'] ?? ''), ENT_QUOTES) ?>')"
-                                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition-all shadow-sm">
-                                <span class="material-symbols-outlined text-[16px]">check</span>
-                                Approve
-                            </button>
-                            <button onclick="showRejectModal(<?= $app['id'] ?>, '<?= htmlspecialchars(addslashes($app['applicant_name'] ?? ''), ENT_QUOTES) ?>')"
-                                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded-xl transition-all shadow-sm">
-                                <span class="material-symbols-outlined text-[16px]">close</span>
-                                Reject
-                            </button>
+                            <?php if ($isRecruitment): ?>
+                                <!-- Recruitment DB candidate: approve + auto-import + create contract -->
+                                <button onclick="showApproveRecruitmentModal(<?= $app['application_id'] ?? 0 ?>, '<?= htmlspecialchars(addslashes($app['applicant_name'] ?? ''), ENT_QUOTES) ?>')"
+                                        class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition-all shadow-sm">
+                                    <span class="material-symbols-outlined text-[16px]">check</span>
+                                    Approve & Buat Kontrak
+                                </button>
+                                <a href="<?= BASE_URL ?>recruitment/candidate/<?= $app['application_id'] ?? '' ?>"
+                                   class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold rounded-xl transition-all no-underline">
+                                    <span class="material-symbols-outlined text-[16px]">visibility</span>
+                                    Detail
+                                </a>
+                            <?php else: ?>
+                                <!-- ERP crew: can approve/reject -->
+                                <button onclick="viewDetail(<?= $app['id'] ?>)"
+                                        class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold rounded-xl transition-all">
+                                    <span class="material-symbols-outlined text-[16px]">visibility</span>
+                                    Detail
+                                </button>
+                                <button onclick="showApproveModal(<?= $app['id'] ?>, '<?= htmlspecialchars(addslashes($app['applicant_name'] ?? ''), ENT_QUOTES) ?>')"
+                                        class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition-all shadow-sm">
+                                    <span class="material-symbols-outlined text-[16px]">check</span>
+                                    Approve
+                                </button>
+                                <button onclick="showRejectModal(<?= $app['id'] ?>, '<?= htmlspecialchars(addslashes($app['applicant_name'] ?? ''), ENT_QUOTES) ?>')"
+                                        class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold rounded-xl transition-all shadow-sm">
+                                    <span class="material-symbols-outlined text-[16px]">close</span>
+                                    Reject
+                                </button>
+                            <?php endif; ?>
                         </div>
 
                         <!-- Submitted Date -->
@@ -699,7 +722,14 @@ function submitApprove() {
             showToast(data.message, 'success');
             const card = document.getElementById('card-' + crewId);
             if (card) { card.style.transition = 'all 0.4s ease'; card.style.opacity = '0'; card.style.transform = 'scale(0.95)'; setTimeout(() => card.remove(), 400); }
-            setTimeout(() => location.reload(), 1500);
+            // Redirect to contract creation page
+            setTimeout(() => {
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    window.location.href = BASE_URL + 'contracts/create?crew_id=' + crewId;
+                }
+            }, 1500);
         } else {
             showToast(data.message || 'Gagal approve', 'error');
         }
@@ -770,14 +800,331 @@ function submitReject() {
     });
 }
 
+// ========== Approve Recruitment DB Candidate ==========
+function showApproveRecruitmentModal(applicationId, name) {
+    document.getElementById('approveRecruitmentAppId').value = applicationId;
+    document.getElementById('approveRecruitmentName').textContent = name;
+    document.getElementById('approveRecruitmentNotes').value = '';
+    openModal('approveRecruitmentModal');
+}
+
+function submitApproveRecruitment() {
+    const applicationId = document.getElementById('approveRecruitmentAppId').value;
+    const notes = document.getElementById('approveRecruitmentNotes').value;
+    const btn = document.getElementById('approveRecruitmentSubmitBtn');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="animate-spin material-symbols-outlined text-[18px]">progress_activity</span> Mengimport & Approve...';
+
+    fetch(BASE_URL + 'recruitment/approveRecruitment/' + applicationId, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest'},
+        body: 'approval_notes=' + encodeURIComponent(notes),
+        credentials: 'same-origin'
+    })
+    .then(r => {
+        if (r.redirected) { window.location.href = r.url; return; }
+        const ct = r.headers.get('content-type') || '';
+        if (ct.includes('application/json')) return r.json();
+        return r.text().then(txt => { throw new Error('Server returned HTML instead of JSON. Possible session expired.'); });
+    })
+    .then(data => {
+        if (!data) return;
+        closeModal('approveRecruitmentModal');
+        if (data.success) {
+            showToast(data.message, 'success');
+            const card = document.getElementById('card-r-' + applicationId);
+            if (card) { card.style.transition = 'all 0.4s ease'; card.style.opacity = '0'; card.style.transform = 'scale(0.95)'; setTimeout(() => card.remove(), 400); }
+            // Redirect to contract creation page
+            setTimeout(() => {
+                if (data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                }
+            }, 1500);
+        } else {
+            showToast(data.message || 'Gagal approve', 'error');
+        }
+    })
+    .catch(err => {
+        closeModal('approveRecruitmentModal');
+        showToast('Error: ' + err.message, 'error');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">rocket_launch</span> Ya, Approve & Buat Kontrak';
+    });
+}
+
 // Close modals on ESC
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
         closeDetailModal();
         closeModal('approveModal');
         closeModal('rejectModal');
+        closeModal('approveRecruitmentModal');
     }
 });
 </script>
+
+<!-- Approve Recruitment Modal -->
+<div id="approveRecruitmentModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm modal-overlay" onclick="closeModal('approveRecruitmentModal')"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-modal w-full max-w-md modal-content">
+            <div class="px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined">rocket_launch</span>
+                    <h3 class="text-lg font-bold">Approve & Buat Kontrak</h3>
+                </div>
+                <button onclick="closeModal('approveRecruitmentModal')" class="p-1 hover:bg-white/20 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-5">
+                    <p class="text-sm text-emerald-700">
+                        <span class="material-symbols-outlined text-[16px] align-middle mr-1">info</span>
+                        Anda akan menyetujui <strong id="approveRecruitmentName"></strong> dari Recruitment DB. Sistem akan otomatis:
+                    </p>
+                    <ul class="text-sm text-emerald-700 mt-2 ml-6 list-disc space-y-1">
+                        <li>Import data kandidat ke ERP</li>
+                        <li>Membuat data kru baru</li>
+                        <li>Mengarahkan ke halaman Buat Kontrak</li>
+                    </ul>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Catatan (opsional)</label>
+                    <textarea id="approveRecruitmentNotes" rows="2"
+                              class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-colors resize-none"
+                              placeholder="Catatan tambahan..."></textarea>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
+                <input type="hidden" id="approveRecruitmentAppId">
+                <button onclick="closeModal('approveRecruitmentModal')" class="px-4 py-2.5 border border-slate-200 text-slate-600 rounded-xl text-sm font-medium hover:bg-slate-100 transition-colors">Batal</button>
+                <button onclick="submitApproveRecruitment()" id="approveRecruitmentSubmitBtn"
+                        class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">rocket_launch</span>
+                    Ya, Approve & Buat Kontrak
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Detail Modal (Book Opening Animation) -->
+<div id="statsDetailModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm modal-overlay" onclick="closeStatsModal()"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+        <div id="statsModalContent" class="bg-white rounded-2xl shadow-modal w-full max-w-2xl max-h-[80vh] flex flex-col book-open">
+            <!-- Header -->
+            <div id="statsModalHeader" class="px-6 py-4 flex items-center justify-between rounded-t-2xl shrink-0">
+                <div class="flex items-center gap-3">
+                    <div id="statsModalIcon" class="w-10 h-10 rounded-xl flex items-center justify-center">
+                        <span class="material-symbols-outlined text-white" id="statsModalIconText">book</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white" id="statsModalTitle"></h3>
+                        <p class="text-sm text-white/70" id="statsModalSubtitle"></p>
+                    </div>
+                </div>
+                <button onclick="closeStatsModal()" class="p-1.5 hover:bg-white/20 rounded-lg transition-colors text-white">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <!-- Content -->
+            <div class="flex-1 overflow-y-auto p-6" id="statsModalBody">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ========== Stats Modal Data ==========
+const statsData = {
+    pending: {
+        title: 'Pending Approvals',
+        subtitle: 'Kandidat menunggu persetujuan',
+        icon: 'hourglass_empty',
+        gradient: 'bg-gradient-to-r from-blue-500 to-indigo-600',
+        iconBg: 'bg-blue-600',
+        items: <?php
+            $pendingItems = [];
+            foreach ($pendingApprovals ?? [] as $p) {
+                $pendingItems[] = [
+                    'name' => $p['applicant_name'] ?? '',
+                    'rank' => $p['rank_name'] ?? 'No Rank',
+                    'email' => $p['email'] ?? '',
+                    'date' => date('d M Y', strtotime($p['created_at'] ?? 'now')),
+                    'source' => $p['source_type'] ?? 'erp',
+                    'completeness' => $p['completeness'] ?? 0
+                ];
+            }
+            echo json_encode($pendingItems);
+        ?>,
+        badge: '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">PENDING</span>',
+        emptyMsg: 'Tidak ada kandidat yang menunggu persetujuan 🎉'
+    },
+    approved: {
+        title: 'Approved (30 Hari)',
+        subtitle: 'Kandidat yang telah disetujui',
+        icon: 'check_circle',
+        gradient: 'bg-gradient-to-r from-emerald-500 to-teal-600',
+        iconBg: 'bg-emerald-600',
+        items: <?php
+            $approvedItems = [];
+            foreach ($approvedList ?? [] as $a) {
+                $approvedItems[] = [
+                    'name' => $a['full_name'] ?? '',
+                    'rank' => $a['rank_name'] ?? 'No Rank',
+                    'email' => $a['email'] ?? '',
+                    'employee_id' => $a['employee_id'] ?? '',
+                    'date' => $a['approved_at'] ? date('d M Y', strtotime($a['approved_at'])) : '-',
+                    'approved_by' => $a['approved_by_name'] ?? '-'
+                ];
+            }
+            echo json_encode($approvedItems);
+        ?>,
+        badge: '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">APPROVED</span>',
+        emptyMsg: 'Belum ada kandidat yang disetujui dalam 30 hari terakhir'
+    },
+    rejected: {
+        title: 'Rejected (30 Hari)',
+        subtitle: 'Kandidat yang ditolak',
+        icon: 'cancel',
+        gradient: 'bg-gradient-to-r from-red-500 to-rose-600',
+        iconBg: 'bg-red-600',
+        items: <?php
+            $rejectedItems = [];
+            foreach ($rejectedList ?? [] as $r) {
+                $rejectedItems[] = [
+                    'name' => $r['full_name'] ?? '',
+                    'rank' => $r['rank_name'] ?? 'No Rank',
+                    'email' => $r['email'] ?? '',
+                    'employee_id' => $r['employee_id'] ?? '',
+                    'date' => $r['rejected_at'] ? date('d M Y', strtotime($r['rejected_at'])) : '-',
+                    'reason' => $r['rejection_reason'] ?? '-'
+                ];
+            }
+            echo json_encode($rejectedItems);
+        ?>,
+        badge: '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">REJECTED</span>',
+        emptyMsg: 'Tidak ada kandidat yang ditolak dalam 30 hari terakhir'
+    }
+};
+// Total = approved + rejected combined
+statsData.total = {
+    title: 'Total Processed (30 Hari)',
+    subtitle: 'Semua kandidat yang telah diproses',
+    icon: 'bolt',
+    gradient: 'bg-gradient-to-r from-amber-500 to-orange-600',
+    iconBg: 'bg-amber-600',
+    items: [...statsData.approved.items.map(i => ({...i, _status: 'approved'})), ...statsData.rejected.items.map(i => ({...i, _status: 'rejected'}))],
+    emptyMsg: 'Belum ada kandidat yang diproses dalam 30 hari terakhir'
+};
+
+function openStatsModal(type) {
+    const data = statsData[type];
+    if (!data) return;
+
+    const modal = document.getElementById('statsDetailModal');
+    const content = document.getElementById('statsModalContent');
+    const header = document.getElementById('statsModalHeader');
+    const body = document.getElementById('statsModalBody');
+
+    // Set header
+    header.className = `px-6 py-4 flex items-center justify-between rounded-t-2xl shrink-0 ${data.gradient}`;
+    document.getElementById('statsModalIcon').className = `w-10 h-10 rounded-xl flex items-center justify-center ${data.iconBg}`;
+    document.getElementById('statsModalIconText').textContent = data.icon;
+    document.getElementById('statsModalTitle').textContent = data.title;
+    document.getElementById('statsModalSubtitle').textContent = data.subtitle;
+
+    // Build content
+    let html = '';
+    if (!data.items || data.items.length === 0) {
+        html = `<div class="flex flex-col items-center justify-center py-12 text-slate-400">
+            <span class="material-symbols-outlined text-[48px] mb-3">menu_book</span>
+            <p class="text-sm">${data.emptyMsg}</p>
+        </div>`;
+    } else {
+        html = `<div class="text-xs text-slate-400 font-medium mb-3 uppercase tracking-wider">Total: ${data.items.length} orang</div>`;
+        html += '<div class="space-y-2">';
+        data.items.forEach((item, idx) => {
+            const delay = Math.min(idx, 8) * 0.06;
+            let statusBadge = data.badge || '';
+            // For total view, show individual status
+            if (type === 'total' && item._status) {
+                statusBadge = item._status === 'approved'
+                    ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">APPROVED</span>'
+                    : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">REJECTED</span>';
+            }
+            const sourceBadge = item.source === 'recruitment'
+                ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-indigo-700 ml-1">REC</span>'
+                : '';
+            const extraInfo = type === 'pending'
+                ? `<div class="flex items-center gap-2 mt-1">
+                    <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-1.5 rounded-full ${item.completeness >= 80 ? 'bg-emerald-500' : item.completeness >= 50 ? 'bg-amber-500' : 'bg-red-400'}" style="width: ${item.completeness}%"></div>
+                    </div>
+                    <span class="text-[10px] text-slate-400">${item.completeness}%</span>
+                </div>`
+                : type === 'rejected' && item.reason && item.reason !== '-'
+                    ? `<div class="text-[11px] text-red-500 mt-0.5 italic">Alasan: ${item.reason}</div>`
+                    : type === 'approved' && item.approved_by
+                        ? `<div class="text-[11px] text-slate-400 mt-0.5">Disetujui oleh: ${item.approved_by}</div>`
+                        : '';
+
+            html += `
+            <div class="flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors page-fade-in" style="animation-delay: ${delay}s; opacity: 0;">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-sm font-bold text-slate-500 shrink-0">
+                        ${(item.name || '?')[0].toUpperCase()}
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-sm font-semibold text-slate-800 truncate flex items-center gap-1">
+                            ${item.name}${sourceBadge}
+                        </div>
+                        <div class="text-[11px] text-slate-400 truncate">${item.rank} ${item.employee_id ? '• ' + item.employee_id : ''}</div>
+                        ${extraInfo}
+                    </div>
+                </div>
+                <div class="flex flex-col items-end gap-1 shrink-0 ml-3">
+                    ${statusBadge}
+                    <span class="text-[10px] text-slate-400">${item.date}</span>
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+    }
+    body.innerHTML = html;
+
+    // Show with animation
+    content.classList.remove('book-close');
+    content.classList.add('book-open');
+    modal.classList.remove('hidden');
+}
+
+function closeStatsModal() {
+    const modal = document.getElementById('statsDetailModal');
+    const content = document.getElementById('statsModalContent');
+    content.classList.remove('book-open');
+    content.classList.add('book-close');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+// Add ESC handler for stats modal
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        const statsModal = document.getElementById('statsDetailModal');
+        if (statsModal && !statsModal.classList.contains('hidden')) {
+            closeStatsModal();
+        }
+    }
+});
+</script>
+
 </body>
 </html>

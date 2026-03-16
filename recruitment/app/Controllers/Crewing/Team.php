@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once APPPATH . 'Controllers/BaseController.php';
 
 /**

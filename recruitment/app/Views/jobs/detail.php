@@ -14,13 +14,12 @@
         <div class="container">
             <nav class="navbar">
                 <a href="<?= url('/') ?>" class="logo">
-                    <img src="<?= asset('images/logo.jpg') ?>" alt="Indo Ocean" style="height: 28px;">
-                    <span>Indo Ocean Crew</span>
+                    <img src="<?= asset('images/logo.jpg') ?>" alt="PT. Indoocean Crew Service" style="height: 28px;">
+                    <span>PT. Indoocean Crew Service</span>
                 </a>
                 <ul class="nav-menu">
                     <li><a href="<?= url('/') ?>">Home</a></li>
                     <li><a href="<?= url('/jobs') ?>" class="active">Jobs</a></li>
-                    <li><a href="/PT_indoocean/about.html">About</a></li>
                 </ul>
                 <div class="nav-actions">
                     <?php if (isLoggedIn()): ?>

@@ -15,6 +15,7 @@ return [
     'Client' => 'Client',
     'Clients' => 'Client',
     'Payroll' => 'Payroll',
+    'payroll' => 'Payroll',
     'Report' => 'Report',
     'Reports' => 'Report',
     'Ranks' => 'Ranks',
@@ -41,11 +42,38 @@ return [
     // Recruitment Hub
     'Recruitment' => 'RecruitmentHub',
 
+    // Admin Checklist (Recruitment Stage 2)
+    'AdminChecklist' => 'AdminChecklist',
+    'admin-checklist' => 'AdminChecklist',
+
+    // Operational (Recruitment Stage 3)
+    'Operational' => 'Operational',
+    'operational' => 'Operational',
+
     // Monitoring
     'Monitoring' => 'Monitoring',
+
+    // Finance & Accounting
+    'Finance' => 'Finance',
+    'finance' => 'Finance',
 
     // AI Document Parser
     'DocumentParser' => 'DocumentParser',
     'Document-parser' => 'DocumentParser',
     'document-parser' => 'DocumentParser',
+
+    // Notifications (lowercase)
+    'notification' => 'Notification',
+    'notifications' => 'Notification',
+
+    // Analytics
+    'Analytics' => 'Analytics',
+
+    // Smart Importer
+    'SmartImport'  => 'SmartImport',
+    'smart-import' => 'SmartImport',
+
+    // Recruiter Performance
+    'RecruiterPerformance' => 'RecruiterPerformance',
+    'recruiter-performance' => 'RecruiterPerformance',
 ];

@@ -7,8 +7,9 @@
     <link rel="icon" type="image/jpeg" href="<?= asset('images/logo.jpg') ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="<?= asset('css/admin.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/crewing.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/admin.css') ?>?v=20260314b">
+    <link rel="stylesheet" href="<?= asset('css/crewing.css') ?>?v=20260314b">
+    <meta name="csrf-token" content="<?= csrf_token() ?>">
     <?php if (isset($_SESSION['ui_scale']) && $_SESSION['ui_scale'] != 1.00): ?>
     <style>
         .admin-main {
@@ -94,12 +95,8 @@
     <aside class="admin-sidebar crewing-sidebar" id="sidebar">
         <div class="sidebar-header">
             <a href="<?= url('/crewing/dashboard') ?>" class="logo">
-                <div style="display:flex;flex-direction:column;align-items:center;gap:0.75rem;width:100%;">
-                    <img src="<?= asset('images/logo.jpg') ?>" alt="Indo Ocean" style="width:80px;height:80px;object-fit:contain;border-radius:50%;border:3px solid rgba(255,255,255,0.2);background:white;padding:5px;box-shadow:0 4px 12px rgba(0,0,0,0.2);">
-                    <div style="text-align:center;">
-                        <div style="font-size:1.25rem;font-weight:700;color:#fff;letter-spacing:0.5px;">PT Indo Ocean</div>
-                        <div style="font-size:0.875rem;color:rgba(255,255,255,0.8);font-weight:500;margin-top:0.25rem;">Crewing Services</div>
-                    </div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;width:100%;padding:0.5rem 0.75rem;">
+                    <img src="<?= asset('images/logo.jpg') ?>" alt="PT Indo Ocean Crew Services" style="width:100%;max-width:140px;height:auto;object-fit:contain;background:white;border-radius:12px;padding:8px;box-shadow:0 4px 16px rgba(0,0,0,0.25);border:2px solid rgba(255,255,255,0.15);">
                 </div>
             </a>
         </div>
@@ -185,6 +182,8 @@
                     </li>
                 </ul>
             </div>
+
+            
 
             <!-- Pengaturan Section -->
             <div class="nav-section <?= $isSettingsSection ? 'open' : '' ?>">

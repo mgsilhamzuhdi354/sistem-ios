@@ -16,7 +16,8 @@ $mailer = new \App\Libraries\Mailer();
 // Cari periode yang statusnya 'completed' tapi belum semua email terkirim
 // Logika: Ambil periode bulan ini atau bulan lalu yang statusnya completed
 // Untuk demo ini, kita ambil periode terakhir yang completed
-$periods = $db->query("SELECT * FROM payroll_periods WHERE status = 'completed' ORDER BY id DESC LIMIT 1");
+$periodsResult = $db->query("SELECT * FROM payroll_periods WHERE status = 'completed' ORDER BY id DESC LIMIT 1");
+$periods = $periodsResult ? $periodsResult->fetch_all(MYSQLI_ASSOC) : [];
 
 if (empty($periods)) {
     echo "No completed payroll period found.\n";
@@ -27,7 +28,8 @@ $period = $periods[0];
 echo "check Period: {$period['period_month']}/{$period['period_year']}... \n";
 
 // Ambil item yang status emailnya 'pending' atau 'failed' (untuk retry)
-$items = $db->query("SELECT * FROM payroll_items WHERE payroll_period_id = ? AND email_status != 'sent'", [$period['id']]);
+$itemsResult = $db->query("SELECT * FROM payroll_items WHERE payroll_period_id = {$period['id']} AND email_status != 'sent'");
+$items = $itemsResult ? $itemsResult->fetch_all(MYSQLI_ASSOC) : [];
 
 if (empty($items)) {
     echo "All emails already sent for this period.\n";
@@ -36,7 +38,11 @@ if (empty($items)) {
 
 $count = 0;
 foreach ($items as $item) {
-    $contract = $db->query("SELECT crew_id FROM contracts WHERE id = ?", [$item['contract_id']], 'i');
+    $contractStmt = $db->prepare("SELECT crew_id FROM contracts WHERE id = ?");
+    $contractStmt->bind_param('i', $item['contract_id']);
+    $contractStmt->execute();
+    $contractResult = $contractStmt->get_result();
+    $contract = $contractResult ? $contractResult->fetch_all(MYSQLI_ASSOC) : [];
     if (empty($contract)) continue;
     
     $crewId = $contract[0]['crew_id'];

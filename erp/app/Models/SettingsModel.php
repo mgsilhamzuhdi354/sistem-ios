@@ -91,6 +91,23 @@ class SettingsModel extends BaseModel
             ['email_notifications', '1', 'notification', 'Enable email notifications'],
             ['contract_expiry_notify', '1', 'notification', 'Notify on contract expiry'],
             ['payroll_complete_notify', '1', 'notification', 'Notify on payroll complete'],
+            
+            // Email SMTP
+            ['smtp_host', 'mail.indooceancrew.co.id', 'email', 'SMTP server host'],
+            ['smtp_port', '465', 'email', 'SMTP server port'],
+            ['smtp_secure', 'ssl', 'email', 'SMTP security (ssl/tls)'],
+            ['smtp_user', 'ios@indooceancrew.co.id', 'email', 'SMTP username/email'],
+            ['smtp_pass', '', 'email', 'SMTP password (set via Settings page)'],
+            ['smtp_from_email', 'ios@indooceancrew.co.id', 'email', 'Sender email address'],
+            ['smtp_from_name', 'PT Indo Ocean ERP', 'email', 'Sender display name'],
+            
+            // WhatsApp (Fonnte API)
+            ['wa_enabled', '0', 'whatsapp', 'Enable WhatsApp notifications'],
+            ['wa_api_token', '', 'whatsapp', 'Fonnte API token'],
+            ['wa_target_phone', '', 'whatsapp', 'Target phone number for notifications'],
+            ['wa_notify_contract', '1', 'whatsapp', 'Send WA on contract expiry'],
+            ['wa_notify_payroll', '1', 'whatsapp', 'Send WA on payroll complete'],
+            ['wa_notify_system', '1', 'whatsapp', 'Send WA on system notifications'],
         ];
         
         foreach ($defaults as $setting) {
@@ -200,7 +217,7 @@ class NotificationModel extends BaseModel
      */
     public function notify($type, $title, $message, $link = null, $userId = null, $data = null)
     {
-        return $this->insert([
+        $result = $this->insert([
             'user_id' => $userId,
             'type' => $type,
             'title' => $title,
@@ -209,6 +226,53 @@ class NotificationModel extends BaseModel
             'data' => $data ? json_encode($data) : null,
             'is_read' => 0
         ]);
+        
+        // Auto-send WhatsApp notification if enabled
+        $this->sendWhatsAppNotification($type, $title, $message, $link);
+        
+        return $result;
+    }
+    
+    /**
+     * Send WhatsApp notification via Fonnte API
+     */
+    private function sendWhatsAppNotification($type, $title, $message, $link = null)
+    {
+        try {
+            $settingsModel = new SettingsModel($this->db);
+            
+            // Check if WA is enabled
+            if ($settingsModel->get('wa_enabled', '0') !== '1') {
+                return;
+            }
+            
+            $targetPhone = $settingsModel->get('wa_target_phone', '');
+            if (empty($targetPhone)) {
+                return;
+            }
+            
+            // Check per-type toggle
+            $typeMap = [
+                'danger'  => 'wa_notify_contract',
+                'warning' => 'wa_notify_contract',
+                'info'    => 'wa_notify_system',
+                'success' => 'wa_notify_system',
+            ];
+            $settingKey = $typeMap[$type] ?? 'wa_notify_system';
+            if ($settingsModel->get($settingKey, '1') !== '1') {
+                return;
+            }
+            
+            require_once APPPATH . 'Libraries/WhatsAppService.php';
+            $apiToken = $settingsModel->get('wa_api_token', '');
+            $wa = new \App\Libraries\WhatsAppService($apiToken);
+            
+            $waMessage = \App\Libraries\WhatsAppService::buildNotificationMessage($title, $message, $link);
+            $wa->sendBulk($targetPhone, $waMessage);
+        } catch (\Exception $e) {
+            // Log but don't fail the notification
+            error_log('WhatsApp notification failed: ' . $e->getMessage());
+        }
     }
     
     /**

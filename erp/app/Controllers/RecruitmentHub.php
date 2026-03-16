@@ -50,7 +50,7 @@ class RecruitmentHub extends BaseController
                 }
             }
 
-            // Get candidates list
+            // Get candidates list with ERP tracking & checklist progress
             $candidatesQuery = "
                 SELECT 
                     a.id,
@@ -64,7 +64,10 @@ class RecruitmentHub extends BaseController
                     s.color as status_color,
                     a.submitted_at,
                     a.interview_score,
-                    a.overall_score
+                    a.overall_score,
+                    a.erp_crew_id,
+                    a.checklist_progress,
+                    a.sent_to_erp_at
                 FROM applications a
                 JOIN users u ON a.user_id = u.id
                 JOIN job_vacancies v ON a.vacancy_id = v.id
@@ -90,15 +93,11 @@ class RecruitmentHub extends BaseController
             'flash' => $this->getFlash()
         ];
 
-        // Check UI mode from session
-        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
-        $view = $uiMode === 'modern' ? 'recruitment/pipeline_modern' : 'recruitment/pipeline';
-
-        return $this->view($view, $data);
+        return $this->view('recruitment/pipeline_modern', $data);
     }
 
     /**
-     * Approval center - show pending approvals from crews table
+     * Approval center - show pending approvals from both crews table AND recruitment DB
      */
     public function approval()
     {
@@ -137,8 +136,6 @@ class RecruitmentHub extends BaseController
         if ($rejectedResult) {
             $stats['rejected_count'] = $rejectedResult->fetch_assoc()['count'];
         }
-
-        $stats['total_processed'] = $stats['approved_count'] + $stats['rejected_count'];
 
         // Get pending approvals from crews table with their documents count
         $query = "
@@ -184,7 +181,106 @@ class RecruitmentHub extends BaseController
                 }
                 $row['completeness'] = round(($filled / count($required)) * 100);
                 $row['is_complete'] = $filled === count($required);
+                $row['source_type'] = 'erp'; // Mark as from ERP crews table
                 $pendingApprovals[] = $row;
+            }
+        }
+
+        // 4. ALSO fetch pending candidates from recruitment DB (applications with Pending status)
+        // Exclude candidates already synced to ERP
+        $syncedAppIds = [];
+        $syncResult = $this->db->query("SELECT recruitment_applicant_id FROM recruitment_sync");
+        if ($syncResult) {
+            while ($syncRow = $syncResult->fetch_assoc()) {
+                $syncedAppIds[] = (int)$syncRow['recruitment_applicant_id'];
+            }
+        }
+
+        if ($this->recruitmentDb && !$this->recruitmentDb->connect_error) {
+            $excludeClause = '';
+            if (!empty($syncedAppIds)) {
+                $excludeClause = 'AND a.id NOT IN (' . implode(',', $syncedAppIds) . ')';
+            }
+
+            $recruitPendingQuery = "
+                SELECT 
+                    a.id as application_id,
+                    u.full_name as applicant_name,
+                    u.email,
+                    u.phone,
+                    ap.gender,
+                    ap.date_of_birth as birth_date,
+                    ap.nationality,
+                    v.title as rank_name,
+                    d.name as department_name,
+                    s.name as status_name,
+                    a.submitted_at as created_at
+                FROM applications a
+                JOIN users u ON a.user_id = u.id
+                LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
+                JOIN job_vacancies v ON a.vacancy_id = v.id
+                LEFT JOIN departments d ON v.department_id = d.id
+                JOIN application_statuses s ON a.status_id = s.id
+                WHERE LOWER(s.name) = 'pending'
+                {$excludeClause}
+                ORDER BY a.submitted_at DESC
+            ";
+            $recruitResult = $this->recruitmentDb->query($recruitPendingQuery);
+
+            if ($recruitResult) {
+                while ($row = $recruitResult->fetch_assoc()) {
+                    // Check data completeness
+                    $required = ['applicant_name', 'email', 'phone', 'gender', 'birth_date', 'nationality'];
+                    $filled = 0;
+                    foreach ($required as $field) {
+                        if (!empty($row[$field])) $filled++;
+                    }
+                    $row['completeness'] = round(($filled / count($required)) * 100);
+                    $row['is_complete'] = $filled === count($required);
+                    $row['source_type'] = 'recruitment'; // Mark as from recruitment DB
+                    $row['id'] = null; // No crew ID yet (not in ERP)
+                    $row['doc_count'] = 0;
+                    $pendingApprovals[] = $row;
+                    $stats['pending_count']++; // Add to pending count
+                }
+            }
+        }
+
+        $stats['total_processed'] = $stats['approved_count'] + $stats['rejected_count'];
+
+        // 5. Fetch detail lists for stats modals (approved, rejected, all processed)
+        $approvedList = [];
+        $rejectedList = [];
+
+        // Approved from ERP crews
+        $approvedQuery = $this->db->query("
+            SELECT c.full_name, c.employee_id, c.email, r.name as rank_name, c.approved_at, c.source,
+                   CONCAT(u.full_name) as approved_by_name
+            FROM crews c 
+            LEFT JOIN ranks r ON c.current_rank_id = r.id
+            LEFT JOIN users u ON c.approved_by = u.id
+            WHERE c.source = 'recruitment' AND c.status = 'available' 
+            AND c.approved_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            ORDER BY c.approved_at DESC
+        ");
+        if ($approvedQuery) {
+            while ($row = $approvedQuery->fetch_assoc()) {
+                $approvedList[] = $row;
+            }
+        }
+
+        // Rejected from ERP crews
+        $rejectedQuery = $this->db->query("
+            SELECT c.full_name, c.employee_id, c.email, r.name as rank_name, c.rejected_at, c.rejection_reason, c.source
+            FROM crews c 
+            LEFT JOIN ranks r ON c.current_rank_id = r.id
+            WHERE c.source = 'recruitment' AND c.status = 'rejected' 
+            AND c.updated_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            ORDER BY c.rejected_at DESC
+        ");
+        if ($rejectedQuery) {
+            while ($row = $rejectedQuery->fetch_assoc()) {
+                $rejectedList[] = $row;
             }
         }
 
@@ -192,6 +288,8 @@ class RecruitmentHub extends BaseController
             'title' => 'Approval Center',
             'currentPage' => 'recruitment-approval',
             'pendingApprovals' => $pendingApprovals,
+            'approvedList' => $approvedList,
+            'rejectedList' => $rejectedList,
             'stats' => $stats,
             'flash' => $this->getFlash()
         ];
@@ -222,10 +320,10 @@ class RecruitmentHub extends BaseController
 
             $userId = $_SESSION['user_id'] ?? 1;
 
-            // Update crew status with approval tracking
+            // Update crew status with approval tracking — now goes to pending_checklist
             $stmt = $this->db->prepare("
                 UPDATE crews SET 
-                    status = 'available', 
+                    status = 'pending_checklist', 
                     approved_at = NOW(), 
                     approved_by = ?,
                     notes = CASE WHEN ? != '' THEN CONCAT(IFNULL(notes,''), '\n[APPROVED] ', ?) ELSE notes END,
@@ -239,6 +337,13 @@ class RecruitmentHub extends BaseController
                 throw new \Exception('Kandidat tidak ditemukan atau sudah diproses');
             }
             $stmt->close();
+
+            // Auto-create admin checklist entry
+            $this->ensureAdminChecklistTable();
+            $clStmt = $this->db->prepare("INSERT IGNORE INTO admin_checklists (crew_id) VALUES (?)");
+            $clStmt->bind_param('i', $crewId);
+            $clStmt->execute();
+            $clStmt->close();
 
             // Get crew name for notification
             $nameStmt = $this->db->prepare("SELECT full_name, current_rank_id FROM crews WHERE id = ?");
@@ -258,12 +363,12 @@ class RecruitmentHub extends BaseController
                 $rankStmt->close();
             }
 
-            // Create notification
+            // Create notification — redirect to Admin Checklist
             $this->createNotification(
                 'candidate_approved',
                 "Kandidat Disetujui: {$crew['full_name']}",
-                "Pengajuan untuk {$crew['full_name']} - {$rankName} sudah di-approve. Silahkan lakukan pembuatan kontrak.",
-                "contracts/create?crew_id={$crewId}"
+                "Pengajuan untuk {$crew['full_name']} - {$rankName} sudah di-approve. Lanjut ke Admin Checklist.",
+                "AdminChecklist/detail/{$crewId}"
             );
 
             // Log activity
@@ -273,12 +378,16 @@ class RecruitmentHub extends BaseController
 
             if ($this->isAjax()) {
                 header('Content-Type: application/json');
-                echo json_encode(['success' => true, 'message' => "✅ Kandidat {$crew['full_name']} berhasil disetujui!"]);
+                echo json_encode([
+                    'success' => true, 
+                    'message' => "✅ Kandidat {$crew['full_name']} berhasil disetujui! Lanjut ke Admin Checklist.",
+                    'redirect_url' => BASE_URL . "AdminChecklist/detail/{$crewId}"
+                ]);
                 return;
             }
 
-            $this->setFlash('success', "✅ Kandidat {$crew['full_name']} berhasil disetujui!");
-            $this->redirect('recruitment/approval');
+            $this->setFlash('success', "✅ Kandidat {$crew['full_name']} berhasil disetujui! Lanjut ke Admin Checklist.");
+            $this->redirect("AdminChecklist/detail/{$crewId}");
         } catch (\Exception $e) {
             $this->db->rollback();
             if ($this->isAjax()) {
@@ -384,6 +493,353 @@ class RecruitmentHub extends BaseController
     }
 
     /**
+     * Reject a recruitment DB candidate directly (from pipeline popup)
+     */
+    public function rejectRecruitment($applicationId = null)
+    {
+        $this->requireAuth();
+        header('Content-Type: application/json');
+
+        if (!$applicationId) {
+            echo json_encode(['success' => false, 'message' => 'ID aplikasi tidak valid']);
+            return;
+        }
+
+        if (!$this->recruitmentDb || $this->recruitmentDb->connect_error) {
+            echo json_encode(['success' => false, 'message' => 'Koneksi ke database recruitment gagal']);
+            return;
+        }
+
+        $reason = $_POST['rejection_reason'] ?? 'Ditolak via Pipeline';
+
+        try {
+            // Get name
+            $nameStmt = $this->recruitmentDb->prepare("
+                SELECT u.full_name FROM applications a JOIN users u ON a.user_id = u.id WHERE a.id = ?
+            ");
+            $nameStmt->bind_param('i', $applicationId);
+            $nameStmt->execute();
+            $candidate = $nameStmt->get_result()->fetch_assoc();
+            $nameStmt->close();
+
+            if (!$candidate) {
+                echo json_encode(['success' => false, 'message' => 'Kandidat tidak ditemukan']);
+                return;
+            }
+
+            // Update to Rejected (status_id = 7)
+            $stmt = $this->recruitmentDb->prepare("
+                UPDATE applications SET status_id = 7, status_updated_at = NOW(), updated_at = NOW() WHERE id = ?
+            ");
+            $stmt->bind_param('i', $applicationId);
+            $stmt->execute();
+            $stmt->close();
+
+            $this->logActivity('reject_recruitment', "Rejected recruitment candidate: {$candidate['full_name']} (App ID: {$applicationId}). Reason: {$reason}");
+
+            echo json_encode(['success' => true, 'message' => "Kandidat {$candidate['full_name']} telah ditolak."]);
+        } catch (\Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Approve a recruitment DB candidate - auto-import to ERP + redirect to contract creation
+     * This combines onboarding (import) + approval in one step
+     */
+    public function approveRecruitment($applicationId = null)
+    {
+        $this->requireAuth();
+
+        if (!$applicationId) {
+            if ($this->isAjax()) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'ID aplikasi tidak valid']);
+                return;
+            }
+            $this->setFlash('error', 'ID aplikasi tidak valid');
+            $this->redirect('recruitment/approval');
+            return;
+        }
+
+        if (!$this->recruitmentDb || $this->recruitmentDb->connect_error) {
+            if ($this->isAjax()) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Koneksi ke database recruitment gagal']);
+                return;
+            }
+            $this->setFlash('error', 'Koneksi ke database recruitment gagal');
+            $this->redirect('recruitment/approval');
+            return;
+        }
+
+        $approvalNotes = $_POST['approval_notes'] ?? '';
+
+        try {
+            // Ensure recruitment_sync table exists
+            $result = $this->db->query("SHOW TABLES LIKE 'recruitment_sync'");
+            if ($result->num_rows == 0) {
+                $this->createRecruitmentSyncTable();
+            }
+
+            // Check if already synced
+            $checkStmt = $this->db->prepare("SELECT crew_id FROM recruitment_sync WHERE recruitment_applicant_id = ?");
+            $checkStmt->bind_param('i', $applicationId);
+            $checkStmt->execute();
+            $existing = $checkStmt->get_result()->fetch_assoc();
+            $checkStmt->close();
+
+            if ($existing) {
+                // Already imported - update status to admin_review and redirect to admin checklist
+                $crewId = $existing['crew_id'];
+
+                // Update recruitment DB: set erp_crew_id and status to admin_review (9)
+                if ($this->recruitmentDb && !$this->recruitmentDb->connect_error) {
+                    $updateStmt = $this->recruitmentDb->prepare(
+                        "UPDATE applications SET erp_crew_id = ?, status_id = 9, sent_to_erp_at = IFNULL(sent_to_erp_at, NOW()), status_updated_at = NOW(), updated_at = NOW() WHERE id = ?"
+                    );
+                    if ($updateStmt) {
+                        $updateStmt->bind_param('ii', $crewId, $applicationId);
+                        $updateStmt->execute();
+                        $updateStmt->close();
+                    }
+                }
+
+                // Ensure admin checklist entry exists
+                $acCheck = $this->db->prepare("SELECT id FROM admin_checklists WHERE crew_id = ?");
+                $acCheck->bind_param('i', $crewId);
+                $acCheck->execute();
+                $acRow = $acCheck->get_result()->fetch_assoc();
+                $acCheck->close();
+
+                if (!$acRow) {
+                    $acInsert = $this->db->prepare("INSERT IGNORE INTO admin_checklists (crew_id) VALUES (?)");
+                    $acInsert->bind_param('i', $crewId);
+                    $acInsert->execute();
+                    $acInsert->close();
+                }
+
+                // Make sure crew status is pending_checklist
+                $crewUpd = $this->db->prepare("UPDATE crews SET status = 'pending_checklist', updated_at = NOW() WHERE id = ? AND status NOT IN ('ready_operational','on_board')");
+                $crewUpd->bind_param('i', $crewId);
+                $crewUpd->execute();
+                $crewUpd->close();
+
+                if ($this->isAjax()) {
+                    header('Content-Type: application/json');
+                    echo json_encode([
+                        'success' => true,
+                        'message' => '✅ Kandidat sudah di-approve! Mengarahkan ke Admin Checklist...',
+                        'redirect_url' => BASE_URL . "AdminChecklist/detail/{$crewId}"
+                    ]);
+                    return;
+                }
+                $this->setFlash('success', 'Kandidat sudah di-approve! Silakan proses Admin Checklist.');
+                $this->redirect("AdminChecklist/detail/{$crewId}");
+                return;
+            }
+
+            // Get complete application data from recruitment DB
+            $stmt = $this->recruitmentDb->prepare("
+                SELECT 
+                    a.*, 
+                    u.full_name, 
+                    u.email, 
+                    u.phone, 
+                    u.id as user_id,
+                    ap.date_of_birth,
+                    ap.address,
+                    ap.city,
+                    ap.nationality as country,
+                    ap.passport_no,
+                    ap.gender,
+                    ap.nationality,
+                    ap.emergency_name as emergency_contact_name,
+                    ap.emergency_phone as emergency_contact_phone,
+                    v.title as position_applied
+                FROM applications a
+                JOIN users u ON a.user_id = u.id
+                LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
+                JOIN job_vacancies v ON a.vacancy_id = v.id
+                WHERE a.id = ?
+            ");
+            $stmt->bind_param('i', $applicationId);
+            $stmt->execute();
+            $application = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+
+            if (!$application) {
+                throw new \Exception('Data aplikasi tidak ditemukan di database recruitment');
+            }
+
+            $this->db->begin_transaction();
+
+            // Generate employee_id (format: CRW-YYYY-XXXX)
+            $year = date('Y');
+            $countStmt = $this->db->prepare("SELECT COUNT(*) as count FROM crews WHERE employee_id LIKE ?");
+            $pattern = "CRW-{$year}-%";
+            $countStmt->bind_param('s', $pattern);
+            $countStmt->execute();
+            $count = $countStmt->get_result()->fetch_assoc()['count'];
+            $countStmt->close();
+            $employeeId = sprintf("CRW-%s-%04d", $year, $count + 1);
+
+            // Insert crew with complete data mapping - status 'pending_checklist' (goes to Admin Checklist)
+            $stmt = $this->db->prepare("
+                INSERT INTO crews (
+                    employee_id, full_name, email, phone, 
+                    birth_date, gender, nationality,
+                    address, city,
+                    emergency_name, emergency_phone,
+                    current_rank_id, status, 
+                    source, candidate_id, approved_at, approved_by,
+                    notes, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_checklist', 'recruitment', ?, NOW(), ?, ?, NOW())
+            ");
+
+            $rankId = 1; // Default rank
+            $userId = $_SESSION['user_id'] ?? 1;
+            $notes = $approvalNotes ? "[APPROVED] {$approvalNotes}" : "[APPROVED] Auto-imported from recruitment DB";
+
+            // Sanitize gender for ENUM('male','female')
+            $gender = strtolower(trim($application['gender'] ?? ''));
+            if (!in_array($gender, ['male', 'female'])) {
+                $gender = null;
+            }
+
+            $stmt->bind_param(
+                'sssssssssssiiis',
+                $employeeId,
+                $application['full_name'],
+                $application['email'],
+                $application['phone'],
+                $application['date_of_birth'],
+                $gender,
+                $application['nationality'],
+                $application['address'],
+                $application['city'],
+                $application['emergency_contact_name'],
+                $application['emergency_contact_phone'],
+                $rankId,
+                $applicationId,
+                $userId,
+                $notes
+            );
+            $stmt->execute();
+            $crewId = $this->db->insert_id;
+            $stmt->close();
+
+            // Log sync
+            $syncStmt = $this->db->prepare("
+                INSERT INTO recruitment_sync 
+                (recruitment_applicant_id, crew_id, sync_status, synced_at, created_at)
+                VALUES (?, ?, 'onboarded', NOW(), NOW())
+            ");
+            $syncStmt->bind_param('ii', $applicationId, $crewId);
+            $syncStmt->execute();
+            $syncStmt->close();
+
+            // Update recruitment DB - mark as synced, set erp_crew_id, and status to Admin Review
+            try {
+                $updateStmt = $this->recruitmentDb->prepare("
+                    UPDATE users SET is_synced_to_erp = 1 WHERE id = ?
+                ");
+                $updateStmt->bind_param('i', $application['user_id']);
+                $updateStmt->execute();
+                $updateStmt->close();
+
+                // Update application: set erp_crew_id + status to 'Admin Review' (9)
+                // Status goes: Pending → Admin Review → Processing → Approved → On Board
+                $syncStatusStmt = $this->recruitmentDb->prepare("
+                    UPDATE applications 
+                    SET status_id = 9,
+                        erp_crew_id = ?,
+                        sent_to_erp_at = NOW(),
+                        status_updated_at = NOW(),
+                        updated_at = NOW()
+                    WHERE id = ?
+                ");
+                if ($syncStatusStmt) {
+                    $syncStatusStmt->bind_param('ii', $crewId, $applicationId);
+                    $syncStatusStmt->execute();
+                    $syncStatusStmt->close();
+                }
+            } catch (\Exception $e) {
+                error_log("Recruitment DB update warning: " . $e->getMessage());
+            }
+
+            // Auto-create admin checklist entry
+            $this->ensureAdminChecklistTable();
+            $clStmt = $this->db->prepare("INSERT IGNORE INTO admin_checklists (crew_id, application_id) VALUES (?, ?)");
+            $clStmt->bind_param('ii', $crewId, $applicationId);
+            $clStmt->execute();
+            $clStmt->close();
+
+            // Create notification — redirect to Admin Checklist
+            $this->createNotification(
+                'candidate_approved',
+                "Kandidat Disetujui: {$application['full_name']}",
+                "Kandidat {$application['full_name']} dari recruitment telah di-import ke ERP (ID: {$employeeId}). Lanjut ke Admin Checklist.",
+                "AdminChecklist/detail/{$crewId}"
+            );
+
+            // Auto-award recruiter performance points
+            try {
+                require_once APPPATH . 'Controllers/RecruiterPerformance.php';
+                // Find the assigned recruiter from recruitment DB
+                $assignStmt = $this->recruitmentDb->prepare("
+                    SELECT aa.assigned_to FROM application_assignments aa
+                    WHERE aa.application_id = ? AND aa.status = 'active'
+                    ORDER BY aa.assigned_at DESC LIMIT 1
+                ");
+                if ($assignStmt) {
+                    $assignStmt->bind_param('i', $applicationId);
+                    $assignStmt->execute();
+                    $assignRow = $assignStmt->get_result()->fetch_assoc();
+                    if ($assignRow && $assignRow['assigned_to']) {
+                        \App\Controllers\RecruiterPerformance::awardPoints(
+                            $this->db, $this->recruitmentDb,
+                            $assignRow['assigned_to'], 'approved',
+                            $applicationId, $application['full_name'],
+                            'Approved via ERP Approval Center'
+                        );
+                    }
+                }
+            } catch (\Exception $e) {
+                error_log("RecruiterPerformance award error: " . $e->getMessage());
+            }
+
+            // Log activity
+            $this->logActivity('approve_recruitment_candidate', "Approved & imported recruitment candidate: {$application['full_name']} (App ID: {$applicationId}, Crew ID: {$crewId})");
+
+            $this->db->commit();
+
+            if ($this->isAjax()) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'message' => "✅ Kandidat {$application['full_name']} berhasil di-import! Lanjut ke Admin Checklist.",
+                    'redirect_url' => BASE_URL . "AdminChecklist/detail/{$crewId}"
+                ]);
+                return;
+            }
+
+            $this->setFlash('success', "✅ Kandidat {$application['full_name']} berhasil di-import (ID: {$employeeId})! Lanjut ke Admin Checklist.");
+            $this->redirect("AdminChecklist/detail/{$crewId}");
+        } catch (\Exception $e) {
+            $this->db->rollback();
+            error_log("ApproveRecruitment error: " . $e->getMessage());
+            if ($this->isAjax()) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Gagal approve: ' . $e->getMessage()]);
+                return;
+            }
+            $this->setFlash('error', 'Gagal approve & import: ' . $e->getMessage());
+            $this->redirect('recruitment/approval');
+        }
+    }
+
+    /**
      * Show candidate detail page (from recruitment DB)
      */
     public function candidate($applicationId = null)
@@ -420,7 +876,6 @@ class RecruitmentHub extends BaseController
                 u.avatar,
                 ap.emergency_name,
                 ap.emergency_phone,
-                u.is_synced_to_erp,
                 v.title as vacancy_title,
                 d.name as department_name,
                 s.name as status_name,
@@ -446,59 +901,71 @@ class RecruitmentHub extends BaseController
 
         // Get documents
         $documents = [];
-        $docStmt = $this->recruitmentDb->prepare("
-            SELECT ad.*, dt.name as type_name
-            FROM applicant_documents ad
-            LEFT JOIN document_types dt ON ad.document_type_id = dt.id
-            WHERE ad.user_id = ?
-            ORDER BY ad.created_at DESC
-        ");
-        if ($docStmt) {
-            $docStmt->bind_param('i', $candidate['user_id']);
-            $docStmt->execute();
-            $docResult = $docStmt->get_result();
-            while ($doc = $docResult->fetch_assoc()) {
-                $documents[] = $doc;
+        try {
+            $docStmt = $this->recruitmentDb->prepare("
+                SELECT ad.*, dt.name as type_name
+                FROM applicant_documents ad
+                LEFT JOIN document_types dt ON ad.document_type_id = dt.id
+                WHERE ad.user_id = ?
+                ORDER BY ad.created_at DESC
+            ");
+            if ($docStmt) {
+                $docStmt->bind_param('i', $candidate['user_id']);
+                $docStmt->execute();
+                $docResult = $docStmt->get_result();
+                while ($doc = $docResult->fetch_assoc()) {
+                    $documents[] = $doc;
+                }
+                $docStmt->close();
             }
-            $docStmt->close();
+        } catch (\Exception $e) {
+            // Table may not exist in local DB
         }
         $candidate['documents'] = $documents;
 
         // Get interviews
         $interviews = [];
-        $intStmt = $this->recruitmentDb->prepare("
-            SELECT i.*, qb.name as question_bank_name
-            FROM interviews i
-            LEFT JOIN interview_question_banks qb ON i.question_bank_id = qb.id
-            WHERE i.application_id = ?
-            ORDER BY i.created_at DESC
-        ");
-        if ($intStmt) {
-            $intStmt->bind_param('i', $applicationId);
-            $intStmt->execute();
-            $intResult = $intStmt->get_result();
-            while ($interview = $intResult->fetch_assoc()) {
-                $interviews[] = $interview;
+        try {
+            $intStmt = $this->recruitmentDb->prepare("
+                SELECT i.*, qb.name as question_bank_name
+                FROM interviews i
+                LEFT JOIN interview_question_banks qb ON i.question_bank_id = qb.id
+                WHERE i.application_id = ?
+                ORDER BY i.created_at DESC
+            ");
+            if ($intStmt) {
+                $intStmt->bind_param('i', $applicationId);
+                $intStmt->execute();
+                $intResult = $intStmt->get_result();
+                while ($interview = $intResult->fetch_assoc()) {
+                    $interviews[] = $interview;
+                }
+                $intStmt->close();
             }
-            $intStmt->close();
+        } catch (\Exception $e) {
+            // Table may not exist in local DB
         }
         $candidate['interviews'] = $interviews;
 
         // Get medical checkups
         $medicals = [];
-        $medStmt = $this->recruitmentDb->prepare("
-            SELECT * FROM medical_checkups
-            WHERE application_id = ?
-            ORDER BY created_at DESC
-        ");
-        if ($medStmt) {
-            $medStmt->bind_param('i', $applicationId);
-            $medStmt->execute();
-            $medResult = $medStmt->get_result();
-            while ($medical = $medResult->fetch_assoc()) {
-                $medicals[] = $medical;
+        try {
+            $medStmt = $this->recruitmentDb->prepare("
+                SELECT * FROM medical_checkups
+                WHERE application_id = ?
+                ORDER BY created_at DESC
+            ");
+            if ($medStmt) {
+                $medStmt->bind_param('i', $applicationId);
+                $medStmt->execute();
+                $medResult = $medStmt->get_result();
+                while ($medical = $medResult->fetch_assoc()) {
+                    $medicals[] = $medical;
+                }
+                $medStmt->close();
             }
-            $medStmt->close();
+        } catch (\Exception $e) {
+            // Table may not exist in local DB
         }
         $candidate['medical_checkups'] = $medicals;
 
@@ -509,7 +976,11 @@ class RecruitmentHub extends BaseController
             'flash' => $this->getFlash()
         ];
 
-        return $this->view('recruitment/candidate_detail', $data);
+        // Check UI mode from session
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
+        $view = $uiMode === 'modern' ? 'recruitment/candidate_detail_modern' : 'recruitment/candidate_detail';
+
+        return $this->view($view, $data);
     }
 
     /**
@@ -629,6 +1100,106 @@ class RecruitmentHub extends BaseController
     }
 
     /**
+     * Restore a rejected candidate back to Admin Review status
+     */
+    public function restoreRejected()
+    {
+        $this->requireAuth();
+
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request']);
+            return;
+        }
+
+        $applicationId = (int) ($_POST['application_id'] ?? 0);
+        if (!$applicationId) {
+            echo json_encode(['success' => false, 'message' => 'Application ID required']);
+            return;
+        }
+
+        if (!$this->recruitmentDb || $this->recruitmentDb->connect_error) {
+            echo json_encode(['success' => false, 'message' => 'Recruitment DB not available']);
+            return;
+        }
+
+        // Get application info
+        $stmt = $this->recruitmentDb->prepare("
+            SELECT a.id, a.status_id, a.erp_crew_id, u.full_name, s.name as status_name
+            FROM applications a
+            JOIN users u ON a.user_id = u.id
+            JOIN application_statuses s ON a.status_id = s.id
+            WHERE a.id = ?
+        ");
+        $stmt->bind_param('i', $applicationId);
+        $stmt->execute();
+        $app = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$app) {
+            echo json_encode(['success' => false, 'message' => 'Application not found']);
+            return;
+        }
+
+        if ($app['status_id'] != 7) { // 7 = Rejected
+            echo json_encode(['success' => false, 'message' => 'Hanya kandidat yang ditolak yang bisa dikembalikan']);
+            return;
+        }
+
+        // Determine target status: if has erp_crew_id, restore to Admin Review (9), else to Pending (1)
+        $targetStatusId = !empty($app['erp_crew_id']) ? 9 : 1;
+        $targetStatusName = !empty($app['erp_crew_id']) ? 'Admin Review' : 'Pending';
+
+        // Update recruitment DB
+        $stmt = $this->recruitmentDb->prepare("
+            UPDATE applications 
+            SET status_id = ?, status_updated_at = NOW()
+            WHERE id = ?
+        ");
+        $stmt->bind_param('ii', $targetStatusId, $applicationId);
+        $stmt->execute();
+        $stmt->close();
+
+        // If has ERP crew, also reset the admin checklist rejection
+        if (!empty($app['erp_crew_id'])) {
+            $crewId = (int) $app['erp_crew_id'];
+            
+            // Reset crew status in ERP
+            $stmt = $this->db->prepare("UPDATE crews SET status = 'pending_checklist' WHERE id = ?");
+            $stmt->bind_param('i', $crewId);
+            $stmt->execute();
+            $stmt->close();
+
+            // Reset any rejected items in admin checklist back to pending (0)
+            $stmt = $this->db->prepare("
+                UPDATE admin_checklists 
+                SET owner_interview = CASE WHEN owner_interview = 2 THEN 0 ELSE owner_interview END,
+                    document_check = CASE WHEN document_check = 2 THEN 0 ELSE document_check END,
+                    pengantar_mcu = CASE WHEN pengantar_mcu = 2 THEN 0 ELSE pengantar_mcu END,
+                    agreement_kontrak = CASE WHEN agreement_kontrak = 2 THEN 0 ELSE agreement_kontrak END,
+                    admin_charge = CASE WHEN admin_charge = 2 THEN 0 ELSE admin_charge END,
+                    ok_to_board = CASE WHEN ok_to_board = 2 THEN 0 ELSE ok_to_board END,
+                    status = 'pending',
+                    updated_at = NOW()
+                WHERE crew_id = ?
+            ");
+            $stmt->bind_param('i', $crewId);
+            $stmt->execute();
+            $stmt->close();
+        }
+
+        // Log activity
+        $this->logActivity('restore_rejected', "Restored rejected candidate: {$app['full_name']} (App #{$applicationId}) back to {$targetStatusName}");
+
+        echo json_encode([
+            'success' => true, 
+            'message' => "{$app['full_name']} berhasil dikembalikan ke status {$targetStatusName}",
+            'new_status' => $targetStatusName
+        ]);
+    }
+
+    /**
      * Auto-onboarding - approved crew ready to onboard
      */
     public function onboarding()
@@ -645,19 +1216,23 @@ class RecruitmentHub extends BaseController
                 $this->createRecruitmentSyncTable();
             }
 
-            // Get approved crew from recruitment DB (status_id 6 = Approved)
+            // Get approved crew from recruitment DB (by status name, not hardcoded ID)
             $query = "
                 SELECT 
                     a.id as application_id,
                     u.full_name as applicant_name,
                     v.title as position_applied,
+                    d.name as department_name,
                     u.email,
                     u.phone,
-                    a.submitted_at as applied_date
+                    a.submitted_at as applied_date,
+                    s.name as status_name
                 FROM applications a
                 JOIN users u ON a.user_id = u.id
                 JOIN job_vacancies v ON a.vacancy_id = v.id
-                WHERE a.status_id = 6
+                LEFT JOIN departments d ON v.department_id = d.id
+                JOIN application_statuses s ON a.status_id = s.id
+                WHERE LOWER(s.name) = 'approved'
                 ORDER BY a.submitted_at DESC
             ";
 
@@ -769,31 +1344,29 @@ class RecruitmentHub extends BaseController
             $stmt = $this->db->prepare("
                 INSERT INTO crews (
                     employee_id, full_name, email, phone, 
-                    date_of_birth, passport_no, gender, nationality,
-                    address, city, country,
-                    emergency_contact_name, emergency_contact_phone,
+                    birth_date, gender, nationality,
+                    address, city,
+                    emergency_name, emergency_phone,
                     current_rank_id, status, 
                     source, candidate_id, approved_at,
                     created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'standby', 'recruitment', ?, NOW(), NOW())
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'standby', 'recruitment', ?, NOW(), NOW())
             ");
 
             // Map position to rank (default to 1 for now, can be enhanced later)
             $rankId = 1;
 
             $stmt->bind_param(
-                'sssssssssssssii',
+                'sssssssssssii',
                 $employeeId,
                 $application['full_name'],
                 $application['email'],
                 $application['phone'],
                 $application['date_of_birth'],
-                $application['passport_no'],
                 $application['gender'],
                 $application['nationality'],
                 $application['address'],
                 $application['city'],
-                $application['country'],
                 $application['emergency_contact_name'],
                 $application['emergency_contact_phone'],
                 $rankId,
@@ -851,6 +1424,49 @@ class RecruitmentHub extends BaseController
             )
         ";
         $this->db->query($sql);
+    }
+
+    /**
+     * Ensure admin_checklists table exists
+     */
+    private function ensureAdminChecklistTable()
+    {
+        $result = $this->db->query("SHOW TABLES LIKE 'admin_checklists'");
+        if ($result && $result->num_rows == 0) {
+            $this->db->query("
+                CREATE TABLE admin_checklists (
+                    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    crew_id INT UNSIGNED NOT NULL,
+                    application_id INT NULL,
+                    document_check TINYINT DEFAULT 0,
+                    document_check_notes TEXT NULL,
+                    document_check_at DATETIME NULL,
+                    owner_interview TINYINT DEFAULT 0,
+                    owner_interview_notes TEXT NULL,
+                    owner_interview_at DATETIME NULL,
+                    pengantar_mcu TINYINT DEFAULT 0,
+                    pengantar_mcu_notes TEXT NULL,
+                    pengantar_mcu_at DATETIME NULL,
+                    agreement_kontrak TINYINT DEFAULT 0,
+                    agreement_kontrak_notes TEXT NULL,
+                    agreement_kontrak_at DATETIME NULL,
+                    admin_charge TINYINT DEFAULT 0,
+                    admin_charge_notes TEXT NULL,
+                    admin_charge_at DATETIME NULL,
+                    ok_to_board TINYINT DEFAULT 0,
+                    ok_to_board_notes TEXT NULL,
+                    ok_to_board_at DATETIME NULL,
+                    status ENUM('in_progress','completed','rejected') DEFAULT 'in_progress',
+                    rejected_reason TEXT NULL,
+                    completed_at DATETIME NULL,
+                    checked_by INT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    UNIQUE KEY unique_crew_checklist (crew_id),
+                    KEY idx_checklist_status (status)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+        }
     }
 
     public function __destruct()

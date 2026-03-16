@@ -392,13 +392,151 @@
         padding: 6px 12px;
         border-radius: 10px;
         text-align: center;
-        margin-bottom: 0.625rem;
+        margin-bottom: 0;
         font-size: 0.8125rem;
         font-weight: 600;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 6px;
+    }
+    
+    /* Card Action Popup Modal */
+    .card-action-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(15, 23, 42, 0.6);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+    .card-action-overlay.show {
+        display: flex;
+        animation: cardActionFadeIn 0.3s ease;
+    }
+    .card-action-popup {
+        background: white;
+        border-radius: 24px;
+        width: 92%;
+        max-width: 400px;
+        overflow: hidden;
+        animation: cardActionPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255,255,255,0.1);
+    }
+    .card-action-popup-header {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #3b82f6 100%);
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        position: relative;
+        overflow: hidden;
+    }
+    .card-action-popup-header::before {
+        content: '';
+        position: absolute;
+        top: -50%; right: -50%;
+        width: 200%; height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 60%);
+    }
+    .card-action-popup-avatar {
+        width: 56px; height: 56px; border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        color: white; display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem; font-weight: 700; flex-shrink: 0;
+        border: 2px solid rgba(255,255,255,0.3);
+        position: relative; overflow: hidden; z-index: 1;
+    }
+    .card-action-popup-avatar img {
+        width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+    }
+    .card-action-popup-info { position: relative; z-index: 1; flex: 1; min-width: 0; }
+    .card-action-popup-info h4 {
+        color: white; font-size: 1.1rem; font-weight: 700; margin: 0 0 4px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .card-action-popup-info p {
+        color: rgba(255,255,255,0.75); font-size: 0.85rem; margin: 0;
+    }
+    .card-action-popup-body {
+        padding: 20px 24px 24px;
+    }
+    .card-action-popup-body .action-label {
+        font-size: 0.75rem; font-weight: 700; color: #94a3b8;
+        text-transform: uppercase; letter-spacing: 1px;
+        margin-bottom: 12px;
+    }
+    .card-action-btn {
+        width: 100%;
+        padding: 14px 18px;
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        background: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 10px;
+        transition: all 0.25s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .card-action-btn::after {
+        content: '';
+        position: absolute;
+        right: 16px;
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        content: '\f054';
+        font-size: 0.75rem;
+        color: #cbd5e1;
+        transition: all 0.25s ease;
+    }
+    .card-action-btn:hover {
+        transform: translateX(4px);
+        border-color: #3b82f6;
+        background: #f0f7ff;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+    .card-action-btn:hover::after { color: #3b82f6; }
+    .card-action-btn:active { transform: translateX(2px) scale(0.98); }
+    .card-action-btn .action-icon {
+        width: 42px; height: 42px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem; flex-shrink: 0;
+    }
+    .card-action-btn .action-text h5 {
+        font-size: 0.9rem; font-weight: 600; color: #1e293b; margin: 0 0 2px;
+    }
+    .card-action-btn .action-text p {
+        font-size: 0.78rem; color: #94a3b8; margin: 0;
+    }
+    .card-action-btn.btn-action-view .action-icon { background: #eff6ff; color: #3b82f6; }
+    .card-action-btn.btn-action-view:hover { border-color: #3b82f6; background: #eff6ff; }
+    .card-action-btn.btn-action-status .action-icon { background: #f0fdf4; color: #16a34a; }
+    .card-action-btn.btn-action-status:hover { border-color: #16a34a; background: #f0fdf4; }
+    .card-action-btn.btn-action-archive .action-icon { background: #fff5f5; color: #ef4444; }
+    .card-action-btn.btn-action-archive:hover { border-color: #ef4444; background: #fff5f5; }
+    .card-action-close {
+        width: 100%; padding: 14px;
+        border: none; border-top: 1px solid #f1f5f9;
+        background: #f8fafc; color: #64748b;
+        font-size: 0.9rem; font-weight: 600;
+        cursor: pointer; transition: all 0.2s;
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .card-action-close:hover { background: #f1f5f9; color: #334155; }
+    @keyframes cardActionFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes cardActionPopIn {
+        from { transform: scale(0.85) translateY(20px); opacity: 0; }
+        to { transform: scale(1) translateY(0); opacity: 1; }
     }
     
     /* Modal Styles - Reuse from original */
@@ -743,14 +881,14 @@ function dismissAllAlerts() {
     <div class="pipeline-columns">
         <?php 
         $statusColors = [
-            '1' => '#3b82f6',  // Blue
-            '2' => '#f59e0b',  // Amber
+            '1' => '#3b82f6',  // Blue - Pending
+            '2' => '#f59e0b',  // Amber - Review
+            '8' => '#f97316',  // Orange - Processing
+            '6' => '#22c55e',  // Green - Approved
+            '7' => '#ef4444',  // Red - Rejected
             '3' => '#a855f7',  // Purple
             '4' => '#f97316',  // Orange
             '5' => '#14b8a6',  // Teal
-            '6' => '#22c55e',  // Green
-            '7' => '#ef4444',  // Red
-            '8' => '#64748b',  // Gray
         ];
         
         foreach ($statuses as $status): 
@@ -784,7 +922,7 @@ function dismissAllAlerts() {
                     ?>
                         <div class="app-card-modern" data-app-id="<?= $app['id'] ?>">
                             <!-- Candidate Header with Avatar -->
-                            <div class="candidate-header-modern" onclick="showDetail(<?= $app['id'] ?>)" style="cursor: pointer;">
+                            <div class="candidate-header-modern" onclick="<?= $currentView == 'my' ? 'openCardActionPopup(' . $app['id'] . ', \'' . htmlspecialchars($app['applicant_name'], ENT_QUOTES) . '\', \'' . htmlspecialchars($app['vacancy_title'] ?? 'N/A', ENT_QUOTES) . '\', \'' . htmlspecialchars($app['applicant_avatar'] ?? '', ENT_QUOTES) . '\', ' . $app['status_id'] . ')' : 'showDetail(' . $app['id'] . ')' ?>" style="cursor: pointer;">
                                 <div class="candidate-avatar-modern">
                                     <?php if (!empty($app['applicant_avatar'])): ?>
                                         <img src="<?= url('/') ?><?= htmlspecialchars($app['applicant_avatar']) ?>" alt="<?= htmlspecialchars($app['applicant_name']) ?>">
@@ -801,7 +939,7 @@ function dismissAllAlerts() {
                                 </div>
                             </div>
                             
-                            <div class="email" onclick="showDetail(<?= $app['id'] ?>)" style="cursor: pointer;">
+                            <div class="email" onclick="<?= $currentView == 'my' ? 'openCardActionPopup(' . $app['id'] . ', \'' . htmlspecialchars($app['applicant_name'], ENT_QUOTES) . '\', \'' . htmlspecialchars($app['vacancy_title'] ?? 'N/A', ENT_QUOTES) . '\', \'' . htmlspecialchars($app['applicant_avatar'] ?? '', ENT_QUOTES) . '\', ' . $app['status_id'] . ')' : 'showDetail(' . $app['id'] . ')' ?>" style="cursor: pointer;">
                                 <i class="fas fa-envelope"></i>
                                 <?= htmlspecialchars($app['applicant_email'] ?? '') ?>
                             </div>
@@ -813,10 +951,66 @@ function dismissAllAlerts() {
                                 </div>
                             <?php endif; ?>
                             
-                            <?php if (!empty($app['sent_to_erp_at'])): ?>
-                                <div class="badge-modern badge-erp">
-                                    <i class="fas fa-check-circle"></i>
-                                    Sent to ERP • ID: <?= $app['erp_crew_id'] ?>
+                            <?php if (!empty($app['sent_to_erp_at'])): 
+                                $crewId = $app['erp_crew_id'];
+                                $progress = $erpProgress[$crewId] ?? null;
+                                $passedCount = $progress ? intval($progress['passed_count']) : 0;
+                                $rejectedCount = $progress ? intval($progress['rejected_count']) : 0;
+                                $totalCount = $progress ? intval($progress['total_count']) : 6;
+                                $pct = $totalCount > 0 ? round(($passedCount / $totalCount) * 100) : 0;
+                                $isRejected = $rejectedCount > 0;
+                                
+                                // Individual item statuses
+                                $checkItems = [
+                                    ['key' => 'document_check', 'label' => 'Document Check', 'icon' => 'folder_open'],
+                                    ['key' => 'owner_interview', 'label' => 'Owner Interview', 'icon' => 'record_voice_over'],
+                                    ['key' => 'pengantar_mcu', 'label' => 'Pengantar MCU', 'icon' => 'medical_services'],
+                                    ['key' => 'agreement_kontrak', 'label' => 'Agreement Kontrak', 'icon' => 'handshake'],
+                                    ['key' => 'admin_charge', 'label' => 'Admin Charge', 'icon' => 'payments'],
+                                    ['key' => 'ok_to_board', 'label' => 'OK to Board', 'icon' => 'flight_takeoff'],
+                                ];
+                            ?>
+                                <div class="badge-modern badge-erp" style="flex-direction:column;align-items:stretch;gap:6px;padding:10px 12px;">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                                        <span style="font-weight:700;"><i class="fas fa-tasks"></i> Admin Checklist</span>
+                                        <span style="font-weight:800;"><?= $passedCount ?>/<?= $totalCount ?></span>
+                                    </div>
+                                    <div style="background:rgba(0,0,0,0.1);border-radius:4px;height:6px;overflow:hidden;">
+                                        <div style="height:100%;border-radius:4px;width:<?= $pct ?>%;background:<?= $isRejected ? '#ef4444' : ($pct == 100 ? '#22c55e' : '#3b82f6') ?>;transition:width 0.5s;"></div>
+                                    </div>
+                                    
+                                    <!-- Detail per item -->
+                                    <div style="display:flex;flex-direction:column;gap:3px;margin-top:4px;">
+                                        <?php foreach ($checkItems as $ci): 
+                                            $val = $progress ? intval($progress[$ci['key']] ?? 0) : 0;
+                                            if ($val == 1) {
+                                                $statusIcon = '✓';
+                                                $statusColor = '#22c55e';
+                                                $statusBg = 'rgba(34,197,94,0.15)';
+                                            } elseif ($val == 2) {
+                                                $statusIcon = '✗';
+                                                $statusColor = '#ef4444';
+                                                $statusBg = 'rgba(239,68,68,0.15)';
+                                            } else {
+                                                $statusIcon = '○';
+                                                $statusColor = '#94a3b8';
+                                                $statusBg = 'rgba(148,163,184,0.1)';
+                                            }
+                                        ?>
+                                            <div style="display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:6px;background:<?= $statusBg ?>;font-size:0.7rem;">
+                                                <span style="color:<?= $statusColor ?>;font-weight:800;width:14px;text-align:center;"><?= $statusIcon ?></span>
+                                                <span style="color:<?= $val == 1 ? '#166534' : ($val == 2 ? '#991b1b' : '#64748b') ?>;font-weight:<?= $val != 0 ? '600' : '500' ?>;"><?= $ci['label'] ?></span>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    
+                                    <?php if ($isRejected): ?>
+                                        <small style="color:#ef4444;font-weight:600;margin-top:2px;"><i class="fas fa-times-circle"></i> Rejected</small>
+                                    <?php elseif ($pct == 100): ?>
+                                        <small style="color:#22c55e;font-weight:600;margin-top:2px;"><i class="fas fa-check-circle"></i> Siap Deploy</small>
+                                    <?php else: ?>
+                                        <small style="color:#1e40af;margin-top:2px;">ID: <?= $crewId ?> • Proses di ERP</small>
+                                    <?php endif; ?>
                                 </div>
                             <?php endif; ?>
                             
@@ -852,25 +1046,6 @@ function dismissAllAlerts() {
                                             <i class="fas fa-check-circle"></i>
                                             Ditangani Anda
                                         </div>
-                                        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                            <button class="btn-modern btn-view" onclick="event.stopPropagation(); showDetail(<?= $app['id'] ?>)">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn-modern btn-status" onclick="event.stopPropagation(); openStatusModal(<?= $app['id'] ?>, '<?= htmlspecialchars($app['applicant_name'], ENT_QUOTES) ?>', <?= $app['status_id'] ?>)">
-                                                <i class="fas fa-exchange-alt"></i> Status
-                                            </button>
-                                            <?php if ($statusId == '6' && empty($app['sent_to_erp_at'])): ?>
-                                            <button class="btn-modern btn-erp" onclick="event.stopPropagation(); openErpModal(<?= $app['id'] ?>, '<?= htmlspecialchars($app['applicant_name'], ENT_QUOTES) ?>')">
-                                                <i class="fas fa-paper-plane"></i> ERP
-                                            </button>
-                                            <?php endif; ?>
-                                        </div>
-                                        <button class="btn-modern" style="width:100%;background:#fff5f5;color:#991b1b;border:2px solid #fca5a5;box-shadow:none;" 
-                                            onmouseover="this.style.background='#fee2e2';this.style.borderColor='#ef4444'" 
-                                            onmouseout="this.style.background='#fff5f5';this.style.borderColor='#fca5a5'"
-                                            onclick="event.stopPropagation(); archiveApplication(<?= $app['id'] ?>)">
-                                            <i class="fas fa-archive"></i> Pindahkan ke Arsip
-                                        </button>
                                     </div>
                                 <?php endif; ?>
                             </div>

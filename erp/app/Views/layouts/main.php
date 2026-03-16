@@ -1483,10 +1483,6 @@
                     class="nav-item <?= (isset($currentPage) && $currentPage === 'recruitment-pipeline') ? 'active' : '' ?>">
                     <i class="fas fa-funnel-dollar"></i><span data-translate="nav_pipeline">Pipeline</span>
                 </a>
-                <a href="<?= BASE_URL ?>recruitment/approval"
-                    class="nav-item <?= (isset($currentPage) && $currentPage === 'recruitment-approval') ? 'active' : '' ?>">
-                    <i class="fas fa-check-circle"></i><span data-translate="nav_approval_center">Approval Center</span>
-                </a>
                 <a href="<?= BASE_URL ?>recruitment/onboarding"
                     class="nav-item <?= (isset($currentPage) && $currentPage === 'recruitment-onboarding') ? 'active' : '' ?>">
                     <i class="fas fa-user-plus"></i><span data-translate="nav_onboarding">Auto-Onboarding</span>
@@ -1511,6 +1507,52 @@
 
             <div class="nav-divider"></div>
 
+            <!-- Finance & Accounting Section -->
+            <div class="nav-section-header">💰 <span data-translate="finance_accounting">Keuangan</span></div>
+            <div class="nav-dropdown" data-dropdown="finance">
+                <button class="nav-dropdown-toggle">
+                    <i class="fas fa-calculator"></i>
+                    <span data-translate="nav_finance">Finance</span>
+                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                </button>
+                <div class="nav-dropdown-menu">
+                    <a href="<?= BASE_URL ?>finance"
+                        class="nav-item <?= ($currentPage ?? '') === 'finance-dashboard' ? 'active' : '' ?>">
+                        <i class="fas fa-tachometer-alt"></i> <span data-translate="nav_finance_dashboard">Dashboard</span>
+                    </a>
+                    <a href="<?= BASE_URL ?>finance/invoices"
+                        class="nav-item <?= ($currentPage ?? '') === 'finance-invoices' ? 'active' : '' ?>">
+                        <i class="fas fa-file-invoice-dollar"></i> <span data-translate="nav_invoices">Invoices</span>
+                    </a>
+                    <a href="<?= BASE_URL ?>finance/bills"
+                        class="nav-item <?= ($currentPage ?? '') === 'finance-bills' ? 'active' : '' ?>">
+                        <i class="fas fa-file-invoice"></i> <span data-translate="nav_bills">Bills</span>
+                    </a>
+                    <a href="<?= BASE_URL ?>finance/journal"
+                        class="nav-item <?= ($currentPage ?? '') === 'finance-journal' ? 'active' : '' ?>">
+                        <i class="fas fa-book"></i> <span data-translate="nav_journal">Journal Entries</span>
+                    </a>
+                    <a href="<?= BASE_URL ?>finance/cashflow"
+                        class="nav-item <?= ($currentPage ?? '') === 'finance-cashflow' ? 'active' : '' ?>">
+                        <i class="fas fa-exchange-alt"></i> <span data-translate="nav_cashflow">Cash Flow</span>
+                    </a>
+                    <a href="<?= BASE_URL ?>finance/profit-loss"
+                        class="nav-item <?= ($currentPage ?? '') === 'finance-pnl' ? 'active' : '' ?>">
+                        <i class="fas fa-chart-line"></i> <span data-translate="nav_pnl">Profit & Loss</span>
+                    </a>
+                    <a href="<?= BASE_URL ?>finance/accounts"
+                        class="nav-item <?= ($currentPage ?? '') === 'finance-accounts' ? 'active' : '' ?>">
+                        <i class="fas fa-sitemap"></i> <span data-translate="nav_coa">Chart of Accounts</span>
+                    </a>
+                    <a href="<?= BASE_URL ?>finance/cost-centers"
+                        class="nav-item <?= ($currentPage ?? '') === 'finance-cost-centers' ? 'active' : '' ?>">
+                        <i class="fas fa-bullseye"></i> <span data-translate="nav_cost_centers">Cost Centers</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-divider"></div>
+
             <!-- Reports Dropdown -->
             <div class="nav-dropdown" data-dropdown="reports">
                 <button class="nav-dropdown-toggle">
@@ -1523,22 +1565,41 @@
                         class="nav-item <?= ($currentPage ?? '') === 'reports' ? 'active' : '' ?>">
                         <i class="fas fa-tachometer-alt"></i> <span data-translate="nav_overview">Ringkasan</span>
                     </a>
+                    <a href="<?= BASE_URL ?>reports/active-contracts" class="nav-item">
+                        <i class="fas fa-file-contract"></i> <span data-translate="nav_active_contracts">Kontrak Aktif</span>
+                    </a>
+                    <a href="<?= BASE_URL ?>reports/expiring-contracts" class="nav-item">
+                        <i class="fas fa-clock"></i> <span data-translate="nav_expiring_contracts">Kontrak Expire</span>
+                    </a>
                     <a href="<?= BASE_URL ?>reports/by-vessel" class="nav-item">
-                        <i class="fas fa-ship"></i> <span data-translate="nav_crew_report">Laporan Crew</span>
+                        <i class="fas fa-ship"></i> <span data-translate="nav_crew_report">Laporan per Vessel</span>
+                    </a>
+                    <a href="<?= BASE_URL ?>reports/by-client" class="nav-item">
+                        <i class="fas fa-building"></i> <span data-translate="nav_client_report">Laporan per Client</span>
                     </a>
                     <a href="<?= BASE_URL ?>reports/employees" class="nav-item">
-                        <i class="fas fa-user-tie"></i> <span data-translate="nav_employee_report">Laporan
-                            Karyawan</span>
-                        <span
-                            style="background: var(--success); color: white; font-size: 9px; padding: 2px 6px; border-radius: 10px; margin-left: 4px;">NEW</span>
+                        <i class="fas fa-user-tie"></i> <span data-translate="nav_employee_report">Laporan Karyawan</span>
                     </a>
                     <a href="<?= BASE_URL ?>reports/payroll-summary" class="nav-item">
-                        <i class="fas fa-money-bill"></i> <span data-translate="nav_financial_report">Laporan
-                            Keuangan</span>
+                        <i class="fas fa-money-bill"></i> <span data-translate="nav_financial_report">Laporan Keuangan</span>
                     </a>
-
+                    <a href="<?= BASE_URL ?>reports/tax-report" class="nav-item">
+                        <i class="fas fa-percentage"></i> <span data-translate="nav_tax_report">PPh 21</span>
+                    </a>
+                    <a href="<?= BASE_URL ?>reports/audit-log" class="nav-item">
+                        <i class="fas fa-history"></i> <span data-translate="nav_audit_log">Audit Log</span>
+                    </a>
                 </div>
             </div>
+
+            <div class="nav-divider"></div>
+
+            <!-- AI Document Parser -->
+            <a href="<?= BASE_URL ?>document-parser"
+                class="nav-item <?= ($currentPage ?? '') === 'document-parser' ? 'active' : '' ?>">
+                <i class="fas fa-robot"></i><span data-translate="nav_ai_scan">AI Scan Cert</span>
+                <span style="background: #8B5CF6; color: white; font-size: 9px; padding: 2px 6px; border-radius: 10px; margin-left: auto;">AI</span>
+            </a>
 
             <div class="nav-divider"></div>
 

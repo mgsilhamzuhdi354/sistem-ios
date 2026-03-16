@@ -24,7 +24,7 @@ class Client extends BaseController
     {
         $this->requirePermission('clients', 'view');
         // Check UI mode from session
-        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
 
         // Get clients with profit stats
         $clients = $this->clientModel->getAllWithStats();
@@ -66,6 +66,15 @@ class Client extends BaseController
             'flash' => $this->getFlash()
         ];
 
+        // Add real KPI data for modern view
+        if ($uiMode === 'modern') {
+            $data['revenueGrowth'] = $this->clientModel->getRevenueGrowth();
+            $data['marginGrowth'] = $this->clientModel->getMarginGrowth();
+            $data['activeContracts'] = $this->clientModel->getActiveContractCount();
+            $data['contractGrowth'] = $this->clientModel->getActiveContractGrowth();
+            $data['revenueTrend'] = $this->clientModel->getMonthlyRevenueTrend(6);
+        }
+
         // Route to appropriate view based on UI mode
         $view = $uiMode === 'modern' ? 'clients/modern' : 'clients/index';
         return $this->view($view, $data);
@@ -75,7 +84,7 @@ class Client extends BaseController
     {
         $this->requirePermission('clients', 'view');
         // Check UI mode from session
-        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
 
         $client = $this->clientModel->getWithStats($id);
         if (!$client) {
@@ -144,8 +153,10 @@ class Client extends BaseController
     public function create()
     {
         $this->requirePermission('clients', 'create');
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
         $data = ['title' => 'Add New Client'];
-        return $this->view('clients/form', $data);
+        $view = $uiMode === 'modern' ? 'clients/form_modern' : 'clients/form';
+        return $this->view($view, $data);
     }
 
     public function store()
@@ -183,12 +194,14 @@ class Client extends BaseController
             $this->redirect('clients');
         }
 
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
         $data = [
             'title' => 'Edit ' . $client['name'],
             'client' => $client,
         ];
 
-        return $this->view('clients/form', $data);
+        $view = $uiMode === 'modern' ? 'clients/form_modern' : 'clients/form';
+        return $this->view($view, $data);
     }
 
     public function update($id)
@@ -209,6 +222,133 @@ class Client extends BaseController
         $this->clientModel->update($id, $data);
         $this->setFlash('success', 'Client updated');
         $this->redirect('clients/' . $id);
+    }
+
+    /**
+     * Show confirmation page before deleting a client
+     */
+    public function confirmDelete($id)
+    {
+        $this->requirePermission('clients', 'edit');
+        
+        $client = $this->clientModel->find($id);
+        if (!$client) {
+            $this->setFlash('error', 'Client tidak ditemukan');
+            $this->redirect('clients');
+            return;
+        }
+
+        // Count related data
+        $db = $this->db;
+        
+        $stmt = $db->prepare("SELECT COUNT(*) as cnt FROM vessels WHERE client_id = ?");
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $vesselCount = $stmt->get_result()->fetch_assoc()['cnt'];
+        $stmt->close();
+
+        $stmt = $db->prepare("SELECT COUNT(*) as cnt FROM contracts WHERE client_id = ?");
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $contractCount = $stmt->get_result()->fetch_assoc()['cnt'];
+        $stmt->close();
+
+        $data = [
+            'title' => 'Konfirmasi Hapus Client',
+            'client' => $client,
+            'vesselCount' => $vesselCount,
+            'contractCount' => $contractCount,
+        ];
+
+        return $this->view('clients/confirm_delete', $data);
+    }
+
+    /**
+     * Delete a client and ALL related data (cascade delete)
+     * Order: payroll_items → contract_* → contracts → finance_invoices → vessels → clients
+     */
+    public function delete($id)
+    {
+        $this->requirePermission('clients', 'edit');
+        
+        $client = $this->clientModel->find($id);
+        if (!$client) {
+            $this->setFlash('error', 'Client tidak ditemukan');
+            $this->redirect('clients');
+            return;
+        }
+
+        $clientName = $client['name'];
+        $db = $this->db;
+
+        try {
+            // Get all contract IDs for this client
+            $stmt = $db->prepare("SELECT id FROM contracts WHERE client_id = ?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $contractIds = [];
+            while ($row = $result->fetch_assoc()) {
+                $contractIds[] = $row['id'];
+            }
+            $stmt->close();
+
+            if (!empty($contractIds)) {
+                $placeholders = implode(',', array_fill(0, count($contractIds), '?'));
+                $types = str_repeat('i', count($contractIds));
+
+                // 1. Delete payroll_items for these contracts
+                $stmt = $db->prepare("DELETE FROM payroll_items WHERE contract_id IN ($placeholders)");
+                $stmt->bind_param($types, ...$contractIds);
+                $stmt->execute();
+                $stmt->close();
+
+                // 2. Delete contract child tables
+                $childTables = ['contract_approvals', 'contract_deductions', 'contract_documents', 'contract_logs', 'contract_salaries', 'contract_taxes'];
+                foreach ($childTables as $table) {
+                    $stmt = $db->prepare("DELETE FROM `$table` WHERE contract_id IN ($placeholders)");
+                    $stmt->bind_param($types, ...$contractIds);
+                    $stmt->execute();
+                    $stmt->close();
+                }
+            }
+
+            // 3. Delete all contracts for this client
+            $stmt = $db->prepare("DELETE FROM contracts WHERE client_id = ?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            $deletedContracts = $stmt->affected_rows;
+            $stmt->close();
+
+            // 4. Delete finance invoices for this client
+            $stmt = $db->prepare("DELETE FROM finance_invoices WHERE client_id = ?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            $stmt->close();
+
+            // 5. Delete all vessels owned by this client
+            $stmt = $db->prepare("DELETE FROM vessels WHERE client_id = ?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            $deletedVessels = $stmt->affected_rows;
+            $stmt->close();
+
+            // 6. Delete the client itself
+            $stmt = $db->prepare("DELETE FROM clients WHERE id = ?");
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            $stmt->close();
+
+            $msg = 'Client "' . $clientName . '" berhasil dihapus';
+            if ($deletedContracts > 0 || $deletedVessels > 0) {
+                $msg .= ' beserta ' . $deletedContracts . ' kontrak dan ' . $deletedVessels . ' kapal terkait';
+            }
+            $this->setFlash('success', $msg);
+        } catch (\Exception $e) {
+            $this->setFlash('error', 'Gagal menghapus client: ' . $e->getMessage());
+        }
+
+        $this->redirect('clients');
     }
 
     /**

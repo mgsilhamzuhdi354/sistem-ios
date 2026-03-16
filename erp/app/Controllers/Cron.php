@@ -134,11 +134,13 @@ class Cron extends BaseController
      */
     private function sendPayrollNotification($period, $month, $year)
     {
+        $monthName = $this->getMonthName($month);
+        
+        // Send email notification
         try {
             if (class_exists('\\App\\Libraries\\EmailService')) {
                 $emailService = new \App\Libraries\EmailService();
                 
-                $monthName = $this->getMonthName($month);
                 $subject = "Payroll {$monthName} {$year} - Generated";
                 
                 $body = "
@@ -152,13 +154,38 @@ class Cron extends BaseController
                 <p>Silakan login ke sistem ERP untuk melihat detail lengkap.</p>
                 ";
                 
-                // Send to admin email
-                $adminEmail = 'admin@indoocean.co.id'; // Change to actual admin email
+                $adminEmail = 'admin@indoocean.co.id';
                 $emailService->send($adminEmail, $subject, $body);
             }
         } catch (\Exception $e) {
-            // Log but don't fail
             error_log('Payroll notification email failed: ' . $e->getMessage());
+        }
+        
+        // Send WhatsApp notification
+        try {
+            require_once APPPATH . 'Models/SettingsModel.php';
+            $settingsModel = new \App\Models\SettingsModel($this->db);
+            
+            if ($settingsModel->get('wa_enabled', '0') === '1' && $settingsModel->get('wa_notify_payroll', '1') === '1') {
+                $targetPhone = $settingsModel->get('wa_target_phone', '');
+                if (!empty($targetPhone)) {
+                    require_once APPPATH . 'Libraries/WhatsAppService.php';
+                    $apiToken = $settingsModel->get('wa_api_token', '');
+                    $wa = new \App\Libraries\WhatsAppService($apiToken);
+                    
+                    $waMsg = "💰 *Payroll {$monthName} {$year} Selesai*\n\n"
+                           . "👥 Total Crew: {$period['total_crew']}\n"
+                           . "💵 Gross: \$" . number_format($period['total_gross'], 2) . "\n"
+                           . "🏦 Tax: \$" . number_format($period['total_tax'], 2) . "\n"
+                           . "✅ Net: \$" . number_format($period['total_net'], 2) . "\n\n"
+                           . "⏰ " . date('d M Y, H:i') . "\n"
+                           . "— _IndoOcean ERP_";
+                    
+                    $wa->sendBulk($targetPhone, $waMsg);
+                }
+            }
+        } catch (\Exception $e) {
+            error_log('Payroll WA notification failed: ' . $e->getMessage());
         }
     }
     
@@ -167,6 +194,7 @@ class Cron extends BaseController
      */
     private function sendExpirationAlerts($expiring7, $expiring30)
     {
+        // Send email notification
         try {
             if (class_exists('\\App\\Libraries\\EmailService')) {
                 $emailService = new \App\Libraries\EmailService();
@@ -176,7 +204,7 @@ class Cron extends BaseController
                 $body = "<h2>Contract Expiration Alert</h2>";
                 
                 if (!empty($expiring7)) {
-                    $body .= "<h3 style='color: red;'>⚠️ Expiring in 7 days (" . count($expiring7) . " contracts)</h3>";
+                    $body .= "<h3 style='color: red;'>\u26a0\ufe0f Expiring in 7 days (" . count($expiring7) . " contracts)</h3>";
                     $body .= "<ul>";
                     foreach ($expiring7 as $c) {
                         $body .= "<li>{$c['crew_name']} - {$c['vessel_name']} (Exp: {$c['sign_off_date']})</li>";
@@ -185,7 +213,7 @@ class Cron extends BaseController
                 }
                 
                 if (!empty($expiring30)) {
-                    $body .= "<h3 style='color: orange;'>⏰ Expiring in 30 days (" . count($expiring30) . " contracts)</h3>";
+                    $body .= "<h3 style='color: orange;'>\u23f0 Expiring in 30 days (" . count($expiring30) . " contracts)</h3>";
                     $body .= "<ul>";
                     foreach ($expiring30 as $c) {
                         $body .= "<li>{$c['crew_name']} - {$c['vessel_name']} (Exp: {$c['sign_off_date']})</li>";
@@ -198,6 +226,47 @@ class Cron extends BaseController
             }
         } catch (\Exception $e) {
             error_log('Contract alert email failed: ' . $e->getMessage());
+        }
+        
+        // Send WhatsApp notification
+        try {
+            require_once APPPATH . 'Models/SettingsModel.php';
+            $settingsModel = new \App\Models\SettingsModel($this->db);
+            
+            if ($settingsModel->get('wa_enabled', '0') === '1' && $settingsModel->get('wa_notify_contract', '1') === '1') {
+                $targetPhone = $settingsModel->get('wa_target_phone', '');
+                if (!empty($targetPhone)) {
+                    require_once APPPATH . 'Libraries/WhatsAppService.php';
+                    $apiToken = $settingsModel->get('wa_api_token', '');
+                    $wa = new \App\Libraries\WhatsAppService($apiToken);
+                    
+                    $waMsg = "\u26a0\ufe0f *Contract Expiration Alert*\n\n";
+                    
+                    if (!empty($expiring7)) {
+                        $waMsg .= "\u{1F534} *KRITIS - Expiring \u22647 hari (" . count($expiring7) . " kontrak):*\n";
+                        foreach ($expiring7 as $c) {
+                            $waMsg .= "\u2022 {$c['crew_name']} - {$c['vessel_name']} (" . ($c['days_remaining'] ?? '?') . " hari)\n";
+                        }
+                        $waMsg .= "\n";
+                    }
+                    
+                    if (!empty($expiring30)) {
+                        $waMsg .= "\u{1F7E1} *WARNING - Expiring \u226430 hari (" . count($expiring30) . " kontrak):*\n";
+                        foreach (array_slice($expiring30, 0, 10) as $c) {
+                            $waMsg .= "\u2022 {$c['crew_name']} - {$c['vessel_name']} (" . ($c['days_remaining'] ?? '?') . " hari)\n";
+                        }
+                        if (count($expiring30) > 10) {
+                            $waMsg .= "... dan " . (count($expiring30) - 10) . " kontrak lainnya\n";
+                        }
+                    }
+                    
+                    $waMsg .= "\n\u23f0 " . date('d M Y, H:i') . "\n\u2014 _IndoOcean ERP_";
+                    
+                    $wa->sendBulk($targetPhone, $waMsg);
+                }
+            }
+        } catch (\Exception $e) {
+            error_log('Contract WA alert failed: ' . $e->getMessage());
         }
     }
     

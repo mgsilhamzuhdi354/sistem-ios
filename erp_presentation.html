@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PT Indo Ocean - ERP System Complete Overview</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root{--ocean-dark:#f0f4f8;--ocean-deep:#e2e8f0;--cyan:#0891b2;--cyan-glow:rgba(8,145,178,.2);--purple:#7c3aed;--gold:#d97706;--coral:#db2777;--emerald:#059669;--red:#dc2626;--blue:#2563eb;--orange:#ea580c;--text-bright:#1e293b;--text-dim:#475569;--text-muted:#64748b;--bg-light:#f8fafc;--bg-card:rgba(255,255,255,.7)}
+        .reveal{font-family:'Inter',sans-serif;background:#f0f4f8}.reveal .slides{text-align:left}.reveal .slides section{padding:18px 36px}
+        .reveal h1,.reveal h2,.reveal h3{font-family:'Outfit',sans-serif;text-transform:none;letter-spacing:-.5px;color:#1e293b!important}
+        .slide-cover{text-align:center!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center}
+        .cover-logo{width:72px;height:72px;border-radius:14px;background:linear-gradient(135deg,rgba(8,145,178,.1),rgba(124,58,237,.1));border:2px solid rgba(8,145,178,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 0 50px var(--cyan-glow);overflow:hidden}
+        .cover-logo img{width:85%;height:85%;object-fit:contain;border-radius:8px}
+        .cover-title{font-size:2.2em!important;font-weight:900!important;color:#0c4a6e!important;margin:0!important;line-height:1.2!important}
+        .cover-subtitle{font-size:.85em;color:#334155;letter-spacing:5px;text-transform:uppercase;margin-top:4px;font-weight:300}
+        .cover-divider{width:60px;height:3px;background:linear-gradient(90deg,var(--cyan),var(--purple));margin:8px auto;border-radius:2px}
+        .cover-tagline{font-size:.6em;color:#475569;margin-top:10px}
+        .tech-badges{display:flex;gap:6px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+        .tech-badge{padding:4px 10px;border-radius:10px;font-size:.5em;font-weight:600;background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.08);color:#334155;display:flex;align-items:center;gap:4px}
+        .bg-accent{position:absolute;width:300px;height:300px;border-radius:50%;filter:blur(120px);opacity:.05;pointer-events:none;z-index:-1}
+        .bg-tr{top:-150px;right:-150px;background:var(--cyan)}.bg-bl{bottom:-150px;left:-150px;background:var(--purple)}
+        .section-badge{display:inline-block;padding:2px 9px;border-radius:30px;font-size:.42em;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px}
+        .b-cyan{background:rgba(8,145,178,.1);color:var(--cyan);border:1px solid rgba(6,182,212,.25)}
+        .b-purple{background:rgba(124,58,237,.1);color:var(--purple);border:1px solid rgba(139,92,246,.25)}
+        .b-gold{background:rgba(217,119,6,.1);color:var(--gold);border:1px solid rgba(245,158,11,.25)}
+        .b-emerald{background:rgba(5,150,105,.1);color:var(--emerald);border:1px solid rgba(16,185,129,.25)}
+        .b-coral{background:rgba(219,39,119,.08);color:var(--coral);border:1px solid rgba(244,114,182,.25)}
+        .b-blue{background:rgba(37,99,235,.1);color:var(--blue);border:1px solid rgba(59,130,246,.25)}
+        .b-red{background:rgba(220,38,38,.1);color:var(--red);border:1px solid rgba(239,68,68,.25)}
+        .b-orange{background:rgba(234,88,12,.1);color:var(--orange);border:1px solid rgba(249,115,22,.25)}
+        .section-title{font-size:1.2em!important;font-weight:800!important;color:#1e293b!important;margin-bottom:1px!important;line-height:1.15!important}
+        .section-desc{font-size:.55em;color:var(--text-dim);line-height:1.35;max-width:620px;margin-bottom:4px}
+        .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:5px}
+        .two-col-ss{grid-template-columns:.65fr .35fr}
+        .feature-list{list-style:none;padding:0;margin:2px 0 0}
+        .feature-list li{padding:3px 0 3px 14px;position:relative;font-size:.52em;color:var(--text-dim);border-bottom:1px solid rgba(0,0,0,.06);line-height:1.3}
+        .feature-list li:last-child{border-bottom:none}
+        .feature-list li::before{content:'';position:absolute;left:0;top:9px;width:4px;height:4px;border-radius:50%}
+        .feature-list li.fl-cyan::before{background:var(--cyan);box-shadow:0 0 5px var(--cyan-glow)}
+        .feature-list li.fl-purple::before{background:var(--purple)}.feature-list li.fl-gold::before{background:var(--gold)}
+        .feature-list li.fl-emerald::before{background:var(--emerald)}.feature-list li.fl-coral::before{background:var(--coral)}
+        .feature-list li.fl-blue::before{background:var(--blue)}.feature-list li.fl-orange::before{background:var(--orange)}
+        .screenshot{border-radius:7px;overflow:hidden;border:1.5px solid rgba(0,0,0,.1);box-shadow:0 6px 25px rgba(0,0,0,.08);transition:all .3s}
+        .screenshot:hover{border-color:rgba(8,145,178,.4);transform:translateY(-1px);box-shadow:0 10px 35px rgba(0,0,0,.12)}
+        .screenshot img{width:100%;height:auto;display:block}
+        .screenshot-label{text-align:center;font-size:.4em;color:var(--text-muted);margin-top:3px;font-weight:500;letter-spacing:.5px}
+        .slide-footer{position:absolute;bottom:8px;left:36px;right:36px;display:flex;justify-content:space-between;align-items:center;font-size:.4em;color:#94a3b8}
+        .slide-footer .fb{display:flex;align-items:center;gap:4px}.slide-footer .fb i{color:var(--cyan);font-size:9px}
+        .reveal .progress{height:3px;background:rgba(0,0,0,.08)}.reveal .progress span{background:linear-gradient(90deg,#0891b2,#7c3aed)}
+        .reveal .slide-number{font-family:'Outfit';font-size:10px;color:var(--text-muted);background:rgba(0,0,0,.06);padding:3px 8px;border-radius:16px}
+        .pill-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+        .pill{padding:2px 8px;border-radius:18px;font-size:.46em;font-weight:600;display:flex;align-items:center;gap:3px}
+        .pill-cyan{background:rgba(6,182,212,.1);color:var(--cyan);border:1px solid rgba(6,182,212,.2)}
+        .pill-purple{background:rgba(139,92,246,.1);color:var(--purple);border:1px solid rgba(139,92,246,.2)}
+        .pill-gold{background:rgba(245,158,11,.1);color:var(--gold);border:1px solid rgba(245,158,11,.2)}
+        .pill-emerald{background:rgba(16,185,129,.1);color:var(--emerald);border:1px solid rgba(16,185,129,.2)}
+        .pill-coral{background:rgba(244,114,182,.1);color:var(--coral);border:1px solid rgba(244,114,182,.2)}
+        .pill-blue{background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.2)}
+        .pill-orange{background:rgba(249,115,22,.1);color:var(--orange);border:1px solid rgba(249,115,22,.2)}
+        .stat-row{display:flex;gap:8px;margin-top:10px}
+        .stat-item{flex:1;text-align:center;padding:10px 6px;border-radius:8px;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.08)}
+        .stat-num{font-family:'Outfit';font-size:1.3em;font-weight:900;line-height:1}
+        .stat-num.cyan{color:var(--cyan)}.stat-num.purple{color:var(--purple)}.stat-num.gold{color:var(--gold)}
+        .stat-num.emerald{color:var(--emerald)}.stat-num.coral{color:var(--coral)}.stat-num.blue{color:var(--blue)}
+        .stat-label{font-size:.45em;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+        .ty-title{font-size:2em!important;font-weight:900!important;color:#0c4a6e!important}
+        .ty-sub{font-size:.7em;color:var(--text-dim);margin-top:3px}
+        .dev-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:18px;font-size:.45em;font-weight:700;background:rgba(249,115,22,.12);color:var(--orange);border:1px solid rgba(249,115,22,.25);margin-left:4px;animation:pulse-dev 2s ease infinite}
+        @keyframes pulse-dev{0%,100%{opacity:1}50%{opacity:.6}}
+        .code-info{font-family:'JetBrains Mono',monospace;font-size:.5em;background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.08);border-radius:7px;padding:8px 12px;color:var(--text-dim);margin-top:6px;line-height:1.5}
+        .code-info .ck{color:var(--cyan)}.code-info .pk{color:var(--purple)}.code-info .comment{color:var(--text-muted);font-style:italic}
+        .module-card{background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.08);border-radius:8px;padding:10px;transition:all .3s}
+        .module-card:hover{background:rgba(255,255,255,.9);border-color:rgba(8,145,178,.4);transform:translateY(-2px)}
+        .module-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;margin-bottom:4px}
+        .mi-cyan{background:rgba(6,182,212,.12);color:var(--cyan)}.mi-purple{background:rgba(139,92,246,.12);color:var(--purple)}
+        .mi-gold{background:rgba(245,158,11,.12);color:var(--gold)}.mi-emerald{background:rgba(16,185,129,.12);color:var(--emerald)}
+        .mi-coral{background:rgba(244,114,182,.12);color:var(--coral)}.mi-blue{background:rgba(59,130,246,.12);color:var(--blue)}
+        .mi-red{background:rgba(239,68,68,.12);color:var(--red)}.mi-orange{background:rgba(249,115,22,.12);color:var(--orange)}
+        .module-title{font-family:'Outfit';font-size:.6em;font-weight:700;color:#1e293b;margin-bottom:1px}
+        .module-desc{font-size:.48em;color:var(--text-muted);line-height:1.3}
+        .module-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px}
+        .module-grid-3{grid-template-columns:repeat(3,1fr)}
+        .reveal table{margin-top:6px;width:100%;border-collapse:collapse}
+        .reveal table th{background:rgba(8,145,178,.08);color:var(--cyan);font-size:.45em;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 8px;text-align:left;border-bottom:2px solid rgba(8,145,178,.2)}
+        .reveal table td{padding:5px 8px;font-size:.5em;color:var(--text-dim);border-bottom:1px solid rgba(0,0,0,.06)}
+        .role-badge{display:inline-block;padding:2px 6px;border-radius:5px;font-size:.6em;font-weight:600}
+        .rb-admin{background:rgba(239,68,68,.12);color:var(--red)}.rb-hr{background:rgba(139,92,246,.12);color:var(--purple)}
+        .rb-finance{background:rgba(245,158,11,.12);color:var(--gold)}.rb-viewer{background:rgba(100,116,139,.2);color:var(--text-dim)}
+        .rb-super{background:rgba(6,182,212,.12);color:var(--cyan)}
+        .flow-img{border-radius:10px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.08);border:2px solid rgba(8,145,178,.2);background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(240,244,248,.95));padding:10px}
+        .flow-img img{width:100%;height:auto;display:block}
+
+        .fullscreen-btn{position:fixed;top:14px;right:14px;z-index:100;background:rgba(8,145,178,.1);border:1.5px solid rgba(8,145,178,.3);color:var(--cyan);padding:6px 14px;border-radius:8px;cursor:pointer;font-family:'Outfit';font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .3s;backdrop-filter:blur(10px)}
+        .fullscreen-btn:hover{background:rgba(8,145,178,.2);transform:scale(1.05);box-shadow:0 0 20px rgba(8,145,178,.15)}
+        .fullscreen-btn i{font-size:13px}
+
+        /* PowerPoint-style animations */
+        .reveal .slides section{animation:slideEntrance .3s ease-out}
+        @keyframes slideEntrance{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+        .reveal .fragment.fade-up{transform:translateY(30px)}
+        .reveal .fragment.fade-right{transform:translateX(-30px)}
+        .reveal .fragment.fade-left{transform:translateX(30px)}
+        .reveal .fragment.zoom-in{transform:scale(0.85)}
+        .reveal .fragment.fade-up.visible,.reveal .fragment.fade-right.visible,.reveal .fragment.fade-left.visible,.reveal .fragment.zoom-in.visible{transform:none}
+        .reveal .fragment{transition:all .25s cubic-bezier(0.16,1,0.3,1)!important}
+        .reveal .fragment.visible{transition:all .25s cubic-bezier(0.16,1,0.3,1)!important}
+        .section-badge{animation:badgePop .2s ease-out 0s both}
+        @keyframes badgePop{from{opacity:0;transform:scale(0.5) translateY(-10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+        .section-title{animation:titleSlide .2s ease-out 0s both}
+        @keyframes titleSlide{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+        .section-desc{animation:descFade .2s ease-out 0s both}
+        @keyframes descFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .screenshot{transition:all .4s cubic-bezier(0.25,0.1,0.25,1)!important}
+        .screenshot.visible{animation:screenshotReveal .25s ease-out both}
+        @keyframes screenshotReveal{from{opacity:0;transform:scale(0.92) translateY(15px)}to{opacity:1;transform:scale(1) translateY(0)}}
+        .cover-logo{animation:logoFloat 3s ease-in-out infinite alternate}
+        @keyframes logoFloat{from{transform:translateY(-3px)}to{transform:translateY(3px)}}
+        
+        @keyframes titleGlow{from{filter:none}to{filter:none}}
+        .stat-item{transition:all .3s ease!important}
+        .stat-item:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,0,0,.1)}
+        .module-card{animation:cardStagger .4s ease-out both}
+        .pill{transition:all .3s ease!important}
+        .pill.visible{animation:pillBounce .2s ease-out both}
+        @keyframes pillBounce{from{opacity:0;transform:translateY(10px) scale(0.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+        .slide-footer{animation:footerSlide .2s ease-out 0s both}
+        @keyframes footerSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+        /* Animated geometric pattern overlay */
+        .reveal .slides section::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:0;opacity:.035;background-image:
+            radial-gradient(circle at 20% 50%, rgba(8,145,178,.4) 1px, transparent 1px),
+            radial-gradient(circle at 80% 20%, rgba(124,58,237,.4) 1px, transparent 1px),
+            radial-gradient(circle at 40% 80%, rgba(8,145,178,.3) 1px, transparent 1px),
+            radial-gradient(circle at 60% 40%, rgba(124,58,237,.3) 1px, transparent 1px);
+            background-size:60px 60px,80px 80px,70px 70px,50px 50px;
+            animation:patternDrift 20s linear infinite}
+        @keyframes patternDrift{from{background-position:0 0,0 0,0 0,0 0}to{background-position:60px 60px,-80px 80px,70px -70px,-50px 50px}}
+        .reveal .slides section>*{position:relative;z-index:1}
+        /* Decorative wave line at bottom */
+        .reveal .slides section::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,rgba(8,145,178,.2),rgba(124,58,237,.2),transparent);z-index:0}
+        /* Animated corner accent */
+        .slide-footer::before{content:'';position:absolute;top:-60px;right:0;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,rgba(8,145,178,.06),transparent 70%);animation:cornerPulse 4s ease-in-out infinite alternate}
+        @keyframes cornerPulse{from{transform:scale(1);opacity:.5}to{transform:scale(1.3);opacity:1}}
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- SLIDE 1: COVER -->
+            <section data-transition="zoom" data-background-gradient="linear-gradient(135deg, #f0f4f8 0%, #e8edf5 50%, #dce4f0 100%)">
+                <div style="text-align:center;padding-top:60px;">
+                    <div style="width:80px;height:80px;border-radius:16px;background:rgba(8,145,178,.08);border:2px solid rgba(8,145,178,.25);display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 4px 20px rgba(8,145,178,.1);overflow:hidden">
+                        <img src="presentation_assets/logo-wave.jpg" alt="Logo" style="width:85%;height:85%;object-fit:contain;border-radius:10px">
+                    </div>
+                    <h1 style="color:#0c4a6e!important;font-size:2.4em!important;font-weight:900!important;margin:0 0 4px 0!important;line-height:1.2!important;font-family:'Outfit',sans-serif!important;">ERP System</h1>
+                    <div style="width:70px;height:3px;background:linear-gradient(90deg,#0891b2,#7c3aed);margin:10px auto;border-radius:2px"></div>
+                    <p style="color:#334155!important;font-size:.85em;letter-spacing:5px;text-transform:uppercase;margin-top:6px;font-weight:300">PT INDO OCEAN CREW SERVICES</p>
+                    <p style="color:#64748b!important;font-size:.55em;margin-top:12px">Enterprise Resource Planning — Sistem Manajemen Terintegrasi untuk Operasional Maritim</p>
+                    <div style="display:flex;gap:6px;justify-content:center;margin-top:14px;flex-wrap:wrap">
+                        <span style="padding:4px 10px;border-radius:10px;font-size:.48em;font-weight:600;background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.08);color:#475569;display:inline-flex;align-items:center;gap:4px"><i class="fa-brands fa-php"></i> PHP / CodeIgniter 4</span>
+                        <span style="padding:4px 10px;border-radius:10px;font-size:.48em;font-weight:600;background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.08);color:#475569;display:inline-flex;align-items:center;gap:4px"><i class="fa-solid fa-database"></i> MySQL</span>
+                        <span style="padding:4px 10px;border-radius:10px;font-size:.48em;font-weight:600;background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.08);color:#475569;display:inline-flex;align-items:center;gap:4px"><i class="fa-brands fa-bootstrap"></i> Bootstrap 5</span>
+                        <span style="padding:4px 10px;border-radius:10px;font-size:.48em;font-weight:600;background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.08);color:#475569;display:inline-flex;align-items:center;gap:4px"><i class="fa-brands fa-js"></i> JavaScript</span>
+                        <span style="padding:4px 10px;border-radius:10px;font-size:.48em;font-weight:600;background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.08);color:#475569;display:inline-flex;align-items:center;gap:4px"><i class="fa-brands fa-whatsapp"></i> WhatsApp API</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 2: RECRUITMENT FLOW DIAGRAM (HTML/CSS) -->
+            <section data-transition="slide" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-coral">Modul 1 — Alur</span>
+                <h2 class="section-title">Alur Rekrutmen End-to-End</h2>
+                <p class="section-desc">Alur 5 tahap: CV masuk → review → approval → monitoring → operasional.</p>
+                <!-- HTML/CSS Flow Diagram -->
+                <div style="display:flex;align-items:flex-start;justify-content:center;gap:6px;margin-top:12px;flex-wrap:nowrap;">
+                    <!-- Step 1: CV Masuk -->
+                    <div style="flex:1;text-align:center;">
+                        <div style="background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(59,130,246,.08));border:1.5px solid rgba(59,130,246,.5);border-radius:10px;padding:10px 6px;position:relative;">
+                            <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;font-family:'Outfit';font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 4px;box-shadow:0 0 12px rgba(59,130,246,.4);">1</div>
+                            <div style="font-size:.5em;font-weight:800;color:#fff;margin-bottom:2px;">📄 CV MASUK</div>
+                            <div style="font-size:.38em;color:var(--text-dim);line-height:1.3;">Crew melamar via portal publik</div>
+                        </div>
+                    </div>
+                    <!-- Arrow -->
+                    <div style="display:flex;align-items:center;padding-top:28px;color:var(--cyan);font-size:.7em;flex-shrink:0;">→</div>
+                    <!-- Step 2: Admin Review -->
+                    <div style="flex:1;text-align:center;">
+                        <div style="background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(245,158,11,.08));border:1.5px solid rgba(245,158,11,.5);border-radius:10px;padding:10px 6px;position:relative;">
+                            <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-family:'Outfit';font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 4px;box-shadow:0 0 12px rgba(245,158,11,.4);">2</div>
+                            <div style="font-size:.5em;font-weight:800;color:#fff;margin-bottom:2px;">📋 ADMIN REVIEW</div>
+                            <div style="font-size:.38em;color:var(--text-dim);line-height:1.3;">Cek dokumen & kelengkapan</div>
+                        </div>
+                        <div style="margin-top:4px;font-size:.35em;color:var(--red);font-weight:700;">✕ Reject → <span style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:1px 5px;">Ditolak</span></div>
+                    </div>
+                    <!-- Arrow -->
+                    <div style="display:flex;align-items:center;padding-top:28px;color:var(--cyan);font-size:.7em;flex-shrink:0;">→</div>
+                    <!-- Step 3: Owner Approval -->
+                    <div style="flex:1;text-align:center;">
+                        <div style="background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(139,92,246,.08));border:1.5px solid rgba(139,92,246,.5);border-radius:10px;padding:10px 6px;position:relative;">
+                            <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;font-family:'Outfit';font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 4px;box-shadow:0 0 12px rgba(139,92,246,.4);">3</div>
+                            <div style="font-size:.5em;font-weight:800;color:#fff;margin-bottom:2px;">🛡️ OWNER APPROVAL</div>
+                            <div style="font-size:.38em;color:var(--text-dim);line-height:1.3;">Persetujuan owner/management</div>
+                        </div>
+                        <div style="margin-top:4px;font-size:.35em;color:var(--red);font-weight:700;">✕ Reject → <span style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:1px 5px;">Ditolak</span></div>
+                    </div>
+                    <!-- Arrow -->
+                    <div style="display:flex;align-items:center;padding-top:28px;color:var(--cyan);font-size:.7em;flex-shrink:0;">→</div>
+                    <!-- Step 4: Monitoring -->
+                    <div style="flex:1;text-align:center;">
+                        <div style="background:linear-gradient(135deg,rgba(244,114,182,.2),rgba(244,114,182,.08));border:1.5px solid rgba(244,114,182,.5);border-radius:10px;padding:10px 6px;position:relative;">
+                            <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#f472b6,#ec4899);color:#fff;font-family:'Outfit';font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 4px;box-shadow:0 0 12px rgba(244,114,182,.4);">4</div>
+                            <div style="font-size:.5em;font-weight:800;color:#fff;margin-bottom:2px;">👁️ MONITORING</div>
+                            <div style="font-size:.38em;color:var(--text-dim);line-height:1.3;">Admin monitoring semua progress</div>
+                        </div>
+                    </div>
+                    <!-- Arrow -->
+                    <div style="display:flex;align-items:center;padding-top:28px;color:var(--cyan);font-size:.7em;flex-shrink:0;">→</div>
+                    <!-- Step 5: Operational -->
+                    <div style="flex:1;text-align:center;">
+                        <div style="background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(16,185,129,.08));border:1.5px solid rgba(16,185,129,.5);border-radius:10px;padding:10px 6px;position:relative;">
+                            <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-family:'Outfit';font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 4px;box-shadow:0 0 12px rgba(16,185,129,.4);">5</div>
+                            <div style="font-size:.5em;font-weight:800;color:#fff;margin-bottom:2px;">⚓ OPERATIONAL</div>
+                            <div style="font-size:.38em;color:var(--text-dim);line-height:1.3;">Crew sign-on ke kapal</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Pass labels -->
+                <div style="display:flex;justify-content:center;gap:40px;margin-top:8px;">
+                    <span class="pill pill-emerald"><i class="fa-solid fa-check"></i> Pass = Lanjut ke tahap berikutnya</span>
+                    <span class="pill pill-coral"><i class="fa-solid fa-xmark"></i> Reject = Kandidat ditolak</span>
+                    <span class="pill pill-cyan"><i class="fa-solid fa-eye"></i> Admin monitoring semua tahap</span>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Recruitment Flow</div></div>
+            </section>
+
+            <!-- SLIDE 3: TAMPILAN USER PELAMAR -->
+            <section data-transition="fade" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-coral">Modul 1 — Pelamar</span>
+                <h2 class="section-title">Tampilan User Pelamar</h2>
+                <p class="section-desc">Crew mencari lowongan & melamar langsung via portal publik.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_applicant_jobs.png" alt="Applicant Jobs"><div class="screenshot-label">Job Vacancies — Lowongan Kerja Publik</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-cyan">Halaman lowongan kerja publik</li>
+                            <li class="fl-coral">Filter departemen &amp; jenis kapal</li>
+                            <li class="fl-emerald">Pendaftaran mandiri (self-registration)</li>
+                            <li class="fl-purple">Upload CV &amp; dokumen sertifikat</li>
+                            <li class="fl-gold">Tracking status lamaran real-time</li>
+                            <li class="fl-blue">Notifikasi email otomatis</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="pill-row" style="margin-top:6px;">
+                    <span class="pill pill-cyan"><i class="fa-solid fa-globe"></i> Portal Publik</span>
+                    <span class="pill pill-emerald"><i class="fa-solid fa-user-plus"></i> Self-Registration</span>
+                    <span class="pill pill-gold"><i class="fa-solid fa-file-arrow-up"></i> Upload Dokumen</span>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Applicant View</div></div>
+            </section>
+
+            <!-- SLIDE 4: TAMPILAN PEREKRUT -->
+            <section data-transition="slide" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-coral">Modul 1 — Perekrut</span>
+                <h2 class="section-title">Tampilan Perekrut</h2>
+                <p class="section-desc">Kelola tugas, pipeline kandidat & monitoring rekrutmen.</p>
+                <div class="two-col">
+                    <div class="screenshot"><img src="presentation_assets/erp_recruitment_public_dashboard.png" alt="Recruiter Dashboard"><div class="screenshot-label">Dashboard Perekrut — KPI &amp; Pipeline</div></div>
+                    <div class="screenshot"><img src="presentation_assets/erp_recruitment_public_pipeline.png" alt="Recruiter Pipeline"><div class="screenshot-label">Pipeline Perekrut — Tracking Kandidat</div></div>
+                </div>
+                <div class="pill-row" style="margin-top:6px;">
+                    <span class="pill pill-coral"><i class="fa-solid fa-tasks"></i> KPI: Tugas, Review, Wawancara</span>
+                    <span class="pill pill-purple"><i class="fa-solid fa-filter"></i> Pipeline: Pending → Approved</span>
+                    <span class="pill pill-emerald"><i class="fa-solid fa-bell"></i> Notifikasi Tugas Baru</span>
+                    <span class="pill pill-gold"><i class="fa-solid fa-ranking-star"></i> Leaderboard Perekrut</span>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Recruiter View</div></div>
+            </section>
+
+            <!-- SLIDE 5: PORTAL INTEGRASI + ERP PIPELINE -->
+            <section data-transition="convex" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-coral">Modul 1 — Integrasi</span>
+                <h2 class="section-title">Portal Rekrutmen Publik — Integrasi ERP</h2>
+                <p class="section-desc">Data portal publik auto-sinkron ke ERP Pipeline admin.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_recruitment_pipeline.png" alt="Pipeline"><div class="screenshot-label">ERP Pipeline — Kandidat, Status &amp; Aksi</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-coral">KPI: Kandidat, Baru, Interview, Setujui</li>
+                            <li class="fl-purple">Status: Applied → Screening → Approved</li>
+                            <li class="fl-cyan">Data otomatis dari Recruitment DB</li>
+                            <li class="fl-emerald">Review profil &amp; dokumen kandidat</li>
+                            <li class="fl-gold">Approve / Reject + feedback</li>
+                            <li class="fl-blue">Kembalikan ke pipeline jika ditolak</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="pill-row" style="margin-top:6px;">
+                    <span class="pill pill-cyan"><i class="fa-solid fa-link"></i> Data Sinkron Portal ↔ ERP</span>
+                    <span class="pill pill-emerald"><i class="fa-solid fa-database"></i> Recruitment DB Terpisah</span>
+                    <span class="pill pill-purple"><i class="fa-solid fa-arrows-rotate"></i> Auto-Refresh Pipeline</span>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Portal Integration</div></div>
+            </section>
+
+            <!-- SLIDE 6: RECRUITMENT APPROVAL -->
+            <section data-transition="fade" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-coral">Modul 1 — Approval</span>
+                <h2 class="section-title">Recruitment — Pusat Persetujuan</h2>
+                <p class="section-desc">Pusat persetujuan kandidat — owner review dan approval final.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_recruitment_approval.png" alt="Approval"><div class="screenshot-label">Approval Center — Review &amp; Approve</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-coral">Review data lengkap sebelum approve</li>
+                            <li class="fl-emerald">Approve / Reject + catatan</li>
+                            <li class="fl-purple">Notifikasi otomatis ke recruiter</li>
+                            <li class="fl-cyan">Integrasi ke pembuatan kontrak</li>
+                            <li class="fl-gold">History keputusan tersimpan</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Approval</div></div>
+            </section>
+
+            <!-- SLIDE 7: ADMIN CHECKLIST -->
+            <section data-transition="slide" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-coral">Modul 1 — Checklist</span>
+                <h2 class="section-title">Admin Checklist — Stage 2</h2>
+                <p class="section-desc">Checklist kelengkapan dokumen crew.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_admin_checklist.png" alt="Checklist"><div class="screenshot-label">Admin Checklist — Dokumen & Tracking</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-gold">Checklist wajib per crew</li>
+                            <li class="fl-emerald">Progress tracking per item</li>
+                            <li class="fl-cyan">Verifikasi: passport, sertifikat, medical</li>
+                            <li class="fl-purple">Status: Complete, In Progress, Missing</li>
+                            <li class="fl-coral">Reminder dokumen belum lengkap</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Admin Checklist</div></div>
+            </section>
+
+            <!-- SLIDE 8: OPERATIONAL -->
+            <section data-transition="convex" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-coral">Modul 1 — Operasional</span>
+                <h2 class="section-title">Operational — Stage 3</h2>
+                <p class="section-desc">Jadwal penempatan crew di kapal.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_operational.png" alt="Operational"><div class="screenshot-label">Operational — Penugasan & Jadwal</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-orange">Jadwal penempatan crew di kapal</li>
+                            <li class="fl-emerald">Crew Assignment Board</li>
+                            <li class="fl-cyan">Sign-on / Sign-off tracking</li>
+                            <li class="fl-purple">Timeline Gantt view</li>
+                            <li class="fl-gold">Alert rotasi & akhir kontrak</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Operational</div></div>
+            </section>
+
+            <!-- SLIDE 9: DASHBOARD MODERN -->
+            <section data-transition="zoom" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-cyan">Modul 2</span>
+                <h2 class="section-title">Dashboard & Analytics — Modern View</h2>
+                <p class="section-desc">Monitoring real-time seluruh operasional perusahaan.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_dashboard_modern.png" alt="Dashboard Modern"><div class="screenshot-label">Dashboard Modern — KPI, Charts & Alerts</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-cyan">KPI Cards: Kontrak Aktif, Crew, Payroll</li>
+                            <li class="fl-purple">Alert kontrak prioritas + countdown</li>
+                            <li class="fl-emerald">Chart profit per kapal</li>
+                            <li class="fl-gold">Tren kontrak bulanan per tahun</li>
+                            <li class="fl-coral">Toggle Classic / Modern view</li>
+                            <li class="fl-blue">Quick action: Buat Kontrak Baru</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Dashboard</div></div>
+            </section>
+
+            <!-- SLIDE 10: CREW LIST -->
+            <section data-transition="slide" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-emerald">Modul 3</span>
+                <h2 class="section-title">Manajemen Kru — Data Crew</h2>
+                <p class="section-desc">Database crew lengkap: profil, status & biaya.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_crew_list.png" alt="Crew List"><div class="screenshot-label">Daftar Kru — Status, Kontrak & Biaya</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-cyan">KPI: Tersedia, Di Kapal, Cuti, Total</li>
+                            <li class="fl-gold">Ringkasan Biaya: IDR, USD, MYR</li>
+                            <li class="fl-purple">Search & filter status crew</li>
+                            <li class="fl-emerald">Status badge: ON BOARD, AVAILABLE</li>
+                            <li class="fl-coral">Info kontrak: sisa hari, kapal</li>
+                            <li class="fl-blue">Aksi: View, Edit, Delete</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Crew Management</div></div>
+            </section>
+
+            <!-- SLIDE 11: CREW DETAIL -->
+            <section data-transition="convex" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-emerald">Modul 3 — Detail</span>
+                <h2 class="section-title">Profil Digital Kru</h2>
+                <p class="section-desc">Profil lengkap crew: dokumen, sertifikat & riwayat.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_crew_detail.png" alt="Crew Detail"><div class="screenshot-label">Detail Kru — Data, Kontrak & Dokumen</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-cyan">Foto profil & data pribadi lengkap</li>
+                            <li class="fl-purple">Kontak & kontak darurat</li>
+                            <li class="fl-emerald">Riwayat kontrak & penempatan</li>
+                            <li class="fl-gold">Dokumen & sertifikat + expiry date</li>
+                            <li class="fl-coral">Skill Matrix & pengalaman</li>
+                            <li class="fl-blue">Upload dokumen langsung</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Crew Detail</div></div>
+            </section>
+
+            <!-- SLIDE 12: CONTRACT LIST -->
+            <section data-transition="slide" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-purple">Modul 4</span>
+                <h2 class="section-title">Manajemen Kontrak</h2>
+                <p class="section-desc">Kelola kontrak dari pembuatan hingga terminasi.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_contract_list.png" alt="Contract"><div class="screenshot-label">Daftar Kontrak — Status, Filter & Aksi</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-gold">Tabel kontrak: nomor, crew, jabatan, kapal</li>
+                            <li class="fl-emerald">Status: ACTIVE, PENDING, EXPIRED</li>
+                            <li class="fl-purple">Filter status, kapal, periode</li>
+                            <li class="fl-cyan">Tanggal naik & turun kapal</li>
+                            <li class="fl-coral">Quick: View, Edit, Renew, Terminate</li>
+                            <li class="fl-blue">Buat kontrak baru digital</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Contract Management</div></div>
+            </section>
+
+            <!-- SLIDE 13: CONTRACT DETAIL -->
+            <section data-transition="fade" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-purple">Modul 4 — Detail</span>
+                <h2 class="section-title">Detail & Lifecycle Kontrak</h2>
+                <p class="section-desc">Detail kontrak + approval workflow & notifikasi WA.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_contract_detail.png" alt="Contract Detail"><div class="screenshot-label">Detail Kontrak — Info, Crew & Timeline</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-gold">Info: nomor, durasi, tanggal</li>
+                            <li class="fl-emerald">Data crew & vessel otomatis</li>
+                            <li class="fl-purple">Workflow: Draft → Pending → Approved</li>
+                            <li class="fl-cyan">WhatsApp notifikasi approve/reject</li>
+                            <li class="fl-coral">Renewal & expiry alert</li>
+                            <li class="fl-blue">Generate PDF kontrak</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Contract Detail</div></div>
+            </section>
+
+            <!-- SLIDE 14: PAYROLL -->
+            <section data-transition="convex" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-gold">Modul 5</span>
+                <h2 class="section-title">Sistem Penggajian (Payroll)</h2>
+                <p class="section-desc">Gaji otomatis multi-currency + slip PDF profesional.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_payroll.png" alt="Payroll"><div class="screenshot-label">Payroll — Daftar Crew & Kalkulasi Gaji</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-gold">Gaji pokok, tunjangan, overtime</li>
+                            <li class="fl-coral">Potongan PPh21, BPJS, asuransi</li>
+                            <li class="fl-cyan">Multi-currency: IDR, USD, MYR</li>
+                            <li class="fl-emerald">Batch processing & export Excel</li>
+                            <li class="fl-purple">Kurs konversi otomatis</li>
+                            <li class="fl-blue">Detail per crew & per kapal</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Payroll</div></div>
+            </section>
+
+            <!-- SLIDE 15: PAYROLL SLIP GAJI -->
+            <section data-transition="slide" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-gold">Modul 5 — Slip Gaji</span>
+                <h2 class="section-title">Slip Gaji Digital & Email</h2>
+                <p class="section-desc">Generate & kirim slip gaji via Email/WhatsApp.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_payroll_slip.png" alt="Payroll Slip"><div class="screenshot-label">Slip Gaji — Income, Deduction & Net Pay</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-gold">Income: Basic, Advance, Actuality Salary</li>
+                            <li class="fl-coral">Deduction: Admin Bank, Insurance, PPh21</li>
+                            <li class="fl-emerald">GROSS & Total Deductions + NET Pay</li>
+                            <li class="fl-cyan">Kirim Slip Gaji via Email langsung</li>
+                            <li class="fl-purple">Print / Save PDF profesional</li>
+                            <li class="fl-blue">Info: Bank Transfer, Acc No, Bank</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Payroll Slip</div></div>
+            </section>
+
+            <!-- SLIDE 16: HRIS EMPLOYEE -->
+            <section data-transition="fade" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-blue">Modul 6</span>
+                <h2 class="section-title">HRIS — Data Karyawan</h2>
+                <p class="section-desc">Data karyawan internal + profil HRIS lengkap.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_employee_list.png" alt="Employee"><div class="screenshot-label">Data Karyawan HRIS — Profil & Departemen</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-coral">Profil: NIK, jabatan, departemen</li>
+                            <li class="fl-purple">Struktur organisasi per dept</li>
+                            <li class="fl-cyan">Direktori karyawan + search</li>
+                            <li class="fl-emerald">Slip gaji karyawan internal</li>
+                            <li class="fl-gold">Modern UI grid/list view</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>HRIS Employee</div></div>
+            </section>
+
+            <!-- SLIDE 17: ATTENDANCE -->
+            <section data-transition="convex" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-blue">Modul 6 — Absensi</span>
+                <h2 class="section-title">HRIS — Absensi Karyawan</h2>
+                <p class="section-desc">Monitoring kehadiran & manajemen cuti digital.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_attendance.png" alt="Attendance"><div class="screenshot-label">Absensi — Clock In/Out & Laporan</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-emerald">Clock In/Out digital + timestamp</li>
+                            <li class="fl-cyan">Laporan harian, mingguan, bulanan</li>
+                            <li class="fl-gold">Leave Management & approval cuti</li>
+                            <li class="fl-purple">Tren kehadiran & keterlambatan</li>
+                            <li class="fl-coral">Alert absensi tanpa keterangan</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Attendance</div></div>
+            </section>
+
+            <!-- SLIDE 18: PERFORMANCE -->
+            <section data-transition="slide" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-blue">Modul 6 — Performa</span>
+                <h2 class="section-title">HRIS — Performa Karyawan</h2>
+                <p class="section-desc">Scoring kinerja, KPI tracking & feedback periodik.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_performance.png" alt="Performance"><div class="screenshot-label">Performance Review — Scoring & KPI</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-purple">Performance scoring per metric</li>
+                            <li class="fl-gold">KPI tracking + progress bar</li>
+                            <li class="fl-emerald">Feedback & review atasan</li>
+                            <li class="fl-cyan">Self-assessment karyawan</li>
+                            <li class="fl-coral">Ranking & top performers</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Performance</div></div>
+            </section>
+            <!-- SLIDE 19: CLIENT -->
+            <section data-transition="zoom" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-cyan">Modul 7</span>
+                <h2 class="section-title">Manajemen Klien</h2>
+                <p class="section-desc">Profil klien, revenue tracking & KPI analytics.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_clients.png" alt="Clients"><div class="screenshot-label">Client Management — KPI & Revenue</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-blue">Profil klien: perusahaan, PIC, kontak</li>
+                            <li class="fl-cyan">KPI: total revenue, profit, growth</li>
+                            <li class="fl-emerald">Grafik revenue trend per klien</li>
+                            <li class="fl-gold">Crew aktif & kontrak per klien</li>
+                            <li class="fl-purple">Export Excel & PDF</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Client</div></div>
+            </section>
+
+            <!-- SLIDE 20: SMART IMPORT -->
+            <section data-transition="fade" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-emerald">Modul 8</span>
+                <h2 class="section-title">Smart Import</h2>
+                <p class="section-desc">Import massal Excel/CSV + AI detection kolom.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_smart_import.png" alt="Smart Import"><div class="screenshot-label">Smart Import — Upload, Mapping & Validasi</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-emerald">Upload Excel / CSV</li>
+                            <li class="fl-cyan">AI Header Detection auto-mapping</li>
+                            <li class="fl-gold">Preview data sebelum import</li>
+                            <li class="fl-purple">Validasi format & duplikasi</li>
+                            <li class="fl-coral">Error report per baris</li>
+                            <li class="fl-blue">Purge & Rollback support</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Smart Import</div></div>
+            </section>
+
+            <!-- SLIDE 21: DOCUMENT PARSER -->
+            <section data-transition="slide" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-emerald">Modul 8 — AI Scan</span>
+                <h2 class="section-title">Scan Sertifikat AI</h2>
+                <p class="section-desc">AI scan otomatis dokumen & sertifikat crew.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_document_parser.png" alt="Doc Parser"><div class="screenshot-label">AI Document Parser — Upload & Extract</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-cyan">Upload scan/foto (PDF, JPG, PNG)</li>
+                            <li class="fl-purple">AI ekstraksi nama, nomor, tanggal</li>
+                            <li class="fl-emerald">Preview hasil sebelum simpan</li>
+                            <li class="fl-gold">Auto-fill form crew</li>
+                            <li class="fl-coral">Validasi format & konsistensi</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>AI Parser</div></div>
+            </section>
+
+            <!-- SLIDE 22: REPORTS -->
+            <section data-transition="convex" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-purple">Modul 9</span>
+                <h2 class="section-title">Reports Center</h2>
+                <p class="section-desc">9 laporan operasional & keuangan komprehensif.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_reports.png" alt="Reports"><div class="screenshot-label">Reports Center — 9 Jenis Laporan</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-purple">Laporan Kontrak per periode</li>
+                            <li class="fl-cyan">Laporan Karyawan per dept</li>
+                            <li class="fl-gold">Payroll Summary & Tax Report</li>
+                            <li class="fl-coral">Expiring Report + countdown</li>
+                            <li class="fl-emerald">Audit Trail semua aktivitas</li>
+                            <li class="fl-blue">By Vessel & Client + Export</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Reports</div></div>
+            </section>
+
+            <!-- SLIDE 23: MONITORING -->
+            <section data-transition="fade" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-coral">Modul 10</span>
+                <h2 class="section-title">System Monitoring</h2>
+                <p class="section-desc">Health check sistem, integrasi & activity log.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_monitoring_fix.png" alt="Monitoring"><div class="screenshot-label">Monitoring — Health, Visitors & Integration</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-cyan">Visitors Hari Ini & Bulan Ini</li>
+                            <li class="fl-purple">Aplikasi Aktif & Pending Approval</li>
+                            <li class="fl-emerald">Integration Status: 2/2 Connected</li>
+                            <li class="fl-gold">Quick Links: Visitor, Activity Logs</li>
+                            <li class="fl-coral">Central monitoring semua sistem</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Monitoring</div></div>
+            </section>
+
+            <!-- SLIDE 24: ACTIVITY LOG & VISITORS -->
+            <section data-transition="slide" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-coral">Modul 10 — Log</span>
+                <h2 class="section-title">Activity Log & Visitors</h2>
+                <p class="section-desc">Log aktivitas user & tracking pengunjung.</p>
+                <div class="two-col">
+                    <div class="screenshot"><img src="presentation_assets/erp_activity_log.png" alt="Activity"><div class="screenshot-label">Activity Log — Riwayat User</div></div>
+                    <div class="screenshot"><img src="presentation_assets/erp_visitors.png" alt="Visitors"><div class="screenshot-label">Visitor Tracking — Analytics</div></div>
+                </div>
+                <div class="pill-row" style="margin-top:6px;">
+                    <span class="pill pill-purple"><i class="fa-solid fa-filter"></i> Filter Action</span>
+                    <span class="pill pill-cyan"><i class="fa-solid fa-user"></i> Filter User</span>
+                    <span class="pill pill-gold"><i class="fa-solid fa-calendar"></i> Date Range</span>
+                    <span class="pill pill-emerald"><i class="fa-solid fa-eye"></i> Unique Visitors</span>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Logs & Visitors</div></div>
+            </section>
+
+            <!-- SLIDE 25: INTEGRATION -->
+            <section data-transition="convex" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-cyan">Modul 11</span>
+                <h2 class="section-title">WhatsApp & Email Integration</h2>
+                <p class="section-desc">Notifikasi otomatis via WhatsApp & Email.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_integration.png" alt="Integration"><div class="screenshot-label">Integration — WhatsApp & Email Config</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-emerald">WhatsApp: kontrak approve/reject</li>
+                            <li class="fl-cyan">Reminder kontrak expired</li>
+                            <li class="fl-gold">Rich message + detail crew</li>
+                            <li class="fl-purple">Email payslip PDF otomatis</li>
+                            <li class="fl-coral">SMTP: Gmail / custom server</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>WhatsApp & Email</div></div>
+            </section>
+
+            <!-- SLIDE 26: NOTIFICATIONS -->
+            <section data-transition="fade" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-gold">Modul 12</span>
+                <h2 class="section-title">Notification Center</h2>
+                <p class="section-desc">Pusat notifikasi — alert, reminder, dan update.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_notifications.png" alt="Notif"><div class="screenshot-label">Notifications — Alerts & Updates</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-orange">Bell icon + counter baru</li>
+                            <li class="fl-cyan">Kontrak: created, approved, expired</li>
+                            <li class="fl-emerald">Alert dokumen mendekati expiry</li>
+                            <li class="fl-purple">Reminder jadwal & rotasi</li>
+                            <li class="fl-gold">Mark as read / mark all</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Notifications</div></div>
+            </section>
+
+            <!-- SLIDE 27: USER MANAGEMENT -->
+            <section data-transition="zoom" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-blue">Modul 13</span>
+                <h2 class="section-title">User Management & Security</h2>
+                <p class="section-desc">Hak akses bertingkat & kontrol keamanan data.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_users.png" alt="Users"><div class="screenshot-label">User Management — Roles & Access</div></div>
+                    <div>
+                        <table style="margin-top:0;">
+                            <thead><tr><th>Role</th><th>Akses</th></tr></thead>
+                            <tbody>
+                                <tr><td><span class="role-badge rb-super">Super Admin</span></td><td>Seluruh modul & settings</td></tr>
+                                <tr><td><span class="role-badge rb-admin">Admin</span></td><td>Crew, kontrak, operasional</td></tr>
+                                <tr><td><span class="role-badge rb-hr">HR / Recruiter</span></td><td>Recruitment, crew, dokumen</td></tr>
+                                <tr><td><span class="role-badge rb-finance">Finance</span></td><td>Payroll, invoices, keuangan</td></tr>
+                                <tr><td><span class="role-badge rb-viewer">Viewer</span></td><td>Read-only</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="pill-row" style="margin-top:4px;">
+                            <span class="pill pill-cyan"><i class="fa-solid fa-lock"></i> Session</span>
+                            <span class="pill pill-purple"><i class="fa-solid fa-key"></i> OTP 2FA</span>
+                            <span class="pill pill-emerald"><i class="fa-solid fa-shield-halved"></i> Reset</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>User Mgmt</div></div>
+            </section>
+
+            <!-- SLIDE 28: RANKS -->
+            <section data-transition="slide" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-blue">Modul 13 — Jabatan</span>
+                <h2 class="section-title">Master Jabatan (Rank)</h2>
+                <p class="section-desc">Hierarki jabatan pelaut — salary rates dan sertifikat wajib.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_ranks.png" alt="Ranks"><div class="screenshot-label">Ranks — Hierarki & Konfigurasi</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-blue">Captain → Officer → Engineer → Rating</li>
+                            <li class="fl-cyan">Gaji pokok & tunjangan per rank</li>
+                            <li class="fl-gold">Sertifikat wajib STCW/IMO</li>
+                            <li class="fl-purple">CRUD management fleksibel</li>
+                            <li class="fl-emerald">Otomasi payroll per rank</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Ranks</div></div>
+            </section>
+
+            <!-- SLIDE 29: SETTINGS -->
+            <section data-transition="convex" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-blue">Modul 13 — Setting</span>
+                <h2 class="section-title">Pengaturan & Konfigurasi</h2>
+                <p class="section-desc">Konfigurasi terpusat — profil, integrasi, tampilan, keamanan.</p>
+                <div class="two-col two-col-ss">
+                    <div class="screenshot"><img src="presentation_assets/erp_settings.png" alt="Settings"><div class="screenshot-label">Settings — Profile, SMTP & WhatsApp</div></div>
+                    <div>
+                        <ul class="feature-list">
+                            <li class="fl-purple">Company Profile: nama, logo</li>
+                            <li class="fl-emerald">WhatsApp Config: API key, template</li>
+                            <li class="fl-cyan">Email SMTP: host, port, auth</li>
+                            <li class="fl-gold">UI Mode: Classic / Modern</li>
+                            <li class="fl-coral">Database Tools & backup</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Settings</div></div>
+            </section>
+
+            <!-- SLIDE 30: FINANCE COMING SOON -->
+            <section data-transition="fade" data-background-gradient="linear-gradient(135deg, #f0f4f8, #e2e8f0)">
+                <span class="section-badge b-orange">Dalam Pengembangan</span>
+                <h2 class="section-title">Finance Module <span class="dev-badge"><i class="fa-solid fa-code"></i> Coming Soon</span></h2>
+                <p class="section-desc">Modul akuntansi lengkap — dalam pengembangan.</p>
+                <div class="module-grid module-grid-3" style="margin-top:8px;">
+                    <div class="module-card" style="opacity:.7;"><div class="module-icon mi-emerald"><i class="fa-solid fa-sitemap"></i></div><div class="module-title">Chart of Accounts</div><div class="module-desc">Struktur akun keuangan standar.</div></div>
+                    <div class="module-card" style="opacity:.7;"><div class="module-icon mi-cyan"><i class="fa-solid fa-book"></i></div><div class="module-title">Journal Entries</div><div class="module-desc">Transaksi debit-kredit + approval.</div></div>
+                    <div class="module-card" style="opacity:.7;"><div class="module-icon mi-purple"><i class="fa-solid fa-file-invoice-dollar"></i></div><div class="module-title">Invoices & Bills</div><div class="module-desc">Tagihan masuk/keluar + tracking.</div></div>
+                    <div class="module-card" style="opacity:.7;"><div class="module-icon mi-gold"><i class="fa-solid fa-building-columns"></i></div><div class="module-title">Cost Centers</div><div class="module-desc">Biaya per departemen & kapal.</div></div>
+                    <div class="module-card" style="opacity:.7;"><div class="module-icon mi-coral"><i class="fa-solid fa-chart-pie"></i></div><div class="module-title">Budget Tracking</div><div class="module-desc">Monitoring budget & spending.</div></div>
+                    <div class="module-card" style="opacity:.7;"><div class="module-icon mi-blue"><i class="fa-solid fa-money-bill-transfer"></i></div><div class="module-title">Cashflow & P/L</div><div class="module-desc">Laporan arus kas & profit/loss.</div></div>
+                </div>
+                <div class="slide-footer"><div class="fb"><i class="fa-solid fa-microchip"></i> PT Indo Ocean — ERP</div><div>Finance — Coming Soon</div></div>
+            </section>
+
+            <!-- SLIDE 31: THANK YOU -->
+            <section data-transition="zoom" data-background-gradient="linear-gradient(135deg, #f0f4f8 0%, #e8edf5 50%, #dce4f0 100%)">
+                <div style="text-align:center;padding-top:40px;">
+                    <div style="width:72px;height:72px;border-radius:14px;background:rgba(8,145,178,.08);border:2px solid rgba(8,145,178,.25);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;overflow:hidden">
+                        <img src="presentation_assets/logo-wave.jpg" alt="Logo" style="width:85%;height:85%;object-fit:contain;border-radius:8px">
+                    </div>
+                    <h2 style="font-size:2em!important;font-weight:900!important;color:#0c4a6e!important;font-family:'Outfit',sans-serif!important;margin:0!important;">Terima Kasih</h2>
+                    <p style="font-size:.7em;color:#475569!important;margin-top:3px">ERP System — PT Indo Ocean Crew Services</p>
+                    <div style="display:flex;gap:8px;max-width:600px;margin:14px auto 0;">
+                        <div style="flex:1;text-align:center;padding:10px 6px;border-radius:8px;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.08)"><div style="font-family:'Outfit';font-size:1.3em;font-weight:900;color:#0891b2">20+</div><div style="font-size:.45em;color:#64748b;letter-spacing:1px;text-transform:uppercase;margin-top:2px">Modul</div></div>
+                        <div style="flex:1;text-align:center;padding:10px 6px;border-radius:8px;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.08)"><div style="font-family:'Outfit';font-size:1.3em;font-weight:900;color:#7c3aed">5</div><div style="font-size:.45em;color:#64748b;letter-spacing:1px;text-transform:uppercase;margin-top:2px">Level Security</div></div>
+                        <div style="flex:1;text-align:center;padding:10px 6px;border-radius:8px;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.08)"><div style="font-family:'Outfit';font-size:1.3em;font-weight:900;color:#d97706">100%</div><div style="font-size:.45em;color:#64748b;letter-spacing:1px;text-transform:uppercase;margin-top:2px">Digital</div></div>
+                        <div style="flex:1;text-align:center;padding:10px 6px;border-radius:8px;background:rgba(255,255,255,.7);border:1px solid rgba(0,0,0,.08)"><div style="font-family:'Outfit';font-size:1.3em;font-weight:900;color:#059669">∞</div><div style="font-size:.45em;color:#64748b;letter-spacing:1px;text-transform:uppercase;margin-top:2px">Scalable</div></div>
+                    </div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:.5em;background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.08);border-radius:7px;padding:8px 12px;color:#475569;margin-top:12px;line-height:1.5;text-align:left;max-width:400px;display:inline-block;">
+                        <span style="color:#64748b;font-style:italic">// Akses sistem:</span><br>
+                        <span style="color:#0891b2">Dashboard</span>: <span style="color:#7c3aed">/dashboard</span><br>
+                        <span style="color:#0891b2">Crew</span>: <span style="color:#7c3aed">/crews</span><br>
+                        <span style="color:#0891b2">Payroll</span>: <span style="color:#7c3aed">/payroll</span><br>
+                        <span style="color:#0891b2">Recruitment</span>: <span style="color:#7c3aed">/recruitment</span><br>
+                        <span style="color:#0891b2">Reports</span>: <span style="color:#7c3aed">/reports</span>
+                    </div>
+                    <div style="margin-top:12px;font-size:.48em;color:#64748b;">© 2026 PT Indo Ocean Crew Services — Powered by CodeIgniter 4</div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true, slideNumber: 'c/t', showSlideNumber: 'all',
+            transition: 'convex', transitionSpeed: 'fast', backgroundTransition: 'zoom',
+            width: 1280, height: 720, margin: 0, center: false,
+            progress: true, controls: true, controlsTutorial: true, controlsLayout: 'bottom-right',
+            autoAnimateDuration: 0.4, autoAnimateEasing: 'cubic-bezier(0.25, 0.1, 0.25, 1)',
+            autoAnimateUnmatched: true,
+        });
+    </script>
+
+    <button class="fullscreen-btn" onclick="toggleFullscreen()" id="fsBtn">
+        <i class="fa-solid fa-expand"></i> <span id="fsTxt">Layar Penuh</span>
+    </button>
+    <script>
+    function toggleFullscreen(){
+        if(!document.fullscreenElement){
+            document.documentElement.requestFullscreen().catch(e=>console.log(e));
+            document.getElementById('fsTxt').textContent='Keluar';
+            document.getElementById('fsBtn').querySelector('i').className='fa-solid fa-compress';
+        }else{
+            document.exitFullscreen();
+            document.getElementById('fsTxt').textContent='Layar Penuh';
+            document.getElementById('fsBtn').querySelector('i').className='fa-solid fa-expand';
+        }
+    }
+    document.addEventListener('fullscreenchange',()=>{
+        if(!document.fullscreenElement){
+            document.getElementById('fsTxt').textContent='Layar Penuh';
+            document.getElementById('fsBtn').querySelector('i').className='fa-solid fa-expand';
+        }
+    });
+    </script>
+</body>
+</html>

@@ -32,6 +32,14 @@ class Payroll extends BaseController
         $year = (int) $this->input('year', date('Y'));
 
         $period = $this->periodModel->getOrCreate($month, $year);
+
+        // Cleanup orphaned payroll items (contract deleted but payroll_item still exists)
+        $this->db->query(
+            "DELETE FROM payroll_items WHERE payroll_period_id = {$period['id']} AND contract_id NOT IN (SELECT id FROM contracts)"
+        );
+        // Recalculate period totals after cleanup
+        $this->periodModel->updateTotals($period['id']);
+
         $items = $this->itemModel->getByPeriod($period['id']);
 
         // Preload full payslip data for all items (avoids separate API call)
@@ -108,9 +116,8 @@ class Payroll extends BaseController
             'flash' => $this->getFlash()
         ];
 
-        // Check UI mode from session
-        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
-        $view = $uiMode === 'modern' ? 'payroll/index_modern' : 'payroll/index';
+        // Payroll always uses modern view
+        $view = 'payroll/index_modern';
         
         return $this->view($view, $data);
     }
@@ -120,6 +127,20 @@ class Payroll extends BaseController
      */
     public function history()
     {
+        // --- Orphan cleanup: remove payroll items whose contracts no longer exist ---
+        $this->db->query("DELETE FROM payroll_items WHERE contract_id NOT IN (SELECT id FROM contracts)");
+
+        // Recalculate period totals from actual remaining items
+        $allPeriods = $this->db->query("SELECT id FROM payroll_periods");
+        while ($p = $allPeriods->fetch_assoc()) {
+            $pid = $p['id'];
+            $stats = $this->db->query("SELECT COUNT(*) as cnt, COALESCE(SUM(gross_salary),0) as gross, COALESCE(SUM(total_deductions),0) as ded, COALESCE(SUM(tax_amount),0) as tax, COALESCE(SUM(net_salary),0) as net FROM payroll_items WHERE payroll_period_id = $pid")->fetch_assoc();
+            $upd = $this->db->prepare("UPDATE payroll_periods SET total_crew=?, total_gross=?, total_deductions=?, total_tax=?, total_net=? WHERE id=?");
+            $upd->bind_param('iddddi', $stats['cnt'], $stats['gross'], $stats['ded'], $stats['tax'], $stats['net'], $pid);
+            $upd->execute();
+            $upd->close();
+        }
+
         // Get all periods, ordered by most recent first
         $sql = "SELECT * FROM payroll_periods ORDER BY period_year DESC, period_month DESC";
         $rawPeriods = $this->db->query($sql);
@@ -146,9 +167,8 @@ class Payroll extends BaseController
             'flash' => $this->getFlash()
         ];
 
-        // Check UI mode from session
-        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
-        $view = $uiMode === 'modern' ? 'payroll/history_modern' : 'payroll/history';
+        // Payroll always uses modern view
+        $view = 'payroll/history_modern';
 
         return $this->view($view, $data);
     }
@@ -175,12 +195,31 @@ class Payroll extends BaseController
         ]);
 
         $this->setFlash('success', 'Payroll generated successfully');
+        
+        // Notify: Payroll Generated
+        try {
+            $notifModel = new \App\Models\NotificationModel($this->db);
+            $monthNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            $periodRefresh = $this->periodModel->find($period['id']);
+            $totalCrew = $periodRefresh['total_crew'] ?? 0;
+            $payDay = (new SettingsModel($this->db))->get('payroll_day', '15');
+            $msg = "\xf0\x9f\x92\xb0 *PAYROLL DI-GENERATE*\n\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\n\n"
+                 . "\xf0\x9f\x93\x85 *Periode:* {$monthNames[$month]} {$year}\n"
+                 . "\xf0\x9f\x91\xa5 *Total Crew:* {$totalCrew} orang\n"
+                 . "\xf0\x9f\x93\x8a *Status:* Processing\n\n"
+                 . "Payroll telah di-generate.\nSilakan review dan finalisasi sebelum tanggal {$payDay}.\n\n"
+                 . "\xe2\x8f\xb0 " . date('d M Y, H:i') . "\n\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\n\xe2\x80\x94 _IndoOcean ERP_ \xf0\x9f\x8c\x8a";
+            $notifModel->notify('info', 'Payroll Di-generate', $msg, 'payroll?month=' . $month . '&year=' . $year);
+        } catch (\Exception $e) {
+            error_log('Payroll process notification failed: ' . $e->getMessage());
+        }
+        
         $this->redirect('payroll?month=' . $month . '&year=' . $year);
     }
 
     public function complete()
     {
-        $this->requirePermission('payroll', 'approve');
+        $this->requirePermission('payroll', 'edit');
         if (!$this->isPost()) {
             $this->redirect('payroll');
         }
@@ -195,7 +234,74 @@ class Payroll extends BaseController
         $this->db->query("UPDATE payroll_items SET status = 'paid', payment_date = CURDATE() WHERE payroll_period_id = $periodId");
 
         $this->setFlash('success', 'Payroll marked as completed');
+        
+        // Notify: Payroll Completed
+        try {
+            $notifModel = new \App\Models\NotificationModel($this->db);
+            $period = $this->periodModel->find($periodId);
+            $monthNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            $monthName = $monthNames[$period['month'] ?? $period['period_month'] ?? 1] ?? '';
+            $year = $period['year'] ?? $period['period_year'] ?? date('Y');
+            $totalGross = number_format($period['total_gross'] ?? 0, 2);
+            $totalTax = number_format($period['total_tax'] ?? 0, 2);
+            $totalNet = number_format($period['total_net'] ?? 0, 2);
+            $totalCrew = $period['total_crew'] ?? 0;
+            $payDay = (new SettingsModel($this->db))->get('payroll_day', '15');
+            $msg = "\xe2\x9c\x85 *PAYROLL SELESAI*\n\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\n\n"
+                 . "\xf0\x9f\x93\x85 *Periode:* {$monthName} {$year}\n"
+                 . "\xf0\x9f\x93\x8a *Status:* COMPLETED \xe2\x9c\x85\n\n"
+                 . "\xe2\x94\x8c\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\n"
+                 . "\xe2\x94\x82 \xf0\x9f\x91\xa5 Total Crew : {$totalCrew}\n"
+                 . "\xe2\x94\x82 \xf0\x9f\x92\xb5 Gross      : \${$totalGross}\n"
+                 . "\xe2\x94\x82 \xf0\x9f\x8f\xa6 Tax        : \${$totalTax}\n"
+                 . "\xe2\x94\x82 \xe2\x9c\x85 Net Pay    : \${$totalNet}\n"
+                 . "\xe2\x94\x94\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\xe2\x94\x80\n\n"
+                 . "Semua payslip ditandai *PAID*.\n"
+                 . "Tanggal bayar: {$payDay} {$monthName} {$year}\n\n"
+                 . "\xe2\x8f\xb0 " . date('d M Y, H:i') . "\n\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\xe2\x94\x81\n\xe2\x80\x94 _IndoOcean ERP_ \xf0\x9f\x8c\x8a";
+            $notifModel->notify('success', 'Payroll Selesai', $msg, 'payroll/' . $periodId);
+        } catch (\Exception $e) {
+            error_log('Payroll complete notification failed: ' . $e->getMessage());
+        }
+        
         $this->redirect('payroll');
+    }
+
+    /**
+     * API: Mark payroll period as complete (AJAX)
+     */
+    public function apiComplete()
+    {
+        if (!$this->isPost()) {
+            $this->json(['success' => false, 'message' => 'POST required'], 405);
+        }
+
+        $periodId = $this->input('period_id');
+        if (!$periodId) {
+            $this->json(['success' => false, 'message' => 'Missing period_id'], 400);
+        }
+
+        try {
+            $this->periodModel->update($periodId, [
+                'status' => PAYROLL_COMPLETED
+            ]);
+
+            $this->db->query("UPDATE payroll_items SET status = 'paid', payment_date = CURDATE() WHERE payroll_period_id = " . intval($periodId));
+
+            // Notification
+            try {
+                $notifModel = new \App\Models\NotificationModel($this->db);
+                $period = $this->periodModel->find($periodId);
+                $monthNames = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                $mn = $monthNames[$period['period_month'] ?? 1] ?? '';
+                $yr = $period['period_year'] ?? date('Y');
+                $notifModel->notify('success', 'Payroll Selesai', "Payroll {$mn} {$yr} telah selesai", 'payroll');
+            } catch (\Exception $e) {}
+
+            $this->json(['success' => true, 'message' => 'Payroll berhasil ditandai selesai']);
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
     }
 
     public function show($periodId)
@@ -214,9 +320,8 @@ class Payroll extends BaseController
             'flash' => $this->getFlash()
         ];
 
-        // Check UI mode from session
-        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
-        $view = $uiMode === 'modern' ? 'payroll/view_modern' : 'payroll/view';
+        // Payroll always uses modern view
+        $view = 'payroll/view_modern';
 
         return $this->view($view, $data);
     }
@@ -299,8 +404,11 @@ class Payroll extends BaseController
                 continue;
             }
 
-            // Send email
-            if ($mailer->sendPayslip($crew['email'], $crew['full_name'], $period, $item)) {
+            // Generate PDF attachment
+            $pdfPath = $this->generatePayslipPdf($item['id']);
+
+            // Send email with PDF
+            if ($mailer->sendPayslip($crew['email'], $crew['full_name'], $period, $item, $pdfPath)) {
                 $this->itemModel->update($item['id'], [
                     'email_status' => 'sent',
                     'email_sent_at' => date('Y-m-d H:i:s'),
@@ -313,6 +421,11 @@ class Payroll extends BaseController
                     'email_failure_reason' => implode(', ', $mailer->getErrors())
                 ]);
                 $countFailed++;
+            }
+
+            // Clean up temp PDF
+            if ($pdfPath && file_exists($pdfPath)) {
+                @unlink($pdfPath);
             }
         }
 
@@ -444,52 +557,44 @@ class Payroll extends BaseController
         
         $period = $this->periodModel->find($item['payroll_period_id']);
         
-        // Try to send email
+        // Generate PDF attachment
+        $pdfPath = $this->generatePayslipPdf($itemId);
+
+        // Try to send email with PDF
         try {
-            if (class_exists('\\App\\Libraries\\Mailer')) {
-                $mailer = new \App\Libraries\Mailer();
-                $sent = $mailer->sendPayslip($email, $item['crew_name'], $period, $item);
+            require_once APPPATH . 'Libraries/Mailer.php';
+            $mailer = new \App\Libraries\Mailer();
+            $sent = $mailer->sendPayslip($email, $item['crew_name'], $period, $item, $pdfPath);
+            
+            // Clean up temp PDF
+            if ($pdfPath && file_exists($pdfPath)) @unlink($pdfPath);
+            
+            if ($sent) {
+                $this->itemModel->update($itemId, [
+                    'email_status' => 'sent',
+                    'email_sent_at' => date('Y-m-d H:i:s'),
+                    'email_failure_reason' => null
+                ]);
                 
-                if ($sent) {
-                    $this->itemModel->update($itemId, [
-                        'email_status' => 'sent',
-                        'email_sent_at' => date('Y-m-d H:i:s'),
-                        'email_failure_reason' => null
-                    ]);
-                    
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => true, 'message' => 'Slip gaji berhasil dikirim ke ' . $email]);
-                    exit;
-                }
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'message' => 'Slip gaji (PDF) berhasil dikirim ke ' . $email]);
+                exit;
+            } else {
+                $errors = $mailer->getErrors();
+                $this->itemModel->update($itemId, [
+                    'email_status' => 'failed',
+                    'email_failure_reason' => implode(', ', $errors)
+                ]);
+                
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Gagal mengirim email: ' . implode(', ', $errors)]);
+                exit;
             }
             
-            // Fallback: use PHP mail()
-            $monthNames = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-            $periodText = ($monthNames[$period['period_month']] ?? '') . ' ' . $period['period_year'];
-            $subject = "Slip Gaji - {$item['crew_name']} - {$periodText}";
-            $body = "Slip gaji Anda untuk periode {$periodText} telah tersedia.\n\n";
-            $body .= "Nama: {$item['crew_name']}\n";
-            $body .= "Kapal: {$item['vessel_name']}\n";
-            $body .= "Gaji Bersih: {$item['currency_code']} " . number_format($item['net_salary'], 0, ',', '.') . "\n\n";
-            $body .= "Silakan login ke ERP untuk melihat detail slip gaji.\n";
-            $body .= "Link: " . BASE_URL . "payroll/payslip/{$itemId}\n\n";
-            $body .= "PT. Indo Oceancrew Services";
-            
-            $headers = "From: PT Indo Oceancrew Services <ios@indooceancrew.co.id>\r\n";
-            $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-            
-            mail($email, $subject, $body, $headers);
-            
-            $this->itemModel->update($itemId, [
-                'email_status' => 'sent',
-                'email_sent_at' => date('Y-m-d H:i:s')
-            ]);
-            
-            header('Content-Type: application/json');
-            echo json_encode(['success' => true, 'message' => 'Slip gaji berhasil dikirim ke ' . $email]);
-            exit;
-            
         } catch (\Exception $e) {
+            // Clean up temp PDF on error
+            if (isset($pdfPath) && $pdfPath && file_exists($pdfPath)) @unlink($pdfPath);
+            
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Gagal mengirim email: ' . $e->getMessage()]);
             exit;
@@ -565,13 +670,28 @@ class Payroll extends BaseController
             exit;
         }
         
-        // Auto-fix exchange_rate column if too small
+        // Auto-fix money columns if too small for IDR values
         try {
-            $colInfo = $this->db->query("SHOW COLUMNS FROM payroll_items WHERE Field = 'exchange_rate'");
-            if ($colInfo && $row = $colInfo->fetch_assoc()) {
-                if (preg_match('/decimal\((\d+),(\d+)\)/i', $row['Type'], $m)) {
-                    if ((intval($m[1]) - intval($m[2])) < 6) {
-                        $this->db->query("ALTER TABLE payroll_items MODIFY COLUMN exchange_rate DECIMAL(15,4) DEFAULT 0");
+            $colsToFix = [
+                'exchange_rate' => 'DECIMAL(15,4) DEFAULT 0',
+                'gross_salary' => 'DECIMAL(15,2) DEFAULT 0',
+                'net_salary' => 'DECIMAL(15,2) DEFAULT 0',
+                'tax_amount' => 'DECIMAL(15,2) DEFAULT 0',
+                'total_deductions' => 'DECIMAL(15,2) DEFAULT 0',
+                'basic_salary' => 'DECIMAL(15,2) DEFAULT 0',
+                'overtime' => 'DECIMAL(15,2) DEFAULT 0',
+                'reimbursement' => 'DECIMAL(15,2) DEFAULT 0',
+                'loans' => 'DECIMAL(15,2) DEFAULT 0',
+                'insurance' => 'DECIMAL(15,2) DEFAULT 0',
+                'admin_bank_fee' => 'DECIMAL(15,2) DEFAULT 0',
+            ];
+            $colResult = $this->db->query("SHOW COLUMNS FROM payroll_items");
+            if ($colResult) {
+                while ($row = $colResult->fetch_assoc()) {
+                    if (isset($colsToFix[$row['Field']]) && preg_match('/decimal\((\d+),(\d+)\)/i', $row['Type'], $m)) {
+                        if (intval($m[1]) < 15) {
+                            $this->db->query("ALTER TABLE payroll_items MODIFY COLUMN {$row['Field']} {$colsToFix[$row['Field']]}");
+                        }
                     }
                 }
             }
@@ -637,14 +757,35 @@ class Payroll extends BaseController
         $merged = array_merge($existingItem, $updateData);
         
         if (!isset($updateData['gross_salary'])) {
-            $grossSalary = (float)$merged['basic_salary'] + (float)($merged['overtime'] ?? 0) + (float)($merged['leave_pay'] ?? 0) + (float)($merged['bonus'] ?? 0) + (float)($merged['other_allowance'] ?? 0);
-            $totalDeductions = (float)($merged['insurance'] ?? 0) + (float)($merged['medical'] ?? 0) + (float)($merged['advance'] ?? 0) + (float)($merged['other_deductions'] ?? 0) + (float)($merged['admin_bank_fee'] ?? 0);
+            // Get exchange rate for conversion to IDR
+            // IMPORTANT: If currency is already IDR, exchange rate MUST be 1
+            $origCurrency = $merged['original_currency'] ?? $merged['currency_code'] ?? 'IDR';
+            if ($origCurrency === 'IDR') {
+                $exchRate = 1;
+            } else {
+                $exchRate = (float)($merged['exchange_rate'] ?? 1);
+                if ($exchRate <= 0) $exchRate = 1;
+            }
+            
+            // Actualy salary in original currency
+            $actualySalary = (float)$merged['basic_salary'] + (float)($merged['overtime'] ?? $merged['overtime_allowance'] ?? 0);
+            
+            // Convert to IDR
+            $idrSalary = $actualySalary * $exchRate;
+            
+            // Gross = IDR salary + reimbursement
+            $reimbursement = (float)($merged['reimbursement'] ?? 0);
+            $grossSalary = $idrSalary + $reimbursement;
+            
+            // Deductions (already in IDR)
+            $totalDeductions = (float)($merged['insurance'] ?? 0) + (float)($merged['medical'] ?? 0) + (float)($merged['advance'] ?? 0) + (float)($merged['other_deductions'] ?? 0) + (float)($merged['admin_bank_fee'] ?? 0) + (float)($merged['loans'] ?? 0);
             $taxRate = (float)($merged['tax_rate'] ?? 2.5);
-            $taxAmount = ($grossSalary - $totalDeductions) * ($taxRate / 100);
+            $taxBase = $grossSalary - $totalDeductions;
+            $taxAmount = $taxBase > 0 ? $taxBase * ($taxRate / 100) : 0;
             $netSalary = $grossSalary - $totalDeductions - $taxAmount;
             
             $updateData['gross_salary'] = round($grossSalary, 2);
-            $updateData['total_deductions'] = round($totalDeductions, 2);
+            $updateData['total_deductions'] = round($totalDeductions + $taxAmount, 2);
             $updateData['tax_amount'] = round($taxAmount, 2);
             $updateData['net_salary'] = round($netSalary, 2);
         }
@@ -698,51 +839,123 @@ class Payroll extends BaseController
         // Get period
         $period = $this->periodModel->find($item['payroll_period_id']);
         
-        // Try to send email
+        // Generate PDF attachment
+        $pdfPath = $this->generatePayslipPdf($itemId);
+
+        // Try to send email with PDF
         try {
-            $mailerSent = false;
-            $mailerFile = APPPATH . 'Libraries/Mailer.php';
-            if (file_exists($mailerFile)) {
-                require_once $mailerFile;
-                if (class_exists('\\App\\Libraries\\Mailer')) {
-                    $mailer = new \App\Libraries\Mailer();
-                    $mailerSent = $mailer->sendPayslip($email, $item['crew_name'], $period, $item);
-                }
+            require_once APPPATH . 'Libraries/Mailer.php';
+            $mailer = new \App\Libraries\Mailer();
+            $mailerSent = $mailer->sendPayslip($email, $item['crew_name'], $period, $item, $pdfPath);
+            
+            // Clean up temp PDF
+            if ($pdfPath && file_exists($pdfPath)) @unlink($pdfPath);
+            
+            if ($mailerSent) {
+                $this->itemModel->update($itemId, [
+                    'status' => 'paid',
+                    'email_sent_at' => date('Y-m-d H:i:s'),
+                    'email_status' => 'sent',
+                    'email_failure_reason' => null
+                ]);
+                echo json_encode(['success' => true, 'message' => 'Slip gaji (PDF) berhasil dikirim ke ' . $email]);
+            } else {
+                $errors = $mailer->getErrors();
+                $this->itemModel->update($itemId, [
+                    'email_status' => 'failed',
+                    'email_failure_reason' => implode(', ', $errors)
+                ]);
+                echo json_encode(['success' => false, 'message' => 'Gagal mengirim email: ' . implode(', ', $errors)]);
             }
-            
-            if (!$mailerSent) {
-                // Fallback: use PHP mail()
-                $monthNames = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-                $periodText = ($monthNames[$period['period_month']] ?? '') . ' ' . $period['period_year'];
-                $subject = "Slip Gaji - {$item['crew_name']} - {$periodText}";
-                $body = "Slip gaji Anda untuk periode {$periodText} telah tersedia.\n\n";
-                $body .= "Nama: {$item['crew_name']}\n";
-                $body .= "Kapal: {$item['vessel_name']}\n";
-                $body .= "Gaji Bersih: Rp " . number_format($item['net_salary'] ?? 0, 0, ',', '.') . "\n\n";
-                $body .= "Silakan login ke ERP untuk melihat detail slip gaji.\n";
-                $body .= "Link: " . BASE_URL . "payroll/payslip/{$itemId}\n\n";
-                $body .= "PT. Indo Oceancrew Services";
-                
-                $headers = "From: PT Indo Oceancrew Services <ios@indooceancrew.co.id>\r\n";
-                $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-                
-                mail($email, $subject, $body, $headers);
-            }
-            
-            // Update status to paid + email_sent_at
-            $updateData = [
-                'status' => 'paid',
-                'email_sent_at' => date('Y-m-d H:i:s'),
-                'email_status' => 'sent'
-            ];
-            $this->itemModel->update($itemId, $updateData);
-            
-            echo json_encode(['success' => true, 'message' => 'Slip gaji berhasil dikirim ke ' . $email]);
             
         } catch (\Exception $e) {
+            // Clean up temp PDF on error
+            if (isset($pdfPath) && $pdfPath && file_exists($pdfPath)) @unlink($pdfPath);
+            
             echo json_encode(['success' => false, 'message' => 'Gagal mengirim email: ' . $e->getMessage()]);
         }
         exit;
+    }
+
+    /**
+     * Generate payslip PDF from HTML template using DOMPDF
+     * @param int $itemId Payroll item ID
+     * @return string|null Path to generated PDF file, or null on failure
+     */
+    private function generatePayslipPdf($itemId)
+    {
+        try {
+            // Get payroll item
+            $sql = "SELECT pi.*, c.contract_no, c.crew_id
+                    FROM payroll_items pi
+                    LEFT JOIN contracts c ON pi.contract_id = c.id
+                    WHERE pi.id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param('i', $itemId);
+            $stmt->execute();
+            $item = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            
+            if (!$item) return null;
+            
+            // Get period
+            $period = $this->periodModel->find($item['payroll_period_id']);
+            
+            // Get crew bank details
+            $crew = ['bank_holder' => '', 'bank_account' => '', 'bank_name' => ''];
+            if (!empty($item['crew_id'])) {
+                $crewStmt = $this->db->prepare("SELECT full_name, bank_holder, bank_account, bank_name, email FROM crews WHERE id = ?");
+                $crewStmt->bind_param('i', $item['crew_id']);
+                $crewStmt->execute();
+                $crewData = $crewStmt->get_result()->fetch_assoc();
+                $crewStmt->close();
+                if ($crewData) $crew = $crewData;
+            }
+            
+            $settingsModel = new SettingsModel($this->db);
+            $payroll_day = $settingsModel->get('payroll_day', '15');
+            
+            // Render the payslip HTML template (DOMPDF-compatible version)
+            ob_start();
+            include APPPATH . 'Views/payroll/payslip_pdf_dompdf.php';
+            $html = ob_get_clean();
+            
+            // Convert logo URL to embedded base64 for PDF
+            $logoPath = FCPATH . 'assets/images/logo.png';
+            if (file_exists($logoPath)) {
+                $logoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
+                $html = str_replace(
+                    [BASE_URL . 'assets/images/logo.png', 'assets/images/logo.png'],
+                    [$logoBase64, $logoBase64],
+                    $html
+                );
+            }
+            
+            // Generate PDF using DOMPDF
+            $options = new \Dompdf\Options();
+            $options->set('isRemoteEnabled', true);
+            $options->set('isHtml5ParserEnabled', true);
+            $options->set('defaultFont', 'Arial');
+            
+            $dompdf = new \Dompdf\Dompdf($options);
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+            
+            // Save to temp file
+            $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $item['crew_name'] ?? 'crew');
+            $monthStr = str_pad($period['period_month'] ?? 1, 2, '0', STR_PAD_LEFT);
+            $yearStr = $period['period_year'] ?? date('Y');
+            $tempPath = sys_get_temp_dir() . "/payslip_{$safeName}_{$yearStr}_{$monthStr}_" . uniqid() . '.pdf';
+            
+            file_put_contents($tempPath, $dompdf->output());
+            
+            return $tempPath;
+            
+        } catch (\Exception $e) {
+            error_log('[PAYROLL] PDF generation failed: ' . $e->getMessage());
+            return null;
+        }
     }
 
     /**

@@ -17,15 +17,15 @@ class Monitoring extends BaseController
         $isWindows = (PHP_OS_FAMILY === 'Windows' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
 
         if (!$isWindows) {
-            // Docker / Linux / NAS - use hardcoded values
-            $dbHost = '172.17.0.3';
-            $dbUser = 'root';
-            $dbPass = 'rahasia123';
-            $dbName = 'recruitment_db';
-            $dbPort = 3306;
+            // Docker / Linux / NAS - read from ENV
+            $dbHost = $_ENV['DB_HOST'] ?? 'mysql';
+            $dbUser = $_ENV['DB_USER'] ?? 'root';
+            $dbPass = $_ENV['DB_PASS'] ?? '';
+            $dbName = $_ENV['RECRUITMENT_DB_NAME'] ?? 'recruitment_db';
+            $dbPort = (int)($_ENV['DB_PORT'] ?? 3306);
 
             // Try primary host, then fallbacks
-            $hostsToTry = ['172.17.0.3', '172.17.0.2', '172.17.0.4', '172.17.0.5'];
+            $hostsToTry = [$dbHost, '172.17.0.3', '172.17.0.2', '172.17.0.4'];
             foreach ($hostsToTry as $host) {
                 try {
                     $conn = @new \mysqli($host, $dbUser, $dbPass, $dbName, $dbPort);
@@ -70,7 +70,8 @@ class Monitoring extends BaseController
             'integration_status' => $this->getIntegrationStatus()
         ];
 
-        return $this->view('monitoring/index', [
+        // Use modern view (full layout with sidebar)
+        return $this->view('monitoring/index_modern', [
             'title' => 'Monitoring Dashboard',
             'currentPage' => 'monitoring',
             'stats' => $stats,
@@ -110,7 +111,7 @@ class Monitoring extends BaseController
         $stats = $this->getVisitorStatistics($period);
 
         // Check UI mode
-        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
         $viewFile = $uiMode === 'modern' ? 'monitoring/visitors_modern' : 'monitoring/visitors';
 
         return $this->view($viewFile, [
@@ -154,7 +155,7 @@ class Monitoring extends BaseController
         }
 
         // Check UI mode
-        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
         $viewFile = $uiMode === 'modern' ? 'monitoring/activity_modern' : 'monitoring/activity';
 
         return $this->view($viewFile, [
@@ -181,7 +182,7 @@ class Monitoring extends BaseController
         ];
 
         // Check UI mode
-        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
         $viewFile = $uiMode === 'modern' ? 'monitoring/integration_modern' : 'monitoring/integration';
 
         return $this->view($viewFile, [

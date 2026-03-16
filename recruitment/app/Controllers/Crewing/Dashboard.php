@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once APPPATH . 'Controllers/BaseController.php';
 
 /**
@@ -62,14 +62,18 @@ class Dashboard extends BaseController {
             "),
         ];
         
-        // Get pipeline data for assigned applications
+        // Get pipeline data - only show core statuses matching the pipeline page
         $pipelineStmt = $this->db->prepare("
-            SELECT s.id, s.name, s.color, COUNT(a.id) as count
+            SELECT s.id, s.name, s.color, 
+                   COUNT(a.id) as count
             FROM application_statuses s
             LEFT JOIN applications a ON s.id = a.status_id
-            LEFT JOIN application_assignments aa ON a.id = aa.application_id AND aa.status = 'active'
-            WHERE aa.assigned_to = ? OR aa.assigned_to IS NULL
-            GROUP BY s.id
+                AND a.id IN (
+                    SELECT aa2.application_id FROM application_assignments aa2 
+                    WHERE aa2.assigned_to = ? AND aa2.status = 'active'
+                )
+            WHERE s.sort_order <= 6
+            GROUP BY s.id, s.name, s.color, s.sort_order
             ORDER BY s.sort_order
         ");
         $pipelineStmt->bind_param('i', $crewingId);

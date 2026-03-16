@@ -1,0 +1,17 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:80/PT_indoocean/PT_indoocean/erp",
+  "backendAuthType": "public",
+  "projectPath": "C:\\laragon\\www\\PT_indoocean\\PT_indoocean\\erp",
+  "executionArgs": {
+    "projectName": "erp",
+    "projectPath": "c:\\laragon\\www\\PT_indoocean\\PT_indoocean\\erp",
+    "testIds": [],
+    "additionalInstruction": "Generate and run frontend tests for this ERP ERP project. The app is running at http://localhost/PT_indoocean/PT_indoocean/erp. Use PRD.md in the project root as the product specification and focus on general frontend coverage (authentication, dashboard, and main modules).",
+    "serverMode": "development",
+    "envs": {}
+  },
+  "serverPort": 62615
+}

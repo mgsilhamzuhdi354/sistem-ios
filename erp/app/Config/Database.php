@@ -9,6 +9,7 @@
 // Note: Docker uses DB_USER/DB_PASS, .env uses DB_USERNAME/DB_PASSWORD
 
 // Helper function to get env var from multiple sources
+if (!function_exists('getEnvVar')) {
 function getEnvVar($keys, $default = '') {
     // $keys can be a string or array of possible key names
     if (!is_array($keys)) $keys = [$keys];
@@ -24,6 +25,7 @@ function getEnvVar($keys, $default = '') {
     }
     return $default;
 }
+}
 
 // =====================================================
 // AUTO-DETECT: Docker (Linux) vs Laragon (Windows)
@@ -37,7 +39,7 @@ if (!$isWindows) {
     // =================================================
     $nas_ip             = getEnvVar(['DB_HOST'], 'mysql');  // Docker service name
     $nas_user           = getEnvVar(['DB_USER', 'DB_USERNAME'], 'root');
-    $nas_password       = getEnvVar(['DB_PASS', 'DB_PASSWORD'], 'rahasia123');
+    $nas_password       = getEnvVar(['DB_PASS', 'DB_PASSWORD'], '');
     $nas_port           = (int) getEnvVar(['DB_PORT'], 3306);
     $nas_db_default     = getEnvVar(['ERP_DB_NAME', 'DB_DATABASE'], 'erp_db');
     $nas_db_recruitment = getEnvVar(['RECRUITMENT_DB_NAME', 'DB_DATABASE_RECRUITMENT'], 'recruitment_db');

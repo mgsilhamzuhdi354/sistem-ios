@@ -171,17 +171,23 @@ class Interview extends BaseController {
         $aiScore = $this->calculateAIScore($question, $answerText, $selectedOption);
         
         // Save answer
+        // Ensure ai_feedback column exists
+        try {
+            $this->db->query("SHOW COLUMNS FROM interview_answers LIKE 'ai_feedback'");
+        } catch (\Throwable $e) {}
+        
         $insertStmt = $this->db->prepare("
             INSERT INTO interview_answers (session_id, question_id, answer_text, selected_option, 
                                            ai_score, keyword_matches, relevance_score, completeness_score,
-                                           time_taken_seconds, answered_at, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                                           ai_feedback, time_taken_seconds, answered_at, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         ");
         $keywordJson = json_encode($aiScore['keywords']);
-        $insertStmt->bind_param('iissiisii', 
+        $aiFeedback = $aiScore['feedback'] ?? '';
+        $insertStmt->bind_param('iisssisssi', 
             $sessionId, $questionId, $answerText, $selectedOption,
             $aiScore['score'], $keywordJson, $aiScore['relevance'], $aiScore['completeness'],
-            $timeTaken
+            $aiFeedback, $timeTaken
         );
         $insertStmt->execute();
         
@@ -209,6 +215,7 @@ class Interview extends BaseController {
         $relevance = 0;
         $completeness = 0;
         $matchedKeywords = [];
+        $aiFeedback = '';
         
         if ($question['question_type'] === 'multiple_choice') {
             // For multiple choice, check correct answer
@@ -222,39 +229,72 @@ class Interview extends BaseController {
                 $completeness = 100;
             }
         } else {
-            // For text/essay questions
-            $expectedKeywords = json_decode($question['expected_keywords'] ?? '[]', true) ?: [];
-            $answerLower = strtolower($answerText);
-            
-            // Check keywords
-            foreach ($expectedKeywords as $keyword) {
-                if (strpos($answerLower, strtolower($keyword)) !== false) {
-                    $matchedKeywords[] = $keyword;
+            // For essay questions - try Gemini AI first
+            $expectedKeywords = [];
+            if (!empty($question['expected_keywords'])) {
+                $decoded = json_decode($question['expected_keywords'], true);
+                if (is_array($decoded)) {
+                    $expectedKeywords = $decoded;
+                } else {
+                    $expectedKeywords = array_filter(array_map('trim', explode(',', $question['expected_keywords'])));
                 }
             }
             
-            // Calculate scores
-            $keywordScore = count($expectedKeywords) > 0 
-                ? (count($matchedKeywords) / count($expectedKeywords)) * 100 
-                : 50;
+            $aiResult = null;
+            try {
+                require_once APPPATH . 'Libraries/GeminiAI.php';
+                $gemini = new \GeminiAI();
+                
+                if ($gemini->isConfigured()) {
+                    $aiResult = $gemini->scoreEssay(
+                        $question['question_text'],
+                        $answerText,
+                        $expectedKeywords,
+                        $question['max_score'] ?? 100
+                    );
+                }
+            } catch (\Throwable $e) {
+                error_log('[Interview] Gemini AI error: ' . $e->getMessage());
+            }
             
-            // Word count check
-            $wordCount = str_word_count($answerText);
-            $minWords = $question['min_word_count'] ?? 50;
-            $completeness = min(100, ($wordCount / $minWords) * 100);
-            
-            // Simple relevance check (length-based for now)
-            $relevance = min(100, ($wordCount / 20) * 100);
-            
-            // Overall score
-            $score = round(($keywordScore * 0.5) + ($completeness * 0.3) + ($relevance * 0.2));
+            if ($aiResult !== null) {
+                // Use Gemini AI scores
+                $score = $aiResult['score'];
+                $relevance = $aiResult['relevance'];
+                $completeness = $aiResult['completeness'];
+                $matchedKeywords = $aiResult['keywords'];
+                $aiFeedback = $aiResult['feedback'] ?? '';
+                error_log('[Interview] Gemini AI score: ' . $score . ' for question #' . $question['id']);
+            } else {
+                // Fallback to keyword-based scoring
+                error_log('[Interview] Falling back to keyword scoring for question #' . $question['id']);
+                $answerLower = strtolower($answerText);
+                
+                foreach ($expectedKeywords as $keyword) {
+                    if (strpos($answerLower, strtolower(trim($keyword))) !== false) {
+                        $matchedKeywords[] = $keyword;
+                    }
+                }
+                
+                $keywordScore = count($expectedKeywords) > 0 
+                    ? (count($matchedKeywords) / count($expectedKeywords)) * 100 
+                    : 50;
+                
+                $wordCount = str_word_count($answerText);
+                $minWords = $question['min_word_count'] ?? 50;
+                $completeness = min(100, ($wordCount / max(1, $minWords)) * 100);
+                $relevance = min(100, ($wordCount / 20) * 100);
+                $score = round(($keywordScore * 0.5) + ($completeness * 0.3) + ($relevance * 0.2));
+                $aiFeedback = 'Dinilai dengan sistem keyword (AI tidak tersedia)';
+            }
         }
         
         return [
             'score' => max(0, min(100, $score)),
             'relevance' => round($relevance),
             'completeness' => round($completeness),
-            'keywords' => $matchedKeywords
+            'keywords' => $matchedKeywords,
+            'feedback' => $aiFeedback
         ];
     }
     

@@ -11,7 +11,7 @@ class HrisApi
 {
     private $baseUrl;
     private $timeout = 10; // seconds
-    private $useDirectDb = true; // Use direct database connection
+    private $useDirectDb = true; // Enabled - use local absensi_laravel DB for real payroll data
     private $hrisDb = null;
 
     public function __construct()
@@ -99,9 +99,17 @@ class HrisApi
 
         $data = json_decode($response, true);
 
+        // Handle Laravel API response format: {"code":200,"message":"Success","data":[...]}
+        $isSuccess = false;
+        if (isset($data['code'])) {
+            $isSuccess = $data['code'] >= 200 && $data['code'] < 300;
+        } else {
+            $isSuccess = $httpCode >= 200 && $httpCode < 300;
+        }
+
         return [
-            'success' => $httpCode >= 200 && $httpCode < 300,
-            'code' => $httpCode,
+            'success' => $isSuccess,
+            'code' => $data['code'] ?? $httpCode,
             'data' => $data['data'] ?? null,
             'message' => $data['message'] ?? null,
             'raw' => $data
@@ -115,11 +123,41 @@ class HrisApi
      */
     public function getEmployees($filters = [])
     {
-        // Try API first (preferred method)
+        // Try API first (preferred method - real-time from Domainesia)
         $result = $this->request('GET', '/employees', $filters);
 
-        // If API succeeds, return the data
-        if ($result['success'] && !empty($result['data'])) {
+        // If API succeeds, normalize field names for view compatibility
+        if ($result['success'] && !empty($result['data']) && is_array($result['data'])) {
+            $result['data'] = array_map(function($emp) {
+                // Normalize: API returns 'name', views expect 'nama' or 'name'
+                if (!isset($emp['nama']) && isset($emp['name'])) {
+                    $emp['nama'] = $emp['name'];
+                }
+                // Normalize jabatan: API returns nested object {"jabatan":{"nama_jabatan":"..."}}
+                if (isset($emp['jabatan']) && is_array($emp['jabatan'])) {
+                    // Keep as-is, views handle both formats
+                } elseif (isset($emp['jabatan_id']) && !isset($emp['jabatan'])) {
+                    $emp['jabatan'] = '-';
+                }
+                // Normalize lokasi for departemen display
+                if (isset($emp['lokasi']) && is_array($emp['lokasi'])) {
+                    $emp['departemen'] = $emp['lokasi']['nama_lokasi'] ?? '-';
+                }
+                // Map status: API uses is_admin field, default to 'aktif'
+                if (!isset($emp['status']) && !isset($emp['status_karyawan'])) {
+                    $emp['status'] = 'aktif';
+                }
+                // Map NIK
+                if (!isset($emp['nik']) && isset($emp['ktp'])) {
+                    $emp['nik'] = $emp['ktp'];
+                }
+                // Map phone
+                if (!isset($emp['no_hp']) && isset($emp['telepon'])) {
+                    $emp['no_hp'] = $emp['telepon'];
+                }
+                return $emp;
+            }, $result['data']);
+            $result['source'] = 'api_live';
             return $result;
         }
 
@@ -448,10 +486,31 @@ class HrisApi
      */
     public function getAttendance($filters = [])
     {
+        // Try API first (real-time from Domainesia)
+        $apiFilters = $filters;
+        // Map filter keys for API compatibility
+        if (!empty($filters['start_date'])) {
+            $apiFilters['start_date'] = $filters['start_date'];
+        }
+        if (!empty($filters['end_date'])) {
+            $apiFilters['end_date'] = $filters['end_date'];
+        }
+        if (!empty($filters['user_id'])) {
+            $apiFilters['user_id'] = $filters['user_id'];
+        }
+
+        $result = $this->request('GET', '/attendance', $apiFilters);
+        if ($result['success'] && $result['data'] !== null) {
+            $result['source'] = 'api_live';
+            return $result;
+        }
+
+        // Fallback to direct database
         if ($this->hrisDb) {
             return $this->getAttendanceFromDb($filters);
         }
-        return $this->request('GET', '/attendance', $filters);
+
+        return $result; // Return API error result
     }
 
     private function getAttendanceFromDb($filters = [])
@@ -526,6 +585,17 @@ class HrisApi
      */
     public function getEmployeeAttendance($employeeId, $month, $year)
     {
+        // Try API first (real-time from Domainesia)
+        $result = $this->request('GET', '/attendance/employee/' . $employeeId, [
+            'month' => $month,
+            'year' => $year
+        ]);
+        if ($result['success'] && $result['data'] !== null) {
+            $result['source'] = 'api_live';
+            return $result;
+        }
+
+        // Fallback to direct database
         if ($this->hrisDb) {
             try {
                 $tables = ['absensi', 'absensis', 'attendance', 'attendances', 'presensi'];
@@ -562,10 +632,7 @@ class HrisApi
             }
         }
 
-        return $this->request('GET', '/attendance/employee/' . $employeeId, [
-            'month' => $month,
-            'year' => $year
-        ]);
+        return $result; // Return API error result
     }
 
     // ===== PAYROLL ENDPOINTS =====
@@ -575,15 +642,45 @@ class HrisApi
      */
     public function getPayroll($filters = [])
     {
-        // Try direct database first
-        if ($this->hrisDb) {
-            return $this->getPayrollFromDb($filters);
+        // Try API first (real-time from Domainesia)
+        $apiFilters = [];
+        if (!empty($filters['bulan'])) $apiFilters['bulan'] = $filters['bulan'];
+        if (!empty($filters['tahun'])) $apiFilters['tahun'] = $filters['tahun'];
+
+        $result = $this->request('GET', '/payroll', $apiFilters);
+        if ($result['success'] && !empty($result['data']) && is_array($result['data'])) {
+            // Normalize payroll data for view compatibility
+            $result['data'] = array_map(function($p) {
+                if (!isset($p['nama']) && isset($p['user']['name'])) {
+                    $p['nama'] = $p['user']['name'];
+                }
+                if (!isset($p['jabatan']) && isset($p['user']['jabatan']['nama_jabatan'])) {
+                    $p['jabatan'] = $p['user']['jabatan']['nama_jabatan'];
+                }
+                if (!isset($p['nik']) && isset($p['no_gaji'])) {
+                    $p['nik'] = $p['no_gaji'];
+                }
+                if (!isset($p['tunjangan']) && isset($p['uang_transport'])) {
+                    $p['tunjangan'] = $p['uang_transport'];
+                }
+                if (!isset($p['lembur']) && isset($p['total_lembur'])) {
+                    $p['lembur'] = $p['total_lembur'];
+                }
+                if (!isset($p['potongan'])) {
+                    $p['potongan'] = ($p['total_mangkir'] ?? 0) + ($p['total_terlambat'] ?? 0) + ($p['bayar_kasbon'] ?? 0);
+                }
+                if (!isset($p['total']) && isset($p['grand_total'])) {
+                    $p['total'] = $p['grand_total'];
+                }
+                return $p;
+            }, $result['data']);
+            $result['source'] = 'api_live';
+            return $result;
         }
 
-        // Try API
-        $result = $this->request('GET', '/payroll', $filters);
-        if ($result['success'] && !empty($result['data'])) {
-            return $result;
+        // Fallback to direct database
+        if ($this->hrisDb) {
+            return $this->getPayrollFromDb($filters);
         }
 
         // Fallback to mock data
@@ -608,23 +705,57 @@ class HrisApi
                 }
 
                 // Join payrolls with users to get employee name and details
+                // Include ALL salary components from payrolls table
                 $sql = "SELECT 
                     p.id,
+                    p.user_id,
                     p.no_gaji as nik,
                     u.name as nama,
-                    j.nama_jabatan as jabatan,
+                    COALESCE(j.nama_jabatan, '') as jabatan,
                     p.bulan,
                     p.tahun,
-                    CAST(p.gaji_pokok AS DECIMAL(15,0)) as gaji_pokok,
-                    CAST(p.uang_transport AS DECIMAL(15,0)) as tunjangan,
-                    CAST(p.total_lembur AS DECIMAL(15,0)) as lembur,
-                    CAST((COALESCE(p.total_mangkir, 0) + COALESCE(p.total_terlambat, 0) + COALESCE(p.bayar_kasbon, 0)) AS DECIMAL(15,0)) as potongan,
-                    CAST(p.grand_total AS DECIMAL(15,0)) as total
+                    p.tanggal_mulai,
+                    p.tanggal_akhir,
+                    p.persentase_kehadiran,
+                    CAST(COALESCE(p.gaji_pokok, 0) AS DECIMAL(15,0)) as gaji_pokok,
+                    CAST(COALESCE(p.uang_transport, 0) AS DECIMAL(15,0)) as uang_transport,
+                    CAST(COALESCE(p.uang_makan, 0) AS DECIMAL(15,0)) as uang_makan,
+                    CAST((COALESCE(p.uang_transport, 0) + COALESCE(p.uang_makan, 0)) AS DECIMAL(15,0)) as tunjangan,
+                    CAST(COALESCE(p.total_lembur, 0) AS DECIMAL(15,0)) as lembur,
+                    CAST(COALESCE(p.total_reimbursement, 0) AS DECIMAL(15,0)) as total_reimbursement,
+                    CAST(COALESCE(p.bonus_pribadi, 0) AS DECIMAL(15,0)) as bonus_pribadi,
+                    CAST(COALESCE(p.bonus_team, 0) AS DECIMAL(15,0)) as bonus_team,
+                    CAST(COALESCE(p.bonus_jackpot, 0) AS DECIMAL(15,0)) as bonus_jackpot,
+                    CAST((COALESCE(p.bonus_pribadi, 0) + COALESCE(p.bonus_team, 0) + COALESCE(p.bonus_jackpot, 0)) AS DECIMAL(15,0)) as total_bonus,
+                    CAST(COALESCE(p.total_kehadiran, 0) AS DECIMAL(15,0)) as total_kehadiran,
+                    CAST(COALESCE(p.total_thr, 0) AS DECIMAL(15,0)) as total_thr,
+                    CAST(COALESCE(p.total_mangkir, 0) AS DECIMAL(15,0)) as total_mangkir,
+                    CAST(COALESCE(p.total_terlambat, 0) AS DECIMAL(15,0)) as total_terlambat,
+                    CAST(COALESCE(p.total_izin, 0) AS DECIMAL(15,0)) as total_izin,
+                    CAST(COALESCE(p.bayar_kasbon, 0) AS DECIMAL(15,0)) as bayar_kasbon,
+                    CAST(COALESCE(p.loss, 0) AS DECIMAL(15,0)) as loss,
+                    CAST(COALESCE(p.pph21_amount, 0) AS DECIMAL(15,0)) as pph21_amount,
+                    CAST(COALESCE(p.bpjs_jht_amount, 0) AS DECIMAL(15,2)) as bpjs_jht_amount,
+                    CAST(COALESCE(p.bpjs_kes_amount, 0) AS DECIMAL(15,2)) as bpjs_kes_amount,
+                    CAST((
+                        COALESCE(p.total_mangkir, 0) + COALESCE(p.total_terlambat, 0) + 
+                        COALESCE(p.total_izin, 0) + COALESCE(p.bayar_kasbon, 0) + 
+                        COALESCE(p.loss, 0) + COALESCE(p.pph21_amount, 0) + 
+                        COALESCE(p.bpjs_jht_amount, 0) + COALESCE(p.bpjs_kes_amount, 0)
+                    ) AS DECIMAL(15,0)) as potongan,
+                    CAST(COALESCE(p.total_penjumlahan, 0) AS DECIMAL(15,0)) as total_penjumlahan,
+                    CAST(COALESCE(p.total_pengurangan, 0) AS DECIMAL(15,0)) as total_pengurangan,
+                    CAST(COALESCE(p.grand_total, 0) AS DECIMAL(15,0)) as grand_total,
+                    p.jumlah_kehadiran,
+                    p.jumlah_mangkir,
+                    p.jumlah_lembur,
+                    p.jumlah_terlambat,
+                    p.jumlah_izin
                 FROM payrolls p
                 LEFT JOIN users u ON p.user_id = u.id
                 LEFT JOIN jabatans j ON u.jabatan_id = j.id
                 $where 
-                ORDER BY p.id DESC 
+                ORDER BY u.name ASC 
                 LIMIT 100";
 
                 $result = $this->hrisDb->query($sql);
@@ -632,6 +763,8 @@ class HrisApi
 
                 if ($result) {
                     while ($row = $result->fetch_assoc()) {
+                        // Set 'total' to grand_total for view compatibility
+                        $row['total'] = $row['grand_total'];
                         $payroll[] = $row;
                     }
                 }
@@ -645,8 +778,13 @@ class HrisApi
                     ];
                 }
 
-                // Database table exists but empty for this period
-                return $this->getMockPayroll($filters);
+                // Database table exists but empty for this period — return empty, NOT mock
+                return [
+                    'success' => true,
+                    'data' => [],
+                    'source' => 'database',
+                    'message' => 'Belum ada data payroll untuk periode ini'
+                ];
             }
 
             // Table not found, return mock data
@@ -807,11 +945,12 @@ class HrisApi
         if ($year)
             $params['year'] = $year;
 
-        // Try API endpoint for employee-specific performance
+        // Try API endpoint for employee-specific performance (real-time from Domainesia)
         if ($employeeId) {
             $params['employee_id'] = $employeeId;
             $result = $this->request('GET', '/performance/employee/' . $employeeId, $params);
             if ($result['success']) {
+                $result['source'] = 'api_live';
                 return $result;
             }
         }
@@ -819,11 +958,16 @@ class HrisApi
         // Summary endpoint returns both running_score (all-time) and monthly_score
         $result = $this->request('GET', '/performance/summary', $params);
         if ($result['success']) {
+            $result['source'] = 'api_live';
             return $result;
         }
 
         // Fallback to general performance endpoint
-        return $this->request('GET', '/performance', $params);
+        $result = $this->request('GET', '/performance', $params);
+        if ($result['success']) {
+            $result['source'] = 'api_live';
+        }
+        return $result;
     }
 
     /**

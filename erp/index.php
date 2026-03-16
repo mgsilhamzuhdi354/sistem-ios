@@ -96,9 +96,13 @@ if (file_exists($controllerFile)) {
     $controller = new $controllerClass();
 
     // Remap method names that conflict with protected BaseController methods
-    $methodRemap = ['view' => 'viewContract'];
-    if (isset($methodRemap[$method])) {
-        $method = $methodRemap[$method];
+    if ($method === 'view') {
+        if ($controllerName === 'Contract') {
+            $method = 'viewContract';
+        } else {
+            // For all other controllers (Crew, etc.), 'view' maps to 'show'
+            $method = 'show';
+        }
     }
 
     // Check if method exists and is public

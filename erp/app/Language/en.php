@@ -52,6 +52,7 @@ return [
         'logout' => 'Logout',
         'login' => 'Login',
         'ai_scan_cert' => 'Scan Certificate AI',
+        'crews' => 'Crews',
     ],
 
     // ===== COMMON / SHARED =====
@@ -94,7 +95,7 @@ return [
         'of' => 'of',
         'entries' => 'entries',
         'results' => 'results',
-        'to' => 'to',
+        'to_label' => 'to',
         'per_page' => 'per page',
         'previous' => 'Previous',
         'next' => 'Next',
@@ -139,8 +140,8 @@ return [
         'csv' => 'CSV',
         'submit' => 'Submit',
         'reset_default' => 'Reset Default',
-        'confirm' => 'Are you sure',
-        'export' => 'Export',
+        'confirm_action' => 'Are you sure',
+        'export_data' => 'Export',
         'client_satisfaction' => 'Client Satisfaction',
         'quick_actions' => 'Quick Actions',
         'hover_for_actions' => 'Hover for actions',
@@ -324,7 +325,7 @@ return [
         'submit_contract' => 'Submit Contract',
         'months' => 'months',
         // Expiring contracts page
-        'expiring_subtitle' => 'Contracts that will expire soon — take action before it\'s too late',
+        'expiring_subtitle2' => 'Contracts that will expire soon — take action before it\'s too late',
         'back_to_contracts' => 'Back to Contracts',
         'show_expiring_within' => 'Show contracts expiring within',
         'days_label' => 'days',
@@ -385,6 +386,54 @@ return [
 
     // ===== PAYROLL =====
     'payroll' => [
+        // Page
+        'title' => 'Payroll Management',
+        'subtitle' => 'Manage crew salary and payslip distribution',
+        'period' => 'Payroll Period',
+        'run_payroll' => 'Run Payroll',
+        'mark_complete' => 'Mark Complete',
+        'confirm_complete' => 'Are you sure you want to mark this period as completed?',
+        'details' => 'Payroll Details',
+        'search_crew' => 'Search crew...',
+
+        // Stats
+        'gross_salary' => 'Gross Salary',
+        'total_tax' => 'Total Tax',
+        'net_payable' => 'Net Payable',
+        'monthly_trend' => 'Monthly Trend',
+        'last_6_months' => 'Last 6 months',
+
+        // Table columns
+        'basic_salary' => 'Basic Salary',
+        'allowances' => 'Allowances',
+        'gross' => 'Gross',
+        'tax' => 'Tax',
+        'net' => 'Net',
+
+        // Empty state
+        'no_payroll' => 'No payroll data for this period',
+        'click_run_payroll' => 'Click "Run Payroll" to generate payroll for this period',
+
+        // Notes
+        'usd_note' => 'Amounts shown in original contract currency for Basic & Allowances, converted to IDR for Gross/Tax/Net',
+
+        // Months
+        'months' => [
+            'january' => 'January',
+            'february' => 'February',
+            'march' => 'March',
+            'april' => 'April',
+            'may' => 'May',
+            'june' => 'June',
+            'july' => 'July',
+            'august' => 'August',
+            'september' => 'September',
+            'october' => 'October',
+            'november' => 'November',
+            'december' => 'December',
+        ],
+
+        // History page
         'history_title' => 'Payroll History',
         'detail_title' => 'Payroll Details',
         'back_to_payroll' => 'Back to Payroll Management',
@@ -489,6 +538,13 @@ return [
         'catering' => 'Catering',
         'radio' => 'Radio',
         'other' => 'Other',
+        // Additional rank keys
+        'master_title' => 'Master Ranks',
+        'add_rank' => 'Add New Rank',
+        'edit_rank' => 'Edit Rank',
+        'level_order' => 'Level Order',
+        'is_officer' => 'Officer?',
+        'is_officer_label' => 'Yes, this is an Officer rank',
     ],
 
     // ===== CREWS =====
@@ -569,8 +625,8 @@ return [
         'account_holder' => 'Account Holder',
         'add_skill' => 'Add Skill',
         'no_skills_added' => 'No skills added yet',
-        'crew_name' => 'Crew Name',
-        'vessel' => 'Vessel',
+        'crew_name_col' => 'Crew Name',
+        'vessel_col2' => 'Vessel',
         // Skill Matrix page
         'back_to_list' => 'Back to Crew List',
         'unique_skills' => 'Unique skill types registered',
@@ -586,63 +642,7 @@ return [
         'all_levels' => 'All Levels',
     ],
 
-    // ===== PAYROLL =====
-    'payroll' => [
-        'title' => 'Payroll Management',
-        'subtitle' => 'Manage crew payroll and salary',
-        'history_title' => 'Payroll History',
-        'history_subtitle' => 'Past payroll records',
-        'view_title' => 'Payroll Details',
-        'period' => 'Period',
-        'month' => 'Month',
-        'year' => 'Year',
-        'crew_name' => 'Crew Name',
-        'basic_salary' => 'Basic Salary',
-        'overtime' => 'Overtime',
-        'allowances' => 'Allowances',
-        'deductions' => 'Deductions',
-        'net_pay' => 'Net Pay',
-        'gross_pay' => 'Gross Pay',
-        'status' => 'Status',
-        'generate_payroll' => 'Generate Payroll',
-        'process_payroll' => 'Process Payroll',
-        'approve_payroll' => 'Approve Payroll',
-        'no_payroll' => 'No payroll records found',
-        'processing_day' => 'Processing Day',
-        'auto_generate' => 'Auto Generate Payroll',
-        'run_payroll' => 'Run Payroll',
-        'mark_complete' => 'Mark Complete',
-        'confirm_complete' => 'Mark this payroll period as completed?',
-        'gross_salary' => 'Gross Salary',
-        'total_tax' => 'Total Tax',
-        'net_payable' => 'Net Payable',
-        'monthly_trend' => 'Monthly Trend',
-        'last_6_months' => 'Last 6 Months',
-        'details' => 'Payroll Details',
-        'search_crew' => 'Search crew...',
-        'gross' => 'Gross',
-        'tax' => 'Tax',
-        'net' => 'Net',
-        'click_run_payroll' => 'Click "Run Payroll" to generate salary data',
-        'confirm_send_payslips' => 'Send payslips to all crew via email?',
-        'send_payslips' => 'Send Payslips via Email',
-        'usd_note' => 'All values in USD with 2 decimal places for accuracy',
-        'summary_by_vessel' => 'Summary by Vessel',
-        'months' => [
-            'january' => 'January',
-            'february' => 'February',
-            'march' => 'March',
-            'april' => 'April',
-            'may' => 'May',
-            'june' => 'June',
-            'july' => 'July',
-            'august' => 'August',
-            'september' => 'September',
-            'october' => 'October',
-            'november' => 'November',
-            'december' => 'December',
-        ],
-    ],
+    // ===== PAYROLL (extended) - merged into payroll above =====
 
     // ===== DOCUMENTS =====
     'documents' => [
@@ -785,8 +785,8 @@ return [
         'interview_stage' => 'Interview Stage',
         'active_interview' => 'Active interviews',
         'applied_screening' => 'Applied / Screening',
-        'approval_subtitle' => 'Manage crew approvals from recruitment system',
-        'pipeline_subtitle' => 'Efficiently manage candidates from the recruitment system',
+        'approval_subtitle2' => 'Manage crew approvals from recruitment system',
+        'pipeline_subtitle2' => 'Efficiently manage candidates from the recruitment system',
     ],
 
     // ===== MONITORING =====
@@ -903,25 +903,7 @@ return [
         'generate_notifications' => 'Generate Notifications',
     ],
 
-    // ===== RANKS =====
-    'ranks' => [
-        'master_title' => 'Master Ranks',
-        'title' => 'Rank Management',
-        'subtitle' => 'Manage crew ranks and positions',
-        'add_rank' => 'Add New Rank',
-        'edit_rank' => 'Edit Rank',
-        'save_rank' => 'Save Rank',
-        'rank_name' => 'Rank Name',
-        'rank_code' => 'Code',
-        'department' => 'Department',
-        'level_order' => 'Level Order',
-        'is_officer' => 'Officer?',
-        'is_officer_label' => 'Yes, this is an Officer rank',
-        'no_ranks' => 'No ranks found',
-        'created_success' => 'Rank created successfully',
-        'updated_success' => 'Rank updated successfully',
-        'deleted_success' => 'Rank deleted successfully',
-    ],
+    // ===== RANKS (extended keys merged into ranks above) =====
 
     // ===== USERS =====
     'users' => [

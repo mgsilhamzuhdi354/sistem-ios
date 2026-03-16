@@ -1,19 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PT Indo Ocean Crew Services - Portal</title>
-    <meta name="description" content="PT Indo Ocean Crew Services - Internal Portal Hub for ERP and Recruitment Systems">
+    <meta name="description"
+        content="PT Indo Ocean Crew Services - Internal Portal Hub for ERP and Recruitment Systems">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         /* ========================================================
            RESET & BASE
            ======================================================== */
-        *, *::before, *::after {
+        *,
+        *::before,
+        *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -103,10 +109,23 @@
         }
 
         @keyframes orbFloat {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            25% { transform: translate(80px, -60px) scale(1.1); }
-            50% { transform: translate(-40px, 40px) scale(0.9); }
-            75% { transform: translate(60px, 80px) scale(1.05); }
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            25% {
+                transform: translate(80px, -60px) scale(1.1);
+            }
+
+            50% {
+                transform: translate(-40px, 40px) scale(0.9);
+            }
+
+            75% {
+                transform: translate(60px, 80px) scale(1.05);
+            }
         }
 
         /* ========================================================
@@ -142,12 +161,29 @@
             backdrop-filter: blur(2px);
         }
 
-        .cube-face:nth-child(1) { transform: translateZ(40px); }
-        .cube-face:nth-child(2) { transform: rotateY(180deg) translateZ(40px); }
-        .cube-face:nth-child(3) { transform: rotateY(90deg) translateZ(40px); }
-        .cube-face:nth-child(4) { transform: rotateY(-90deg) translateZ(40px); }
-        .cube-face:nth-child(5) { transform: rotateX(90deg) translateZ(40px); }
-        .cube-face:nth-child(6) { transform: rotateX(-90deg) translateZ(40px); }
+        .cube-face:nth-child(1) {
+            transform: translateZ(40px);
+        }
+
+        .cube-face:nth-child(2) {
+            transform: rotateY(180deg) translateZ(40px);
+        }
+
+        .cube-face:nth-child(3) {
+            transform: rotateY(90deg) translateZ(40px);
+        }
+
+        .cube-face:nth-child(4) {
+            transform: rotateY(-90deg) translateZ(40px);
+        }
+
+        .cube-face:nth-child(5) {
+            transform: rotateX(90deg) translateZ(40px);
+        }
+
+        .cube-face:nth-child(6) {
+            transform: rotateX(-90deg) translateZ(40px);
+        }
 
         /* Rotating Octahedron */
         .octa-wrapper {
@@ -176,14 +212,37 @@
             filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.3));
         }
 
-        .octa-face:nth-child(1) { transform: rotateX(30deg) translateZ(20px); }
-        .octa-face:nth-child(2) { transform: rotateX(30deg) rotateY(90deg) translateZ(20px); }
-        .octa-face:nth-child(3) { transform: rotateX(30deg) rotateY(180deg) translateZ(20px); }
-        .octa-face:nth-child(4) { transform: rotateX(30deg) rotateY(270deg) translateZ(20px); }
-        .octa-face:nth-child(5) { transform: rotateX(-30deg) translateZ(20px) rotateX(180deg); }
-        .octa-face:nth-child(6) { transform: rotateX(-30deg) rotateY(90deg) translateZ(20px) rotateX(180deg); }
-        .octa-face:nth-child(7) { transform: rotateX(-30deg) rotateY(180deg) translateZ(20px) rotateX(180deg); }
-        .octa-face:nth-child(8) { transform: rotateX(-30deg) rotateY(270deg) translateZ(20px) rotateX(180deg); }
+        .octa-face:nth-child(1) {
+            transform: rotateX(30deg) translateZ(20px);
+        }
+
+        .octa-face:nth-child(2) {
+            transform: rotateX(30deg) rotateY(90deg) translateZ(20px);
+        }
+
+        .octa-face:nth-child(3) {
+            transform: rotateX(30deg) rotateY(180deg) translateZ(20px);
+        }
+
+        .octa-face:nth-child(4) {
+            transform: rotateX(30deg) rotateY(270deg) translateZ(20px);
+        }
+
+        .octa-face:nth-child(5) {
+            transform: rotateX(-30deg) translateZ(20px) rotateX(180deg);
+        }
+
+        .octa-face:nth-child(6) {
+            transform: rotateX(-30deg) rotateY(90deg) translateZ(20px) rotateX(180deg);
+        }
+
+        .octa-face:nth-child(7) {
+            transform: rotateX(-30deg) rotateY(180deg) translateZ(20px) rotateX(180deg);
+        }
+
+        .octa-face:nth-child(8) {
+            transform: rotateX(-30deg) rotateY(270deg) translateZ(20px) rotateX(180deg);
+        }
 
         /* Rotating Ring / Torus outline */
         .ring-wrapper {
@@ -204,7 +263,8 @@
             position: relative;
         }
 
-        .ring::before, .ring::after {
+        .ring::before,
+        .ring::after {
             content: '';
             position: absolute;
             inset: -2px;
@@ -212,8 +272,13 @@
             border-radius: 50%;
         }
 
-        .ring::before { transform: rotateX(60deg); }
-        .ring::after { transform: rotateY(60deg); }
+        .ring::before {
+            transform: rotateX(60deg);
+        }
+
+        .ring::after {
+            transform: rotateY(60deg);
+        }
 
         /* Small pyramid */
         .pyramid-wrapper {
@@ -242,10 +307,21 @@
             filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.2));
         }
 
-        .pyr-face:nth-child(1) { transform: rotateY(0deg) translateZ(15px) rotateX(20deg); }
-        .pyr-face:nth-child(2) { transform: rotateY(90deg) translateZ(15px) rotateX(20deg); }
-        .pyr-face:nth-child(3) { transform: rotateY(180deg) translateZ(15px) rotateX(20deg); }
-        .pyr-face:nth-child(4) { transform: rotateY(270deg) translateZ(15px) rotateX(20deg); }
+        .pyr-face:nth-child(1) {
+            transform: rotateY(0deg) translateZ(15px) rotateX(20deg);
+        }
+
+        .pyr-face:nth-child(2) {
+            transform: rotateY(90deg) translateZ(15px) rotateX(20deg);
+        }
+
+        .pyr-face:nth-child(3) {
+            transform: rotateY(180deg) translateZ(15px) rotateX(20deg);
+        }
+
+        .pyr-face:nth-child(4) {
+            transform: rotateY(270deg) translateZ(15px) rotateX(20deg);
+        }
 
         /* Another floating cube - smaller */
         .cube-sm-wrapper {
@@ -265,36 +341,80 @@
             background: rgba(6, 182, 212, 0.02);
         }
 
-        .cube-sm-face:nth-child(1) { transform: translateZ(22.5px); }
-        .cube-sm-face:nth-child(2) { transform: rotateY(180deg) translateZ(22.5px); }
-        .cube-sm-face:nth-child(3) { transform: rotateY(90deg) translateZ(22.5px); }
-        .cube-sm-face:nth-child(4) { transform: rotateY(-90deg) translateZ(22.5px); }
-        .cube-sm-face:nth-child(5) { transform: rotateX(90deg) translateZ(22.5px); }
-        .cube-sm-face:nth-child(6) { transform: rotateX(-90deg) translateZ(22.5px); }
+        .cube-sm-face:nth-child(1) {
+            transform: translateZ(22.5px);
+        }
+
+        .cube-sm-face:nth-child(2) {
+            transform: rotateY(180deg) translateZ(22.5px);
+        }
+
+        .cube-sm-face:nth-child(3) {
+            transform: rotateY(90deg) translateZ(22.5px);
+        }
+
+        .cube-sm-face:nth-child(4) {
+            transform: rotateY(-90deg) translateZ(22.5px);
+        }
+
+        .cube-sm-face:nth-child(5) {
+            transform: rotateX(90deg) translateZ(22.5px);
+        }
+
+        .cube-sm-face:nth-child(6) {
+            transform: rotateX(-90deg) translateZ(22.5px);
+        }
 
         @keyframes floatShape {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-30px); }
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-30px);
+            }
         }
 
         @keyframes rotateCube {
-            from { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-            to { transform: rotateX(360deg) rotateY(360deg) rotateZ(0deg); }
+            from {
+                transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+            }
+
+            to {
+                transform: rotateX(360deg) rotateY(360deg) rotateZ(0deg);
+            }
         }
 
         @keyframes rotateOcta {
-            from { transform: rotateX(0deg) rotateY(0deg); }
-            to { transform: rotateX(360deg) rotateY(360deg); }
+            from {
+                transform: rotateX(0deg) rotateY(0deg);
+            }
+
+            to {
+                transform: rotateX(360deg) rotateY(360deg);
+            }
         }
 
         @keyframes ringRotate {
-            from { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-            to { transform: rotateX(360deg) rotateY(180deg) rotateZ(360deg); }
+            from {
+                transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+            }
+
+            to {
+                transform: rotateX(360deg) rotateY(180deg) rotateZ(360deg);
+            }
         }
 
         @keyframes rotatePyramid {
-            from { transform: rotateY(0deg); }
-            to { transform: rotateY(360deg); }
+            from {
+                transform: rotateY(0deg);
+            }
+
+            to {
+                transform: rotateY(360deg);
+            }
         }
 
         /* ========================================================
@@ -320,8 +440,17 @@
         }
 
         @keyframes particlePulse {
-            0%, 100% { opacity: 0.1; transform: scale(1); }
-            50% { opacity: 0.6; transform: scale(1.8); }
+
+            0%,
+            100% {
+                opacity: 0.1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.6;
+                transform: scale(1.8);
+            }
         }
 
         /* ========================================================
@@ -335,8 +464,8 @@
             height: 100%;
             z-index: 0;
             background-image:
-                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
             background-size: 60px 60px;
             pointer-events: none;
         }
@@ -388,8 +517,13 @@
         }
 
         @keyframes logoSpin {
-            from { transform: translateX(-50%) rotate(0deg); }
-            to { transform: translateX(-50%) rotate(360deg); }
+            from {
+                transform: translateX(-50%) rotate(0deg);
+            }
+
+            to {
+                transform: translateX(-50%) rotate(360deg);
+            }
         }
 
         .logo-icon {
@@ -459,14 +593,20 @@
             animation: cardSlideIn 0.8s ease-out both;
         }
 
-        .portal-card:nth-child(1) { animation-delay: 0.5s; }
-        .portal-card:nth-child(2) { animation-delay: 0.7s; }
+        .portal-card:nth-child(1) {
+            animation-delay: 0.5s;
+        }
+
+        .portal-card:nth-child(2) {
+            animation-delay: 0.7s;
+        }
 
         @keyframes cardSlideIn {
             from {
                 opacity: 0;
                 transform: translateY(60px) rotateX(10deg);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0) rotateX(0deg);
@@ -479,7 +619,7 @@
             inset: 0;
             border-radius: 24px;
             padding: 1.5px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.02), rgba(255,255,255,0.1));
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.1));
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
@@ -696,7 +836,7 @@
             left: -150%;
             width: 50%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
             transform: skewX(-15deg);
             transition: left 0.8s ease;
         }
@@ -786,21 +926,42 @@
         }
 
         @keyframes statusPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-            50% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+            }
         }
 
         /* ========================================================
            ANIMATIONS
            ======================================================== */
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(40px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* ========================================================
@@ -843,7 +1004,11 @@
                 font-size: 1.6rem;
             }
 
-            .cube-wrapper, .octa-wrapper, .ring-wrapper, .pyramid-wrapper, .cube-sm-wrapper {
+            .cube-wrapper,
+            .octa-wrapper,
+            .ring-wrapper,
+            .pyramid-wrapper,
+            .cube-sm-wrapper {
                 transform: scale(0.6);
             }
         }
@@ -878,6 +1043,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Mouse Glow Follower -->
     <div class="mouse-glow" id="mouseGlow"></div>
@@ -973,7 +1139,7 @@
         <!-- Portal Cards -->
         <div class="cards-container">
             <!-- ERP Card -->
-            <a href="/erp/" class="portal-card card-erp" id="cardErp">
+            <a href="./erp/" class="portal-card card-erp" id="cardErp">
                 <div class="card-inner">
                     <div class="card-glow"></div>
                     <div class="card-content">
@@ -982,7 +1148,8 @@
                         </div>
                         <span class="card-badge">Enterprise System</span>
                         <h2 class="card-title">ERP Management</h2>
-                        <p class="card-desc">Enterprise resource planning for vessels, contracts, payroll, and comprehensive crew management operations.</p>
+                        <p class="card-desc">Enterprise resource planning for vessels, contracts, payroll, and
+                            comprehensive crew management operations.</p>
                         <div class="card-features">
                             <span class="card-feature"><i class="fa-solid fa-ship"></i> Vessels</span>
                             <span class="card-feature"><i class="fa-solid fa-file-contract"></i> Contracts</span>
@@ -998,7 +1165,7 @@
             </a>
 
             <!-- Recruitment Card -->
-            <a href="/recruitment/" class="portal-card card-recruit" id="cardRecruit">
+            <a href="./recruitment/" class="portal-card card-recruit" id="cardRecruit">
                 <div class="card-inner">
                     <div class="card-glow"></div>
                     <div class="card-content">
@@ -1007,7 +1174,8 @@
                         </div>
                         <span class="card-badge">Hiring Platform</span>
                         <h2 class="card-title">Recruitment System</h2>
-                        <p class="card-desc">Complete crew recruitment pipeline — from job vacancies and applications to interviews, medical checks, and onboarding.</p>
+                        <p class="card-desc">Complete crew recruitment pipeline — from job vacancies and applications to
+                            interviews, medical checks, and onboarding.</p>
                         <div class="card-features">
                             <span class="card-feature"><i class="fa-solid fa-briefcase"></i> Vacancies</span>
                             <span class="card-feature"><i class="fa-solid fa-user-plus"></i> Applications</span>
@@ -1030,8 +1198,8 @@
                 <span class="version">v2.0</span>
             </p>
             <div class="footer-links">
-                <a href="/erp/">Dashboard</a>
-                <a href="/recruitment/">Recruitment</a>
+                <a href="./erp/">Dashboard</a>
+                <a href="./recruitment/">Recruitment</a>
             </div>
         </div>
     </div>
@@ -1058,7 +1226,7 @@
         // ============================================================
         // MOUSE GLOW FOLLOWER
         // ============================================================
-        document.addEventListener('mousemove', function(e) {
+        document.addEventListener('mousemove', function (e) {
             const glow = document.getElementById('mouseGlow');
             glow.style.left = e.clientX + 'px';
             glow.style.top = e.clientY + 'px';
@@ -1067,8 +1235,8 @@
         // ============================================================
         // 3D CARD TILT ON MOUSE MOVE
         // ============================================================
-        document.querySelectorAll('.portal-card').forEach(function(card) {
-            card.addEventListener('mousemove', function(e) {
+        document.querySelectorAll('.portal-card').forEach(function (card) {
+            card.addEventListener('mousemove', function (e) {
                 const rect = card.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
@@ -1079,7 +1247,7 @@
                 card.style.transform = 'translateY(-12px) rotateX(' + rotateX + 'deg) rotateY(' + rotateY + 'deg) scale(1.02)';
             });
 
-            card.addEventListener('mouseleave', function() {
+            card.addEventListener('mouseleave', function () {
                 card.style.transform = 'translateY(0) rotateX(0) rotateY(0) scale(1)';
             });
         });
@@ -1103,13 +1271,14 @@
         // ============================================================
         // PARALLAX ON SCROLL (for 3D shapes)
         // ============================================================
-        window.addEventListener('scroll', function() {
+        window.addEventListener('scroll', function () {
             const scrolled = window.pageYOffset;
-            document.querySelectorAll('.geo-shape').forEach(function(shape, i) {
+            document.querySelectorAll('.geo-shape').forEach(function (shape, i) {
                 const speed = 0.15 + (i * 0.05);
                 shape.style.transform = 'translateY(' + (scrolled * speed * -1) + 'px)';
             });
         });
     </script>
 </body>
+
 </html>

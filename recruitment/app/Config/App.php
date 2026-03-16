@@ -17,7 +17,7 @@ if (!$isWindows || $isLaragonPrettyUrl) {
     $baseURL = $protocol . '://' . $host . '/recruitment/public/';
 } else {
     // Windows localhost only
-    $baseURL = $protocol . '://' . $host . '/indoocean/recruitment/public/';
+    $baseURL = $protocol . '://' . $host . '/PT_indoocean/PT_indoocean/recruitment/public/';
 }
 
 

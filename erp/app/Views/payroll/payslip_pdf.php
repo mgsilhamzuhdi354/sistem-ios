@@ -25,10 +25,14 @@
             width: 80px;
             height: 80px;
             flex-shrink: 0;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid #1e3a5f;
         }
-        .header-logo svg {
+        .header-logo img {
             width: 80px;
             height: 80px;
+            object-fit: cover;
         }
         .header-text h1 {
             font-size: 18pt;
@@ -175,12 +179,19 @@
     $origCurrency = strtoupper($item['original_currency'] ?? '');
     $origBasic = (float)($item['original_basic'] ?? 0);
     $origOvertime = (float)($item['original_overtime'] ?? 0);
-    $origLeavePay = (float)($item['original_leave_pay'] ?? 0);
     $kursRate = (float)($item['exchange_rate'] ?? 0);
     
     // Determine if dual-currency (non-IDR original)
     $isDualCurrency = !empty($origCurrency) && $origCurrency !== 'IDR' && $origCurrency !== 'Rp' && $kursRate > 0;
-    $origCurSymbol = $origCurrency ?: 'RM'; // Default to RM if not set
+    
+    // Currency symbol for the original currency
+    if ($isDualCurrency) {
+        $origCurSymbol = $origCurrency; // RM, USD, SGD, etc.
+    } else {
+        $origCurSymbol = 'IDR'; // For IDR contracts, show IDR
+        // For IDR, kurs is always 1
+        if ($kursRate <= 0) $kursRate = 1;
+    }
     
     // IDR values (converted)
     $basicSalary = (float)($item['basic_salary'] ?? 0);
@@ -200,32 +211,37 @@
     $taxRate = (float)($item['tax_rate'] ?? 2.5);
     $taxAmount = (float)($item['tax_amount'] ?? 0);
     $netSalary = (float)($item['net_salary'] ?? 0);
-    $currency = $item['currency_code'] ?? 'Rp';
 
-    // For dual currency: Actualy Salary = Basic - Overtime (Advance)
-    $actualySalary = $origBasic - $origOvertime;
+    // Actualy Salary = Basic + Advance (same as UI modal: origBasic + origOvertime)
+    if ($isDualCurrency) {
+        $actualySalary = $origBasic + $origOvertime;
+    } else {
+        // For IDR, use basic_salary from payroll_items as the "basic" in original currency
+        $origBasic = $basicSalary > 0 ? $basicSalary : $origBasic;
+        $origOvertime = 0; // No advance for IDR
+        $actualySalary = $origBasic + $origOvertime;
+    }
     
-    // IDR equivalent of the gross
-    // If dual currency, calculate IDR = original gross * kurs
-    $idrGross = $isDualCurrency ? ($origBasic * $kursRate) : $grossSalary;
+    // IDR = Actualy Salary * Kurs
+    $idrGross = $actualySalary * $kursRate;
     
-    // Total gross in Rp for display
+    // Total gross in Rp = IDR + Reimbursement - Loans
     $totalGrossRp = $idrGross + $reimbursement - $loans;
-    // If not dual currency, just use gross_salary
-    if (!$isDualCurrency) {
+    
+    // If grossSalary was already saved from the UI, prefer that
+    if (!$isDualCurrency && $grossSalary > 0) {
         $totalGrossRp = $grossSalary;
     }
     
-    // Total deductions for Rp side
-    $totalDeductionsRp = $adminBankFee + $taxAmount;
-    if (!$isDualCurrency) {
-        $totalDeductionsRp = $totalDeductions + $taxAmount;
-    }
+    // Total deductions = Admin Bank + Insurance + Other Deductions + PPH21
+    $totalDeductionsRp = $adminBankFee + $insurance + $otherDeductions + $taxAmount;
 
     // Format number with dots (Indonesian number format)
-    function fmtMoney($val) {
-        if ($val == 0) return '-';
-        return number_format(abs($val), 0, ',', '.');
+    if (!function_exists('fmtMoney')) {
+        function fmtMoney($val) {
+            if ($val == 0) return '-';
+            return number_format(abs($val), 0, ',', '.');
+        }
     }
 ?>
 
@@ -233,11 +249,7 @@
     <!-- Header -->
     <div class="header">
         <div class="header-logo">
-            <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="40" cy="40" r="38" fill="#1e3a5f" opacity="0.1"/>
-                <path d="M20 50C25 35 35 25 50 20C45 30 42 40 50 55C40 55 30 55 20 50Z" fill="#1e3a5f" opacity="0.8"/>
-                <path d="M25 45C30 33 38 28 48 25C44 33 43 40 48 52C40 52 32 50 25 45Z" fill="#2c5282"/>
-            </svg>
+            <img src="<?= defined('BASE_URL') ? BASE_URL . 'assets/images/logo.png' : 'assets/images/logo.png' ?>" alt="Logo">
         </div>
         <div class="header-text">
             <h1>PT. INDO OCEANCREW SERVICES</h1>
@@ -274,7 +286,7 @@
         </div>
     </div>
 
-    <!-- Salary Table -->
+    <!-- Salary Table: Unified layout matching UI modal -->
     <table class="salary-table">
         <thead>
             <tr>
@@ -284,57 +296,55 @@
             </tr>
         </thead>
         <tbody>
-        <?php if ($isDualCurrency): ?>
-            <!-- DUAL CURRENCY FORMAT (RM -> Rp) -->
-            <!-- Row 1: Basic Salary (RM) -->
+            <!-- Row 1: Basic Salary | Admin Bank -->
             <tr>
                 <td class="label-col">Basic Salary</td>
                 <td class="sep-col">:</td>
                 <td class="cur-col"><?= $origCurSymbol ?></td>
                 <td class="amount-col amount"><?= fmtMoney($origBasic) ?></td>
                 <td class="spacer-col"></td>
-                <td class="label-col"></td>
-                <td class="sep-col"></td>
-                <td class="cur-col"></td>
-                <td class="amount-col amount"></td>
+                <td class="label-col">Admin Bank</td>
+                <td class="sep-col">:</td>
+                <td class="cur-col">Rp</td>
+                <td class="amount-col amount"><?= fmtMoney($adminBankFee) ?></td>
             </tr>
-            <!-- Row 2: Advance Salary (RM) -->
+            <!-- Row 2: Advance Salary | Insurance -->
             <tr>
                 <td>Advance Salary</td>
                 <td class="sep-col">:</td>
                 <td><?= $origCurSymbol ?></td>
                 <td class="amount"><?= fmtMoney($origOvertime) ?></td>
                 <td class="spacer-col"></td>
-                <td></td>
-                <td class="sep-col"></td>
-                <td></td>
-                <td class="amount"></td>
-            </tr>
-            <!-- Row 3: Actualy Salary (RM) | Admin Bank -->
-            <tr>
-                <td>Actualy Salary</td>
-                <td class="sep-col">:</td>
-                <td><?= $origCurSymbol ?></td>
-                <td class="amount"><?= fmtMoney($actualySalary) ?></td>
-                <td class="spacer-col"></td>
-                <td>Admin Bank</td>
+                <td>Insurance</td>
                 <td class="sep-col">:</td>
                 <td>Rp</td>
-                <td class="amount"><?= fmtMoney($adminBankFee) ?></td>
+                <td class="amount"><?= fmtMoney($insurance) ?></td>
             </tr>
-            <!-- Row 4: Reimbursement (Rp) -->
+            <!-- Row 3: Actualy Salary | Other Deductions -->
+            <tr>
+                <td><strong>Actualy Salary</strong></td>
+                <td class="sep-col">:</td>
+                <td><strong><?= $origCurSymbol ?></strong></td>
+                <td class="amount"><strong><?= fmtMoney($actualySalary) ?></strong></td>
+                <td class="spacer-col"></td>
+                <td>Other Deductions</td>
+                <td class="sep-col">:</td>
+                <td>Rp</td>
+                <td class="amount"><?= fmtMoney($otherDeductions) ?></td>
+            </tr>
+            <!-- Row 4: Reimbursement | PPH 21 -->
             <tr>
                 <td>Reimbursement</td>
                 <td class="sep-col">:</td>
                 <td>Rp</td>
                 <td class="amount"><?= fmtMoney($reimbursement) ?></td>
                 <td class="spacer-col"></td>
-                <td></td>
-                <td class="sep-col"></td>
-                <td></td>
-                <td class="amount"></td>
+                <td>PPH 21 (<?= number_format($taxRate, 1, ',', '.') ?>%)</td>
+                <td class="sep-col">:</td>
+                <td>Rp</td>
+                <td class="amount"><?= fmtMoney($taxAmount) ?></td>
             </tr>
-            <!-- Row 5: Loans To IOS (Rp) -->
+            <!-- Row 5: Loans To IOS | (empty) -->
             <tr>
                 <td>Loans To IOS</td>
                 <td class="sep-col">:</td>
@@ -346,19 +356,19 @@
                 <td></td>
                 <td class="amount"></td>
             </tr>
-            <!-- Row 6: Kurs (Rp) | PPH 21 -->
+            <!-- Row 6: Kurs | (empty) -->
             <tr>
                 <td>Kurs</td>
                 <td class="sep-col">:</td>
                 <td>Rp</td>
                 <td class="amount"><?= fmtMoney($kursRate) ?></td>
                 <td class="spacer-col"></td>
-                <td>PPH 21 (<?= number_format($taxRate, 1, ',', '.') ?>%)</td>
-                <td class="sep-col">:</td>
-                <td>Rp</td>
-                <td class="amount"><?= fmtMoney($taxAmount) ?></td>
+                <td></td>
+                <td class="sep-col"></td>
+                <td></td>
+                <td class="amount"></td>
             </tr>
-            <!-- Row 7: IDR (Rp) = Actualy Salary * Kurs -->
+            <!-- Row 7: IDR | (empty) -->
             <tr>
                 <td>IDR</td>
                 <td class="sep-col">:</td>
@@ -382,87 +392,6 @@
                 <td><strong>Rp</strong></td>
                 <td class="amount"><strong><?= fmtMoney($totalDeductionsRp) ?></strong></td>
             </tr>
-        <?php else: ?>
-            <!-- SINGLE CURRENCY FORMAT (Rp only) -->
-            <tr>
-                <td class="label-col">Basic Salary</td>
-                <td class="sep-col">:</td>
-                <td class="cur-col">Rp</td>
-                <td class="amount-col amount"><?= fmtMoney($basicSalary) ?></td>
-                <td class="spacer-col"></td>
-                <td class="label-col">Insurance</td>
-                <td class="sep-col">:</td>
-                <td class="cur-col">Rp</td>
-                <td class="amount-col amount"><?= fmtMoney($insurance) ?></td>
-            </tr>
-            <tr>
-                <td>Overtime</td>
-                <td class="sep-col">:</td>
-                <td>Rp</td>
-                <td class="amount"><?= fmtMoney($overtime) ?></td>
-                <td class="spacer-col"></td>
-                <td>Medical</td>
-                <td class="sep-col">:</td>
-                <td>Rp</td>
-                <td class="amount"><?= fmtMoney($medical) ?></td>
-            </tr>
-            <tr>
-                <td>Leave Pay</td>
-                <td class="sep-col">:</td>
-                <td>Rp</td>
-                <td class="amount"><?= fmtMoney($leavePay) ?></td>
-                <td class="spacer-col"></td>
-                <td>Admin Bank</td>
-                <td class="sep-col">:</td>
-                <td>Rp</td>
-                <td class="amount"><?= fmtMoney($adminBankFee) ?></td>
-            </tr>
-            <tr>
-                <td>Bonus</td>
-                <td class="sep-col">:</td>
-                <td>Rp</td>
-                <td class="amount"><?= fmtMoney($bonus) ?></td>
-                <td class="spacer-col"></td>
-                <td>Advance</td>
-                <td class="sep-col">:</td>
-                <td>Rp</td>
-                <td class="amount"><?= fmtMoney($advance) ?></td>
-            </tr>
-            <tr>
-                <td>Other Allowance</td>
-                <td class="sep-col">:</td>
-                <td>Rp</td>
-                <td class="amount"><?= fmtMoney($otherAllowance) ?></td>
-                <td class="spacer-col"></td>
-                <td>Other Deductions</td>
-                <td class="sep-col">:</td>
-                <td>Rp</td>
-                <td class="amount"><?= fmtMoney($otherDeductions) ?></td>
-            </tr>
-            <tr>
-                <td>Reimbursement</td>
-                <td class="sep-col">:</td>
-                <td>Rp</td>
-                <td class="amount"><?= fmtMoney($reimbursement) ?></td>
-                <td class="spacer-col"></td>
-                <td>PPH 21 (<?= number_format($taxRate, 1, ',', '.') ?>%)</td>
-                <td class="sep-col">:</td>
-                <td>Rp</td>
-                <td class="amount"><?= fmtMoney($taxAmount) ?></td>
-            </tr>
-            <!-- Gross Row -->
-            <tr class="gross-row">
-                <td><strong>Gross</strong></td>
-                <td class="sep-col"></td>
-                <td><strong>Rp</strong></td>
-                <td class="amount"><strong><?= fmtMoney($grossSalary) ?></strong></td>
-                <td class="spacer-col"></td>
-                <td></td>
-                <td class="sep-col"></td>
-                <td><strong>Rp</strong></td>
-                <td class="amount"><strong><?= fmtMoney($totalDeductions + $taxAmount) ?></strong></td>
-            </tr>
-        <?php endif; ?>
         </tbody>
     </table>
 

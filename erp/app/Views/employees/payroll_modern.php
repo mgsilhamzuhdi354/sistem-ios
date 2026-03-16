@@ -162,7 +162,24 @@ $avatarColors = [
                                 <?= __('common.active_period') ?>
                             </span>
                         </h1>
-                        <p class="mt-2 text-sm text-slate-500 font-medium">Data payroll karyawan dari sistem HRIS Absensi.</p>
+                        <p class="mt-2 text-sm text-slate-500 font-medium flex items-center gap-2">
+                            Data payroll karyawan dari sistem HRIS Absensi.
+                            <?php 
+                            $dataSource = $dataSource ?? 'unknown';
+                            if ($dataSource === 'database'): ?>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 border border-green-200">
+                                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span>Live Database
+                                </span>
+                            <?php elseif ($dataSource === 'api_live'): ?>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                                    <span class="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1"></span>API Live
+                                </span>
+                            <?php else: ?>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                                    <span class="w-1.5 h-1.5 bg-amber-500 rounded-full mr-1"></span>Demo Data
+                                </span>
+                            <?php endif; ?>
+                        </p>
                     </div>
                     <div class="flex items-center gap-3">
                         <a href="<?= BASE_URL ?>employees" class="inline-flex items-center px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 shadow-sm hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-300 transform hover:-translate-y-0.5">

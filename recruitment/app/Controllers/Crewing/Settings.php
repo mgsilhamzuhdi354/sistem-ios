@@ -64,6 +64,16 @@ class Settings extends BaseController {
             $_SESSION['ui_scale'] = $user['ui_scale'];
         }
 
+        // Auto-generate referral code if not exists (for crewing staff)
+        try { $this->db->query("ALTER TABLE users ADD COLUMN referral_code VARCHAR(10) NULL UNIQUE AFTER avatar"); } catch (\Exception $e) {}
+        if (empty($user['referral_code'])) {
+            $newCode = 'REF-' . strtoupper(substr(md5($userId . time() . rand()), 0, 5));
+            $stmtRef = $this->db->prepare("UPDATE users SET referral_code = ? WHERE id = ?");
+            $stmtRef->bind_param('si', $newCode, $userId);
+            $stmtRef->execute();
+            $user['referral_code'] = $newCode;
+        }
+
         $this->view('crewing/settings/index', [
             'pageTitle' => 'Settings',
             'smtpSettings' => $smtpSettings,
@@ -871,5 +881,80 @@ public function testSmtp() {
         }
         
         return $this->json(['success' => false, 'message' => 'Failed to save language']);
+    }
+    
+    /**
+     * Regenerate Referral Code (AJAX)
+     */
+    public function regenerateReferralCode() {
+        if (!$this->isPost()) {
+            return $this->json(['success' => false, 'message' => 'Invalid request']);
+        }
+        
+        $userId = $_SESSION['user_id'];
+        $newCode = 'REF-' . strtoupper(substr(md5($userId . microtime(true) . rand(1000, 9999)), 0, 5));
+        
+        // Ensure uniqueness
+        $maxAttempts = 10;
+        for ($i = 0; $i < $maxAttempts; $i++) {
+            $check = $this->db->prepare("SELECT id FROM users WHERE referral_code = ? AND id != ?");
+            $check->bind_param('si', $newCode, $userId);
+            $check->execute();
+            if ($check->get_result()->num_rows === 0) break;
+            $newCode = 'REF-' . strtoupper(substr(md5($userId . microtime(true) . rand(1000, 9999)), 0, 5));
+        }
+        
+        $stmt = $this->db->prepare("UPDATE users SET referral_code = ? WHERE id = ?");
+        $stmt->bind_param('si', $newCode, $userId);
+        
+        if ($stmt->execute()) {
+            return $this->json(['success' => true, 'code' => $newCode, 'message' => 'Kode referral berhasil di-regenerate!']);
+        }
+        
+        return $this->json(['success' => false, 'message' => 'Gagal regenerate kode referral']);
+    }
+    
+    /**
+     * Save Gemini AI API Key
+     */
+    public function saveGeminiKey() {
+        if (!$this->isPost()) {
+            return $this->json(['success' => false, 'message' => 'Invalid request']);
+        }
+        
+        $apiKey = trim($this->input('gemini_api_key'));
+        
+        if (empty($apiKey)) {
+            return $this->json(['success' => false, 'message' => 'API key tidak boleh kosong']);
+        }
+        
+        require_once APPPATH . 'Libraries/GeminiAI.php';
+        
+        if (\GeminiAI::saveApiKey($apiKey)) {
+            return $this->json(['success' => true, 'message' => 'API Key Gemini berhasil disimpan!']);
+        }
+        
+        return $this->json(['success' => false, 'message' => 'Gagal menyimpan API key']);
+    }
+    
+    /**
+     * Test Gemini AI Connection
+     */
+    public function testGeminiKey() {
+        if (!$this->isPost()) {
+            return $this->json(['success' => false, 'message' => 'Invalid request']);
+        }
+        
+        $apiKey = trim($this->input('gemini_api_key'));
+        
+        if (empty($apiKey)) {
+            return $this->json(['success' => false, 'message' => 'API key tidak boleh kosong']);
+        }
+        
+        require_once APPPATH . 'Libraries/GeminiAI.php';
+        $gemini = new \GeminiAI($apiKey);
+        $result = $gemini->testConnection();
+        
+        return $this->json($result);
     }
 }

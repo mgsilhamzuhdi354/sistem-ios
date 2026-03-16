@@ -60,6 +60,21 @@ class PayrollPeriodModel extends BaseModel
      */
     public function updateTotals($periodId)
     {
+        // Auto-fix period money columns for IDR
+        try {
+            $periodCols = ['total_gross','total_deductions','total_tax','total_net'];
+            $colResult = $this->db->query("SHOW COLUMNS FROM payroll_periods");
+            if ($colResult) {
+                while ($row = $colResult->fetch_assoc()) {
+                    if (in_array($row['Field'], $periodCols) && preg_match('/decimal\((\d+),/i', $row['Type'], $m)) {
+                        if (intval($m[1]) < 15) {
+                            $this->db->query("ALTER TABLE payroll_periods MODIFY COLUMN {$row['Field']} DECIMAL(15,2) DEFAULT 0");
+                        }
+                    }
+                }
+            }
+        } catch (\Exception $e) {}
+        
         $sql = "UPDATE payroll_periods p SET
                     total_crew = (SELECT COUNT(*) FROM payroll_items WHERE payroll_period_id = ?),
                     total_gross = (SELECT COALESCE(SUM(gross_salary), 0) FROM payroll_items WHERE payroll_period_id = ?),
@@ -106,16 +121,46 @@ class PayrollItemModel extends BaseModel
      */
     public function generateForPeriod($periodId)
     {
-        // Auto-fix exchange_rate column if too small for IDR kurs values
-        $colInfo = $this->db->query("SHOW COLUMNS FROM payroll_items WHERE Field = 'exchange_rate'");
-        if ($colInfo && $row = $colInfo->fetch_assoc()) {
-            if (preg_match('/decimal\((\d+),(\d+)\)/i', $row['Type'], $m)) {
-                if ((intval($m[1]) - intval($m[2])) < 6) {
-                    $this->db->query("ALTER TABLE payroll_items MODIFY COLUMN exchange_rate DECIMAL(15,4) DEFAULT 0");
+        // Auto-fix columns if too small for IDR values (e.g. Rp 7,500,000)
+        try {
+            $colsToFix = [
+                'exchange_rate' => 'DECIMAL(15,4) DEFAULT 0',
+                'gross_salary' => 'DECIMAL(15,2) DEFAULT 0',
+                'net_salary' => 'DECIMAL(15,2) DEFAULT 0',
+                'tax_amount' => 'DECIMAL(15,2) DEFAULT 0',
+                'total_deductions' => 'DECIMAL(15,2) DEFAULT 0',
+                'basic_salary' => 'DECIMAL(15,2) DEFAULT 0',
+                'overtime' => 'DECIMAL(15,2) DEFAULT 0',
+                'overtime_allowance' => 'DECIMAL(15,2) DEFAULT 0',
+                'reimbursement' => 'DECIMAL(15,2) DEFAULT 0',
+                'loans' => 'DECIMAL(15,2) DEFAULT 0',
+                'insurance' => 'DECIMAL(15,2) DEFAULT 0',
+                'admin_bank_fee' => 'DECIMAL(15,2) DEFAULT 0',
+            ];
+            $colResult = $this->db->query("SHOW COLUMNS FROM payroll_items");
+            if ($colResult) {
+                while ($row = $colResult->fetch_assoc()) {
+                    if (isset($colsToFix[$row['Field']]) && preg_match('/decimal\((\d+),(\d+)\)/i', $row['Type'], $m)) {
+                        if (intval($m[1]) < 15) {
+                            $this->db->query("ALTER TABLE payroll_items MODIFY COLUMN {$row['Field']} {$colsToFix[$row['Field']]}");
+                        }
+                    }
                 }
             }
+        } catch (\Exception $e) {
+            // Ignore ALTER errors
         }
         
+        // Cleanup orphaned payroll items (contract deleted but payroll_item still exists)
+        try {
+            $this->execute(
+                "DELETE FROM payroll_items WHERE payroll_period_id = ? AND contract_id NOT IN (SELECT id FROM contracts)",
+                [$periodId], 'i'
+            );
+        } catch (\Exception $e) {
+            // Ignore cleanup errors
+        }
+
         // Get active contracts with currency info
         $sql = "SELECT c.id, c.crew_name, c.crew_id,
                     r.name AS rank_name,
@@ -159,20 +204,33 @@ class PayrollItemModel extends BaseModel
             }
             
             // Exchange rate = Kurs (1 unit original currency = X IDR)
-            $exchangeRate = floatval($contract['contract_exchange_rate'] ?? 0);
-            if ($exchangeRate <= 0) {
-                // Default IDR rates: 1 USD = 15900 IDR, 1 MYR = 3500 IDR, etc.
-                $defaultRates = ['IDR' => 1, 'USD' => 15900, 'MYR' => 3500, 'SGD' => 11800, 'EUR' => 17000];
-                $exchangeRate = $defaultRates[$originalCurrency] ?? 1;
+            // IMPORTANT: If currency is already IDR, exchange rate MUST be 1
+            if ($originalCurrency === 'IDR') {
+                $exchangeRate = 1;
+            } else {
+                $exchangeRate = floatval($contract['contract_exchange_rate'] ?? 0);
+                if ($exchangeRate <= 0) {
+                    // Default rates: 1 USD = 15900 IDR, 1 MYR = 3500 IDR, etc.
+                    $defaultRates = ['USD' => 15900, 'MYR' => 3500, 'SGD' => 11800, 'EUR' => 17000];
+                    $exchangeRate = $defaultRates[$originalCurrency] ?? 1;
+                }
             }
             
-            // Salary values in ORIGINAL currency (no USD conversion)
+            // Salary values in ORIGINAL currency
             $basicSalary = floatval($contract['basic_salary'] ?? 0);
             $overtime = floatval($contract['overtime_allowance'] ?? 0);
             $leavePay = floatval($contract['leave_pay'] ?? 0);
             $bonus = floatval($contract['bonus'] ?? 0);
             $otherAllowance = floatval($contract['other_allowance'] ?? 0);
-            $grossSalary = $totalMonthly > 0 ? $totalMonthly : ($basicSalary + $overtime + $leavePay + $bonus + $otherAllowance);
+            
+            // Actualy Salary in original currency = basic + overtime
+            $actualySalary = $basicSalary + $overtime;
+            
+            // Convert to IDR: IDR = actualySalary * kurs
+            $idrSalary = $actualySalary * $exchangeRate;
+            
+            // Gross in IDR = IDR salary (reimbursement/loans start at 0 for new records)
+            $grossSalary = $idrSalary;
             
             // Calculate deductions (try/catch in case table doesn't exist)
             $insurance = 0;
@@ -201,9 +259,10 @@ class PayrollItemModel extends BaseModel
                 // contract_deductions table may not exist in production
             }
             
+            // Deductions are already in IDR (Rp)
             $totalDeductions = $insurance + $medical + $advance + $otherDed;
             
-            // Calculate tax
+            // Calculate tax from IDR gross
             $taxRate = floatval($contract['tax_rate'] ?? 2.5);
             $taxBase = $grossSalary - $totalDeductions;
             $taxAmount = $taxBase > 0 ? $taxBase * ($taxRate / 100) : 0;

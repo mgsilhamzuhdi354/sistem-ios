@@ -167,7 +167,7 @@ class Api extends BaseController
             $hostsToTry = ['172.17.0.3', '172.17.0.2', '172.17.0.4', '172.17.0.5'];
             foreach ($hostsToTry as $host) {
                 try {
-                    $db = @new \mysqli($host, 'root', 'rahasia123', 'recruitment_db', 3306);
+                    $db = @new \mysqli($host, $_ENV['DB_USER'] ?? 'root', $_ENV['DB_PASS'] ?? '', 'recruitment_db', 3306);
                     if (!$db->connect_error) {
                         $db->close();
                         return true;

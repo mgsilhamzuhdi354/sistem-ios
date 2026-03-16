@@ -134,7 +134,7 @@ $currentPage = 'crews';
                     </div>
 
                     <div class="flex space-x-3 mt-6 md:mt-0">
-                        <a href="<?= BASE_URL ?>crews/<?= $crew['id'] ?>/edit"
+                        <a href="<?= BASE_URL ?>crews/edit/<?= $crew['id'] ?>"
                             class="flex items-center space-x-2 px-5 py-2.5 bg-accent-gold text-white rounded-xl font-semibold text-sm hover:opacity-90 transition-all shadow-lg shadow-yellow-600/10">
                             <span class="material-icons text-lg">edit</span>
                             <span><?= __('crews.edit_profile') ?></span>
@@ -281,6 +281,107 @@ $currentPage = 'crews';
                             </div>
                         </div>
 
+                        <!-- Active Contract -->
+                        <?php if (!empty($activeContract)): ?>
+                        <div class="mt-8 pt-6 border-t border-slate-100">
+                            <div class="flex items-center space-x-2 mb-4 text-emerald-600">
+                                <span class="material-icons text-lg">description</span>
+                                <span class="font-bold text-sm uppercase tracking-wider">Kontrak Aktif</span>
+                            </div>
+                            <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-5 border border-emerald-200/50">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="font-bold text-slate-800"><?= htmlspecialchars($activeContract['contract_no'] ?? '-') ?></span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                        <?= strtoupper($activeContract['status'] ?? 'active') ?>
+                                    </span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3 text-sm">
+                                    <div>
+                                        <span class="text-slate-400">Kapal</span>
+                                        <p class="font-semibold text-slate-700"><?= htmlspecialchars($activeContract['vessel_name'] ?? '-') ?></p>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-400">Jabatan</span>
+                                        <p class="font-semibold text-slate-700"><?= htmlspecialchars($activeContract['rank_name'] ?? '-') ?></p>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-400">Sign On</span>
+                                        <p class="font-semibold text-slate-700"><?= !empty($activeContract['sign_on_date']) ? date('d M Y', strtotime($activeContract['sign_on_date'])) : '-' ?></p>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-400">Sign Off</span>
+                                        <p class="font-semibold text-slate-700"><?= !empty($activeContract['sign_off_date']) ? date('d M Y', strtotime($activeContract['sign_off_date'])) : '-' ?></p>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-400">Gaji Pokok</span>
+                                        <p class="font-semibold text-slate-700"><?= ($activeContract['currency_code'] ?? 'IDR') ?> <?= number_format($activeContract['basic_salary'] ?? 0, 0, ',', '.') ?></p>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-400">Total Bulanan</span>
+                                        <p class="font-semibold text-emerald-700"><?= ($activeContract['currency_code'] ?? 'IDR') ?> <?= number_format($activeContract['total_monthly'] ?? 0, 0, ',', '.') ?></p>
+                                    </div>
+                                </div>
+                                <div class="mt-3 text-right">
+                                    <a href="<?= BASE_URL ?>contracts/view/<?= $activeContract['id'] ?>" class="text-xs text-emerald-600 hover:text-emerald-800 font-semibold">
+                                        Lihat Detail Kontrak →
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <!-- Recent Payroll -->
+                        <?php if (!empty($recentPayroll)): ?>
+                        <div class="mt-6 pt-6 border-t border-slate-100">
+                            <div class="flex items-center space-x-2 mb-4 text-blue-600">
+                                <span class="material-icons text-lg">payments</span>
+                                <span class="font-bold text-sm uppercase tracking-wider">Riwayat Payroll (3 Bulan Terakhir)</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="text-xs text-slate-400 uppercase border-b border-slate-100">
+                                            <th class="text-left py-2">Periode</th>
+                                            <th class="text-right py-2">Gross</th>
+                                            <th class="text-right py-2">Net</th>
+                                            <th class="text-center py-2">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($recentPayroll as $pr): ?>
+                                        <tr class="border-b border-slate-50 hover:bg-slate-50/50">
+                                            <td class="py-2.5 font-semibold text-slate-700"><?= htmlspecialchars($pr['period_name'] ?? '') ?></td>
+                                            <td class="py-2.5 text-right text-slate-600"><?= number_format($pr['gross_salary'] ?? 0, 0, ',', '.') ?></td>
+                                            <td class="py-2.5 text-right font-semibold text-emerald-700"><?= number_format($pr['net_salary'] ?? 0, 0, ',', '.') ?></td>
+                                            <td class="py-2.5 text-center">
+                                                <?php
+                                                    $pStatus = strtolower($pr['status'] ?? 'pending');
+                                                    $pBadge = match($pStatus) {
+                                                        'paid' => 'bg-emerald-100 text-emerald-700',
+                                                        'confirmed' => 'bg-blue-100 text-blue-700',
+                                                        default => 'bg-amber-100 text-amber-700'
+                                                    };
+                                                ?>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold <?= $pBadge ?>">
+                                                    <?= strtoupper($pStatus) ?>
+                                                </span>
+                                                <?php if ($pr['email_status'] === 'sent'): ?>
+                                                    <span class="material-icons text-emerald-500 text-xs ml-1" title="Email terkirim">email</span>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-2 text-right">
+                                <a href="<?= BASE_URL ?>payroll" class="text-xs text-blue-600 hover:text-blue-800 font-semibold">
+                                    Lihat Semua Payroll →
+                                </a>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
                         <!-- Contract History -->
                         <div class="mt-8 pt-6 border-t border-slate-100">
                             <div class="flex items-center space-x-2 mb-4 text-primary">
@@ -302,8 +403,8 @@ $currentPage = 'crews';
                                                 <?= htmlspecialchars($contract['vessel_name']) ?>
                                             </p>
                                             <p class="text-slate-500">
-                                                <?= date('M Y', strtotime($contract['start_date'])) ?> -
-                                                <?= $contract['end_date'] ? date('M Y', strtotime($contract['end_date'])) : 'Present' ?>
+                                                <?= !empty($contract['start_date']) ? date('M Y', strtotime($contract['start_date'])) : '-' ?> -
+                                                <?= !empty($contract['end_date']) ? date('M Y', strtotime($contract['end_date'])) : 'Present' ?>
                                             </p>
                                         </div>
                                     <?php endforeach; ?>
@@ -362,7 +463,7 @@ $currentPage = 'crews';
                                                 <?= htmlspecialchars($doc['document_number']) ?>
                                             </td>
                                             <td class="px-6 py-4 text-sm text-slate-500">
-                                                <?= date('d M Y', strtotime($doc['issue_date'])) ?>
+                                                <?= !empty($doc['issue_date']) ? date('d M Y', strtotime($doc['issue_date'])) : '-' ?>
                                             </td>
                                             <td class="px-6 py-4 text-sm text-slate-500">
                                                 <?= $doc['expiry_date'] ? date('d M Y', strtotime($doc['expiry_date'])) : '-' ?>
@@ -453,11 +554,11 @@ $currentPage = 'crews';
                                                 <?= htmlspecialchars($skill['notes'] ?? '-') ?>
                                             </td>
                                             <td class="px-6 py-4 text-right space-x-2">
-                                                <button onclick="editSkill(<?= $skill['id'] ?>)"
+                                                <button onclick='editSkill(<?= json_encode($skill) ?>)'
                                                     class="p-1.5 text-slate-400 hover:text-primary bg-slate-100 rounded">
                                                     <span class="material-icons text-sm">edit</span>
                                                 </button>
-                                                <button onclick="deleteSkill(<?= $skill['id'] ?>)"
+                                                <button onclick="deleteSkill(<?= $skill['id'] ?>, '<?= htmlspecialchars($skill['skill_name'], ENT_QUOTES) ?>')"
                                                     class="p-1.5 text-slate-400 hover:text-red-500 bg-slate-100 rounded">
                                                     <span class="material-icons text-sm">delete</span>
                                                 </button>
@@ -672,9 +773,152 @@ $currentPage = 'crews';
         </div>
     </div>
 
+    <!-- Edit Skill Modal -->
+    <div id="editSkillModal" style="display:none;" class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div onclick="closeEditSkillModal()" class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <form id="editSkillForm" onsubmit="saveEditSkill(event)">
+                    <div class="bg-white px-6 pt-6 pb-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-primary flex items-center gap-2">
+                                <span class="material-icons">edit</span>
+                                Edit Skill
+                            </h3>
+                            <button type="button" onclick="closeEditSkillModal()" class="text-slate-400 hover:text-slate-600">
+                                <span class="material-icons">close</span>
+                            </button>
+                        </div>
+                        <input type="hidden" id="edit_skill_id" name="skill_id">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Skill Name</label>
+                                <input type="text" id="edit_skill_name" readonly
+                                       class="w-full px-4 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Proficiency Level *</label>
+                                <select id="edit_skill_level" name="skill_level" required
+                                        class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                                    <option value="basic">Basic</option>
+                                    <option value="intermediate">Intermediate</option>
+                                    <option value="advanced">Advanced</option>
+                                    <option value="expert">Expert</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Certificate ID</label>
+                                <input type="text" id="edit_certificate_id" name="certificate_id"
+                                       class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Notes</label>
+                                <textarea id="edit_notes" name="notes" rows="3"
+                                          class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 px-6 py-4 flex items-center justify-end gap-3">
+                        <button type="button" onclick="closeEditSkillModal()"
+                                class="px-4 py-2 bg-white border border-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-slate-800 transition-colors flex items-center gap-2">
+                            <span class="material-icons text-sm">save</span>
+                            Simpan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <style>
         [x-cloak] { display: none !important; }
     </style>
+
+    <script>
+    const BASE_URL = '<?= BASE_URL ?>';
+    const CREW_ID = <?= $crew['id'] ?>;
+
+    function editSkill(skill) {
+        document.getElementById('edit_skill_id').value = skill.id;
+        document.getElementById('edit_skill_name').value = skill.skill_name;
+        var level = (skill.skill_level || skill.proficiency_level || 'basic').toLowerCase();
+        document.getElementById('edit_skill_level').value = level;
+        document.getElementById('edit_certificate_id').value = skill.certificate_id || '';
+        document.getElementById('edit_notes').value = skill.notes || '';
+        document.getElementById('editSkillModal').style.display = 'block';
+    }
+
+    function closeEditSkillModal() {
+        document.getElementById('editSkillModal').style.display = 'none';
+    }
+
+    async function saveEditSkill(event) {
+        event.preventDefault();
+        var skillId = document.getElementById('edit_skill_id').value;
+        var formData = new FormData();
+        formData.append('skill_level', document.getElementById('edit_skill_level').value);
+        formData.append('certificate_id', document.getElementById('edit_certificate_id').value);
+        formData.append('notes', document.getElementById('edit_notes').value);
+
+        try {
+            var response = await fetch(BASE_URL + 'crews/updateSkill/' + skillId, {
+                method: 'POST',
+                body: formData
+            });
+            var result = await response.json();
+            if (result.success) {
+                closeEditSkillModal();
+                showNotification(result.message, 'success');
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                showNotification(result.message || 'Gagal mengupdate skill', 'error');
+            }
+        } catch (error) {
+            showNotification('Terjadi kesalahan. Silakan coba lagi.', 'error');
+        }
+    }
+
+    async function deleteSkill(skillId, skillName) {
+        if (!confirm('Apakah Anda yakin ingin menghapus skill "' + skillName + '"?')) {
+            return;
+        }
+        try {
+            var response = await fetch(BASE_URL + 'crews/deleteSkill/' + skillId, {
+                method: 'POST'
+            });
+            var result = await response.json();
+            if (result.success) {
+                showNotification(result.message, 'success');
+                setTimeout(function() { location.reload(); }, 800);
+            } else {
+                showNotification(result.message || 'Gagal menghapus skill', 'error');
+            }
+        } catch (error) {
+            showNotification('Terjadi kesalahan. Silakan coba lagi.', 'error');
+        }
+    }
+
+    function showNotification(message, type) {
+        var bg = type === 'success' ? 'background:#10b981;' : 'background:#ef4444;';
+        var icon = type === 'success' ? '✓' : '✗';
+        var div = document.createElement('div');
+        div.style.cssText = bg + 'color:#fff;padding:14px 20px;border-radius:12px;position:fixed;top:20px;right:20px;z-index:9999;font-size:14px;font-weight:500;box-shadow:0 10px 25px rgba(0,0,0,0.15);';
+        div.innerHTML = '<strong>' + icon + '</strong> ' + message;
+        document.body.appendChild(div);
+        setTimeout(function() { div.remove(); }, 3000);
+    }
+
+    // Close modal on outside click
+    window.addEventListener('click', function(e) {
+        var modal = document.getElementById('editSkillModal');
+        if (e.target === modal) closeEditSkillModal();
+    });
+    </script>
 </body>
 
 </html>

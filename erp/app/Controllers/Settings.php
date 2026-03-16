@@ -35,6 +35,8 @@ class Settings extends BaseController
                 'contract' => $this->settingsModel->getByGroup('contract'),
                 'payroll' => $this->settingsModel->getByGroup('payroll'),
                 'notification' => $this->settingsModel->getByGroup('notification'),
+                'email' => $this->settingsModel->getByGroup('email'),
+                'whatsapp' => $this->settingsModel->getByGroup('whatsapp'),
             ],
             'flash' => $this->getFlash()
         ];
@@ -59,6 +61,363 @@ class Settings extends BaseController
         
         $this->setFlash('success', 'Settings saved successfully');
         $this->redirect('settings');
+    }
+    
+    /**
+     * Save email SMTP settings
+     */
+    public function saveEmail()
+    {
+        if (!$this->isPost()) {
+            $this->redirect('settings');
+        }
+        
+        $emailFields = [
+            'smtp_host', 'smtp_port', 'smtp_secure',
+            'smtp_user', 'smtp_pass', 'smtp_from_email', 'smtp_from_name'
+        ];
+        
+        foreach ($emailFields as $field) {
+            if (isset($_POST[$field])) {
+                $this->settingsModel->set($field, $_POST[$field], 'email', ucfirst(str_replace('_', ' ', $field)));
+            }
+        }
+        
+        if ($this->isAjax()) {
+            $this->json(['success' => true, 'message' => 'Email settings saved successfully']);
+        } else {
+            $this->setFlash('success', 'Email SMTP settings saved successfully');
+            $this->redirect('settings');
+        }
+    }
+    
+    /**
+     * Save WhatsApp settings
+     */
+    public function saveWhatsApp()
+    {
+        if (!$this->isPost()) {
+            $this->redirect('settings');
+        }
+        
+        $waFields = [
+            'wa_enabled', 'wa_api_token', 'wa_target_phone',
+            'wa_notify_contract', 'wa_notify_payroll', 'wa_notify_system'
+        ];
+        
+        foreach ($waFields as $field) {
+            if (isset($_POST[$field])) {
+                $this->settingsModel->set($field, $_POST[$field], 'whatsapp', ucfirst(str_replace('_', ' ', $field)));
+            }
+        }
+        
+        if ($this->isAjax()) {
+            $this->json(['success' => true, 'message' => 'WhatsApp settings saved successfully']);
+        } else {
+            $this->setFlash('success', 'WhatsApp settings saved successfully');
+            $this->redirect('settings');
+        }
+    }
+    
+    /**
+     * Test WhatsApp sending
+     */
+    public function testWhatsApp()
+    {
+        $testPhone = $_POST['test_phone'] ?? $_GET['test_phone'] ?? '';
+        if (empty($testPhone)) {
+            $this->json(['success' => false, 'message' => 'Masukkan nomor HP tujuan test']);
+            return;
+        }
+        
+        try {
+            require_once APPPATH . 'Libraries/WhatsAppService.php';
+            
+            // First save current form values
+            $waFields = ['wa_enabled', 'wa_api_token', 'wa_target_phone', 'wa_notify_contract', 'wa_notify_payroll', 'wa_notify_system'];
+            foreach ($waFields as $field) {
+                if (isset($_POST[$field])) {
+                    $this->settingsModel->set($field, $_POST[$field], 'whatsapp');
+                }
+            }
+            
+            $apiToken = $_POST['wa_api_token'] ?? $this->settingsModel->get('wa_api_token', '');
+            
+            if (empty($apiToken)) {
+                $this->json(['success' => false, 'message' => 'API Token Fonnte belum diisi']);
+                return;
+            }
+            
+            $wa = new \App\Libraries\WhatsAppService($apiToken);
+            
+            // Count how many numbers
+            $phoneList = array_filter(array_map('trim', explode(',', $testPhone)));
+            $phoneCount = count($phoneList);
+            
+            $message = "✅ *Test WhatsApp - IndoOcean ERP*\n\n"
+                     . "Pesan ini dikirim sebagai test dari halaman Settings ERP.\n"
+                     . "Konfigurasi WhatsApp Anda sudah benar!\n\n"
+                     . "⏰ " . date('d M Y, H:i:s') . "\n"
+                     . "— _IndoOcean ERP System_";
+            
+            $result = $wa->sendBulk($testPhone, $message);
+            
+            if ($result) {
+                $label = $phoneCount > 1 ? "Test WA berhasil dikirim ke {$phoneCount} nomor" : "Test WA berhasil dikirim ke {$testPhone}";
+                $this->json(['success' => true, 'message' => $label]);
+            } else {
+                $errors = $wa->getErrors();
+                $this->json(['success' => false, 'message' => 'Gagal mengirim WA: ' . implode(', ', $errors)]);
+            }
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * Test ALL WhatsApp notification types (8 samples)
+     */
+    public function testAllWhatsApp()
+    {
+        $testPhone = $_POST['test_phone'] ?? '';
+        if (empty($testPhone)) {
+            $this->json(['success' => false, 'message' => 'Masukkan nomor HP tujuan test']);
+            return;
+        }
+        
+        try {
+            require_once APPPATH . 'Libraries/WhatsAppService.php';
+            
+            // Save settings first
+            $waFields = ['wa_enabled', 'wa_api_token', 'wa_target_phone', 'wa_notify_contract', 'wa_notify_payroll', 'wa_notify_system'];
+            foreach ($waFields as $field) {
+                if (isset($_POST[$field])) {
+                    $this->settingsModel->set($field, $_POST[$field], 'whatsapp');
+                }
+            }
+            
+            $apiToken = $_POST['wa_api_token'] ?? $this->settingsModel->get('wa_api_token', '');
+            if (empty($apiToken)) {
+                $this->json(['success' => false, 'message' => 'API Token Fonnte belum diisi']);
+                return;
+            }
+            
+            $wa = new \App\Libraries\WhatsAppService($apiToken);
+            $now = date('d M Y, H:i');
+            $today = date('d M Y');
+            $sentCount = 0;
+            $errors = [];
+            
+            // ═══ 1. Kontrak Baru Dibuat ═══
+            $msg1 = "📢 *KONTRAK BARU DIBUAT*\n"
+                  . "━━━━━━━━━━━━━━━━━━\n\n"
+                  . "👤 *Crew:* Ahmad Rasyid\n"
+                  . "🎖️ *Rank:* Chief Officer\n"
+                  . "🚢 *Vessel:* MV Indo Pacific\n"
+                  . "🏢 *Client:* PT Pelayaran Nusantara\n"
+                  . "📋 *No. Kontrak:* IOC-2026-0315\n"
+                  . "📅 *Sign On:* " . date('d M Y') . "\n"
+                  . "📅 *Sign Off:* " . date('d M Y', strtotime('+9 months')) . "\n"
+                  . "⏱️ *Durasi:* 9 bulan\n\n"
+                  . "🔗 _Buka ERP untuk detail_\n"
+                  . "⏰ {$now}\n"
+                  . "━━━━━━━━━━━━━━━━━━\n"
+                  . "— _IndoOcean ERP_ 🌊";
+            if ($wa->sendBulk($testPhone, $msg1)) $sentCount++; else $errors[] = '1-Kontrak Baru';
+            sleep(1);
+            
+            // ═══ 2. Kontrak Diapprove (ON Board) ═══
+            $msg2 = "✅ *CREW ON BOARD*\n"
+                  . "━━━━━━━━━━━━━━━━━━\n\n"
+                  . "👤 *Crew:* Budi Setiawan\n"
+                  . "🎖️ *Rank:* 2nd Engineer\n"
+                  . "🚢 *Vessel:* MT Oceanic Star\n"
+                  . "📋 *Kontrak:* IOC-2026-0298\n"
+                  . "📅 *Tanggal Aktif:* {$today}\n"
+                  . "📊 *Status:* ACTIVE ✅\n\n"
+                  . "Kontrak telah disetujui semua pihak.\n"
+                  . "Crew sudah ON BOARD.\n\n"
+                  . "⏰ {$now}\n"
+                  . "━━━━━━━━━━━━━━━━━━\n"
+                  . "— _IndoOcean ERP_ 🌊";
+            if ($wa->sendBulk($testPhone, $msg2)) $sentCount++; else $errors[] = '2-Crew ON';
+            sleep(1);
+            
+            // ═══ 3. Kontrak Ditolak ═══
+            $msg3 = "⚠️ *KONTRAK DITOLAK*\n"
+                  . "━━━━━━━━━━━━━━━━━━\n\n"
+                  . "👤 *Crew:* Deni Pratama\n"
+                  . "🎖️ *Rank:* Able Seaman\n"
+                  . "📋 *Kontrak:* IOC-2026-0301\n"
+                  . "❌ *Status:* REJECTED\n\n"
+                  . "📝 *Alasan Penolakan:*\n"
+                  . "Dokumen COC belum lengkap, sertifikat BST expired.\n\n"
+                  . "👨‍💼 *Ditolak oleh:* Manager Crewing\n"
+                  . "📅 *Tanggal:* {$today}\n\n"
+                  . "⏰ {$now}\n"
+                  . "━━━━━━━━━━━━━━━━━━\n"
+                  . "— _IndoOcean ERP_ 🌊";
+            if ($wa->sendBulk($testPhone, $msg3)) $sentCount++; else $errors[] = '3-Ditolak';
+            sleep(1);
+            
+            // ═══ 4. Kontrak Diperpanjang ═══
+            $msg4 = "🔄 *KONTRAK DIPERPANJANG*\n"
+                  . "━━━━━━━━━━━━━━━━━━\n\n"
+                  . "👤 *Crew:* Eko Wijaya\n"
+                  . "🎖️ *Rank:* Bosun\n"
+                  . "🚢 *Vessel:* MV Indo Pacific\n\n"
+                  . "📋 *Kontrak Lama:* IOC-2025-0187\n"
+                  . "   └ Sign Off: " . date('d M Y', strtotime('-1 day')) . "\n\n"
+                  . "📋 *Kontrak Baru:* IOC-2026-0316\n"
+                  . "   ├ Sign On: {$today}\n"
+                  . "   ├ Sign Off: " . date('d M Y', strtotime('+9 months')) . "\n"
+                  . "   └ Durasi: 9 bulan\n\n"
+                  . "⏰ {$now}\n"
+                  . "━━━━━━━━━━━━━━━━━━\n"
+                  . "— _IndoOcean ERP_ 🌊";
+            if ($wa->sendBulk($testPhone, $msg4)) $sentCount++; else $errors[] = '4-Perpanjang';
+            sleep(1);
+            
+            // ═══ 5. Kontrak Diterminasi (OFF Board) ═══
+            $msg5 = "⛔ *CREW OFF BOARD*\n"
+                  . "━━━━━━━━━━━━━━━━━━\n\n"
+                  . "👤 *Crew:* Fajar Nugroho\n"
+                  . "🎖️ *Rank:* Oiler\n"
+                  . "🚢 *Vessel:* MT Oceanic Star\n"
+                  . "📋 *Kontrak:* IOC-2025-0245\n\n"
+                  . "❌ *Status:* TERMINATED\n"
+                  . "📅 *Tanggal Sign Off:* {$today}\n"
+                  . "🏗️ *Pelabuhan:* Tanjung Priok, Jakarta\n\n"
+                  . "📝 *Alasan:*\n"
+                  . "Kontrak selesai, crew akan repatriasi.\n\n"
+                  . "⏰ {$now}\n"
+                  . "━━━━━━━━━━━━━━━━━━\n"
+                  . "— _IndoOcean ERP_ 🌊";
+            if ($wa->sendBulk($testPhone, $msg5)) $sentCount++; else $errors[] = '5-Crew OFF';
+            sleep(1);
+            
+            // ═══ 6. Payroll Di-generate ═══
+            $monthName = date('F Y');
+            $msg6 = "💰 *PAYROLL DI-GENERATE*\n"
+                  . "━━━━━━━━━━━━━━━━━━\n\n"
+                  . "📅 *Periode:* {$monthName}\n"
+                  . "👥 *Total Crew:* 24 orang\n"
+                  . "📊 *Status:* Processing\n\n"
+                  . "Payroll telah di-generate otomatis.\n"
+                  . "Silakan review dan lakukan finalisasi\n"
+                  . "sebelum tanggal 15.\n\n"
+                  . "⏰ {$now}\n"
+                  . "━━━━━━━━━━━━━━━━━━\n"
+                  . "— _IndoOcean ERP_ 🌊";
+            if ($wa->sendBulk($testPhone, $msg6)) $sentCount++; else $errors[] = '6-Payroll Generate';
+            sleep(1);
+            
+            // ═══ 7. Payroll Selesai (PAID) ═══
+            $msg7 = "✅ *PAYROLL SELESAI*\n"
+                  . "━━━━━━━━━━━━━━━━━━\n\n"
+                  . "📅 *Periode:* {$monthName}\n"
+                  . "📊 *Status:* COMPLETED ✅\n\n"
+                  . "┌─────────────────────\n"
+                  . "│ 👥 Total Crew : 24\n"
+                  . "│ 💵 Gross      : \$48,500.00\n"
+                  . "│ 🏦 Tax        : \$2,425.00\n"
+                  . "│ ✅ Net Pay    : \$46,075.00\n"
+                  . "└─────────────────────\n\n"
+                  . "Semua payslip ditandai *PAID*.\n"
+                  . "Tanggal bayar: 15 " . date('M Y') . "\n\n"
+                  . "⏰ {$now}\n"
+                  . "━━━━━━━━━━━━━━━━━━\n"
+                  . "— _IndoOcean ERP_ 🌊";
+            if ($wa->sendBulk($testPhone, $msg7)) $sentCount++; else $errors[] = '7-Payroll Selesai';
+            sleep(1);
+            
+            // ═══ 8. Kontrak Expiring (Cron Alert) ═══
+            $msg8 = "⚠️ *CONTRACT EXPIRATION ALERT*\n"
+                  . "━━━━━━━━━━━━━━━━━━\n\n"
+                  . "🔴 *KRITIS — Expired ≤7 hari (2 kontrak):*\n"
+                  . "┌─────────────────────\n"
+                  . "│ • Ahmad Rasyid — MV Indo Pacific\n"
+                  . "│   Rank: Chief Officer | Sisa: *3 hari*\n"
+                  . "│   Sign Off: " . date('d M Y', strtotime('+3 days')) . "\n"
+                  . "│\n"
+                  . "│ • Budi Setiawan — MT Oceanic Star\n"
+                  . "│   Rank: 2nd Engineer | Sisa: *5 hari*\n"
+                  . "│   Sign Off: " . date('d M Y', strtotime('+5 days')) . "\n"
+                  . "└─────────────────────\n\n"
+                  . "🟡 *WARNING — Expired ≤30 hari (3 kontrak):*\n"
+                  . "┌─────────────────────\n"
+                  . "│ • Eko Wijaya — MV Indo Pacific\n"
+                  . "│   Rank: Bosun | Sisa: *14 hari*\n"
+                  . "│ • Deni Pratama — TB Ocean 01\n"
+                  . "│   Rank: AB | Sisa: *21 hari*\n"
+                  . "│ • Fajar Nugroho — MT Oceanic Star\n"
+                  . "│   Rank: Oiler | Sisa: *28 hari*\n"
+                  . "└─────────────────────\n\n"
+                  . "📊 Total: *5 kontrak* perlu ditindaklanjuti\n\n"
+                  . "⏰ {$now}\n"
+                  . "━━━━━━━━━━━━━━━━━━\n"
+                  . "— _IndoOcean ERP_ 🌊";
+            if ($wa->sendBulk($testPhone, $msg8)) $sentCount++; else $errors[] = '8-Expiring';
+            
+            if ($sentCount === 8) {
+                $this->json(['success' => true, 'message' => "✅ Semua {$sentCount}/8 notifikasi test berhasil dikirim!"]);
+            } elseif ($sentCount > 0) {
+                $this->json(['success' => true, 'message' => "⚠️ {$sentCount}/8 berhasil, gagal: " . implode(', ', $errors)]);
+            } else {
+                $allErrors = $wa->getErrors();
+                $this->json(['success' => false, 'message' => 'Gagal semua: ' . implode(', ', $allErrors)]);
+            }
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * Test email sending
+     */
+    public function testEmail()
+    {
+        $testTo = $_POST['test_email'] ?? $_GET['test_email'] ?? '';
+        if (empty($testTo)) {
+            $this->json(['success' => false, 'message' => 'Masukkan alamat email tujuan test']);
+            return;
+        }
+        
+        try {
+            require_once APPPATH . 'Libraries/Mailer.php';
+            $mailer = new \App\Libraries\Mailer();
+            
+            $subject = 'Test Email - PT Indo Ocean ERP';
+            $body = '
+                <html><body>
+                <div style="max-width:500px;margin:20px auto;font-family:Arial,sans-serif;">
+                    <div style="background:#0A2463;color:#D4AF37;padding:20px;text-align:center;border-radius:12px 12px 0 0;">
+                        <h2 style="margin:0;">PT Indo Ocean ERP</h2>
+                        <p style="margin:5px 0 0;font-size:13px;opacity:.8;">Email Test</p>
+                    </div>
+                    <div style="padding:25px;background:#f9fafb;border:1px solid #e5e7eb;">
+                        <p style="color:#059669;font-weight:bold;font-size:16px;">✅ Email berhasil terkirim!</p>
+                        <p style="color:#6b7280;font-size:14px;">Konfigurasi SMTP Anda sudah benar. Email ini dikirim sebagai test dari halaman Settings ERP.</p>
+                        <p style="color:#9ca3af;font-size:12px;margin-top:20px;">Waktu: ' . date('d M Y, H:i:s') . '</p>
+                    </div>
+                    <div style="padding:12px;text-align:center;font-size:11px;color:#9ca3af;">
+                        PT Indo Ocean Crew Services
+                    </div>
+                </div>
+                </body></html>
+            ';
+            
+            $result = $mailer->send($testTo, $subject, $body, true);
+            
+            if ($result) {
+                $this->json(['success' => true, 'message' => 'Test email berhasil dikirim ke ' . $testTo]);
+            } else {
+                $errors = $mailer->getErrors();
+                $this->json(['success' => false, 'message' => 'Gagal mengirim email: ' . implode(', ', $errors)]);
+            }
+        } catch (\Exception $e) {
+            $this->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
     }
     
     public function init()
@@ -116,32 +475,48 @@ class Settings extends BaseController
                 // Delete all transactional data
                 $this->db->query("SET FOREIGN_KEY_CHECKS = 0");
                 
-                // Payroll
-                $this->db->query("TRUNCATE TABLE payroll_items");
-                $this->db->query("TRUNCATE TABLE payroll_periods");
+                // All tables to truncate (order doesn't matter with FK checks off)
+                $tablesToTruncate = [
+                    // Payroll
+                    'payroll_items',
+                    'payroll_periods',
+                    // Contract related
+                    'contract_logs',
+                    'contract_documents',
+                    'contract_approvals',
+                    'contract_deductions',
+                    'contract_taxes',
+                    'contract_salaries',
+                    'contracts',
+                    // Crew related
+                    'crew_documents',
+                    'crew_skills',
+                    'crew_experiences',
+                    'crew_operationals',
+                    'onboarding_tasks',
+                    'admin_checklists',
+                    'crews',
+                    // Notifications
+                    'notifications',
+                ];
                 
-                // Contract related
-                $this->db->query("TRUNCATE TABLE contract_logs");
-                $this->db->query("TRUNCATE TABLE contract_documents");
-                $this->db->query("TRUNCATE TABLE contract_approvals");
-                $this->db->query("TRUNCATE TABLE contract_deductions");
-                $this->db->query("TRUNCATE TABLE contract_taxes");
-                $this->db->query("TRUNCATE TABLE contract_salaries");
-                $this->db->query("TRUNCATE TABLE contracts");
+                foreach ($tablesToTruncate as $table) {
+                    try {
+                        $this->db->query("TRUNCATE TABLE `$table`");
+                    } catch (\Throwable $e) {
+                        // Skip if table doesn't exist
+                    }
+                }
                 
-                // Notifications & Settings
-                $this->db->query("TRUNCATE TABLE notifications");
+                // Settings - delete and reinitialize
                 $this->db->query("DELETE FROM settings");
-                
-                // Exchange rates
-                $this->db->query("DELETE FROM exchange_rates");
                 
                 $this->db->query("SET FOREIGN_KEY_CHECKS = 1");
                 
                 // Reinitialize default settings
                 $this->settingsModel->initDefaults();
                 
-                $deletedItems[] = 'All data (contracts, payroll, notifications, settings)';
+                $deletedItems[] = 'All data (crews, contracts, payroll, notifications, settings)';
                 break;
                 
             default:
@@ -187,8 +562,7 @@ class Settings extends BaseController
             'payroll_periods',
             'payroll_items',
             'notifications',
-            'settings',
-            'exchange_rates'
+            'settings'
         ];
         
         foreach ($tables as $table) {
@@ -287,7 +661,6 @@ class Settings extends BaseController
         $importedTables = [];
         $importOrder = [
             'settings',
-            'exchange_rates',
             'contracts',
             'contract_salaries',
             'contract_taxes',
@@ -327,90 +700,5 @@ class Settings extends BaseController
         $message = 'Berhasil import data dari backup ' . ($exportInfo['exported_at'] ?? 'unknown') . '. Tables: ' . implode(', ', $importedTables);
         $this->setFlash('success', $message);
         $this->redirect('settings');
-    }
-}
-
-/**
- * Notification Controller
- */
-class Notification extends BaseController
-{
-    private $notificationModel;
-    
-    public function __construct()
-    {
-        parent::__construct();
-        require_once APPPATH . 'Models/SettingsModel.php';
-        $this->notificationModel = new NotificationModel($this->db);
-    }
-    
-    public function index()
-    {
-        $data = [
-            'title' => 'Notifications',
-            'notifications' => $this->notificationModel->getForUser(null, 100),
-            'flash' => $this->getFlash()
-        ];
-        
-        return $this->view('notifications/index', $data);
-    }
-    
-    public function getUnread()
-    {
-        $notifications = $this->notificationModel->getUnread(null, 10);
-        $count = $this->notificationModel->countUnread();
-        
-        $this->json([
-            'success' => true,
-            'count' => $count,
-            'notifications' => $notifications
-        ]);
-    }
-    
-    public function markRead($id)
-    {
-        $this->notificationModel->markAsRead($id);
-        
-        if ($this->isAjax()) {
-            $this->json(['success' => true]);
-        } else {
-            $this->redirect('notifications');
-        }
-    }
-    
-    public function markAllRead()
-    {
-        $this->notificationModel->markAllAsRead();
-        
-        if ($this->isAjax()) {
-            $this->json(['success' => true]);
-        } else {
-            $this->setFlash('success', 'All notifications marked as read');
-            $this->redirect('notifications');
-        }
-    }
-    
-    public function generate()
-    {
-        // Generate notifications for expiring contracts
-        require_once APPPATH . 'Models/ContractModel.php';
-        $contractModel = new \App\Models\ContractModel($this->db);
-        
-        $expiringContracts = $contractModel->getExpiring(30);
-        $count = 0;
-        
-        foreach ($expiringContracts as $contract) {
-            $days = $contract['days_remaining'];
-            
-            // Check if notification already exists
-            $existing = $this->db->query("SELECT id FROM notifications WHERE data LIKE '%\"contract_id\":{$contract['id']}%' AND DATE(created_at) = CURDATE()");
-            if ($existing->num_rows == 0) {
-                $this->notificationModel->notifyContractExpiry($contract, $days);
-                $count++;
-            }
-        }
-        
-        $this->setFlash('success', "Generated $count notifications");
-        $this->redirect('notifications');
     }
 }

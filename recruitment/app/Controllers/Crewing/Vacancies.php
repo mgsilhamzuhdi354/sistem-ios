@@ -30,7 +30,15 @@ class Vacancies extends BaseController {
         // Get vessel types for filter
         $vesselTypes = $this->db->query("SELECT id, name FROM vessel_types ORDER BY name")->fetch_all(MYSQLI_ASSOC);
         
-        // Build query
+        // Get current crewing user's referral code
+        $crewingId = $_SESSION['user_id'];
+        $refStmt = $this->db->prepare("SELECT referral_code FROM users WHERE id = ?");
+        $refStmt->bind_param('i', $crewingId);
+        $refStmt->execute();
+        $refResult = $refStmt->get_result()->fetch_assoc();
+        $referralCode = $refResult['referral_code'] ?? '';
+        
+        // Build query - only show vacancies created by this crewing user
         $query = "
             SELECT jv.*, 
                    d.name as department_name,
@@ -40,11 +48,11 @@ class Vacancies extends BaseController {
             LEFT JOIN departments d ON jv.department_id = d.id
             LEFT JOIN vessel_types vt ON jv.vessel_type_id = vt.id
             LEFT JOIN applications a ON jv.id = a.vacancy_id
-            WHERE jv.status = 'published'
+            WHERE jv.status = 'published' AND jv.created_by = ?
         ";
         
-        $params = [];
-        $types = '';
+        $params = [$crewingId];
+        $types = 'i';
         
         if (!empty($search)) {
             $query .= " AND (jv.title LIKE ? OR jv.description LIKE ?)";
@@ -74,6 +82,8 @@ class Vacancies extends BaseController {
             $stmt->execute();
             $vacancies = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         } else {
+            // This block should ideally not be reached if created_by is always filtered
+            // but keeping it for robustness if $params somehow becomes empty.
             $vacancies = $this->db->query($query)->fetch_all(MYSQLI_ASSOC);
         }
         
@@ -81,7 +91,8 @@ class Vacancies extends BaseController {
             'pageTitle' => 'Lowongan Kerja',
             'vacancies' => $vacancies,
             'departments' => $departments,
-            'vesselTypes' => $vesselTypes
+            'vesselTypes' => $vesselTypes,
+            'referralCode' => $referralCode
         ];
         
         $this->view('crewing/vacancies/index', $data);
@@ -115,7 +126,15 @@ class Vacancies extends BaseController {
         
         // Generate share link with recruiter tracking
         $crewingId = $_SESSION['user_id'];
-        $shareUrl = url("/jobs/{$id}?ref=crewing&recruiter_id={$crewingId}");
+        
+        // Get crewing user's referral code
+        $refStmt = $this->db->prepare("SELECT referral_code FROM users WHERE id = ?");
+        $refStmt->bind_param('i', $crewingId);
+        $refStmt->execute();
+        $refResult = $refStmt->get_result()->fetch_assoc();
+        $referralCode = $refResult['referral_code'] ?? '';
+        
+        $shareUrl = url("/jobs/{$id}?ref=crewing&recruiter_id={$crewingId}" . (!empty($referralCode) ? "&referral_code={$referralCode}" : ''));
         
         // Get share statistics for this vacancy by current crewing
         $statsStmt = $this->db->prepare("
@@ -131,7 +150,8 @@ class Vacancies extends BaseController {
             'pageTitle' => $vacancy['title'],
             'vacancy' => $vacancy,
             'shareUrl' => $shareUrl,
-            'stats' => $stats
+            'stats' => $stats,
+            'referralCode' => $referralCode
         ];
         
         $this->view('crewing/vacancies/detail', $data);
@@ -160,8 +180,15 @@ class Vacancies extends BaseController {
             return $this->json(['success' => false, 'message' => 'Lowongan tidak ditemukan']);
         }
         
-        // Generate share URL
-        $shareUrl = url("/jobs/{$id}?ref=crewing&recruiter_id={$crewingId}");
+        // Get crewing user's referral code
+        $refStmt = $this->db->prepare("SELECT referral_code FROM users WHERE id = ?");
+        $refStmt->bind_param('i', $crewingId);
+        $refStmt->execute();
+        $refResult = $refStmt->get_result()->fetch_assoc();
+        $referralCode = $refResult['referral_code'] ?? '';
+        
+        // Generate share URL with referral code
+        $shareUrl = url("/jobs/{$id}?ref=crewing&recruiter_id={$crewingId}" . (!empty($referralCode) ? "&referral_code={$referralCode}" : ''));
         
         // Track the share
         $trackStmt = $this->db->prepare("
@@ -171,9 +198,12 @@ class Vacancies extends BaseController {
         $trackStmt->bind_param('iiss', $id, $crewingId, $shareMethod, $shareUrl);
         $trackStmt->execute();
         
-        // Generate WhatsApp message
+        // Generate WhatsApp message with referral code
         $whatsappMessage = "🚢 *Lowongan Kerja PT Indo Ocean*\n\n";
         $whatsappMessage .= "*{$vacancy['title']}*\n\n";
+        if (!empty($referralCode)) {
+            $whatsappMessage .= "📋 *Kode Referral:* {$referralCode}\n\n";
+        }
         $whatsappMessage .= "Tertarik? Lihat detail dan apply di:\n{$shareUrl}";
         $whatsappUrl = "https://wa.me/?text=" . urlencode($whatsappMessage);
         
@@ -181,6 +211,7 @@ class Vacancies extends BaseController {
             'success' => true,
             'shareUrl' => $shareUrl,
             'whatsappUrl' => $whatsappUrl,
+            'referralCode' => $referralCode,
             'message' => 'Link berhasil dibuat'
         ]);
     }
@@ -367,10 +398,6 @@ class Vacancies extends BaseController {
         $isFeatured = $this->input('is_featured') ? 1 : 0;
         $deadline = $this->input('application_deadline') ?: null;
         
-        // Debug and auto-fix status column
-        error_log("DEBUG: Status value = '" . $status . "' (length: " . strlen($status) . ")");
-        try { $this->db->query("ALTER TABLE job_vacancies MODIFY COLUMN status VARCHAR(20) DEFAULT 'draft'"); } catch (\Exception $e) {}
-
         // Handle ship photo upload
         $shipPhotoPath = null;
         if (isset($_FILES['ship_photo']) && $_FILES['ship_photo']['error'] === UPLOAD_ERR_OK) {
@@ -421,7 +448,7 @@ class Vacancies extends BaseController {
                 WHERE id = ?
             ");
             $stmt->bind_param(
-                'iisssddssssssiiississi',
+                'iisssddsssssssiiissisi',
                 $departmentId, $vesselTypeId, $shipPhotoPath, $title, $titleId,
                 $salaryMin, $salaryMax, $salaryCurrency, $contractDuration, $joiningDate,
                 $description, $descriptionId, $requirements, $requirementsId,
@@ -439,7 +466,7 @@ class Vacancies extends BaseController {
                 WHERE id = ?
             ");
             $stmt->bind_param(
-                'iissddssssssiiississi',
+                'iissddsssssssiiissisi',
                 $departmentId, $vesselTypeId, $title, $titleId,
                 $salaryMin, $salaryMax, $salaryCurrency, $contractDuration, $joiningDate,
                 $description, $descriptionId, $requirements, $requirementsId,
@@ -462,6 +489,210 @@ class Vacancies extends BaseController {
         }
     }
     
+    /**
+     * Add new department via AJAX
+     */
+    public function addDepartment() {
+        if (!$this->isPost()) {
+            return $this->json(['success' => false, 'message' => 'Invalid request']);
+        }
+        
+        validate_csrf();
+        
+        $name = trim($this->input('name') ?? '');
+        if (empty($name)) {
+            return $this->json(['success' => false, 'message' => 'Nama departemen wajib diisi']);
+        }
+        
+        // Check if already exists
+        $checkStmt = $this->db->prepare("SELECT id FROM departments WHERE LOWER(name) = LOWER(?)");
+        $checkStmt->bind_param('s', $name);
+        $checkStmt->execute();
+        $existing = $checkStmt->get_result()->fetch_assoc();
+        
+        if ($existing) {
+            return $this->json(['success' => false, 'message' => 'Departemen "' . $name . '" sudah ada']);
+        }
+        
+        $stmt = $this->db->prepare("INSERT INTO departments (name, is_active, created_at) VALUES (?, 1, NOW())");
+        $stmt->bind_param('s', $name);
+        
+        if ($stmt->execute()) {
+            return $this->json([
+                'success' => true,
+                'id' => $this->db->insert_id,
+                'name' => $name,
+                'message' => 'Departemen "' . $name . '" berhasil ditambahkan!'
+            ]);
+        }
+        
+        return $this->json(['success' => false, 'message' => 'Gagal menambahkan departemen']);
+    }
+    
+    /**
+     * Add new vessel type via AJAX
+     */
+    public function addVesselType() {
+        if (!$this->isPost()) {
+            return $this->json(['success' => false, 'message' => 'Invalid request']);
+        }
+        
+        validate_csrf();
+        
+        $name = trim($this->input('name') ?? '');
+        if (empty($name)) {
+            return $this->json(['success' => false, 'message' => 'Nama jenis kapal wajib diisi']);
+        }
+        
+        // Check if already exists
+        $checkStmt = $this->db->prepare("SELECT id FROM vessel_types WHERE LOWER(name) = LOWER(?)");
+        $checkStmt->bind_param('s', $name);
+        $checkStmt->execute();
+        $existing = $checkStmt->get_result()->fetch_assoc();
+        
+        if ($existing) {
+            return $this->json(['success' => false, 'message' => 'Jenis kapal "' . $name . '" sudah ada']);
+        }
+        
+        $stmt = $this->db->prepare("INSERT INTO vessel_types (name, is_active) VALUES (?, 1)");
+        $stmt->bind_param('s', $name);
+        
+        if ($stmt->execute()) {
+            return $this->json([
+                'success' => true,
+                'id' => $this->db->insert_id,
+                'name' => $name,
+                'message' => 'Jenis kapal "' . $name . '" berhasil ditambahkan!'
+            ]);
+        }
+        
+        return $this->json(['success' => false, 'message' => 'Gagal menambahkan jenis kapal']);
+    }
+
+    /**
+     * List departments (AJAX)
+     */
+    public function listDepartments() {
+        $items = $this->db->query("SELECT id, name FROM departments WHERE is_active = 1 ORDER BY name ASC")->fetch_all(MYSQLI_ASSOC);
+        return $this->json(['items' => $items]);
+    }
+
+    /**
+     * List vessel types (AJAX)
+     */
+    public function listVesselTypes() {
+        $items = $this->db->query("SELECT id, name FROM vessel_types WHERE is_active = 1 ORDER BY name ASC")->fetch_all(MYSQLI_ASSOC);
+        return $this->json(['items' => $items]);
+    }
+
+    /**
+     * Delete department (soft delete)
+     */
+    public function deleteDepartment($id) {
+        if (!$this->isPost()) {
+            return $this->json(['success' => false, 'message' => 'Invalid request']);
+        }
+        validate_csrf();
+
+        // Check if in use
+        $checkStmt = $this->db->prepare("SELECT COUNT(*) as cnt FROM job_vacancies WHERE department_id = ?");
+        $checkStmt->bind_param('i', $id);
+        $checkStmt->execute();
+        $count = $checkStmt->get_result()->fetch_assoc()['cnt'];
+
+        if ($count > 0) {
+            return $this->json(['success' => false, 'message' => 'Tidak bisa dihapus, departemen masih digunakan oleh ' . $count . ' lowongan']);
+        }
+
+        $stmt = $this->db->prepare("UPDATE departments SET is_active = 0 WHERE id = ?");
+        $stmt->bind_param('i', $id);
+
+        if ($stmt->execute()) {
+            return $this->json(['success' => true, 'message' => 'Departemen berhasil dihapus']);
+        }
+        return $this->json(['success' => false, 'message' => 'Gagal menghapus departemen']);
+    }
+
+    /**
+     * Delete vessel type (soft delete)
+     */
+    public function deleteVesselType($id) {
+        if (!$this->isPost()) {
+            return $this->json(['success' => false, 'message' => 'Invalid request']);
+        }
+        validate_csrf();
+
+        // Check if in use
+        $checkStmt = $this->db->prepare("SELECT COUNT(*) as cnt FROM job_vacancies WHERE vessel_type_id = ?");
+        $checkStmt->bind_param('i', $id);
+        $checkStmt->execute();
+        $count = $checkStmt->get_result()->fetch_assoc()['cnt'];
+
+        if ($count > 0) {
+            return $this->json(['success' => false, 'message' => 'Tidak bisa dihapus, jenis kapal masih digunakan oleh ' . $count . ' lowongan']);
+        }
+
+        $stmt = $this->db->prepare("UPDATE vessel_types SET is_active = 0 WHERE id = ?");
+        $stmt->bind_param('i', $id);
+
+        if ($stmt->execute()) {
+            return $this->json(['success' => true, 'message' => 'Jenis kapal berhasil dihapus']);
+        }
+        return $this->json(['success' => false, 'message' => 'Gagal menghapus jenis kapal']);
+    }
+
+    /**
+     * Delete vacancy
+     */
+    public function delete($id) {
+        if (!$this->isPost()) {
+            redirect(url('/crewing/vacancies'));
+            return;
+        }
+
+        // Check if has applications
+        $checkStmt = $this->db->prepare("SELECT COUNT(*) as c FROM applications WHERE vacancy_id = ?");
+        $checkStmt->bind_param('i', $id);
+        $checkStmt->execute();
+        $count = $checkStmt->get_result()->fetch_assoc()['c'];
+
+        if ($count > 0) {
+            flash('error', 'Tidak bisa menghapus lowongan yang sudah memiliki ' . $count . ' pelamar');
+            redirect(url('/crewing/vacancies'));
+            return;
+        }
+
+        // Get photo path before deleting
+        $photoStmt = $this->db->prepare("SELECT ship_photo FROM job_vacancies WHERE id = ?");
+        $photoStmt->bind_param('i', $id);
+        $photoStmt->execute();
+        $vacancy = $photoStmt->get_result()->fetch_assoc();
+
+        // Delete vacancy shares
+        $delShares = $this->db->prepare("DELETE FROM vacancy_shares WHERE vacancy_id = ?");
+        $delShares->bind_param('i', $id);
+        $delShares->execute();
+
+        // Delete vacancy
+        $delStmt = $this->db->prepare("DELETE FROM job_vacancies WHERE id = ?");
+        $delStmt->bind_param('i', $id);
+
+        if ($delStmt->execute()) {
+            // Delete ship photo file
+            if (!empty($vacancy['ship_photo'])) {
+                $photoPath = dirname(APPPATH) . '/public/' . $vacancy['ship_photo'];
+                if (file_exists($photoPath)) {
+                    @unlink($photoPath);
+                }
+            }
+            flash('success', 'Lowongan berhasil dihapus');
+        } else {
+            flash('error', 'Gagal menghapus lowongan');
+        }
+
+        redirect(url('/crewing/vacancies'));
+    }
+
     /**
      * Handle ship photo upload
      */

@@ -598,6 +598,34 @@
                 </div>
             </div>
 
+            <!-- Referral Code Section -->
+            <div class="referral-section" style="margin-bottom:2rem;position:relative;z-index:1;">
+                <div style="background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:1.75rem 2rem;text-align:center;">
+                    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:1rem;">
+                        <div style="width:42px;height:42px;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                            <i class="fas fa-ticket-alt" style="color:white;font-size:1.1rem;"></i>
+                        </div>
+                        <h3 style="margin:0;color:white;font-size:1.15rem;font-weight:700;">Punya Kode Referral?</h3>
+                    </div>
+                    <p style="color:rgba(255,255,255,0.6);font-size:0.88rem;margin:0 0 1.25rem;">
+                        Masukkan kode referral dari perekrut untuk langsung terhubung
+                    </p>
+                    <div style="display:flex;gap:0.75rem;max-width:420px;margin:0 auto;" id="referralInputGroup">
+                        <input type="text" id="referralCodeInput" placeholder="Contoh: REF-A3K9X" 
+                               style="flex:1;padding:14px 18px;border:2px solid rgba(255,255,255,0.2);border-radius:14px;background:rgba(255,255,255,0.1);color:white;font-size:1.1rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;font-family:'Courier New',monospace;outline:none;transition:all 0.3s ease;"
+                               onfocus="this.style.borderColor='rgba(245,158,11,0.6)';this.style.boxShadow='0 0 0 3px rgba(245,158,11,0.15)'"
+                               onblur="this.style.borderColor='rgba(255,255,255,0.2)';this.style.boxShadow='none'"
+                               maxlength="10">
+                        <button type="button" onclick="validateReferralCode()" id="validateReferralBtn"
+                                style="padding:14px 28px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:14px;color:white;font-weight:700;cursor:pointer;font-size:0.95rem;display:flex;align-items:center;gap:8px;transition:all 0.3s ease;font-family:inherit;white-space:nowrap;">
+                            <i class="fas fa-arrow-right"></i> Gunakan
+                        </button>
+                    </div>
+                    <!-- Result display -->
+                    <div id="referralResult" style="display:none;margin-top:1rem;padding:1rem;border-radius:14px;"></div>
+                </div>
+            </div>
+
             <!-- Random Selection CTA -->
             <div class="random-cta">
                 <a href="<?= url('/applicant/random-recruiter/' . $vacancy['id']) ?>" class="btn-random">
@@ -776,6 +804,98 @@
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') closeLightbox();
         });
+
+        // Enter key on referral input
+        document.getElementById('referralCodeInput')?.addEventListener('keypress', e => {
+            if (e.key === 'Enter') validateReferralCode();
+        });
+
+        // Referral Code Validation
+        function validateReferralCode() {
+            const input = document.getElementById('referralCodeInput');
+            const btn = document.getElementById('validateReferralBtn');
+            const result = document.getElementById('referralResult');
+            const code = input.value.trim();
+
+            if (!code) {
+                input.style.borderColor = 'rgba(239,68,68,0.6)';
+                input.style.animation = 'shake 0.4s ease';
+                setTimeout(() => { input.style.animation = ''; input.style.borderColor = 'rgba(255,255,255,0.2)'; }, 600);
+                return;
+            }
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validating...';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+
+            fetch('<?= url('/applicant/validate-referral/' . $vacancy['id']) ?>', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'referral_code=' + encodeURIComponent(code)
+            })
+            .then(r => r.json())
+            .then(data => {
+                result.style.display = 'block';
+                if (data.success) {
+                    // Success state
+                    result.style.background = 'rgba(34,197,94,0.15)';
+                    result.style.border = '1px solid rgba(34,197,94,0.3)';
+                    result.innerHTML = `
+                        <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
+                            ${data.recruiter.photo 
+                                ? `<img src="${data.recruiter.photo}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.2);">` 
+                                : `<div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#6366f1);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:1.2rem;">${data.recruiter.name.charAt(0)}</div>`
+                            }
+                            <div style="text-align:left;">
+                                <div style="color:#16a34a;font-weight:700;font-size:1rem;">
+                                    <i class="fas fa-check-circle"></i> ${data.message}
+                                </div>
+                                <div style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin-top:2px;">
+                                    ${data.recruiter.specialization || 'Recruiter'}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="text-align:center;margin-top:0.75rem;color:rgba(255,255,255,0.5);font-size:0.8rem;">
+                            <i class="fas fa-spinner fa-spin"></i> Mengalihkan ke formulir pendaftaran...
+                        </div>
+                    `;
+
+                    input.style.borderColor = 'rgba(34,197,94,0.6)';
+                    btn.innerHTML = '<i class="fas fa-check"></i> Valid!';
+                    btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+                    btn.style.opacity = '1';
+
+                    // Redirect after delay
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 2000);
+                } else {
+                    // Error state  
+                    result.style.background = 'rgba(239,68,68,0.15)';
+                    result.style.border = '1px solid rgba(239,68,68,0.3)';
+                    result.innerHTML = `<div style="color:#ef4444;font-weight:600;"><i class="fas fa-times-circle"></i> ${data.message}</div>`;
+                    
+                    input.style.borderColor = 'rgba(239,68,68,0.6)';
+                    btn.innerHTML = '<i class="fas fa-arrow-right"></i> Gunakan';
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+
+                    setTimeout(() => {
+                        result.style.display = 'none';
+                        input.style.borderColor = 'rgba(255,255,255,0.2)';
+                    }, 4000);
+                }
+            })
+            .catch(() => {
+                result.style.display = 'block';
+                result.style.background = 'rgba(239,68,68,0.15)';
+                result.style.border = '1px solid rgba(239,68,68,0.3)';
+                result.innerHTML = '<div style="color:#ef4444;font-weight:600;"><i class="fas fa-exclamation-triangle"></i> Terjadi kesalahan jaringan</div>';
+                btn.innerHTML = '<i class="fas fa-arrow-right"></i> Gunakan';
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            });
+        }
     </script>
 </body>
 </html>

@@ -208,6 +208,7 @@ class Applications extends BaseController {
         // Get preferred recruiter from session (NEW)
         $preferredRecruiterId = $_SESSION['preferred_recruiter'] ?? null;
         $recruiterAssignmentType = $_SESSION['recruiter_assignment_type'] ?? 'auto';
+        $referralCodeUsed = $_SESSION['referral_code_used'] ?? null;
         
         // Get form data
         $coverLetter = $this->input('cover_letter') ?: '';
@@ -218,6 +219,7 @@ class Applications extends BaseController {
         try { $this->db->query("ALTER TABLE applications MODIFY COLUMN recruiter_assignment_type VARCHAR(20) DEFAULT 'auto'"); } catch (\Exception $e) {}
         try { $this->db->query("ALTER TABLE applications ADD COLUMN preferred_recruiter_id INT(11) NULL"); } catch (\Exception $e) {}
         try { $this->db->query("ALTER TABLE applications ADD COLUMN recruiter_assignment_type VARCHAR(20) DEFAULT 'auto'"); } catch (\Exception $e) {}
+        try { $this->db->query("ALTER TABLE applications ADD COLUMN referral_code_used VARCHAR(10) NULL"); } catch (\Exception $e) {}
         
         // Create application with preferred recruiter
         $stmt = $this->db->prepare("
@@ -247,13 +249,16 @@ class Applications extends BaseController {
             
             // Auto-assign to preferred recruiter if selected (NEW)
             if ($preferredRecruiterId && $recruiterAssignmentType != 'auto') {
+                $assignNote = $recruiterAssignmentType === 'referral' 
+                    ? 'Assigned via referral code: ' . ($referralCodeUsed ?? 'N/A')
+                    : 'Assigned based on applicant preference';
                 $assignStmt = $this->db->prepare("
                     INSERT INTO application_assignments (
                         application_id, assigned_to, assigned_by, 
                         notes, status, assigned_at
-                    ) VALUES (?, ?, ?, 'Assigned based on applicant preference', 'active', NOW())
+                    ) VALUES (?, ?, ?, ?, 'active', NOW())
                 ");
-                $assignStmt->bind_param('iii', $applicationId, $preferredRecruiterId, $preferredRecruiterId);
+                $assignStmt->bind_param('iiis', $applicationId, $preferredRecruiterId, $preferredRecruiterId, $assignNote);
                 $assignStmt->execute();
                 
                 // Update application with current crewing
@@ -262,13 +267,24 @@ class Applications extends BaseController {
                 // Notify the preferred recruiter that a candidate chose them
                 $applicantName = $_SESSION['full_name'] ?? 'Seorang pelamar';
                 $vacancyTitle = $this->db->real_escape_string($vacancy['title']);
+                $notifyTitle = $recruiterAssignmentType === 'referral' 
+                    ? 'Kandidat Baru via Referral!' 
+                    : 'Kandidat Baru Memilih Anda!';
+                $notifyMsg = $recruiterAssignmentType === 'referral'
+                    ? $applicantName . ' melamar menggunakan kode referral Anda untuk posisi ' . $vacancyTitle
+                    : $applicantName . ' telah memilih Anda sebagai perekrut untuk posisi ' . $vacancyTitle;
                 notifyUser(
                     $preferredRecruiterId,
-                    'Kandidat Baru Memilih Anda!',
-                    $applicantName . ' telah memilih Anda sebagai perekrut untuk posisi ' . $vacancyTitle,
+                    $notifyTitle,
+                    $notifyMsg,
                     'info',
                     url('/crewing/pipeline?view=my')
                 );
+                
+                // Save referral code used
+                if ($referralCodeUsed) {
+                    $this->db->query("UPDATE applications SET referral_code_used = '" . $this->db->real_escape_string($referralCodeUsed) . "' WHERE id = {$applicationId}");
+                }
             } else {
                 // Try auto-assignment
                 autoAssignApplication($applicationId, $userId);
@@ -295,6 +311,7 @@ class Applications extends BaseController {
             // Clear recruiter selection from session (NEW)
             unset($_SESSION['preferred_recruiter']);
             unset($_SESSION['recruiter_assignment_type']);
+            unset($_SESSION['referral_code_used']);
             
             flash('success', 'Application submitted successfully!');
             $this->redirect(url('/applicant/applications/' . $applicationId));

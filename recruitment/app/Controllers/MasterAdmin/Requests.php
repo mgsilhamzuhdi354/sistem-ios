@@ -107,16 +107,19 @@ class Requests extends BaseController
             // Commit transaction
             $this->db->commit();
 
-            // Notify requester (outside transaction to avoid rollback issues if notification fails, though unlikely)
+            // AUTO-SYNC TO ERP: automatically push to ERP and set Processing status
+            $this->autoPushToErp($request['application_id']);
+
+            // Notify requester
             notifyUser(
                 $request['requested_by'],
                 'Claim Request Approved!',
-                'Your request to handle an application has been approved. You can now manage this applicant.',
+                'Lamaran sudah di-approve dan otomatis dikirim ke ERP untuk proses Admin Checklist.',
                 'success',
                 url('/crewing/pipeline?view=my')
             );
 
-            return $this->json(['success' => true, 'message' => 'Claim approved! Staff has been assigned.']);
+            return $this->json(['success' => true, 'message' => 'Claim approved! Kandidat otomatis dikirim ke ERP.']);
 
         } catch (Exception $e) {
             $this->db->rollback();
@@ -217,17 +220,19 @@ class Requests extends BaseController
             require_once APPPATH . 'Libraries/ErpSync.php';
             
             $stmt = $this->db->prepare("
-                SELECT a.*, u.full_name, u.email, u.phone,
+                SELECT a.*, u.full_name, u.email, u.phone, u.avatar,
                        ap.gender, ap.date_of_birth, ap.place_of_birth,
                        ap.nationality, ap.address as profile_address,
-                       ap.city, ap.postal_code,
+                       ap.city, ap.postal_code, ap.profile_photo,
                        ap.emergency_name, ap.emergency_phone, ap.emergency_relation,
                        ap.total_sea_service_months,
-                       cp.employee_id
+                       cp.employee_id,
+                       jv.title as job_title
                 FROM applications a
                 JOIN users u ON a.user_id = u.id
                 LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
                 LEFT JOIN crewing_profiles cp ON u.id = cp.user_id
+                LEFT JOIN job_vacancies jv ON a.vacancy_id = jv.id
                 WHERE a.id = ?
             ");
             $stmt->bind_param('i', $applicationId);
@@ -245,8 +250,8 @@ class Requests extends BaseController
                 'phone' => $app['phone'] ?? '',
                 'employee_id' => $app['employee_id'] ?: ('IO' . date('Ymd') . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT)),
                 'candidate_id' => $app['user_id'],
-                'status' => 'available',
-                'notes' => 'Auto-pushed from recruitment approval',
+                'status' => 'pending_approval',
+                'notes' => 'Auto-synced from recruitment: ' . ($app['job_title'] ?? ''),
                 'gender' => $gender,
                 'birth_date' => $app['date_of_birth'] ?? null,
                 'birth_place' => $app['place_of_birth'] ?? '',
@@ -262,14 +267,40 @@ class Requests extends BaseController
             
             $erpSync = new \ErpSync($this->db);
             $existingCrewId = $erpSync->getCrewByCandidateId($app['user_id']);
+            $crewId = $existingCrewId;
             if ($existingCrewId) {
                 $erpSync->updateCrew($existingCrewId, $crewData);
             } else {
-                $erpSync->createCrew($crewData);
+                $crewId = $erpSync->createCrew($crewData);
             }
             
-            $updateStmt = $this->db->prepare("UPDATE applications SET sent_to_erp_at = NOW() WHERE id = ?");
-            $updateStmt->bind_param('i', $applicationId);
+            // Sync photo
+            $photoPath = $app['profile_photo'] ?: ($app['avatar'] ?? '');
+            if ($photoPath) {
+                $erpPhotoPath = $erpSync->syncPhoto($photoPath, $crewId);
+                if ($erpPhotoPath) $erpSync->updateCrew($crewId, ['photo' => $erpPhotoPath]);
+            }
+            
+            // Sync documents
+            $docStmt = $this->db->prepare("
+                SELECT d.*, dt.name as type_name, dt.name_id as type_name_id
+                FROM documents d LEFT JOIN document_types dt ON d.document_type_id = dt.id
+                WHERE d.user_id = ?
+            ");
+            $docStmt->bind_param('i', $app['user_id']);
+            $docStmt->execute();
+            $documents = $docStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            if (!empty($documents)) {
+                $erpSync->syncDocuments($crewId, $documents, $_SESSION['user_id']);
+            }
+            
+            // Mark as sent to ERP + set Processing status (8)
+            $updateStmt = $this->db->prepare("
+                UPDATE applications 
+                SET sent_to_erp_at = NOW(), erp_crew_id = ?, status_id = 8, status_updated_at = NOW() 
+                WHERE id = ?
+            ");
+            $updateStmt->bind_param('ii', $crewId, $applicationId);
             $updateStmt->execute();
             
         } catch (\Throwable $e) {

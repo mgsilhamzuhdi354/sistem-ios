@@ -12,6 +12,17 @@ define('APPPATH', BASEPATH . 'app/');
 define('WRITEPATH', BASEPATH . 'writable/');
 define('FCPATH', BASEPATH);
 
+// Load Composer Autoload (for DOMPDF)
+if (file_exists(BASEPATH . 'vendor/autoload.php')) {
+    require_once BASEPATH . 'vendor/autoload.php';
+}
+
+// Ensure payslips directory exists
+$payslipsDir = WRITEPATH . 'payslips/';
+if (!is_dir($payslipsDir)) {
+    @mkdir($payslipsDir, 0755, true);
+}
+
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
@@ -63,6 +74,7 @@ $migrateCols = [
     'email_sent_at' => 'DATETIME NULL',
     'email_status' => "VARCHAR(20) DEFAULT 'pending'",
     'overtime_allowance' => 'DECIMAL(12,2) DEFAULT 0',
+    'pdf_path' => 'VARCHAR(255) NULL',
 ];
 $existing = [];
 $colCheck = $db->query("SHOW COLUMNS FROM payroll_items");
@@ -254,7 +266,127 @@ if ($action === 'get' && $id > 0) {
     $stmt->close();
     
     if ($result) {
-        echo json_encode(['success' => true, 'message' => 'Data payslip berhasil disimpan', 'fields_updated' => count($fields)]);
+        // === AUTO-GENERATE PDF ON SAVE ===
+        $pdfUrl = null;
+        $pdfRelPath = null;
+        try {
+            // Fetch full payslip data for PDF rendering
+            $fullSql = "SELECT pi.*, 
+                           c.contract_no, c.crew_id, c.crew_name AS contract_crew_name,
+                           cr.email, cr.full_name, cr.bank_holder, cr.bank_account, cr.bank_name,
+                           COALESCE(pi.crew_name, c.crew_name, cr.full_name) AS display_crew_name,
+                           COALESCE(pi.rank_name, r.name) AS display_rank_name,
+                           COALESCE(pi.vessel_name, v.name) AS display_vessel_name,
+                           COALESCE(cur.code, 'IDR') AS original_currency_code,
+                           COALESCE(cs.basic_salary, 0) AS contract_basic_salary,
+                           COALESCE(cs.overtime_allowance, 0) AS contract_overtime,
+                           COALESCE(cs.exchange_rate, 0) AS contract_exchange_rate
+                    FROM payroll_items pi
+                    LEFT JOIN contracts c ON pi.contract_id = c.id
+                    LEFT JOIN crews cr ON c.crew_id = cr.id
+                    LEFT JOIN ranks r ON c.rank_id = r.id
+                    LEFT JOIN vessels v ON c.vessel_id = v.id
+                    LEFT JOIN contract_salaries cs ON c.id = cs.contract_id
+                    LEFT JOIN currencies cur ON cs.currency_id = cur.id
+                    WHERE pi.id = ?";
+            $fstmt = $db->prepare($fullSql);
+            $fstmt->bind_param('i', $itemId);
+            $fstmt->execute();
+            $fullItem = $fstmt->get_result()->fetch_assoc();
+            $fstmt->close();
+            
+            if ($fullItem) {
+                // Map display values
+                $fullItem['crew_name'] = $fullItem['display_crew_name'];
+                $fullItem['rank_name'] = $fullItem['display_rank_name'];
+                $fullItem['vessel_name'] = $fullItem['display_vessel_name'];
+                if (empty($fullItem['original_currency']) || $fullItem['original_currency'] === 'IDR') {
+                    $fullItem['original_currency'] = $fullItem['original_currency_code'] ?? 'IDR';
+                }
+                
+                // Crew data for bank info
+                $crew = [
+                    'bank_holder' => $fullItem['bank_holder'] ?? $fullItem['crew_name'],
+                    'bank_account' => $fullItem['bank_account'] ?? '-',
+                    'bank_name' => $fullItem['bank_name'] ?? '-'
+                ];
+                
+                // Get period
+                $pstmtPdf = $db->prepare("SELECT * FROM payroll_periods WHERE id = ?");
+                $pstmtPdf->bind_param('i', $fullItem['payroll_period_id']);
+                $pstmtPdf->execute();
+                $period = $pstmtPdf->get_result()->fetch_assoc();
+                $pstmtPdf->close();
+                
+                // Get payroll day setting
+                $pdResult = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'payroll_day' LIMIT 1");
+                $payroll_day = 1;
+                if ($pdResult && $pdRow = $pdResult->fetch_assoc()) {
+                    $payroll_day = intval($pdRow['setting_value']);
+                }
+                
+                // Render the DOMPDF-compatible payslip template
+                $item = $fullItem;
+                ob_start();
+                include APPPATH . 'Views/payroll/payslip_pdf_dompdf.php';
+                $html = ob_get_clean();
+                
+                // Convert logo to base64 for embeddable PDF
+                $logoPath = FCPATH . 'assets/images/logo.png';
+                if (file_exists($logoPath)) {
+                    $logoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
+                    $html = str_replace(
+                        [BASE_URL . 'assets/images/logo.png', 'assets/images/logo.png'],
+                        [$logoBase64, $logoBase64],
+                        $html
+                    );
+                }
+                
+                // Generate PDF with DOMPDF
+                $options = new \Dompdf\Options();
+                $options->set('isRemoteEnabled', true);
+                $options->set('isHtml5ParserEnabled', true);
+                $options->set('defaultFont', 'Arial');
+                
+                $dompdf = new \Dompdf\Dompdf($options);
+                $dompdf->loadHtml($html);
+                $dompdf->setPaper('A4', 'portrait');
+                $dompdf->render();
+                
+                // Save PDF permanently
+                $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $fullItem['crew_name'] ?? 'crew');
+                $monthStr = str_pad($period['period_month'] ?? 1, 2, '0', STR_PAD_LEFT);
+                $yearStr = $period['period_year'] ?? date('Y');
+                $pdfFilename = "payslip_{$safeName}_{$yearStr}_{$monthStr}.pdf";
+                $pdfFullPath = $payslipsDir . $pdfFilename;
+                $pdfRelPath = 'writable/payslips/' . $pdfFilename;
+                
+                file_put_contents($pdfFullPath, $dompdf->output());
+                
+                // Update pdf_path in DB
+                $dbCols2 = getTableColumns($db, 'payroll_items');
+                if (in_array('pdf_path', $dbCols2)) {
+                    $pdfStmt = $db->prepare("UPDATE payroll_items SET pdf_path = ? WHERE id = ?");
+                    $pdfStmt->bind_param('si', $pdfRelPath, $itemId);
+                    $pdfStmt->execute();
+                    $pdfStmt->close();
+                }
+                
+                $pdfUrl = BASE_URL . $pdfRelPath;
+                error_log("[PAYSLIP] PDF auto-generated: {$pdfFullPath}");
+            }
+        } catch (\Exception $e) {
+            error_log('[PAYSLIP] Auto PDF generation failed: ' . $e->getMessage());
+            // Don't fail the save — PDF generation is a bonus
+        }
+        
+        echo json_encode([
+            'success' => true, 
+            'message' => 'Slip gaji berhasil disimpan & PDF dibuat', 
+            'fields_updated' => count($fields),
+            'pdf_url' => $pdfUrl,
+            'pdf_path' => $pdfRelPath
+        ]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Gagal menyimpan: ' . $execError]);
     }
@@ -289,6 +421,122 @@ if ($action === 'get' && $id > 0) {
     
     // Try to send email
     try {
+        // Check if a saved PDF already exists (from auto-generate on save)
+        $attachmentPath = null;
+        $attachmentName = 'payslip.pdf';
+        $isPermanentPdf = false;
+        
+        // Check for existing saved PDF
+        if (!empty($item['pdf_path']) && file_exists(BASEPATH . $item['pdf_path'])) {
+            $attachmentPath = BASEPATH . $item['pdf_path'];
+            $isPermanentPdf = true;
+            $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $item['crew_name'] ?? 'crew');
+            $monthStr = str_pad($period['period_month'] ?? 1, 2, '0', STR_PAD_LEFT);
+            $yearStr = $period['period_year'] ?? date('Y');
+            $attachmentName = "Payslip_{$safeName}_{$yearStr}_{$monthStr}.pdf";
+            error_log("[PAYSLIP_EMAIL] Using saved PDF: {$attachmentPath}");
+        } else {
+            // Fallback: generate PDF on-the-fly if no saved PDF exists
+            try {
+                $fullSql = "SELECT pi.*, 
+                               c.contract_no, c.crew_id, c.crew_name AS contract_crew_name,
+                               cr.email, cr.full_name, cr.bank_holder, cr.bank_account, cr.bank_name,
+                               COALESCE(pi.crew_name, c.crew_name, cr.full_name) AS display_crew_name,
+                               COALESCE(pi.rank_name, r.name) AS display_rank_name,
+                               COALESCE(pi.vessel_name, v.name) AS display_vessel_name,
+                               COALESCE(cur.code, 'IDR') AS original_currency,
+                               COALESCE(cs.basic_salary, 0) AS contract_basic_salary,
+                               COALESCE(cs.overtime_allowance, 0) AS contract_overtime,
+                               COALESCE(cs.exchange_rate, 0) AS contract_exchange_rate
+                        FROM payroll_items pi
+                        LEFT JOIN contracts c ON pi.contract_id = c.id
+                        LEFT JOIN crews cr ON c.crew_id = cr.id
+                        LEFT JOIN ranks r ON c.rank_id = r.id
+                        LEFT JOIN vessels v ON c.vessel_id = v.id
+                        LEFT JOIN contract_salaries cs ON c.id = cs.contract_id
+                        LEFT JOIN currencies cur ON cs.currency_id = cur.id
+                        WHERE pi.id = ?";
+                $fstmt = $db->prepare($fullSql);
+                $fstmt->bind_param('i', $itemId);
+                $fstmt->execute();
+                $fullItem = $fstmt->get_result()->fetch_assoc();
+                $fstmt->close();
+                
+                if ($fullItem) {
+                    $fullItem['crew_name'] = $fullItem['display_crew_name'];
+                    $fullItem['rank_name'] = $fullItem['display_rank_name'];
+                    $fullItem['vessel_name'] = $fullItem['display_vessel_name'];
+                    
+                    $crew = [
+                        'bank_holder' => $fullItem['bank_holder'] ?? $fullItem['crew_name'],
+                        'bank_account' => $fullItem['bank_account'] ?? '-',
+                        'bank_name' => $fullItem['bank_name'] ?? '-'
+                    ];
+                    
+                    $pdResult = $db->query("SELECT setting_value FROM settings WHERE setting_key = 'payroll_day' LIMIT 1");
+                    $payroll_day = 1;
+                    if ($pdResult && $pdRow = $pdResult->fetch_assoc()) {
+                        $payroll_day = intval($pdRow['setting_value']);
+                    }
+                    
+                    // Render DOMPDF template
+                    $renderItem = $fullItem;
+                    $item_backup = $item;
+                    $item = $renderItem;
+                    ob_start();
+                    include APPPATH . 'Views/payroll/payslip_pdf_dompdf.php';
+                    $html = ob_get_clean();
+                    $item = $item_backup;
+                    
+                    // Convert logo to base64
+                    $logoPath = FCPATH . 'assets/images/logo.png';
+                    if (file_exists($logoPath)) {
+                        $logoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
+                        $html = str_replace(
+                            [BASE_URL . 'assets/images/logo.png', 'assets/images/logo.png'],
+                            [$logoBase64, $logoBase64],
+                            $html
+                        );
+                    }
+                    
+                    // Generate PDF
+                    $options = new \Dompdf\Options();
+                    $options->set('isRemoteEnabled', true);
+                    $options->set('isHtml5ParserEnabled', true);
+                    $options->set('defaultFont', 'Arial');
+                    
+                    $dompdf = new \Dompdf\Dompdf($options);
+                    $dompdf->loadHtml($html);
+                    $dompdf->setPaper('A4', 'portrait');
+                    $dompdf->render();
+                    
+                    // Save permanently
+                    $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $fullItem['crew_name'] ?? 'crew');
+                    $monthStr = str_pad($period['period_month'] ?? 1, 2, '0', STR_PAD_LEFT);
+                    $yearStr = $period['period_year'] ?? date('Y');
+                    $pdfFilename = "payslip_{$safeName}_{$yearStr}_{$monthStr}.pdf";
+                    $pdfFullPath = $payslipsDir . $pdfFilename;
+                    
+                    file_put_contents($pdfFullPath, $dompdf->output());
+                    $attachmentPath = $pdfFullPath;
+                    $attachmentName = "Payslip_{$safeName}_{$yearStr}_{$monthStr}.pdf";
+                    $isPermanentPdf = true;
+                    
+                    // Save pdf_path to DB
+                    $pdfRelPath = 'writable/payslips/' . $pdfFilename;
+                    $dbCols3 = getTableColumns($db, 'payroll_items');
+                    if (in_array('pdf_path', $dbCols3)) {
+                        $pdfStmt = $db->prepare("UPDATE payroll_items SET pdf_path = ? WHERE id = ?");
+                        $pdfStmt->bind_param('si', $pdfRelPath, $itemId);
+                        $pdfStmt->execute();
+                        $pdfStmt->close();
+                    }
+                }
+            } catch (\Exception $e) {
+                error_log("[PAYSLIP_EMAIL] Failed to generate PDF attachment: " . $e->getMessage());
+            }
+        }
+        
         // Try Mailer class first
         $mailerSent = false;
         $mailerErrors = '';
@@ -297,13 +545,16 @@ if ($action === 'get' && $id > 0) {
             require_once $mailerFile;
             if (class_exists('App\\Libraries\\Mailer')) {
                 $mailer = new \App\Libraries\Mailer();
-                $mailerSent = $mailer->sendPayslip($email, $item['crew_name'], $period, $item);
+                $mailerSent = $mailer->sendPayslip($email, $item['crew_name'], $period, $item, $attachmentPath);
                 if (!$mailerSent) {
                     $mailerErrors = implode('; ', $mailer->getErrors());
                     error_log("[PAYSLIP_EMAIL] SMTP failed for {$email}: {$mailerErrors}");
                 }
             }
         }
+        
+        // Don't delete permanent PDF files (only delete temp ones)
+        // Permanent PDFs in writable/payslips/ are kept for future use
         
         if (!$mailerSent) {
             // Fallback: use PHP mail()
@@ -386,8 +637,35 @@ if ($action === 'get' && $id > 0) {
     
     echo json_encode(['success' => $result, 'message' => $result ? 'Tanggal gajian berhasil diubah ke tanggal ' . $day : 'Gagal menyimpan']);
 
+} elseif ($action === 'bulk_list' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    // Return all payroll items for a period with crew emails
+    $periodId = intval($_GET['period_id'] ?? 0);
+    if (!$periodId) {
+        echo json_encode(['success' => false, 'message' => 'Period ID diperlukan']);
+        exit;
+    }
+    
+    $sql = "SELECT pi.id, pi.crew_name, pi.status, pi.email_sent_at, pi.email_status,
+                   cr.email
+            FROM payroll_items pi
+            LEFT JOIN contracts c ON pi.contract_id = c.id
+            LEFT JOIN crews cr ON c.crew_id = cr.id
+            WHERE pi.payroll_period_id = ?
+            ORDER BY pi.vessel_name, pi.crew_name";
+    $stmt = $db->prepare($sql);
+    $stmt->bind_param('i', $periodId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $items = [];
+    while ($row = $result->fetch_assoc()) {
+        $items[] = $row;
+    }
+    $stmt->close();
+    
+    echo json_encode(['success' => true, 'items' => $items]);
+
 } else {
-    echo json_encode(['success' => false, 'message' => 'Invalid action. Use ?action=get&id=X, POST action=update, POST action=send_email, or POST action=update_payday']);
+    echo json_encode(['success' => false, 'message' => 'Invalid action. Use ?action=get&id=X, POST action=update, POST action=send_email, GET action=bulk_list&period_id=X, or POST action=update_payday']);
 }
 
 $db->close();

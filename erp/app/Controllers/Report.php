@@ -306,4 +306,115 @@ class Report extends BaseController
         fclose($output);
         exit;
     }
+
+    /**
+     * Export report to PDF (print-friendly HTML)
+     */
+    public function exportPdf($type = 'active')
+    {
+        $contractModel = new ContractModel($this->db);
+
+        switch ($type) {
+            case 'active':
+                $data = [
+                    'contracts' => $contractModel->getList(['status' => 'active'], 1, 1000),
+                ];
+                return $this->view('reports/contracts_pdf', $data, true);
+
+            case 'expiring':
+                $days = $this->input('days', 60);
+                $data = [
+                    'contracts' => $contractModel->getExpiring($days),
+                    'days' => $days,
+                ];
+                return $this->view('reports/expiring_pdf', $data, true);
+
+            case 'payroll':
+                $month = $this->input('month', date('n'));
+                $year = $this->input('year', date('Y'));
+                $periodModel = new PayrollPeriodModel($this->db);
+                $itemModel = new PayrollItemModel($this->db);
+
+                $period = $periodModel->query(
+                    "SELECT * FROM payroll_periods WHERE period_month = ? AND period_year = ?",
+                    [$month, $year], 'ii'
+                );
+
+                $items = [];
+                $summary = [];
+                if (!empty($period)) {
+                    $items = $itemModel->getByPeriod($period[0]['id']);
+                    // Group by vessel for summary
+                    $vesselGroups = [];
+                    foreach ($items as $it) {
+                        $vn = $it['vessel_name'] ?? 'Unassigned';
+                        if (!isset($vesselGroups[$vn])) {
+                            $vesselGroups[$vn] = ['vessel_name' => $vn, 'crew_count' => 0, 'total_gross' => 0, 'total_tax' => 0, 'total_net' => 0];
+                        }
+                        $vesselGroups[$vn]['crew_count']++;
+                        $vesselGroups[$vn]['total_gross'] += (float)($it['gross_salary'] ?? 0);
+                        $vesselGroups[$vn]['total_tax'] += (float)($it['tax_amount'] ?? 0);
+                        $vesselGroups[$vn]['total_net'] += (float)($it['net_salary'] ?? 0);
+                    }
+                    $summary = array_values($vesselGroups);
+                }
+
+                $data = [
+                    'items' => $items,
+                    'period' => $period[0] ?? ['period_month' => $month, 'period_year' => $year],
+                    'summary' => $summary,
+                ];
+                return $this->view('reports/payroll_summary_pdf', $data, true);
+
+            case 'tax':
+                $month = $this->input('month', date('n'));
+                $year = $this->input('year', date('Y'));
+                $itemModel = new PayrollItemModel($this->db);
+                $periodModel = new PayrollPeriodModel($this->db);
+
+                $period = $periodModel->query(
+                    "SELECT * FROM payroll_periods WHERE period_month = ? AND period_year = ?",
+                    [$month, $year], 'ii'
+                );
+
+                $items = [];
+                if (!empty($period)) {
+                    $items = $itemModel->getByPeriod($period[0]['id']);
+                }
+
+                $data = [
+                    'items' => $items,
+                    'month' => $month,
+                    'year' => $year,
+                    'totalTax' => array_sum(array_column($items, 'tax_amount')),
+                ];
+                return $this->view('reports/tax_pdf', $data, true);
+
+            case 'bank-transfer':
+                $month = $this->input('month', date('n'));
+                $year = $this->input('year', date('Y'));
+                $itemModel = new PayrollItemModel($this->db);
+                $periodModel = new PayrollPeriodModel($this->db);
+
+                $period = $periodModel->query(
+                    "SELECT * FROM payroll_periods WHERE period_month = ? AND period_year = ?",
+                    [$month, $year], 'ii'
+                );
+
+                $items = [];
+                if (!empty($period)) {
+                    $items = $itemModel->getByPeriod($period[0]['id']);
+                }
+
+                $data = [
+                    'items' => $items,
+                    'period' => $period[0] ?? ['period_month' => $month, 'period_year' => $year],
+                ];
+                return $this->view('reports/bank_transfer_pdf', $data, true);
+
+            default:
+                $this->redirect('reports');
+                break;
+        }
+    }
 }

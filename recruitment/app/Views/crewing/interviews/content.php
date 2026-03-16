@@ -489,12 +489,25 @@
             </div>
             <div class="form-group">
                 <label>Pertanyaan Soal</label>
-                <select name="question_bank_id" required>
-                    <option value="">— Pilih Pertanyaan Soal —</option>
-                    <?php foreach ($questionBanks as $qb): ?>
-                        <option value="<?= $qb['id'] ?>"><?= htmlspecialchars($qb['name']) ?> (<?= $qb['question_count'] ?> questions)</option>
-                    <?php endforeach; ?>
-                </select>
+                <?php if (empty($questionBanks)): ?>
+                    <select disabled style="color:#94a3b8;">
+                        <option>— Belum ada pertanyaan soal —</option>
+                    </select>
+                    <div style="margin-top:8px;padding:10px 14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;font-size:0.8rem;color:#92400e;display:flex;align-items:center;gap:8px;">
+                        <i class="fas fa-info-circle" style="color:#f59e0b;"></i>
+                        Anda perlu membuat pertanyaan soal terlebih dahulu.
+                        <a href="<?= url('/crewing/interviews/questions') ?>" style="color:#6366f1;font-weight:600;text-decoration:none;margin-left:4px;">
+                            Buat Pertanyaan →
+                        </a>
+                    </div>
+                <?php else: ?>
+                    <select name="question_bank_id" required>
+                        <option value="">— Pilih Pertanyaan Soal —</option>
+                        <?php foreach ($questionBanks as $qb): ?>
+                            <option value="<?= $qb['id'] ?>"><?= htmlspecialchars($qb['name']) ?> (<?= $qb['question_count'] ?> questions)</option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php endif; ?>
             </div>
             <div class="form-group">
                 <label>Kadaluarsa Dalam (hari)</label>

@@ -46,6 +46,7 @@ $routes['POST']['/applicant/profile/update'] = 'Applicant/Profile::update';
 $routes['GET']['/applicant/select-recruiter/(:num)'] = 'Applicant/SelectRecruiter::index/$1';
 $routes['POST']['/applicant/select-recruiter/(:num)/(:num)'] = 'Applicant/SelectRecruiter::select/$1/$2';
 $routes['GET']['/applicant/random-recruiter/(:num)'] = 'Applicant/SelectRecruiter::random/$1';
+$routes['POST']['/applicant/validate-referral/(:num)'] = 'Applicant/SelectRecruiter::validateReferral/$1';
 
 $routes['GET']['/applicant/applications'] = 'Applicant/Applications::index';
 $routes['GET']['/applicant/applications/(:num)'] = 'Applicant/Applications::detail/$1';
@@ -132,6 +133,7 @@ $routes['GET']['/crewing/applications/(:num)'] = 'Crewing/Applications::detail/$
 $routes['POST']['/crewing/applications/assign/(:num)'] = 'Crewing/Applications::assign/$1';
 $routes['POST']['/crewing/applications/status/(:num)'] = 'Crewing/Applications::updateStatus/$1';
 $routes['POST']['/crewing/applications/complete/(:num)'] = 'Crewing/Applications::markComplete/$1';
+$routes['GET']['/crewing/applications/profile-pdf/(:num)'] = 'Crewing/Applications::profilePdf/$1';
 
 // Crewing - Pipeline
 $routes['GET']['/crewing/pipeline'] = 'Crewing/Pipeline::index';
@@ -147,6 +149,7 @@ $routes['GET']['/crewing/pipeline/archived'] = 'Crewing/Pipeline::getArchivedApp
 $routes['POST']['/crewing/pipeline/restore'] = 'Crewing/Pipeline::restore';
 $routes['POST']['/crewing/pipeline/delete-permanent'] = 'Crewing/Pipeline::permanentDelete';
 $routes['POST']['/crewing/pipeline/dismiss-alert'] = 'Crewing/Pipeline::dismissAlert';
+$routes['GET']['/crewing/pipeline/export-pdf'] = 'Crewing/Pipeline::exportPdf';
 
 
 // Crewing - Team
@@ -186,6 +189,7 @@ $routes['GET']['/crewing/interviews/questions'] = 'Crewing/Interviews::questions
 $routes['POST']['/crewing/interviews/storeQuestion'] = 'Crewing/Interviews::storeQuestion';
 $routes['POST']['/crewing/interviews/deleteQuestion/(:num)'] = 'Crewing/Interviews::deleteQuestion/$1';
 $routes['POST']['/crewing/interviews/deleteBank/(:num)'] = 'Crewing/Interviews::deleteBank/$1';
+$routes['GET']['/crewing/interviews/export-pdf/(:num)'] = 'Crewing/Interviews::exportPdf/$1';
 
 // Crewing - Email Center
 $routes['GET']['/crewing/email'] = 'Crewing/Email::index';
@@ -210,6 +214,9 @@ $routes['POST']['/crewing/settings/smtp-personal/test'] = 'Crewing/Settings::smt
 $routes['POST']['/crewing/settings/smtp-personal/delete'] = 'Crewing/Settings::smtpPersonalDelete';
 $routes['POST']['/crewing/settings/save-ui-scale'] = 'Crewing/Settings::saveUiScale';
 $routes['POST']['/crewing/settings/save-language'] = 'Crewing/Settings::saveLanguage';
+$routes['POST']['/crewing/settings/regenerate-referral'] = 'Crewing/Settings::regenerateReferralCode';
+$routes['POST']['/crewing/settings/save-gemini-key'] = 'Crewing/Settings::saveGeminiKey';
+$routes['POST']['/crewing/settings/test-gemini-key'] = 'Crewing/Settings::testGeminiKey';
 
 
 // Crewing - ERP Integration
@@ -237,6 +244,16 @@ $routes['GET']['/crewing/vacancies/edit/(:num)'] = 'Crewing/Vacancies::edit/$1';
 $routes['POST']['/crewing/vacancies/update/(:num)'] = 'Crewing/Vacancies::update/$1';
 $routes['GET']['/crewing/vacancies/detail/(:num)'] = 'Crewing/Vacancies::detail/$1';
 $routes['POST']['/crewing/vacancies/share/(:num)'] = 'Crewing/Vacancies::generateShareLink/$1';
+$routes['POST']['/crewing/vacancies/add-department'] = 'Crewing/Vacancies::addDepartment';
+$routes['POST']['/crewing/vacancies/add-vessel-type'] = 'Crewing/Vacancies::addVesselType';
+$routes['GET']['/crewing/vacancies/list-departments'] = 'Crewing/Vacancies::listDepartments';
+$routes['GET']['/crewing/vacancies/list-vessel-types'] = 'Crewing/Vacancies::listVesselTypes';
+$routes['POST']['/crewing/vacancies/delete-department/(:num)'] = 'Crewing/Vacancies::deleteDepartment/$1';
+$routes['POST']['/crewing/vacancies/delete-vessel-type/(:num)'] = 'Crewing/Vacancies::deleteVesselType/$1';
+$routes['POST']['/crewing/vacancies/delete/(:num)'] = 'Crewing/Vacancies::delete/$1';
+
+
+
 
 // Crewing - AI Interviews
 $routes['GET']['/crewing/interviews'] = 'Crewing/Interviews::index';

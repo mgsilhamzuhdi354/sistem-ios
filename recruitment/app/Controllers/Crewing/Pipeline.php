@@ -10,9 +10,7 @@ class Pipeline extends BaseController
     public function __construct()
     {
         parent::__construct();
-        if (!isLoggedIn() || !isCrewingOrAdmin()) {
-            redirect(url('/login'));
-        }
+        if (!isLoggedIn()) { redirect(url('/login')); } elseif (!isCrewingOrAdmin()) { redirect(getRoleDashboard()); }
     }
     
     /**
@@ -32,6 +30,11 @@ class Pipeline extends BaseController
 
     public function index()
     {
+        // Prevent browser caching - always serve fresh HTML
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
+
         $crewingId = $_SESSION['user_id'];
         $view = $this->input('view', 'available'); // 'available', 'my'
 
@@ -45,7 +48,8 @@ class Pipeline extends BaseController
         } catch (Throwable $e) {}
         $emailCountSql = $hasEmailLogs ? ",\n                           (SELECT COUNT(*) FROM email_logs el WHERE el.application_id = a.id AND el.status = 'sent') as email_sent_count,\n                           (SELECT MAX(el.sent_at) FROM email_logs el WHERE el.application_id = a.id AND el.status = 'sent') as last_email_sent_at" : ",\n                           0 as email_sent_count, NULL as last_email_sent_at";
 
-        // Get all statuses
+        // Get ALL statuses for recruitment pipeline (including ERP-managed ones)
+        // Status is managed by ERP Admin Checklist, pipeline is read-only view
         $statusResult = $this->db->query("SELECT * FROM application_statuses ORDER BY sort_order");
         $statuses = $statusResult ? $statusResult->fetch_all(MYSQLI_ASSOC) : [];
 
@@ -101,6 +105,65 @@ class Pipeline extends BaseController
             $pipeline[$status['id']] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         }
 
+        // Fetch ERP Admin Checklist progress for candidates sent to ERP
+        $erpProgress = [];
+        try {
+            global $dbConfig;
+            $erpCfg = $dbConfig['erp'] ?? [];
+            $erpDb = new \mysqli(
+                $erpCfg['hostname'] ?? 'localhost',
+                $erpCfg['username'] ?? 'root',
+                $erpCfg['password'] ?? '',
+                $erpCfg['database'] ?? 'erp_db',
+                $erpCfg['port'] ?? 3306
+            );
+            if (!$erpDb->connect_error) {
+                // Get all erp_crew_ids from pipeline
+                $erpCrewIds = [];
+                foreach ($pipeline as $statusApps) {
+                    foreach ($statusApps as $app) {
+                        if (!empty($app['erp_crew_id'])) {
+                            $erpCrewIds[] = intval($app['erp_crew_id']);
+                        }
+                    }
+                }
+                
+                if (!empty($erpCrewIds)) {
+                    $idList = implode(',', $erpCrewIds);
+                    $erpResult = $erpDb->query("
+                        SELECT crew_id,
+                               document_check, owner_interview, pengantar_mcu,
+                               agreement_kontrak, admin_charge, ok_to_board,
+                               (CASE WHEN document_check = 1 THEN 1 ELSE 0 END
+                                + CASE WHEN owner_interview = 1 THEN 1 ELSE 0 END
+                                + CASE WHEN pengantar_mcu = 1 THEN 1 ELSE 0 END
+                                + CASE WHEN agreement_kontrak = 1 THEN 1 ELSE 0 END
+                                + CASE WHEN admin_charge = 1 THEN 1 ELSE 0 END
+                                + CASE WHEN ok_to_board = 1 THEN 1 ELSE 0 END) as passed_count,
+                               (CASE WHEN document_check = 2 THEN 1 ELSE 0 END
+                                + CASE WHEN owner_interview = 2 THEN 1 ELSE 0 END
+                                + CASE WHEN pengantar_mcu = 2 THEN 1 ELSE 0 END
+                                + CASE WHEN agreement_kontrak = 2 THEN 1 ELSE 0 END
+                                + CASE WHEN admin_charge = 2 THEN 1 ELSE 0 END
+                                + CASE WHEN ok_to_board = 2 THEN 1 ELSE 0 END) as rejected_count,
+                               6 as total_count,
+                               updated_at as last_update,
+                               status as checklist_status
+                        FROM admin_checklists
+                        WHERE crew_id IN ($idList)
+                    ");
+                    if ($erpResult) {
+                        while ($row = $erpResult->fetch_assoc()) {
+                            $erpProgress[$row['crew_id']] = $row;
+                        }
+                    }
+                }
+                $erpDb->close();
+            }
+        } catch (\Throwable $e) {
+            // Silently fail - ERP data is supplementary
+        }
+
         // Get my pending claim requests
         $pendingStmt = $this->db->prepare("
             SELECT jcr.*, a.id as app_id, u.full_name as applicant_name, jv.title as vacancy_title
@@ -115,10 +178,8 @@ class Pipeline extends BaseController
         $pendingStmt->execute();
         $myPendingRequests = $pendingStmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        // Set default UI mode to modern for new users
-        if (!isset($_SESSION['ui_mode'])) {
-            $_SESSION['ui_mode'] = 'modern';
-        }
+        // Force standard mode - merged all features into content.php
+        $_SESSION['ui_mode'] = 'standard';
 
         // --- New Candidate Alerts: candidates who chose this crewing as preferred recruiter ---
         $newCandidateAlerts = [];
@@ -157,6 +218,7 @@ class Pipeline extends BaseController
             'currentView' => $view,
             'myPendingRequests' => $myPendingRequests,
             'newCandidateAlerts' => $newCandidateAlerts,
+            'erpProgress' => $erpProgress,
             'uiMode' => $_SESSION['ui_mode']
         ]);
     }
@@ -239,6 +301,32 @@ class Pipeline extends BaseController
         $docStmt->bind_param('i', $app['user_id']);
         $docStmt->execute();
         $app['documents'] = $docStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        // Fetch ERP Admin Checklist progress if sent to ERP
+        if (!empty($app['erp_crew_id'])) {
+            try {
+                global $dbConfig;
+                $erpCfg = $dbConfig['erp'] ?? [];
+                $erpDb = new \mysqli(
+                    $erpCfg['hostname'] ?? 'localhost',
+                    $erpCfg['username'] ?? 'root',
+                    $erpCfg['password'] ?? '',
+                    $erpCfg['database'] ?? 'erp_db',
+                    $erpCfg['port'] ?? 3306
+                );
+                if (!$erpDb->connect_error) {
+                    $erpStmt = $erpDb->prepare("SELECT document_check, owner_interview, pengantar_mcu, agreement_kontrak, admin_charge, ok_to_board, status as checklist_status FROM admin_checklists WHERE crew_id = ?");
+                    $crewId = intval($app['erp_crew_id']);
+                    $erpStmt->bind_param('i', $crewId);
+                    $erpStmt->execute();
+                    $erpData = $erpStmt->get_result()->fetch_assoc();
+                    if ($erpData) {
+                        $app['erp_checklist'] = $erpData;
+                    }
+                    $erpDb->close();
+                }
+            } catch (\Throwable $e) {}
+        }
 
         return $this->json(['success' => true, 'data' => $app]);
     }
@@ -475,6 +563,14 @@ class Pipeline extends BaseController
             return $this->json(['success' => false, 'message' => 'Application ID required']);
         }
         
+        // Auto-create archive columns if they don't exist
+        $colCheck = $this->db->query("SHOW COLUMNS FROM applications LIKE 'is_archived'");
+        if ($colCheck && $colCheck->num_rows == 0) {
+            $this->db->query("ALTER TABLE applications ADD COLUMN is_archived TINYINT(1) DEFAULT 0");
+            $this->db->query("ALTER TABLE applications ADD COLUMN archived_at DATETIME NULL");
+            $this->db->query("ALTER TABLE applications ADD COLUMN archived_by INT NULL");
+        }
+        
         $stmt = $this->db->prepare("
             UPDATE applications 
             SET is_archived = 0, archived_at = NULL, archived_by = NULL
@@ -483,10 +579,10 @@ class Pipeline extends BaseController
         $stmt->bind_param('i', $applicationId);
         
         if ($stmt->execute()) {
-            return $this->json(['success' => true, 'message' => 'Aplikasi berhasil dikembalikan']);
+            return $this->json(['success' => true, 'message' => 'Aplikasi berhasil dikembalikan ke pipeline']);
         }
         
-        return $this->json(['success' => false, 'message' => 'Gagal mengembalikan aplikasi']);
+        return $this->json(['success' => false, 'message' => 'Gagal mengembalikan: ' . $this->db->error]);
     }
     
     /**
@@ -514,27 +610,80 @@ class Pipeline extends BaseController
             return $this->json(['success' => false, 'message' => 'Hanya bisa menghapus aplikasi yang sudah diarsipkan']);
         }
         
-        // Delete related records first
-        $delStmt = $this->db->prepare("DELETE FROM application_assignments WHERE application_id = ?");
-        $delStmt->bind_param('i', $applicationId);
-        $delStmt->execute();
-        
-        $delStmt = $this->db->prepare("DELETE FROM pipeline_requests WHERE application_id = ?");
-        $delStmt->bind_param('i', $applicationId);
-        $delStmt->execute();
-        
-        $delStmt = $this->db->prepare("DELETE FROM applicant_documents WHERE application_id = ?");
-        $delStmt->bind_param('i', $applicationId);
-        @$delStmt->execute(); // @ suppress if table doesn't exist
-        
-        // Delete the application
-        $stmt = $this->db->prepare("DELETE FROM applications WHERE id = ?");
-        $stmt->bind_param('i', $applicationId);
-        
-        if ($stmt->execute()) {
-            return $this->json(['success' => true, 'message' => 'Aplikasi berhasil dihapus permanen']);
+        try {
+            // Delete all related records (each in try-catch to handle missing tables)
+            $relatedTables = [
+                'application_assignments',
+                'status_change_requests',
+                'job_claim_requests',
+                'pipeline_requests',
+                'applicant_documents',
+                'email_logs',
+            ];
+            
+            foreach ($relatedTables as $table) {
+                try {
+                    $stmt = $this->db->prepare("DELETE FROM `{$table}` WHERE application_id = ?");
+                    if ($stmt) {
+                        $stmt->bind_param('i', $applicationId);
+                        $stmt->execute();
+                        $stmt->close();
+                    }
+                } catch (\Throwable $e) {
+                    // Table might not exist, continue
+                }
+            }
+            
+            // Delete the application
+            $stmt = $this->db->prepare("DELETE FROM applications WHERE id = ?");
+            $stmt->bind_param('i', $applicationId);
+            
+            if ($stmt->execute()) {
+                return $this->json(['success' => true, 'message' => 'Aplikasi berhasil dihapus permanen']);
+            }
+            
+            return $this->json(['success' => false, 'message' => 'Gagal menghapus: ' . $this->db->error]);
+        } catch (\Throwable $e) {
+            return $this->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
         }
-        
-        return $this->json(['success' => false, 'message' => 'Gagal menghapus aplikasi']);
+    }
+
+    /**
+     * Export Pipeline Summary as PDF
+     */
+    public function exportPdf()
+    {
+        $crewingId = $_SESSION['user_id'];
+
+        // Get statuses
+        $statusResult = $this->db->query("SELECT * FROM application_statuses WHERE id NOT IN (9, 10, 11) ORDER BY sort_order");
+        $statuses = $statusResult ? $statusResult->fetch_all(MYSQLI_ASSOC) : [];
+
+        // Get pipeline data - all applications (not just assigned)
+        $pipeline = [];
+        foreach ($statuses as $status) {
+            $query = "
+                SELECT a.id, a.user_id, a.created_at,
+                       u.full_name as applicant_name,
+                       jv.title as vacancy_title,
+                       uc.full_name as crewing_name
+                FROM applications a
+                JOIN users u ON a.user_id = u.id
+                LEFT JOIN job_vacancies jv ON a.vacancy_id = jv.id
+                LEFT JOIN application_assignments aa ON a.id = aa.application_id AND aa.status = 'active'
+                LEFT JOIN users uc ON aa.assigned_to = uc.id
+                WHERE a.status_id = ?
+                ORDER BY a.created_at DESC
+            ";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param('i', $status['id']);
+            $stmt->execute();
+            $pipeline[$status['id']] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        }
+
+        $this->view('crewing/pipeline/pipeline_pdf', [
+            'statuses' => $statuses,
+            'pipeline' => $pipeline,
+        ]);
     }
 }

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once APPPATH . 'Controllers/BaseController.php';
 
 /**
@@ -416,5 +416,62 @@ class Applications extends BaseController {
         }
         
         $this->redirect(url('/crewing/applications'));
+    }
+    
+    /**
+     * Generate applicant profile PDF (CV style)
+     */
+    public function profilePdf($id) {
+        $stmt = $this->db->prepare("
+            SELECT a.*, u.full_name, u.email, u.phone, u.avatar,
+                   ap.*,
+                   v.title as vacancy_title,
+                   s.name as status_name, s.color as status_color
+            FROM applications a
+            JOIN users u ON a.user_id = u.id
+            LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
+            LEFT JOIN job_vacancies v ON a.vacancy_id = v.id
+            LEFT JOIN application_statuses s ON a.status_id = s.id
+            WHERE a.id = ?
+        ");
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $applicant = $stmt->get_result()->fetch_assoc();
+        
+        if (!$applicant) {
+            flash('error', 'Application not found');
+            $this->redirect(url('/crewing/applications'));
+            return;
+        }
+        
+        // Get documents
+        $docStmt = $this->db->prepare("
+            SELECT d.*, dt.name as type_name
+            FROM documents d
+            JOIN document_types dt ON d.document_type_id = dt.id
+            WHERE d.user_id = ?
+            ORDER BY dt.sort_order
+        ");
+        $docStmt->bind_param('i', $applicant['user_id']);
+        $docStmt->execute();
+        $documents = $docStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        
+        // Get interview score if available
+        $interviewScore = null;
+        $interviewStmt = $this->db->prepare("
+            SELECT total_score, ai_recommendation, admin_override_score
+            FROM interview_sessions 
+            WHERE application_id = ? AND status = 'completed'
+            ORDER BY completed_at DESC LIMIT 1
+        ");
+        $interviewStmt->bind_param('i', $id);
+        $interviewStmt->execute();
+        $interviewScore = $interviewStmt->get_result()->fetch_assoc();
+        
+        $this->view('crewing/applications/profile_pdf', [
+            'applicant' => $applicant,
+            'documents' => $documents,
+            'interviewScore' => $interviewScore
+        ]);
     }
 }

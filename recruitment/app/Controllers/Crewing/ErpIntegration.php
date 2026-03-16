@@ -153,10 +153,10 @@ class ErpIntegration extends BaseController {
                 $docsSynced = $erpSync->syncDocuments($crewId, $documents, $_SESSION['user_id']);
             }
             
-            // Update application
+            // Update application - mark as sent and move to Processing status
             $updateStmt = $this->db->prepare("
                 UPDATE applications 
-                SET sent_to_erp_at = NOW(), erp_crew_id = ? 
+                SET sent_to_erp_at = NOW(), erp_crew_id = ?, status_id = 8, status_updated_at = NOW()
                 WHERE id = ?
             ");
             $updateStmt->bind_param('ii', $crewId, $applicationId);

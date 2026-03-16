@@ -52,6 +52,7 @@ return [
         'logout' => 'Keluar',
         'login' => 'Masuk',
         'ai_scan_cert' => 'Scan Sertifikat AI',
+        'crews' => 'Kru',
     ],
 
     // ===== COMMON / SHARED =====
@@ -125,7 +126,7 @@ return [
         'modern' => 'Modern',
         'id' => 'ID',
         'from' => 'Dari',
-        'to' => 'Ke',
+        'to_label' => 'Ke',
         'start_date' => 'Tanggal Mulai',
         'end_date' => 'Tanggal Selesai',
         'created_at' => 'Dibuat',
@@ -139,8 +140,8 @@ return [
         'csv' => 'CSV',
         'submit' => 'Kirim',
         'reset_default' => 'Reset Default',
-        'confirm' => 'Apakah Anda yakin',
-        'export' => 'Ekspor',
+        'confirm_action' => 'Apakah Anda yakin',
+        'export_data' => 'Ekspor',
         'client_satisfaction' => 'Kepuasan Klien',
         'quick_actions' => 'Aksi Cepat',
         'hover_for_actions' => 'Hover untuk aksi',
@@ -323,7 +324,7 @@ return [
         'submit_contract' => 'Kirim Kontrak',
         'months' => 'bulan',
         // Halaman kontrak segera berakhir
-        'expiring_subtitle' => 'Kontrak yang segera berakhir — ambil tindakan sebelum terlambat',
+        'expiring_subtitle2' => 'Kontrak yang segera berakhir — ambil tindakan sebelum terlambat',
         'back_to_contracts' => 'Kembali ke Kontrak',
         'show_expiring_within' => 'Tampilkan kontrak yang berakhir dalam',
         'days_label' => 'hari',
@@ -384,6 +385,50 @@ return [
 
     // ===== PAYROLL =====
     'payroll' => [
+        // Page header
+        'title' => 'Payroll Kru',
+        'subtitle' => 'Manajemen penggajian kru kapal',
+        'run_payroll' => 'Jalankan Payroll',
+        'mark_complete' => 'Tandai Selesai',
+        'confirm_complete' => 'Apakah Anda yakin ingin menandai payroll ini selesai? Semua item akan ditandai PAID.',
+
+        // Period & months
+        'period' => 'Periode Payroll',
+        'months' => [
+            'january' => 'Januari',
+            'february' => 'Februari',
+            'march' => 'Maret',
+            'april' => 'April',
+            'may' => 'Mei',
+            'june' => 'Juni',
+            'july' => 'Juli',
+            'august' => 'Agustus',
+            'september' => 'September',
+            'october' => 'Oktober',
+            'november' => 'November',
+            'december' => 'Desember',
+        ],
+
+        // Stats cards
+        'gross_salary' => 'Gaji Kotor',
+        'total_tax' => 'Total Pajak',
+        'net_payable' => 'Gaji Diterima',
+        'monthly_trend' => 'Tren Bulanan',
+        'last_6_months' => '6 bulan terakhir',
+
+        // Table
+        'details' => 'Detail Penggajian',
+        'search_crew' => 'Cari kru...',
+        'basic_salary' => 'Gaji Pokok',
+        'allowances' => 'Tunjangan',
+        'gross' => 'Gaji Kotor',
+        'tax' => 'Pajak',
+        'net' => 'Gaji Bersih',
+        'no_payroll' => 'Belum ada data payroll',
+        'click_run_payroll' => 'Klik "Jalankan Payroll" untuk generate data',
+        'usd_note' => 'Gaji dalam mata uang asing dikonversi ke IDR berdasarkan kurs kontrak',
+
+        // History & detail
         'history_title' => 'Riwayat Penggajian',
         'detail_title' => 'Detail Penggajian',
         'back_to_payroll' => 'Kembali ke Manajemen Penggajian',
@@ -488,6 +533,13 @@ return [
         'catering' => 'Catering',
         'radio' => 'Radio',
         'other' => 'Lainnya',
+        // Kunci pangkat tambahan
+        'master_title' => 'Master Pangkat',
+        'add_rank' => 'Tambah Pangkat Baru',
+        'edit_rank' => 'Edit Pangkat',
+        'level_order' => 'Urutan Level',
+        'is_officer' => 'Officer?',
+        'is_officer_label' => 'Ya, ini jabatan Officer (Perwira)',
     ],
 
     // ===== CREWS =====
@@ -568,8 +620,8 @@ return [
         'account_holder' => 'Atas Nama',
         'add_skill' => 'Tambah Skill',
         'no_skills_added' => 'Belum ada skill yang ditambahkan',
-        'crew_name' => 'Nama Kru',
-        'vessel' => 'Kapal',
+        'crew_name_col' => 'Nama Kru',
+        'vessel_col2' => 'Kapal',
         // Halaman skill matrix
         'back_to_list' => 'Kembali ke Daftar Kru',
         'unique_skills' => 'Jenis skill unik terdaftar',
@@ -585,63 +637,7 @@ return [
         'all_levels' => 'Semua Level',
     ],
 
-    // ===== PAYROLL =====
-    'payroll' => [
-        'title' => 'Manajemen Penggajian',
-        'subtitle' => 'Kelola penggajian dan gaji kru',
-        'history_title' => 'Riwayat Penggajian',
-        'history_subtitle' => 'Catatan penggajian sebelumnya',
-        'view_title' => 'Detail Penggajian',
-        'period' => 'Periode',
-        'month' => 'Bulan',
-        'year' => 'Tahun',
-        'crew_name' => 'Nama Kru',
-        'basic_salary' => 'Gaji Pokok',
-        'overtime' => 'Lembur',
-        'allowances' => 'Tunjangan',
-        'deductions' => 'Potongan',
-        'net_pay' => 'Gaji Bersih',
-        'gross_pay' => 'Gaji Kotor',
-        'status' => 'Status',
-        'generate_payroll' => 'Generate Payroll',
-        'process_payroll' => 'Proses Payroll',
-        'approve_payroll' => 'Setujui Payroll',
-        'no_payroll' => 'Tidak ada data penggajian ditemukan',
-        'processing_day' => 'Hari Pemrosesan Gaji',
-        'auto_generate' => 'Otomatis Generate Payroll',
-        'run_payroll' => 'Jalankan Payroll',
-        'mark_complete' => 'Tandai Selesai',
-        'confirm_complete' => 'Tandai periode payroll ini sebagai selesai?',
-        'gross_salary' => 'Gaji Kotor',
-        'total_tax' => 'Total Pajak',
-        'net_payable' => 'Total Dibayarkan',
-        'monthly_trend' => 'Tren Bulanan',
-        'last_6_months' => '6 Bulan Terakhir',
-        'details' => 'Detail Payroll',
-        'search_crew' => 'Cari crew...',
-        'gross' => 'Bruto',
-        'tax' => 'Pajak',
-        'net' => 'Netto',
-        'click_run_payroll' => 'Klik "Jalankan Payroll" untuk generate data gaji',
-        'confirm_send_payslips' => 'Kirim slip gaji ke semua crew via email?',
-        'send_payslips' => 'Kirim Slip Gaji via Email',
-        'usd_note' => 'Semua nilai dalam USD dengan 2 desimal untuk akurasi',
-        'summary_by_vessel' => 'Ringkasan per Kapal',
-        'months' => [
-            'january' => 'Januari',
-            'february' => 'Februari',
-            'march' => 'Maret',
-            'april' => 'April',
-            'may' => 'Mei',
-            'june' => 'Juni',
-            'july' => 'Juli',
-            'august' => 'Agustus',
-            'september' => 'September',
-            'october' => 'Oktober',
-            'november' => 'November',
-            'december' => 'Desember',
-        ],
-    ],
+    // ===== PAYROLL (extended) - merged into payroll above =====
 
     // ===== DOCUMENTS =====
     'documents' => [
@@ -784,8 +780,8 @@ return [
         'interview_stage' => 'Tahap Interview',
         'active_interview' => 'Interview aktif',
         'applied_screening' => 'Applied / Screening',
-        'approval_subtitle' => 'Kelola persetujuan kru dari sistem recruitment',
-        'pipeline_subtitle' => 'Manajemen kandidat dari sistem recruitment secara efisien',
+        'approval_subtitle2' => 'Kelola persetujuan kru dari sistem recruitment',
+        'pipeline_subtitle2' => 'Manajemen kandidat dari sistem recruitment secara efisien',
     ],
 
     // ===== MONITORING =====
@@ -903,25 +899,7 @@ return [
         'generate_notifications' => 'Generate Notifikasi',
     ],
 
-    // ===== RANKS =====
-    'ranks' => [
-        'master_title' => 'Master Pangkat',
-        'title' => 'Manajemen Pangkat',
-        'subtitle' => 'Kelola pangkat dan jabatan kru',
-        'add_rank' => 'Tambah Pangkat Baru',
-        'edit_rank' => 'Edit Pangkat',
-        'save_rank' => 'Simpan Pangkat',
-        'rank_name' => 'Nama Pangkat',
-        'rank_code' => 'Kode',
-        'department' => 'Departemen',
-        'level_order' => 'Urutan Level',
-        'is_officer' => 'Officer?',
-        'is_officer_label' => 'Ya, ini jabatan Officer (Perwira)',
-        'no_ranks' => 'Tidak ada pangkat ditemukan',
-        'created_success' => 'Pangkat berhasil dibuat',
-        'updated_success' => 'Pangkat berhasil diperbarui',
-        'deleted_success' => 'Pangkat berhasil dihapus',
-    ],
+    // ===== RANKS (kunci tambahan sudah digabung ke ranks di atas) =====
 
     // ===== USERS =====
     'users' => [

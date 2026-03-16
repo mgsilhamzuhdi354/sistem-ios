@@ -5,7 +5,7 @@
 
 require_once __DIR__ . '/../config/database.php';
 
-$db = getDB Connection();
+$db = getDBConnection();
 
 try {
     // Check if column exists

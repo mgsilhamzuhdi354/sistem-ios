@@ -126,6 +126,62 @@ class SelectRecruiter extends BaseController {
     }
     
     /**
+     * Validate referral code (AJAX)
+     */
+    public function validateReferral($vacancyId) {
+        header('Content-Type: application/json');
+        
+        $code = trim($_POST['referral_code'] ?? '');
+        
+        if (empty($code)) {
+            echo json_encode(['success' => false, 'message' => 'Kode referral tidak boleh kosong']);
+            return;
+        }
+        
+        // Validate vacancy
+        $stmtV = $this->db->prepare("SELECT id FROM job_vacancies WHERE id = ? AND status = 'published'");
+        $stmtV->bind_param('i', $vacancyId);
+        $stmtV->execute();
+        if (!$stmtV->get_result()->fetch_assoc()) {
+            echo json_encode(['success' => false, 'message' => 'Lowongan tidak ditemukan']);
+            return;
+        }
+        
+        // Find recruiter by referral code
+        $stmt = $this->db->prepare("
+            SELECT u.id, u.full_name, u.avatar, cp.photo, cp.specialization
+            FROM users u
+            LEFT JOIN crewing_profiles cp ON u.id = cp.user_id
+            WHERE u.referral_code = ? AND u.role_id = 5 AND u.is_active = 1
+        ");
+        $stmt->bind_param('s', $code);
+        $stmt->execute();
+        $recruiter = $stmt->get_result()->fetch_assoc();
+        
+        if (!$recruiter) {
+            echo json_encode(['success' => false, 'message' => 'Kode referral tidak valid atau perekrut tidak aktif']);
+            return;
+        }
+        
+        // Store in session
+        $_SESSION['preferred_recruiter'] = $recruiter['id'];
+        $_SESSION['recruiter_assignment_type'] = 'referral';
+        $_SESSION['referral_code_used'] = $code;
+        
+        echo json_encode([
+            'success' => true,
+            'message' => 'Kode referral valid! Anda akan di-assign ke ' . $recruiter['full_name'],
+            'recruiter' => [
+                'id' => $recruiter['id'],
+                'name' => $recruiter['full_name'],
+                'specialization' => $recruiter['specialization'] ?? '',
+                'photo' => !empty($recruiter['photo']) ? url('/uploads/recruiters/' . $recruiter['photo']) : (!empty($recruiter['avatar']) ? url('/uploads/avatars/' . $recruiter['avatar']) : null)
+            ],
+            'redirect' => url('/applicant/applications/apply/' . $vacancyId)
+        ]);
+    }
+    
+    /**
      * Manual recruiter selection
      */
     public function select($vacancyId, $recruiterId) {

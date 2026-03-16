@@ -43,6 +43,9 @@ class BaseController
         // Check session timeout
         $this->checkSessionTimeout();
         
+        // ALWAYS force modern UI mode - never allow classic
+        $_SESSION['ui_mode'] = 'modern';
+        
         $this->session = $_SESSION;
         
         // Set security headers
@@ -314,7 +317,9 @@ protected function requireAuth()
             case 'view': return (bool)$permission['can_view'];
             case 'create': return (bool)$permission['can_create'];
             case 'edit': return (bool)$permission['can_edit'];
+            case 'approve': return (bool)$permission['can_edit'];
             case 'delete': return (bool)$permission['can_delete'];
+            case 'export': return (bool)$permission['can_view'];
             default: return false;
         }
     }

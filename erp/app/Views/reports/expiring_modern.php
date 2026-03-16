@@ -31,6 +31,10 @@ $currentPage = 'reports';
                 <p class="text-[11px] text-slate-400">Contracts expiring within <?= $days ?? 60 ?> days</p>
             </div>
             <div class="flex items-center gap-2">
+                <a href="<?= BASE_URL ?>reports/export-pdf/expiring?days=<?= $days ?? 60 ?>" target="_blank"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition-colors">
+                    <span class="material-icons text-sm">picture_as_pdf</span> Export PDF
+                </a>
                 <a href="<?= BASE_URL ?>reports/export/expiring" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 text-xs font-semibold rounded-lg transition-colors">
                     <span class="material-icons text-sm">download</span> Export CSV
                 </a>

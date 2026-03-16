@@ -1091,3 +1091,5 @@
         width: 100%;
     }
 }
+
+/* Pipeline layout is now controlled by table + inline styles in content.php */

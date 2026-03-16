@@ -3,7 +3,7 @@ DirectoryIndex index.php
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /erp/
+    RewriteBase /PT_indoocean/PT_indoocean/erp/
 
     # Allow direct access to existing files and directories
     RewriteCond %{REQUEST_FILENAME} !-f

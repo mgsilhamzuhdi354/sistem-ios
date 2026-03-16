@@ -1,7 +1,8 @@
 <?php
 /**
- * Modern Sidebar - Multi-language support
- * No bouncing, no jumping, consistent active indicators
+ * Modern Sidebar - Stable, no-jump, pure CSS/JS
+ * No Alpine.js dependency for sidebar toggles
+ * Dropdowns open/close via server-side detection + vanilla JS
  */
 
 $currentPage = $currentPage ?? '';
@@ -21,9 +22,9 @@ $act = [
     'contracts-list'  => str_ends_with($_sidebarPath, '/contracts') || str_ends_with($_sidebarPath, '/contracts/'),
     'contracts-create'=> $_isActive('/contracts/create'),
     'contracts-expiring' => $_isActive('/contracts/expiring'),
-    'vessels'         => $_isActive('/vessels'),
+    'crew-monitoring' => $_isActive('/contracts/timeline'),
+    'vessels'         => $_isActive('/vessels') && !$_isActive('/finance') && !$_isActive('/vessels/profit'),
     'vessels-list'    => str_ends_with($_sidebarPath, '/vessels') || str_ends_with($_sidebarPath, '/vessels/'),
-    'vessels-profit'  => $_isActive('/vessels/profit'),
     'clients'         => $_isActive('/clients'),
     'ranks'           => $_isActive('/ranks'),
     'crews'           => $_isActive('/crews') && !$_isActive('/crews/performance'),
@@ -34,6 +35,7 @@ $act = [
     'crew-payroll-history' => $_isActive('/payroll/history') && !$_isActive('/employees'),
     'documents'       => $_isActive('/documents'),
     'doc-parser'      => $_isActive('/DocumentParser'),
+    'smart-import'    => $_isActive('/SmartImport') || $_isActive('/smart-import'),
     'crew-performance'=> $_isActive('/crews/performance'),
     'employees'       => $_isActive('/employees') && !$_isActive('/employees/attendance') && !$_isActive('/employees/payroll') && !$_isActive('/employees/performance'),
     'attendance'      => $_isActive('/employees/attendance'),
@@ -42,317 +44,429 @@ $act = [
     'pipeline'        => $_isActive('/recruitment/pipeline'),
     'approval'        => $_isActive('/recruitment/approval'),
     'onboarding'      => $_isActive('/recruitment/onboarding'),
+    'admin-checklist' => $_isActive('/AdminChecklist') || $_isActive('/admin-checklist'),
+    'operational'     => $_isActive('/Operational') || $_isActive('/operational'),
+    'recruiter-perf'  => $_isActive('/RecruiterPerformance') || $_isActive('/recruiter-performance'),
     'visitors'        => $_isActive('/monitoring/visitors'),
     'activity'        => $_isActive('/monitoring/activity'),
     'integration'     => $_isActive('/monitoring/integration'),
-    'reports'         => $_isActive('/reports'),
+    'finance'          => $_isActive('/finance') || $_isActive('/vessels/profit') || $_isActive('/reports/payroll-summary'),
+    'finance-dash'     => str_ends_with($_sidebarPath, '/finance') || str_ends_with($_sidebarPath, '/finance/'),
+    'finance-invoices' => $_isActive('/finance/invoices') || $_isActive('/finance/invoice') || $_isActive('/finance/create-invoice') || $_isActive('/finance/edit-invoice'),
+    'finance-bills'    => $_isActive('/finance/bills') || $_isActive('/finance/bill') || $_isActive('/finance/create-bill') || $_isActive('/finance/edit-bill'),
+    'finance-journal'  => $_isActive('/finance/journal') || $_isActive('/finance/create-journal') || $_isActive('/finance/journal-detail'),
+    'finance-cc'       => $_isActive('/finance/cost-centers'),
+    'finance-accounts' => $_isActive('/finance/accounts'),
+    'finance-cashflow' => $_isActive('/finance/cashflow'),
+    'finance-pnl'      => $_isActive('/finance/profit-loss'),
+    'finance-vessel'   => $_isActive('/vessels/profit'),
+    'finance-payroll'  => $_isActive('/reports/payroll-summary'),
+    'reports'         => $_isActive('/reports') && !$_isActive('/reports/payroll-summary'),
     'reports-overview'=> str_ends_with($_sidebarPath, '/reports') || str_ends_with($_sidebarPath, '/reports/'),
     'reports-vessel'  => $_isActive('/reports/by-vessel'),
     'reports-emp'     => $_isActive('/reports/employees'),
-    'reports-finance' => $_isActive('/reports/payroll-summary'),
     'notifications'   => $_isActive('/notifications'),
     'settings'        => $_isActive('/settings'),
     'users'           => $_isActive('/users'),
 ];
-
-$activeClass = 'bg-blue-50 text-blue-700 font-semibold border-l-[3px] border-blue-600';
-$inactiveClass = 'text-slate-600 hover:bg-slate-50 hover:text-slate-800 border-l-[3px] border-transparent';
-$activeIcon = 'text-blue-600';
-$inactiveIcon = 'text-slate-400';
-$activeSub = 'text-blue-700 font-semibold bg-blue-50/80';
-$inactiveSub = 'text-slate-500 hover:text-slate-700 hover:bg-slate-50';
 ?>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <style>
-    [x-cloak] { display: none !important; }
-    #sidebarNav { scrollbar-width: none; -ms-overflow-style: none; }
-    #sidebarNav::-webkit-scrollbar { width: 0; display: none; }
+    /* === SIDEBAR CORE STYLES === */
+    #erpSidebar { scrollbar-width: none; -ms-overflow-style: none; }
+    #erpSidebar::-webkit-scrollbar { width: 0; display: none; }
+
+    /* Menu item text truncation */
+    .sb-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+
+    /* Dropdown submenu - no animation, instant show/hide */
+    .sb-sub { display: none; margin-left: 36px; margin-top: 2px; }
+    .sb-sub.sb-open { display: block; }
+
+    /* Dropdown arrow rotation */
+    .sb-arrow { flex-shrink: 0; font-size: 16px; transition: transform 0.15s ease; }
+    .sb-arrow.sb-rotated { transform: rotate(180deg); }
+
+    /* Icon fixed width */
+    .sb-icon { flex-shrink: 0; width: 20px; text-align: center; }
+
+    /* Badge fixed */
+    .sb-badge { flex-shrink: 0; white-space: nowrap; }
+
+    /* Menu item base */
+    .sb-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        line-height: 1.4;
+        text-decoration: none;
+        color: #475569;
+        border-left: 3px solid transparent;
+        cursor: pointer;
+        width: 100%;
+        min-width: 0;
+    }
+    .sb-item:hover { background: #f8fafc; color: #1e293b; }
+
+    /* Active state */
+    .sb-item.sb-active {
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-weight: 600;
+        border-left-color: #2563eb;
+    }
+    .sb-item.sb-active .sb-icon { color: #2563eb; }
+
+    /* Sub-item */
+    .sb-sub a {
+        display: block;
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        color: #64748b;
+        text-decoration: none;
+        line-height: 1.5;
+    }
+    .sb-sub a:hover { color: #334155; background: #f8fafc; }
+    .sb-sub a.sb-sub-active {
+        color: #1d4ed8;
+        font-weight: 600;
+        background: rgba(239, 246, 255, 0.8);
+    }
+
+    /* Section header */
+    .sb-section {
+        padding: 14px 12px 6px;
+        font-size: 10px;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+    }
+    .sb-section:first-child { padding-top: 4px; }
+
+    /* Dropdown button - reset */
+    .sb-dropdown-btn {
+        background: none;
+        border: none;
+        font-family: inherit;
+        font-size: inherit;
+        text-align: left;
+        outline: none;
+    }
+    .sb-dropdown-btn .sb-text { flex: 1; min-width: 0; }
 </style>
-<aside class="w-64 h-screen bg-white border-r border-slate-200/60 flex-shrink-0 fixed left-0 top-0 flex flex-col z-40">
+
+<aside style="width:256px;height:100vh;background:#fff;border-right:1px solid rgba(226,232,240,0.6);flex-shrink:0;position:fixed;left:0;top:0;display:flex;flex-direction:column;z-index:40;">
     <!-- Logo -->
-    <div class="px-4 py-4 border-b border-slate-100 flex-shrink-0">
-        <a href="<?= BASE_URL ?>" class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-md">
-                <span class="material-icons text-white text-xl">anchor</span>
+    <div style="padding:14px 16px;border-bottom:1px solid #f1f5f9;flex-shrink:0;">
+        <a href="<?= BASE_URL ?>" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+            <div style="width:38px;height:38px;border-radius:10px;overflow:hidden;flex-shrink:0;box-shadow:0 2px 8px rgba(37,99,235,0.15);">
+                <img src="<?= BASE_URL ?>assets/images/logo.png" alt="IndoOcean" style="width:100%;height:100%;object-fit:cover;">
             </div>
             <div>
-                <h1 class="text-base font-bold text-slate-800 leading-tight">IndoOcean</h1>
-                <span class="text-[10px] text-blue-600 font-bold tracking-wide">MARITIME ERP</span>
+                <div style="font-size:15px;font-weight:700;color:#1e293b;line-height:1.2;">IndoOcean</div>
+                <div style="font-size:10px;color:#2563eb;font-weight:700;letter-spacing:0.5px;">MARITIME ERP</div>
             </div>
         </a>
     </div>
 
-    <!-- Navigation (scrollable) -->
-    <nav class="flex-1 overflow-y-scroll py-3 px-3 space-y-0.5 text-[13px]" id="sidebarNav">
+    <!-- Navigation -->
+    <nav style="flex:1;overflow-y:auto;padding:8px 10px;" id="erpSidebar">
 
         <!-- OVERVIEW -->
-        <div class="px-3 pt-1 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider"><?= __('sidebar.overview') ?></div>
+        <div class="sb-section"><?= __('sidebar.overview') ?></div>
 
-        <a href="<?= BASE_URL ?>" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['dashboard'] ? $activeClass : $inactiveClass ?>">
-            <span class="material-icons text-[18px] <?= $act['dashboard'] ? $activeIcon : $inactiveIcon ?>">dashboard</span>
-            <?= __('sidebar.dashboard') ?>
+        <a href="<?= BASE_URL ?>" class="sb-item <?= $act['dashboard'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;"><?= $act['dashboard'] ? 'dashboard' : 'dashboard' ?></span>
+            <span class="sb-text"><?= __('sidebar.dashboard') ?></span>
         </a>
 
-        <!-- MANAGEMENT -->
-        <div class="px-3 pt-4 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider"><?= __('sidebar.management') ?></div>
+        <!-- MANAJEMEN -->
+        <div class="sb-section"><?= __('sidebar.management') ?></div>
 
-        <!-- Contracts -->
-        <div x-data="{ open: <?= $act['contracts'] ? 'true' : 'false' ?> }" x-cloak>
-            <button @click.prevent="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['contracts'] ? $activeClass : $inactiveClass ?>">
-                <span class="flex items-center gap-3">
-                    <span class="material-icons text-[18px] <?= $act['contracts'] ? $activeIcon : $inactiveIcon ?>">description</span>
-                    <?= __('sidebar.contracts') ?>
-                </span>
-                <span class="material-icons text-[16px] transition-transform duration-200" :class="open && 'rotate-180'">expand_more</span>
-            </button>
-            <div x-show="open" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-1" class="ml-9 mt-1 space-y-0.5">
-                <a href="<?= BASE_URL ?>contracts" class="block px-3 py-1.5 rounded-md text-xs <?= $act['contracts-list'] ? $activeSub : $inactiveSub ?>"><?= __('sidebar.all_contracts') ?></a>
-                <a href="<?= BASE_URL ?>contracts/create" class="block px-3 py-1.5 rounded-md text-xs <?= $act['contracts-create'] ? $activeSub : $inactiveSub ?>"><?= __('sidebar.create_contract') ?></a>
-                <a href="<?= BASE_URL ?>contracts/expiring" class="block px-3 py-1.5 rounded-md text-xs <?= $act['contracts-expiring'] ? $activeSub : $inactiveSub ?>"><?= __('sidebar.expiring_soon') ?></a>
-            </div>
+        <!-- Kontrak -->
+        <button class="sb-item sb-dropdown-btn <?= $act['contracts'] ? 'sb-active' : '' ?>" onclick="sbToggle('sub-contracts')">
+            <span class="material-icons sb-icon" style="font-size:18px;">description</span>
+            <span class="sb-text"><?= __('sidebar.contracts') ?></span>
+            <span class="material-icons sb-arrow <?= $act['contracts'] ? 'sb-rotated' : '' ?>" id="arrow-sub-contracts">expand_more</span>
+        </button>
+        <div class="sb-sub <?= $act['contracts'] ? 'sb-open' : '' ?>" id="sub-contracts">
+            <a href="<?= BASE_URL ?>contracts" class="<?= $act['contracts-list'] ? 'sb-sub-active' : '' ?>"><?= __('sidebar.all_contracts') ?></a>
+            <a href="<?= BASE_URL ?>contracts/create" class="<?= $act['contracts-create'] ? 'sb-sub-active' : '' ?>"><?= __('sidebar.create_contract') ?></a>
+            <a href="<?= BASE_URL ?>contracts/expiring" class="<?= $act['contracts-expiring'] ? 'sb-sub-active' : '' ?>"><?= __('sidebar.expiring_soon') ?></a>
+            <a href="<?= BASE_URL ?>contracts/timeline" class="<?= $act['crew-monitoring'] ? 'sb-sub-active' : '' ?>">📊 Crew Monitoring</a>
         </div>
 
-
-        <!-- Clients -->
-        <div x-data="{ open: <?= $act['clients'] ? 'true' : 'false' ?> }" x-cloak>
-            <button @click.prevent="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['clients'] ? $activeClass : $inactiveClass ?>">
-                <span class="flex items-center gap-3">
-                    <span class="material-icons text-[18px] <?= $act['clients'] ? $activeIcon : $inactiveIcon ?>">business</span>
-                    <?= __('sidebar.clients') ?>
-                </span>
-                <span class="material-icons text-[16px] transition-transform duration-200" :class="open && 'rotate-180'">expand_more</span>
-            </button>
-            <div x-show="open" x-collapse class="ml-9 mt-1 space-y-0.5">
-                <a href="<?= BASE_URL ?>clients" class="block px-3 py-1.5 rounded-md text-xs <?= $act['clients'] ? $activeSub : $inactiveSub ?>"><?= __('sidebar.client_management') ?></a>
-            </div>
+        <!-- Klien -->
+        <button class="sb-item sb-dropdown-btn <?= $act['clients'] ? 'sb-active' : '' ?>" onclick="sbToggle('sub-clients')">
+            <span class="material-icons sb-icon" style="font-size:18px;">business</span>
+            <span class="sb-text"><?= __('sidebar.clients') ?></span>
+            <span class="material-icons sb-arrow <?= $act['clients'] ? 'sb-rotated' : '' ?>" id="arrow-sub-clients">expand_more</span>
+        </button>
+        <div class="sb-sub <?= $act['clients'] ? 'sb-open' : '' ?>" id="sub-clients">
+            <a href="<?= BASE_URL ?>clients" class="<?= $act['clients'] ? 'sb-sub-active' : '' ?>"><?= __('sidebar.client_management') ?></a>
         </div>
 
-        <!-- Master Ranks -->
-        <a href="<?= BASE_URL ?>ranks" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['ranks'] ? $activeClass : $inactiveClass ?>">
-            <span class="material-icons text-[18px] <?= $act['ranks'] ? $activeIcon : $inactiveIcon ?>">military_tech</span>
-            <?= __('sidebar.master_ranks') ?>
+        <!-- Master Jabatan -->
+        <a href="<?= BASE_URL ?>ranks" class="sb-item <?= $act['ranks'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">military_tech</span>
+            <span class="sb-text"><?= __('sidebar.master_ranks') ?></span>
         </a>
 
-        <!-- CREW -->
-        <div class="px-3 pt-4 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider"><?= __('sidebar.crew') ?></div>
+        <!-- KREW -->
+        <div class="sb-section"><?= __('sidebar.crew') ?></div>
 
-        <!-- Data Crew -->
-        <div x-data="{ open: <?= $act['crews'] ? 'true' : 'false' ?> }" x-cloak>
-            <button @click.prevent="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['crews'] ? $activeClass : $inactiveClass ?>">
-                <span class="flex items-center gap-3">
-                    <span class="material-icons text-[18px] <?= $act['crews'] ? $activeIcon : $inactiveIcon ?>">badge</span>
-                    <?= __('sidebar.data_crew') ?>
-                </span>
-                <span class="material-icons text-[16px] transition-transform duration-200" :class="open && 'rotate-180'">expand_more</span>
-            </button>
-            <div x-show="open" x-collapse class="ml-9 mt-1 space-y-0.5">
-                <a href="<?= BASE_URL ?>crews" class="block px-3 py-1.5 rounded-md text-xs <?= $act['crews-list'] ? $activeSub : $inactiveSub ?>"><?= __('sidebar.all_crew') ?></a>
-                <a href="<?= BASE_URL ?>crews/skill-matrix" class="block px-3 py-1.5 rounded-md text-xs <?= $act['skill-matrix'] ? $activeSub : $inactiveSub ?>"><?= __('sidebar.skill_matrix') ?></a>
-            </div>
+        <!-- Data Krew -->
+        <button class="sb-item sb-dropdown-btn <?= ($act['crews'] || $act['documents']) ? 'sb-active' : '' ?>" onclick="sbToggle('sub-crews')">
+            <span class="material-icons sb-icon" style="font-size:18px;">badge</span>
+            <span class="sb-text"><?= __('sidebar.data_crew') ?></span>
+            <span class="material-icons sb-arrow <?= ($act['crews'] || $act['documents']) ? 'sb-rotated' : '' ?>" id="arrow-sub-crews">expand_more</span>
+        </button>
+        <div class="sb-sub <?= ($act['crews'] || $act['documents']) ? 'sb-open' : '' ?>" id="sub-crews">
+            <a href="<?= BASE_URL ?>crews" class="<?= $act['crews-list'] ? 'sb-sub-active' : '' ?>"><?= __('sidebar.all_crew') ?></a>
+            <a href="<?= BASE_URL ?>crews/skill-matrix" class="<?= $act['skill-matrix'] ? 'sb-sub-active' : '' ?>"><?= __('sidebar.skill_matrix') ?></a>
+            <a href="<?= BASE_URL ?>documents" class="<?= $act['documents'] ? 'sb-sub-active' : '' ?>"><?= __('sidebar.documents') ?></a>
         </div>
 
-        <!-- Crew Payroll -->
-        <div x-data="{ open: <?= $act['crew-payroll'] ? 'true' : 'false' ?> }" x-cloak>
-            <button @click.prevent="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['crew-payroll'] ? $activeClass : $inactiveClass ?>">
-                <span class="flex items-center gap-3">
-                    <span class="material-icons text-[18px] <?= $act['crew-payroll'] ? $activeIcon : $inactiveIcon ?>">account_balance_wallet</span>
-                    <?= __('sidebar.crew_payroll') ?>
-                </span>
-                <span class="material-icons text-[16px] transition-transform duration-200" :class="open && 'rotate-180'">expand_more</span>
-            </button>
-            <div x-show="open" x-collapse class="ml-9 mt-1 space-y-0.5">
-                <a href="<?= BASE_URL ?>payroll" class="block px-3 py-1.5 rounded-md text-xs <?= $act['crew-payroll-mgmt'] ? $activeSub : $inactiveSub ?>"><?= __('sidebar.management_label') ?></a>
-                <a href="<?= BASE_URL ?>payroll/history" class="block px-3 py-1.5 rounded-md text-xs <?= $act['crew-payroll-history'] ? $activeSub : $inactiveSub ?>"><?= __('sidebar.history') ?></a>
-            </div>
+        <!-- Payroll Krew -->
+        <button class="sb-item sb-dropdown-btn <?= $act['crew-payroll'] ? 'sb-active' : '' ?>" onclick="sbToggle('sub-crewpay')">
+            <span class="material-icons sb-icon" style="font-size:18px;">account_balance_wallet</span>
+            <span class="sb-text"><?= __('sidebar.crew_payroll') ?></span>
+            <span class="material-icons sb-arrow <?= $act['crew-payroll'] ? 'sb-rotated' : '' ?>" id="arrow-sub-crewpay">expand_more</span>
+        </button>
+        <div class="sb-sub <?= $act['crew-payroll'] ? 'sb-open' : '' ?>" id="sub-crewpay">
+            <a href="<?= BASE_URL ?>payroll" class="<?= $act['crew-payroll-mgmt'] ? 'sb-sub-active' : '' ?>"><?= __('sidebar.management_label') ?></a>
+            <a href="<?= BASE_URL ?>payroll/history" class="<?= $act['crew-payroll-history'] ? 'sb-sub-active' : '' ?>"><?= __('sidebar.history') ?></a>
         </div>
 
-        <!-- Documents -->
-        <a href="<?= BASE_URL ?>documents" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['documents'] ? $activeClass : $inactiveClass ?>">
-            <span class="material-icons text-[18px] <?= $act['documents'] ? $activeIcon : $inactiveIcon ?>">folder_open</span>
-            <?= __('sidebar.documents') ?>
+        <!-- Scan Sertifikat AI -->
+        <a href="<?= BASE_URL ?>DocumentParser" class="sb-item <?= $act['doc-parser'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">smart_toy</span>
+            <span class="sb-text"><?= __('sidebar.ai_scan_cert') ?></span>
+            <span class="sb-badge" style="padding:2px 6px;font-size:9px;font-weight:700;background:#ede9fe;color:#7c3aed;border-radius:10px;">AI</span>
         </a>
 
-        <!-- AI Document Scanner -->
-        <a href="<?= BASE_URL ?>DocumentParser" class="flex items-center justify-between px-3 py-2 rounded-lg <?= $act['doc-parser'] ? $activeClass : $inactiveClass ?>">
-            <span class="flex items-center gap-3">
-                <span class="material-icons text-[18px] <?= $act['doc-parser'] ? $activeIcon : $inactiveIcon ?>">smart_toy</span>
-                <?= __('sidebar.ai_scan_cert') ?>
-            </span>
-            <span class="px-1.5 py-0.5 text-[9px] font-bold bg-violet-100 text-violet-600 rounded-full leading-none">AI</span>
+        <!-- Smart Import -->
+        <a href="<?= BASE_URL ?>SmartImport" class="sb-item <?= $act['smart-import'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">upload_file</span>
+            <span class="sb-text">Smart Import</span>
+            <span class="sb-badge" style="padding:2px 6px;font-size:9px;font-weight:700;background:linear-gradient(135deg,#dbeafe,#e0e7ff);color:#4338ca;border-radius:10px;">SMART</span>
         </a>
 
-        <!-- Performance -->
-        <a href="<?= BASE_URL ?>crews/performance" class="flex items-center justify-between px-3 py-2 rounded-lg <?= $act['crew-performance'] ? $activeClass : $inactiveClass ?>">
-            <span class="flex items-center gap-3">
-                <span class="material-icons text-[18px] <?= $act['crew-performance'] ? $activeIcon : $inactiveIcon ?>">insights</span>
-                <?= __('sidebar.performance') ?>
-            </span>
+        <!-- Performa Krew -->
+        <a href="<?= BASE_URL ?>crews/performance" class="sb-item <?= $act['crew-performance'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">insights</span>
+            <span class="sb-text"><?= __('sidebar.performance') ?></span>
             <?php if (!$act['crew-performance']): ?>
-                <span class="px-1.5 py-0.5 text-[9px] font-bold bg-blue-100 text-blue-600 rounded-full leading-none"><?= __('common.new') ?></span>
+                <span class="sb-badge" style="padding:2px 6px;font-size:9px;font-weight:700;background:#dbeafe;color:#2563eb;border-radius:10px;"><?= __('common.new') ?></span>
             <?php endif; ?>
         </a>
 
-        <!-- EMPLOYEE -->
-        <div class="px-3 pt-4 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider"><?= __('sidebar.employee') ?></div>
+        <!-- REKRUTMEN -->
+        <div class="sb-section"><?= __('sidebar.recruitment') ?></div>
 
-        <a href="<?= BASE_URL ?>employees" class="flex items-center justify-between px-3 py-2 rounded-lg <?= $act['employees'] ? $activeClass : $inactiveClass ?>">
-            <span class="flex items-center gap-3">
-                <span class="material-icons text-[18px] <?= $act['employees'] ? $activeIcon : $inactiveIcon ?>">person</span>
-                <?= __('sidebar.employee_data') ?>
-            </span>
-            <span class="px-1.5 py-0.5 text-[9px] font-bold bg-green-100 text-green-600 rounded-full leading-none">HRIS</span>
+        <a href="<?= BASE_URL ?>recruitment/pipeline" class="sb-item <?= $act['pipeline'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">filter_alt</span>
+            <span class="sb-text"><?= __('sidebar.pipeline') ?></span>
         </a>
 
-        <a href="<?= BASE_URL ?>employees/attendance" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['attendance'] ? $activeClass : $inactiveClass ?>">
-            <span class="material-icons text-[18px] <?= $act['attendance'] ? $activeIcon : $inactiveIcon ?>">schedule</span>
-            <?= __('sidebar.attendance') ?>
+        <a href="<?= BASE_URL ?>AdminChecklist" class="sb-item <?= $act['admin-checklist'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">checklist</span>
+            <span class="sb-text">Admin Checklist</span>
+            <span class="sb-badge" style="padding:2px 6px;font-size:9px;font-weight:700;background:#dbeafe;color:#2563eb;border-radius:10px;">Stage 2</span>
         </a>
 
-        <a href="<?= BASE_URL ?>employees/payroll" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['emp-payroll'] ? $activeClass : $inactiveClass ?>">
-            <span class="material-icons text-[18px] <?= $act['emp-payroll'] ? $activeIcon : $inactiveIcon ?>">receipt_long</span>
-            <?= __('sidebar.payroll') ?>
+        <a href="<?= BASE_URL ?>Operational" class="sb-item <?= $act['operational'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">flight_takeoff</span>
+            <span class="sb-text">Operational</span>
+            <span class="sb-badge" style="padding:2px 6px;font-size:9px;font-weight:700;background:#dcfce7;color:#16a34a;border-radius:10px;">Stage 3</span>
         </a>
 
-        <a href="<?= BASE_URL ?>employees/performance" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['emp-performance'] ? $activeClass : $inactiveClass ?>">
-            <span class="material-icons text-[18px] <?= $act['emp-performance'] ? $activeIcon : $inactiveIcon ?>">trending_up</span>
-            <?= __('sidebar.performance') ?>
+        <a href="<?= BASE_URL ?>RecruiterPerformance" class="sb-item <?= $act['recruiter-perf'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">emoji_events</span>
+            <span class="sb-text">Kinerja Perekrut</span>
+            <span class="sb-badge" style="padding:2px 6px;font-size:9px;font-weight:700;background:linear-gradient(135deg,#fef3c7,#fde68a);color:#92400e;border-radius:10px;">PTS</span>
         </a>
 
-        <!-- RECRUITMENT -->
-        <div class="px-3 pt-4 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider"><?= __('sidebar.recruitment') ?></div>
+        <!-- KARYAWAN -->
+        <div class="sb-section"><?= __('sidebar.employee') ?></div>
 
-        <a href="<?= BASE_URL ?>recruitment/pipeline" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['pipeline'] ? $activeClass : $inactiveClass ?>">
-            <span class="material-icons text-[18px] <?= $act['pipeline'] ? $activeIcon : $inactiveIcon ?>">filter_alt</span>
-            <?= __('sidebar.pipeline') ?>
+        <a href="<?= BASE_URL ?>employees" class="sb-item <?= $act['employees'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">person</span>
+            <span class="sb-text"><?= __('sidebar.employee_data') ?></span>
+            <span class="sb-badge" style="padding:2px 6px;font-size:9px;font-weight:700;background:#dcfce7;color:#16a34a;border-radius:10px;">HRIS</span>
         </a>
 
-        <a href="<?= BASE_URL ?>recruitment/approval" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['approval'] ? $activeClass : $inactiveClass ?>">
-            <span class="material-icons text-[18px] <?= $act['approval'] ? $activeIcon : $inactiveIcon ?>">check_circle</span>
-            <?= __('sidebar.approval') ?>
+        <a href="<?= BASE_URL ?>employees/attendance" class="sb-item <?= $act['attendance'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">schedule</span>
+            <span class="sb-text"><?= __('sidebar.attendance') ?></span>
         </a>
 
-        <a href="<?= BASE_URL ?>recruitment/onboarding" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['onboarding'] ? $activeClass : $inactiveClass ?>">
-            <span class="material-icons text-[18px] <?= $act['onboarding'] ? $activeIcon : $inactiveIcon ?>">person_add</span>
-            <?= __('sidebar.onboarding') ?>
+        <a href="<?= BASE_URL ?>employees/payroll" class="sb-item <?= $act['emp-payroll'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">receipt_long</span>
+            <span class="sb-text"><?= __('sidebar.payroll') ?></span>
         </a>
+
+        <a href="<?= BASE_URL ?>employees/performance" class="sb-item <?= $act['emp-performance'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">trending_up</span>
+            <span class="sb-text"><?= __('sidebar.performance') ?></span>
+        </a>
+
 
         <!-- MONITORING -->
-        <div class="px-3 pt-4 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider"><?= __('sidebar.monitoring') ?></div>
+        <div class="sb-section"><?= __('sidebar.monitoring') ?></div>
 
-        <a href="<?= BASE_URL ?>monitoring/visitors" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['visitors'] ? $activeClass : $inactiveClass ?>">
-            <span class="material-icons text-[18px] <?= $act['visitors'] ? $activeIcon : $inactiveIcon ?>">visibility</span>
-            <?= __('sidebar.visitor_cp') ?>
+        <a href="<?= BASE_URL ?>monitoring/visitors" class="sb-item <?= $act['visitors'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">visibility</span>
+            <span class="sb-text"><?= __('sidebar.visitor_cp') ?></span>
         </a>
 
-        <a href="<?= BASE_URL ?>monitoring/activity" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['activity'] ? $activeClass : $inactiveClass ?>">
-            <span class="material-icons text-[18px] <?= $act['activity'] ? $activeIcon : $inactiveIcon ?>">list_alt</span>
-            <?= __('sidebar.activity_log') ?>
+        <a href="<?= BASE_URL ?>monitoring/activity" class="sb-item <?= $act['activity'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">list_alt</span>
+            <span class="sb-text"><?= __('sidebar.activity_log') ?></span>
         </a>
 
-        <a href="<?= BASE_URL ?>monitoring/integration" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['integration'] ? $activeClass : $inactiveClass ?>">
-            <span class="material-icons text-[18px] <?= $act['integration'] ? $activeIcon : $inactiveIcon ?>">extension</span>
-            <?= __('sidebar.integration') ?>
+        <a href="<?= BASE_URL ?>monitoring/integration" class="sb-item <?= $act['integration'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">extension</span>
+            <span class="sb-text"><?= __('sidebar.integration') ?></span>
         </a>
 
-        <!-- REPORTS -->
-        <div class="px-3 pt-4 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider"><?= __('sidebar.reports') ?></div>
+        <!-- KEUANGAN -->
+        <div class="sb-section">💰 Keuangan</div>
 
-        <div x-data="{ open: <?= $act['reports'] ? 'true' : 'false' ?> }" x-cloak>
-            <button @click.prevent="open = !open" class="w-full flex items-center justify-between px-3 py-2 rounded-lg <?= $act['reports'] ? $activeClass : $inactiveClass ?>">
-                <span class="flex items-center gap-3">
-                    <span class="material-icons text-[18px] <?= $act['reports'] ? $activeIcon : $inactiveIcon ?>">assessment</span>
-                    <?= __('sidebar.reports') ?>
-                </span>
-                <span class="material-icons text-[16px] transition-transform duration-200" :class="open && 'rotate-180'">expand_more</span>
-            </button>
-            <div x-show="open" x-collapse class="ml-9 mt-1 space-y-0.5">
-                <a href="<?= BASE_URL ?>reports" class="block px-3 py-1.5 rounded-md text-xs <?= $act['reports-overview'] ? $activeSub : $inactiveSub ?>"><?= __('sidebar.report_overview') ?></a>
-                <a href="<?= BASE_URL ?>reports/by-vessel" class="block px-3 py-1.5 rounded-md text-xs <?= $act['reports-vessel'] ? $activeSub : $inactiveSub ?>"><?= __('sidebar.crew_report') ?></a>
-                <a href="<?= BASE_URL ?>reports/employees" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs <?= $act['reports-emp'] ? $activeSub : $inactiveSub ?>">
-                    <?= __('sidebar.employee_report') ?> <span class="px-1 text-[8px] font-bold bg-green-100 text-green-600 rounded"><?= __('common.new') ?></span>
-                </a>
-                <a href="<?= BASE_URL ?>reports/payroll-summary" class="block px-3 py-1.5 rounded-md text-xs <?= $act['reports-finance'] ? $activeSub : $inactiveSub ?>"><?= __('sidebar.financial') ?></a>
-            </div>
+        <button class="sb-item sb-dropdown-btn <?= $act['finance'] ? 'sb-active' : '' ?>" onclick="sbToggle('sub-finance')">
+            <span class="material-icons sb-icon" style="font-size:18px;">account_balance</span>
+            <span class="sb-text">Keuangan &amp; Akuntansi</span>
+            <span class="material-icons sb-arrow <?= $act['finance'] ? 'sb-rotated' : '' ?>" id="arrow-sub-finance">expand_more</span>
+        </button>
+        <div class="sb-sub <?= $act['finance'] ? 'sb-open' : '' ?>" id="sub-finance">
+            <a href="<?= BASE_URL ?>finance" class="<?= $act['finance-dash'] ? 'sb-sub-active' : '' ?>">Dasbor Keuangan</a>
+            <a href="<?= BASE_URL ?>finance/invoices" class="<?= $act['finance-invoices'] ? 'sb-sub-active' : '' ?>">Invoice (AR)</a>
+            <a href="<?= BASE_URL ?>finance/bills" class="<?= $act['finance-bills'] ? 'sb-sub-active' : '' ?>">Bills (AP)</a>
+            <a href="<?= BASE_URL ?>finance/journal" class="<?= $act['finance-journal'] ? 'sb-sub-active' : '' ?>">General Ledger</a>
+            <a href="<?= BASE_URL ?>finance/accounts" class="<?= $act['finance-accounts'] ? 'sb-sub-active' : '' ?>">Bagan Akun (COA)</a>
+            <a href="<?= BASE_URL ?>finance/cost-centers" class="<?= $act['finance-cc'] ? 'sb-sub-active' : '' ?>">Cost Center</a>
+            <a href="<?= BASE_URL ?>vessels/profit" class="<?= $act['finance-vessel'] ? 'sb-sub-active' : '' ?>">Profit per Vessel</a>
+            <a href="<?= BASE_URL ?>finance/cashflow" class="<?= $act['finance-cashflow'] ? 'sb-sub-active' : '' ?>">Arus Kas</a>
+            <a href="<?= BASE_URL ?>finance/profit-loss" class="<?= $act['finance-pnl'] ? 'sb-sub-active' : '' ?>">Laba / Rugi (P&amp;L)</a>
+            <a href="<?= BASE_URL ?>reports/payroll-summary" class="<?= $act['finance-payroll'] ? 'sb-sub-active' : '' ?>">Laporan Payroll</a>
         </div>
 
-        <!-- SETTINGS -->
-        <div class="px-3 pt-4 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider"><?= __('sidebar.settings_section') ?></div>
+        <!-- LAPORAN -->
+        <div class="sb-section"><?= __('sidebar.reports') ?></div>
 
-        <a href="<?= BASE_URL ?>notifications" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['notifications'] ? $activeClass : $inactiveClass ?>">
-            <span class="material-icons text-[18px] <?= $act['notifications'] ? $activeIcon : $inactiveIcon ?>">notifications</span>
-            <?= __('sidebar.notifications') ?>
+        <button class="sb-item sb-dropdown-btn <?= $act['reports'] ? 'sb-active' : '' ?>" onclick="sbToggle('sub-reports')">
+            <span class="material-icons sb-icon" style="font-size:18px;">assessment</span>
+            <span class="sb-text"><?= __('sidebar.reports') ?></span>
+            <span class="material-icons sb-arrow <?= $act['reports'] ? 'sb-rotated' : '' ?>" id="arrow-sub-reports">expand_more</span>
+        </button>
+        <div class="sb-sub <?= $act['reports'] ? 'sb-open' : '' ?>" id="sub-reports">
+            <a href="<?= BASE_URL ?>reports" class="<?= $act['reports-overview'] ? 'sb-sub-active' : '' ?>"><?= __('sidebar.report_overview') ?></a>
+            <a href="<?= BASE_URL ?>reports/by-vessel" class="<?= $act['reports-vessel'] ? 'sb-sub-active' : '' ?>"><?= __('sidebar.crew_report') ?></a>
+            <a href="<?= BASE_URL ?>reports/employees" class="<?= $act['reports-emp'] ? 'sb-sub-active' : '' ?>">
+                <?= __('sidebar.employee_report') ?>
+                <span style="padding:1px 4px;font-size:8px;font-weight:700;background:#dcfce7;color:#16a34a;border-radius:4px;margin-left:4px;"><?= __('common.new') ?></span>
+            </a>
+        </div>
+
+        <!-- PENGATURAN -->
+        <div class="sb-section"><?= __('sidebar.settings_section') ?></div>
+
+        <a href="<?= BASE_URL ?>notifications" class="sb-item <?= $act['notifications'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">notifications</span>
+            <span class="sb-text"><?= __('sidebar.notifications') ?></span>
         </a>
 
-        <a href="<?= BASE_URL ?>settings" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['settings'] ? $activeClass : $inactiveClass ?>">
-            <span class="material-icons text-[18px] <?= $act['settings'] ? $activeIcon : $inactiveIcon ?>">settings</span>
-            <?= __('sidebar.settings') ?>
+        <a href="<?= BASE_URL ?>settings" class="sb-item <?= $act['settings'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">settings</span>
+            <span class="sb-text"><?= __('sidebar.settings') ?></span>
         </a>
 
-        <a href="<?= BASE_URL ?>users" class="flex items-center gap-3 px-3 py-2 rounded-lg <?= $act['users'] ? $activeClass : $inactiveClass ?>">
-            <span class="material-icons text-[18px] <?= $act['users'] ? $activeIcon : $inactiveIcon ?>">manage_accounts</span>
-            <?= __('sidebar.users') ?>
+        <a href="<?= BASE_URL ?>users" class="sb-item <?= $act['users'] ? 'sb-active' : '' ?>">
+            <span class="material-icons sb-icon" style="font-size:18px;">manage_accounts</span>
+            <span class="sb-text"><?= __('sidebar.users') ?></span>
         </a>
 
-        <!-- Bottom spacing -->
-        <div class="h-4"></div>
+        <div style="height:16px;"></div>
     </nav>
 
     <!-- User Footer -->
-    <div class="p-3 border-t border-slate-100 bg-white flex-shrink-0">
+    <div style="padding:10px 12px;border-top:1px solid #f1f5f9;background:#fff;flex-shrink:0;">
         <?php if ($currentUser): ?>
-            <div class="flex items-center justify-between gap-2">
-                <div class="flex items-center gap-2 min-w-0 flex-1">
-                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
+                    <div style="width:32px;height:32px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;flex-shrink:0;">
                         <?= strtoupper(substr($currentUser['full_name'] ?? 'U', 0, 1)) ?>
                     </div>
-                    <div class="min-w-0 flex-1">
-                        <p class="text-xs font-semibold text-slate-800 truncate"><?= htmlspecialchars($currentUser['full_name'] ?? 'User') ?></p>
-                        <p class="text-[10px] text-slate-500 truncate"><?= htmlspecialchars($currentUser['email'] ?? '') ?></p>
+                    <div style="min-width:0;flex:1;">
+                        <div style="font-size:12px;font-weight:600;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($currentUser['full_name'] ?? 'User') ?></div>
+                        <div style="font-size:10px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= htmlspecialchars($currentUser['email'] ?? '') ?></div>
                     </div>
                 </div>
-                <!-- Language Toggle -->
-                <button onclick="toggleLanguage()" class="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg" title="<?= __('settings.language') ?>">
-                    <span class="text-[10px] font-bold"><?= strtoupper(getLanguage()) ?></span>
-                </button>
-                <a href="<?= BASE_URL ?>auth/logout" class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg" title="<?= __('sidebar.logout') ?>">
-                    <span class="material-icons text-lg">logout</span>
-                </a>
+                <div style="display:flex;align-items:center;gap:2px;flex-shrink:0;">
+                    <button onclick="toggleLanguage()" style="padding:4px 6px;background:none;border:none;cursor:pointer;border-radius:6px;color:#94a3b8;font-size:10px;font-weight:700;" title="<?= __('settings.language') ?>">
+                        <?= strtoupper(getLanguage()) ?>
+                    </button>
+                    <a href="<?= BASE_URL ?>auth/logout" style="padding:4px;color:#94a3b8;border-radius:6px;display:flex;align-items:center;" title="<?= __('sidebar.logout') ?>">
+                        <span class="material-icons" style="font-size:18px;">logout</span>
+                    </a>
+                </div>
             </div>
         <?php else: ?>
-            <a href="<?= BASE_URL ?>auth/login" class="flex items-center justify-center gap-2 w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold">
-                <span class="material-icons text-base">login</span> <?= __('sidebar.login') ?>
+            <a href="<?= BASE_URL ?>auth/login" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:8px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;">
+                <span class="material-icons" style="font-size:16px;">login</span> <?= __('sidebar.login') ?>
             </a>
         <?php endif; ?>
     </div>
 </aside>
 
 <script>
+// Sidebar dropdown toggle - pure vanilla JS, no animations
+function sbToggle(id) {
+    var sub = document.getElementById(id);
+    var arrow = document.getElementById('arrow-' + id);
+    if (!sub) return;
+    var isOpen = sub.classList.contains('sb-open');
+    if (isOpen) {
+        sub.classList.remove('sb-open');
+        if (arrow) arrow.classList.remove('sb-rotated');
+    } else {
+        sub.classList.add('sb-open');
+        if (arrow) arrow.classList.add('sb-rotated');
+    }
+}
+
 // Language toggle
 function toggleLanguage() {
-    const current = '<?= getLanguage() ?>';
-    const newLang = current === 'en' ? 'id' : 'en';
-    
+    var current = '<?= getLanguage() ?>';
+    var newLang = current === 'en' ? 'id' : 'en';
+
     fetch('<?= BASE_URL ?>settings/change-language', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest'},
         body: 'language=' + newLang
     })
-    .then(r => r.json())
-    .then(data => { if (data.success) location.reload(); })
-    .catch(() => { location.href = '<?= BASE_URL ?>settings/change-language?language=' + newLang; });
+    .then(function(r) { return r.json(); })
+    .then(function(data) { if (data.success) location.reload(); })
+    .catch(function() { location.href = '<?= BASE_URL ?>settings/change-language?language=' + newLang; });
 }
 
 // Save & restore sidebar scroll position
 (function() {
-    var STORAGE_KEY = 'sidebar_scroll_pos';
-    var nav = document.getElementById('sidebarNav');
+    var KEY = 'sidebar_scroll_pos';
+    var nav = document.getElementById('erpSidebar');
     if (!nav) return;
-    var saved = sessionStorage.getItem(STORAGE_KEY);
+    var saved = sessionStorage.getItem(KEY);
     if (saved !== null) nav.scrollTop = parseInt(saved, 10);
-    var debounce;
+    var t;
     nav.addEventListener('scroll', function() {
-        clearTimeout(debounce);
-        debounce = setTimeout(function() { sessionStorage.setItem(STORAGE_KEY, nav.scrollTop); }, 50);
+        clearTimeout(t);
+        t = setTimeout(function() { sessionStorage.setItem(KEY, nav.scrollTop); }, 50);
     });
-    window.addEventListener('beforeunload', function() { sessionStorage.setItem(STORAGE_KEY, nav.scrollTop); });
+    window.addEventListener('beforeunload', function() { sessionStorage.setItem(KEY, nav.scrollTop); });
 })();
 </script>

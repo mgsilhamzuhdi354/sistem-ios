@@ -6,6 +6,9 @@
         <h1>Application Detail</h1>
     </div>
     <div class="header-actions">
+        <a href="<?= url('/crewing/applications/profile-pdf/' . $application['id']) ?>" target="_blank" class="btn btn-outline btn-sm" style="margin-right:8px">
+            <i class="fas fa-file-pdf"></i> Download CV PDF
+        </a>
         <span class="status-badge large" style="background-color: <?= $application['status_color'] ?>">
             <?= $application['status_name'] ?>
         </span>
@@ -20,7 +23,7 @@
         </div>
         <div class="card-body">
             <div class="applicant-profile">
-                <img src="<?= $application['avatar'] ? asset('uploads/avatars/' . $application['avatar']) : asset('images/avatar-default.svg') ?>" 
+                <img src="<?= !empty($application['avatar']) ? url('/uploads/avatars/' . $application['avatar']) : asset('images/avatar-default.svg') ?>" 
                      alt="Avatar" class="avatar-large">
                 <div class="profile-info">
                     <h3><?= htmlspecialchars($application['full_name']) ?></h3>

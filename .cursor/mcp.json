@@ -1,0 +1,15 @@
+{
+    "mcpServers": {
+        "testsprite": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@testsprite/testsprite-mcp@latest"
+            ],
+            "env": {
+                "TESTSPRITE_API_KEY": "sk-user-CLpFTtwTRFYIfbJnBTfSNH5-tHq7vVovnepO81AR7pnw9smJdqF9ceH7T0syDiqZ14DErlii4YHd5OnXefQfT_lohcU3OQszlM0K5483PM8245NnzAkauJ-ESE-2pUTR-zI",
+                "PATH": "C:\\laragon\\bin\\nodejs\\node-v22;%PATH%"
+            }
+        }
+    }
+}

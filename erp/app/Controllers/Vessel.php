@@ -110,6 +110,35 @@ class Vessel extends BaseController
             $this->redirect('vessels');
         }
 
+        // Check for duplicate vessel name (normalized: ignore spaces, dots, case)
+        $vesselName = $this->input('name');
+        $normalizedName = strtolower(str_replace([' ', '.', ','], '', $vesselName));
+        $stmt = $this->db->prepare("SELECT id, name FROM vessels WHERE LOWER(REPLACE(REPLACE(REPLACE(name, ' ', ''), '.', ''), ',', '')) = ?");
+        $stmt->bind_param('s', $normalizedName);
+        $stmt->execute();
+        $existing = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if ($existing) {
+            $this->setFlash('error', 'Kapal dengan nama serupa "' . $existing['name'] . '" sudah terdaftar. Nama kapal harus unik.');
+            $this->redirect('vessels/create');
+            return;
+        }
+
+        // Check for duplicate IMO number
+        $imoNumber = $this->input('imo_number');
+        if (!empty($imoNumber) && $imoNumber !== 'KOSONG') {
+            $stmt = $this->db->prepare("SELECT id, name FROM vessels WHERE imo_number = ? AND imo_number != '' AND imo_number != 'KOSONG'");
+            $stmt->bind_param('s', $imoNumber);
+            $stmt->execute();
+            $existing = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            if ($existing) {
+                $this->setFlash('error', 'IMO Number "' . $imoNumber . '" sudah digunakan oleh kapal "' . $existing['name'] . '". IMO harus unik.');
+                $this->redirect('vessels/create');
+                return;
+            }
+        }
+
         $data = [
             'name' => $this->input('name'),
             'imo_number' => $this->input('imo_number'),
@@ -163,6 +192,35 @@ class Vessel extends BaseController
         $this->requirePermission('vessels', 'edit');
         if (!$this->isPost()) {
             $this->redirect('vessels/' . $id);
+        }
+
+        // Check for duplicate vessel name (normalized, exclude current vessel)
+        $vesselName = $this->input('name');
+        $normalizedName = strtolower(str_replace([' ', '.', ','], '', $vesselName));
+        $stmt = $this->db->prepare("SELECT id, name FROM vessels WHERE LOWER(REPLACE(REPLACE(REPLACE(name, ' ', ''), '.', ''), ',', '')) = ? AND id != ?");
+        $stmt->bind_param('si', $normalizedName, $id);
+        $stmt->execute();
+        $existing = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if ($existing) {
+            $this->setFlash('error', 'Kapal dengan nama serupa "' . $existing['name'] . '" sudah terdaftar. Nama kapal harus unik.');
+            $this->redirect('vessels/edit/' . $id);
+            return;
+        }
+
+        // Check for duplicate IMO number (exclude current vessel)
+        $imoNumber = $this->input('imo_number');
+        if (!empty($imoNumber) && $imoNumber !== 'KOSONG') {
+            $stmt = $this->db->prepare("SELECT id, name FROM vessels WHERE imo_number = ? AND id != ? AND imo_number != '' AND imo_number != 'KOSONG'");
+            $stmt->bind_param('si', $imoNumber, $id);
+            $stmt->execute();
+            $existing = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            if ($existing) {
+                $this->setFlash('error', 'IMO Number "' . $imoNumber . '" sudah digunakan oleh kapal "' . $existing['name'] . '". IMO harus unik.');
+                $this->redirect('vessels/edit/' . $id);
+                return;
+            }
         }
 
         $data = [
@@ -263,6 +321,32 @@ class Vessel extends BaseController
         // Route to appropriate view based on UI mode
         $view = $uiMode === 'modern' ? 'vessels/profit_modern' : 'vessels/profit';
         return $this->view($view, $data);
+    }
+
+    /**
+     * Export crew list for a vessel as PDF
+     */
+    public function crewListPdf($id)
+    {
+        $vessel = $this->vesselModel->getWithDetails($id);
+        if (!$vessel) {
+            $this->redirect('vessels');
+            return;
+        }
+
+        $data = [
+            'vessel' => [
+                'vessel_name' => $vessel['name'] ?? $vessel['vessel_name'] ?? '-',
+                'vessel_type' => $vessel['vessel_type_name'] ?? $vessel['type'] ?? '-',
+                'flag' => $vessel['flag_state'] ?? $vessel['flag'] ?? '-',
+                'imo_number' => $vessel['imo_number'] ?? '-',
+                'client_name' => $vessel['client_name'] ?? '-',
+                'status' => $vessel['status'] ?? 'Active',
+            ],
+            'crew' => $this->vesselModel->getCrewList($id),
+        ];
+
+        return $this->view('reports/crew_list_pdf', $data);
     }
 }
 

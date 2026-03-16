@@ -15,64 +15,153 @@ class Mailer
 {
     private $config;
     private $errors = [];
+    private $channel; // 'payslip' or 'otp'
     
-    public function __construct()
+    // Gmail config for OTP/login emails
+    private const OTP_CONFIG = [
+        'smtp_host' => 'smtp.gmail.com',
+        'smtp_port' => 587,
+        'smtp_secure' => 'tls',
+        'smtp_user' => 'indooceancrewservice@gmail.com',
+        'smtp_pass' => 'kabpgxlpzqkznnla',
+        'from_email' => 'indooceancrewservice@gmail.com',
+        'from_name' => 'PT Indo Ocean ERP',
+        'debug' => false,
+    ];
+    
+    /**
+     * @param string $channel 'payslip' for payroll emails, 'otp' for OTP/login emails
+     */
+    public function __construct($channel = 'payslip')
     {
-        // Try to load from config file first
-        $configFile = dirname(dirname(__DIR__)) . '/config/email.php';
+        $this->channel = $channel;
         
-        if (file_exists($configFile)) {
-            $fileConfig = include $configFile;
-            $this->config = [
-                'smtp_host' => $fileConfig['smtp_host'] ?? 'smtp.gmail.com',
-                'smtp_port' => $fileConfig['smtp_port'] ?? 587,
-                'smtp_secure' => $fileConfig['smtp_secure'] ?? 'tls',
-                'smtp_user' => $fileConfig['smtp_user'] ?? '',
-                'smtp_pass' => $fileConfig['smtp_pass'] ?? '',
-                'from_email' => $fileConfig['from_email'] ?? 'noreply@ptindoocean.com',
-                'from_name' => $fileConfig['from_name'] ?? 'PT Indo Ocean ERP',
-                'debug' => $fileConfig['debug'] ?? false,
-            ];
+        // OTP/Login channel: always use Gmail
+        if ($channel === 'otp') {
+            $this->config = self::OTP_CONFIG;
+            return;
+        }
+        
+        // Payslip channel: DB settings → config file → environment variables → Gmail fallback
+        $dbConfig = $this->loadFromDatabase();
+        
+        if ($dbConfig && !empty($dbConfig['smtp_pass'])) {
+            $this->config = $dbConfig;
         } else {
-            // Fallback to environment variables
-            $this->config = [
-                'smtp_host' => getenv('SMTP_HOST') ?: 'smtp.gmail.com',
-                'smtp_port' => getenv('SMTP_PORT') ?: 587,
-                'smtp_secure' => 'tls',
-                'smtp_user' => getenv('SMTP_USER') ?: '',
-                'smtp_pass' => getenv('SMTP_PASS') ?: '',
-                'from_email' => getenv('MAIL_FROM') ?: 'noreply@ptindoocean.com',
-                'from_name' => getenv('MAIL_FROM_NAME') ?: 'PT Indo Ocean ERP',
-                'debug' => false,
-            ];
+            // Try to load from config file
+            $configFile = dirname(dirname(__DIR__)) . '/config/email.php';
+            
+            if (file_exists($configFile)) {
+                $fileConfig = include $configFile;
+                if (!empty($fileConfig['smtp_pass'])) {
+                    $this->config = [
+                        'smtp_host' => $fileConfig['smtp_host'] ?? 'mail.indooceancrew.co.id',
+                        'smtp_port' => $fileConfig['smtp_port'] ?? 465,
+                        'smtp_secure' => $fileConfig['smtp_secure'] ?? 'ssl',
+                        'smtp_user' => $fileConfig['smtp_user'] ?? '',
+                        'smtp_pass' => $fileConfig['smtp_pass'] ?? '',
+                        'from_email' => $fileConfig['from_email'] ?? 'ios@indooceancrew.co.id',
+                        'from_name' => $fileConfig['from_name'] ?? 'PT Indo Ocean ERP',
+                        'debug' => $fileConfig['debug'] ?? false,
+                    ];
+                    return;
+                }
+            }
+            
+            // Check environment variables
+            $envPass = getenv('SMTP_PASS');
+            if (!empty($envPass)) {
+                $this->config = [
+                    'smtp_host' => getenv('SMTP_HOST') ?: 'mail.indooceancrew.co.id',
+                    'smtp_port' => getenv('SMTP_PORT') ?: 465,
+                    'smtp_secure' => 'ssl',
+                    'smtp_user' => getenv('SMTP_USER') ?: '',
+                    'smtp_pass' => $envPass,
+                    'from_email' => getenv('MAIL_FROM') ?: 'ios@indooceancrew.co.id',
+                    'from_name' => getenv('MAIL_FROM_NAME') ?: 'PT Indo Ocean ERP',
+                    'debug' => false,
+                ];
+                return;
+            }
+            
+            // Fallback to Gmail (same as OTP) — guaranteed to work
+            $this->config = self::OTP_CONFIG;
+            error_log('[MAILER] No payslip SMTP config found, using Gmail fallback');
         }
     }
     
     /**
-     * Send email using SMTP with authentication
+     * Load SMTP config from database settings table
      */
+    private function loadFromDatabase()
+    {
+        try {
+            $dbConfigAll = require APPPATH . 'Config/Database.php';
+            $dbConf = $dbConfigAll['default'] ?? $dbConfigAll;
+            $db = @new \mysqli(
+                $dbConf['hostname'] ?? $dbConf['host'] ?? 'localhost',
+                $dbConf['username'] ?? 'root',
+                $dbConf['password'] ?? '',
+                $dbConf['database'] ?? 'erp_db',
+                $dbConf['port'] ?? 3306
+            );
+            
+            if ($db->connect_error) {
+                return null;
+            }
+            
+            $result = $db->query("SELECT setting_key, setting_value FROM settings WHERE setting_group = 'email'");
+            if (!$result || $result->num_rows === 0) {
+                $db->close();
+                return null;
+            }
+            
+            $settings = [];
+            while ($row = $result->fetch_assoc()) {
+                $settings[$row['setting_key']] = $row['setting_value'];
+            }
+            $db->close();
+            
+            // Only use DB config if smtp_user is set (meaning it was configured)
+            if (empty($settings['smtp_user'])) {
+                return null;
+            }
+            
+            return [
+                'smtp_host' => $settings['smtp_host'] ?? 'mail.indooceancrew.co.id',
+                'smtp_port' => intval($settings['smtp_port'] ?? 465),
+                'smtp_secure' => $settings['smtp_secure'] ?? 'ssl',
+                'smtp_user' => $settings['smtp_user'],
+                'smtp_pass' => $settings['smtp_pass'] ?? '',
+                'from_email' => $settings['smtp_from_email'] ?? $settings['smtp_user'],
+                'from_name' => $settings['smtp_from_name'] ?? 'PT Indo Ocean ERP',
+                'debug' => false,
+            ];
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+    
     public function send($to, $subject, $body, $isHtml = true)
     {
-        // If SMTP credentials are configured, use SMTP
-        if (!empty($this->config['smtp_user']) && !empty($this->config['smtp_pass'])) {
-            return $this->sendViaSMTP($to, $subject, $body, $isHtml);
-        }
-        
-        // Fallback to PHP mail() (will likely fail on most systems)
-        $headers = [];
-        $headers[] = "MIME-Version: 1.0";
-        $headers[] = $isHtml ? "Content-type: text/html; charset=UTF-8" : "Content-type: text/plain; charset=UTF-8";
-        $headers[] = "From: {$this->config['from_name']} <{$this->config['from_email']}>";
-        $headers[] = "Reply-To: {$this->config['from_email']}";
-        
-        $result = @mail($to, $subject, $body, implode("\r\n", $headers));
-        
-        if (!$result) {
-            $this->errors[] = "Failed to send email to {$to}";
+        if (empty($this->config['smtp_user']) || empty($this->config['smtp_pass'])) {
+            $this->errors[] = "SMTP tidak dikonfigurasi";
             return false;
         }
         
-        return true;
+        $result = $this->sendViaSMTP($to, $subject, $body, $isHtml);
+        
+        // If primary SMTP failed and it's not Gmail, retry with Gmail
+        if (!$result && $this->config['smtp_host'] !== 'smtp.gmail.com') {
+            error_log('[MAILER] Primary SMTP failed, retrying with Gmail...');
+            $origConfig = $this->config;
+            $this->config = self::OTP_CONFIG;
+            $this->errors = []; // clear previous errors
+            $result = $this->sendViaSMTP($to, $subject, $body, $isHtml);
+            $this->config = $origConfig; // restore
+        }
+        
+        return $result;
     }
     
     /**
@@ -106,7 +195,7 @@ class Mailer
             $protocol,
             $errno,
             $errstr,
-            30,
+            5,
             STREAM_CLIENT_CONNECT,
             $context
         );
@@ -118,7 +207,7 @@ class Mailer
         }
         
         // Set stream timeout
-        stream_set_timeout($socket, 15);
+        stream_set_timeout($socket, 10);
         
         // Read greeting
         $this->smtpRead($socket);
@@ -150,26 +239,43 @@ class Mailer
             $this->smtpRead($socket);
         }
         
-        // AUTH LOGIN
+        // Try AUTH LOGIN first
         $this->smtpWrite($socket, "AUTH LOGIN\r\n");
         $response = $this->smtpRead($socket);
         
-        if (strpos($response, '334') === false) {
-            $this->errors[] = "AUTH LOGIN failed";
-            fclose($socket);
-            return false;
+        $authSuccess = false;
+        
+        if (strpos($response, '334') !== false) {
+            // Send username (base64)
+            $this->smtpWrite($socket, base64_encode($user) . "\r\n");
+            $this->smtpRead($socket);
+            
+            // Send password (base64)
+            $this->smtpWrite($socket, base64_encode($pass) . "\r\n");
+            $response = $this->smtpRead($socket);
+            
+            if (strpos($response, '235') !== false) {
+                $authSuccess = true;
+            } else {
+                error_log("[MAILER] AUTH LOGIN failed, server said: " . trim($response));
+            }
         }
         
-        // Send username (base64)
-        $this->smtpWrite($socket, base64_encode($user) . "\r\n");
-        $this->smtpRead($socket);
+        // Fallback to AUTH PLAIN if AUTH LOGIN failed
+        if (!$authSuccess) {
+            $authPlain = base64_encode("\0" . $user . "\0" . $pass);
+            $this->smtpWrite($socket, "AUTH PLAIN {$authPlain}\r\n");
+            $response = $this->smtpRead($socket);
+            
+            if (strpos($response, '235') !== false) {
+                $authSuccess = true;
+            } else {
+                error_log("[MAILER] AUTH PLAIN also failed, server said: " . trim($response));
+            }
+        }
         
-        // Send password (base64)
-        $this->smtpWrite($socket, base64_encode($pass) . "\r\n");
-        $response = $this->smtpRead($socket);
-        
-        if (strpos($response, '235') === false) {
-            $this->errors[] = "Authentication failed - check username/password";
+        if (!$authSuccess) {
+            $this->errors[] = "Authentication failed - check username/password. Server: " . trim($response);
             fclose($socket);
             return false;
         }
@@ -210,6 +316,160 @@ class Mailer
         
         $this->errors[] = "Failed to send email: {$response}";
         return false;
+    }
+    
+    /**
+     * Send email with file attachment via SMTP
+     */
+    public function sendWithAttachment($to, $subject, $body, $attachmentPath, $attachmentName = 'attachment.html')
+    {
+        if (!file_exists($attachmentPath)) {
+            $this->errors[] = "Attachment file not found: {$attachmentPath}";
+            return $this->send($to, $subject, $body); // Fallback to send without attachment
+        }
+        
+        $host = $this->config['smtp_host'];
+        $port = $this->config['smtp_port'];
+        $user = $this->config['smtp_user'];
+        $pass = $this->config['smtp_pass'];
+        $from = $this->config['from_email'];
+        $fromName = $this->config['from_name'];
+        $secure = $this->config['smtp_secure'] ?? 'tls';
+        
+        if (empty($user) || empty($pass)) {
+            $this->errors[] = "SMTP credentials not configured";
+            return false;
+        }
+        
+        // Build SSL context
+        $context = stream_context_create([
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true,
+                'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_SSLv23_CLIENT
+            ]
+        ]);
+        
+        $protocol = ($secure === 'ssl') ? "ssl://{$host}:{$port}" : "tcp://{$host}:{$port}";
+        
+        $socket = @stream_socket_client($protocol, $errno, $errstr, 5, STREAM_CLIENT_CONNECT, $context);
+        
+        if (!$socket) {
+            $this->errors[] = "SMTP connect failed ({$protocol}): [{$errno}] {$errstr}";
+            return false;
+        }
+        
+        stream_set_timeout($socket, 10);
+        $this->smtpRead($socket);
+        $this->smtpWrite($socket, "EHLO localhost\r\n");
+        $this->smtpRead($socket);
+        
+        if ($secure !== 'ssl') {
+            $this->smtpWrite($socket, "STARTTLS\r\n");
+            $response = $this->smtpRead($socket);
+            if (strpos($response, '220') === false) {
+                fclose($socket);
+                return false;
+            }
+            if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                fclose($socket);
+                return false;
+            }
+            $this->smtpWrite($socket, "EHLO localhost\r\n");
+            $this->smtpRead($socket);
+        }
+        
+        // AUTH LOGIN
+        $this->smtpWrite($socket, "AUTH LOGIN\r\n");
+        $response = $this->smtpRead($socket);
+        $authSuccess = false;
+        
+        if (strpos($response, '334') !== false) {
+            $this->smtpWrite($socket, base64_encode($user) . "\r\n");
+            $this->smtpRead($socket);
+            $this->smtpWrite($socket, base64_encode($pass) . "\r\n");
+            $response = $this->smtpRead($socket);
+            if (strpos($response, '235') !== false) {
+                $authSuccess = true;
+            }
+        }
+        
+        if (!$authSuccess) {
+            $this->errors[] = "Authentication failed";
+            fclose($socket);
+            return false;
+        }
+        
+        $this->smtpWrite($socket, "MAIL FROM:<{$from}>\r\n");
+        $this->smtpRead($socket);
+        $this->smtpWrite($socket, "RCPT TO:<{$to}>\r\n");
+        $this->smtpRead($socket);
+        $this->smtpWrite($socket, "DATA\r\n");
+        $this->smtpRead($socket);
+        
+        // Build MIME multipart message with attachment
+        $boundary = 'BOUNDARY_' . uniqid(time());
+        $fileContent = file_get_contents($attachmentPath);
+        $fileBase64 = chunk_split(base64_encode($fileContent));
+        
+        // Detect MIME type from file extension
+        $ext = strtolower(pathinfo($attachmentName, PATHINFO_EXTENSION));
+        $mimeTypes = ['pdf' => 'application/pdf', 'html' => 'text/html', 'csv' => 'text/csv', 'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+        $attachmentMime = $mimeTypes[$ext] ?? 'application/octet-stream';
+        
+        $message = "From: {$fromName} <{$from}>\r\n";
+        $message .= "To: {$to}\r\n";
+        $message .= "Subject: {$subject}\r\n";
+        $message .= "MIME-Version: 1.0\r\n";
+        $message .= "Content-Type: multipart/mixed; boundary=\"{$boundary}\"\r\n";
+        $message .= "\r\n";
+        $message .= "--{$boundary}\r\n";
+        $message .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $message .= "Content-Transfer-Encoding: 7bit\r\n";
+        $message .= "\r\n";
+        $message .= $body . "\r\n";
+        $message .= "--{$boundary}\r\n";
+        $message .= "Content-Type: {$attachmentMime}; name=\"{$attachmentName}\"\r\n";
+        $message .= "Content-Transfer-Encoding: base64\r\n";
+        $message .= "Content-Disposition: attachment; filename=\"{$attachmentName}\"\r\n";
+        $message .= "\r\n";
+        $message .= $fileBase64;
+        $message .= "--{$boundary}--\r\n";
+        $message .= ".\r\n";
+        
+        $this->smtpWrite($socket, $message);
+        $response = $this->smtpRead($socket);
+        
+        $this->smtpWrite($socket, "QUIT\r\n");
+        fclose($socket);
+        
+        if (strpos($response, '250') !== false) {
+            return true;
+        }
+        
+        $this->errors[] = "Failed to send email with attachment: {$response}";
+        return false;
+    }
+    
+    /**
+     * Send email with attachment, with Gmail auto-retry on failure
+     */
+    public function sendWithAttachmentRetry($to, $subject, $body, $attachmentPath, $attachmentName = 'attachment.pdf')
+    {
+        $result = $this->sendWithAttachment($to, $subject, $body, $attachmentPath, $attachmentName);
+        
+        // If primary SMTP failed and it's not Gmail, retry with Gmail
+        if (!$result && $this->config['smtp_host'] !== 'smtp.gmail.com') {
+            error_log('[MAILER] Primary SMTP with attachment failed, retrying with Gmail...');
+            $origConfig = $this->config;
+            $this->config = self::OTP_CONFIG;
+            $this->errors = [];
+            $result = $this->sendWithAttachment($to, $subject, $body, $attachmentPath, $attachmentName);
+            $this->config = $origConfig;
+        }
+        
+        return $result;
     }
     
     private function smtpWrite($socket, $data)
@@ -341,7 +601,7 @@ class Mailer
     /**
      * Send payslip email
      */
-    public function sendPayslip($email, $crewName, $payrollPeriod, $payrollItem)
+    public function sendPayslip($email, $crewName, $payrollPeriod, $payrollItem, $attachmentPath = null)
     {
         $subject = "Slip Gaji / Payslip: {$payrollPeriod['period_name']} - PT Indo Ocean";
         
@@ -350,6 +610,14 @@ class Mailer
             'period' => $payrollPeriod,
             'item' => $payrollItem
         ]);
+        
+        if ($attachmentPath && file_exists($attachmentPath)) {
+            $monthName = $payrollPeriod['period_name'] ?? 'Payslip';
+            $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $crewName);
+            $ext = strtolower(pathinfo($attachmentPath, PATHINFO_EXTENSION)) ?: 'pdf';
+            $attachmentName = "Payslip_{$safeName}_{$monthName}.{$ext}";
+            return $this->sendWithAttachmentRetry($email, $subject, $body, $attachmentPath, $attachmentName);
+        }
         
         return $this->send($email, $subject, $body);
     }
@@ -509,53 +777,25 @@ class Mailer
                 
                 
             case 'payslip':
-                $currency = $data['item']['currency_code'];
-                $netSalary = number_format($data['item']['net_salary'], 2);
-                $basic = number_format($data['item']['basic_salary'], 2);
-                $allowances = number_format($data['item']['gross_salary'] - $data['item']['basic_salary'], 2);
-                $deductions = number_format($data['item']['total_deductions'], 2);
+                $periodName = $data['period']['period_name'] ?? '';
                 
                 return "
                     <html><head>{$baseStyle}</head><body>
                     <div class='container'>
                         <div class='header'>
-                            <h1>PT Indo Ocean</h1>
+                            <h1>PT Indo Oceancrew Services</h1>
                             <p>Slip Gaji / Payslip</p>
                         </div>
                         <div class='content'>
                             <p>Yth. <strong>{$data['name']}</strong>,</p>
-                            <p>Berikut adalah rincian gaji Anda untuk periode <strong>{$data['period']['period_name']}</strong>.</p>
-                            
-                            <table style='width:100%; border-collapse:collapse; margin:20px 0; background:#fff;'>
-                                <tr style='background:#f1f1f1;'>
-                                    <td style='padding:10px; border:1px solid #ddd;'><strong>Total Penerimaan (Net)</strong></td>
-                                    <td style='padding:10px; border:1px solid #ddd; text-align:right; font-size:18px; font-weight:bold; color:#0A2463;'>
-                                        {$currency} {$netSalary}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style='padding:10px; border:1px solid #ddd;'>Gaji Pokok</td>
-                                    <td style='padding:10px; border:1px solid #ddd; text-align:right;'>{$currency} {$basic}</td>
-                                </tr>
-                                <tr>
-                                    <td style='padding:10px; border:1px solid #ddd;'>Tunjangan & Lembur</td>
-                                    <td style='padding:10px; border:1px solid #ddd; text-align:right;'>{$currency} {$allowances}</td>
-                                </tr>
-                                <tr>
-                                    <td style='padding:10px; border:1px solid #ddd; color:#EF4444;'>Potongan</td>
-                                    <td style='padding:10px; border:1px solid #ddd; text-align:right; color:#EF4444;'>- {$currency} {$deductions}</td>
-                                </tr>
-                            </table>
-                            
-                            <p>Terima kasih atas kerja keras dan dedikasi Anda.</p>
-                            
-                            <div class='alert alert-warning' style='font-size:12px;'>
-                                Dokumen ini dihasilkan secara otomatis oleh sistem ERP.
-                            </div>
+                            <p>Terlampir adalah slip gaji Anda untuk periode <strong>{$periodName}</strong>.</p>
+                            <p>Silakan buka file PDF terlampir untuk melihat rincian slip gaji Anda.</p>
+                            <p style='margin-top:20px;'>Terima kasih atas kerja keras dan dedikasi Anda.</p>
+                            <p style='color:#666; font-size:12px; margin-top:20px;'>Email ini dikirim secara otomatis oleh sistem ERP. Jika ada pertanyaan, silakan hubungi HRD.</p>
                         </div>
                         <div class='footer'>
-                            PT Indo Ocean Crew Management<br>
-                            Jalan ... (Alamat Lengkap Perusahaan)
+                            PT. Indo Oceancrew Services<br>
+                            Menara Cakrawala lt 15 no 1506, Jl. M.H. Thamrin No.9
                         </div>
                     </div>
                     </body></html>

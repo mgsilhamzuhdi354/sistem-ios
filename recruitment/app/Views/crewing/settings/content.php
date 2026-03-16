@@ -367,6 +367,54 @@
             </button>
         </div>
     </form>
+
+    <!-- Referral Code Card -->
+    <?php if (!empty($user['referral_code'])): ?>
+    <div class="settings-card" style="margin-top:1.5rem;overflow:visible;">
+        <div class="settings-card-header" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border-bottom:none;">
+            <div class="card-icon" style="background:rgba(255,255,255,0.2);backdrop-filter:blur(10px);"><i class="fas fa-gift" style="color:white;"></i></div>
+            <h3 style="color:white;">Kode Referral Anda</h3>
+        </div>
+        <div class="settings-card-body" style="background:linear-gradient(135deg,#eef2ff,#e0e7ff);position:relative;overflow:hidden;">
+            <!-- Floating particles background -->
+            <div style="position:absolute;inset:0;pointer-events:none;overflow:hidden;" id="referralParticles"></div>
+            
+            <div style="position:relative;z-index:1;">
+                <div style="text-align:center;margin-bottom:1.5rem;">
+                    <p style="color:#4338ca;font-size:0.9rem;margin:0 0 1rem;">
+                        <i class="fas fa-info-circle"></i> 
+                        Bagikan kode ini ke pelamar. Pelamar yang menggunakan kode Anda akan otomatis menjadi tanggungan Anda.
+                    </p>
+                    
+                    <!-- The Code Display -->
+                    <div id="referralCodeContainer" style="display:inline-flex;align-items:center;gap:1rem;background:white;border-radius:16px;padding:1rem 2rem;box-shadow:0 8px 32px rgba(99,102,241,0.2);border:2px solid rgba(99,102,241,0.2);transition:all 0.3s ease;cursor:pointer;" onclick="copyReferralCode()">
+                        <div style="display:flex;align-items:center;gap:0.75rem;">
+                            <i class="fas fa-ticket-alt" style="font-size:1.5rem;color:#6366f1;"></i>
+                            <span id="referralCodeDisplay" style="font-size:2rem;font-weight:800;letter-spacing:0.15em;color:#1e293b;font-family:'Courier New',monospace;">
+                                <?= htmlspecialchars($user['referral_code']) ?>
+                            </span>
+                        </div>
+                        <button type="button" id="copyBtn" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:white;padding:10px 20px;border-radius:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9rem;transition:all 0.3s ease;font-family:inherit;">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    
+                    <!-- Copy success message -->
+                    <div id="copySuccess" style="display:none;margin-top:0.75rem;color:#16a34a;font-weight:600;font-size:0.9rem;">
+                        <i class="fas fa-check-circle"></i> Kode berhasil disalin!
+                    </div>
+                </div>
+                
+                <!-- Regenerate button -->
+                <div style="text-align:center;">
+                    <button type="button" onclick="regenerateReferral()" id="regenBtn" style="background:none;border:2px dashed #a5b4fc;color:#6366f1;padding:8px 24px;border-radius:12px;font-weight:600;cursor:pointer;transition:all 0.3s ease;font-size:0.85rem;font-family:inherit;">
+                        <i class="fas fa-sync-alt"></i> Generate Ulang Kode
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <!-- Display Tab -->
@@ -614,6 +662,57 @@
         </div>
     </div>
     
+    <!-- Gemini AI Configuration -->
+    <div class="settings-card">
+        <div class="settings-card-header">
+            <div class="card-icon" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);"><i class="fas fa-robot"></i></div>
+            <h3>Gemini AI - Interview Scoring</h3>
+        </div>
+        <div class="settings-card-body">
+            <div class="info-box" style="background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-color:#c4b5fd;">
+                <p style="color:#5b21b6;">
+                    <i class="fas fa-brain me-1"></i>
+                    <strong>AI Interview Scoring:</strong> Masukkan API Key Google Gemini untuk mengaktifkan 
+                    penilaian jawaban essay secara otomatis oleh AI. Dapatkan API key gratis di 
+                    <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#6d28d9;font-weight:700;">Google AI Studio</a>.
+                </p>
+            </div>
+            <?php
+                $geminiKey = '';
+                try {
+                    $_db = getDB();
+                    $gResult = $_db->query("SELECT setting_value FROM recruitment_settings WHERE setting_key = 'gemini_api_key' LIMIT 1");
+                    if ($gResult && $gRow = $gResult->fetch_assoc()) {
+                        $geminiKey = $gRow['setting_value'];
+                    }
+                } catch (\Throwable $e) {}
+            ?>
+            <div class="form-group">
+                <label><i class="fas fa-key"></i> Gemini API Key</label>
+                <div style="position:relative;">
+                    <input type="password" id="geminiApiKey" value="<?= htmlspecialchars($geminiKey) ?>" 
+                           placeholder="AIzaSy..." style="padding-right:45px;">
+                    <button type="button" onclick="toggleGeminiKey()" 
+                            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#6b7280;padding:4px;">
+                        <i class="fas fa-eye" id="geminiKeyIcon"></i>
+                    </button>
+                </div>
+            </div>
+            <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+                <button type="button" onclick="testGeminiKey()" class="btn-primary" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);padding:0.6rem 1.5rem;font-size:0.9rem;">
+                    <i class="fas fa-plug me-1"></i> Test Koneksi
+                </button>
+                <button type="button" onclick="saveGeminiKey()" class="btn-primary" style="padding:0.6rem 1.5rem;font-size:0.9rem;">
+                    <i class="fas fa-save me-1"></i> Simpan API Key
+                </button>
+                <span id="geminiStatus" style="font-size:0.85rem;font-weight:600;<?= !empty($geminiKey) ? 'color:#16a34a;' : 'color:#94a3b8;' ?>">
+                    <?= !empty($geminiKey) ? '✅ API Key terkonfigurasi' : '⚠️ Belum dikonfigurasi' ?>
+                </span>
+            </div>
+            <div id="geminiResult" style="display:none;margin-top:1rem;padding:0.75rem 1rem;border-radius:10px;font-size:0.9rem;"></div>
+        </div>
+    </div>
+
     <!-- Delete All Data -->
     <div class="settings-card">
         <div class="settings-card-header">
@@ -923,4 +1022,200 @@ function toggleSmtpPassword() {
         icon.classList.add('fa-eye');
     }
 }
+
+// ═══════ REFERRAL CODE FUNCTIONS ═══════
+
+function copyReferralCode() {
+    const code = document.getElementById('referralCodeDisplay').textContent.trim();
+    navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copyBtn');
+        const container = document.getElementById('referralCodeContainer');
+        const successMsg = document.getElementById('copySuccess');
+        
+        // Animate container
+        container.style.borderColor = '#22c55e';
+        container.style.boxShadow = '0 8px 32px rgba(34,197,94,0.3)';
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+        successMsg.style.display = 'block';
+        
+        // Trigger confetti
+        createConfetti(container);
+        
+        setTimeout(() => {
+            container.style.borderColor = 'rgba(99,102,241,0.2)';
+            container.style.boxShadow = '0 8px 32px rgba(99,102,241,0.2)';
+            btn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+            btn.style.background = 'linear-gradient(135deg,#6366f1,#8b5cf6)';
+            successMsg.style.display = 'none';
+        }, 2500);
+    });
+}
+
+function regenerateReferral() {
+    if (!confirm('Yakin ingin generate ulang kode referral? Kode lama tidak akan bisa digunakan lagi.')) return;
+    
+    const btn = document.getElementById('regenBtn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    btn.disabled = true;
+    
+    fetch('<?= url('/crewing/settings/regenerate-referral') ?>', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'csrf_token=<?= csrf_token() ?>'
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const display = document.getElementById('referralCodeDisplay');
+            const container = document.getElementById('referralCodeContainer');
+            
+            // Flip animation
+            display.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+            display.style.transform = 'rotateX(90deg)';
+            display.style.opacity = '0';
+            
+            setTimeout(() => {
+                display.textContent = data.code;
+                display.style.transform = 'rotateX(0deg)';
+                display.style.opacity = '1';
+                createConfetti(container);
+            }, 300);
+            
+            btn.innerHTML = '<i class="fas fa-check"></i> Berhasil!';
+            btn.style.borderColor = '#22c55e';
+            btn.style.color = '#22c55e';
+            
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-sync-alt"></i> Generate Ulang Kode';
+                btn.style.borderColor = '#a5b4fc';
+                btn.style.color = '#6366f1';
+                btn.disabled = false;
+            }, 2000);
+        } else {
+            alert(data.message || 'Gagal regenerate');
+            btn.innerHTML = '<i class="fas fa-sync-alt"></i> Generate Ulang Kode';
+            btn.disabled = false;
+        }
+    })
+    .catch(() => {
+        alert('Terjadi kesalahan jaringan');
+        btn.innerHTML = '<i class="fas fa-sync-alt"></i> Generate Ulang Kode';
+        btn.disabled = false;
+    });
+}
+
+function createConfetti(target) {
+    const colors = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6'];
+    const rect = target.getBoundingClientRect();
+    for (let i = 0; i < 20; i++) {
+        const confetti = document.createElement('div');
+        confetti.style.cssText = `
+            position:fixed;
+            width:${6 + Math.random()*6}px;
+            height:${6 + Math.random()*6}px;
+            background:${colors[Math.floor(Math.random()*colors.length)]};
+            border-radius:${Math.random()>0.5?'50%':'2px'};
+            left:${rect.left + rect.width/2}px;
+            top:${rect.top + rect.height/2}px;
+            z-index:9999;
+            pointer-events:none;
+            transition:all ${0.6+Math.random()*0.8}s cubic-bezier(.25,.46,.45,.94);
+        `;
+        document.body.appendChild(confetti);
+        requestAnimationFrame(() => {
+            confetti.style.left = (rect.left + rect.width/2 + (Math.random()-0.5)*200) + 'px';
+            confetti.style.top = (rect.top - 50 - Math.random()*100) + 'px';
+            confetti.style.opacity = '0';
+            confetti.style.transform = `rotate(${Math.random()*360}deg) scale(0.3)`;
+        });
+        setTimeout(() => confetti.remove(), 1500);
+    }
+}
+
+// Floating particles for referral card
+(function() {
+    const container = document.getElementById('referralParticles');
+    if (!container) return;
+    for (let i = 0; i < 8; i++) {
+        const p = document.createElement('div');
+        const size = 4 + Math.random() * 8;
+        p.style.cssText = `
+            position:absolute;
+            width:${size}px;height:${size}px;
+            background:rgba(99,102,241,${0.1+Math.random()*0.15});
+            border-radius:50%;
+            left:${Math.random()*100}%;
+            top:${Math.random()*100}%;
+            animation:floatParticle${i%3} ${3+Math.random()*4}s ease-in-out infinite;
+        `;
+        container.appendChild(p);
+    }
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes floatParticle0{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-15px)}}
+        @keyframes floatParticle1{0%,100%{transform:translate(0,0)}50%{transform:translate(-15px,20px)}}
+        @keyframes floatParticle2{0%,100%{transform:translate(0,0)}50%{transform:translate(25px,10px)}}
+    `;
+    document.head.appendChild(style);
+})();
+
+// Gemini AI Key Functions
+function toggleGeminiKey() {
+    var input = document.getElementById('geminiApiKey');
+    var icon = document.getElementById('geminiKeyIcon');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+
+function showGeminiResult(success, message) {
+    var el = document.getElementById('geminiResult');
+    el.style.display = 'block';
+    el.style.background = success ? '#dcfce7' : '#fee2e2';
+    el.style.color = success ? '#166534' : '#991b1b';
+    el.style.border = '1px solid ' + (success ? '#bbf7d0' : '#fecaca');
+    el.innerHTML = '<i class="fas fa-' + (success ? 'check-circle' : 'times-circle') + '"></i> ' + message;
+}
+
+function testGeminiKey() {
+    var apiKey = document.getElementById('geminiApiKey').value.trim();
+    if (!apiKey) { showGeminiResult(false, 'Masukkan API key terlebih dahulu'); return; }
+    
+    showGeminiResult(true, '<i class="fas fa-spinner fa-spin"></i> Menguji koneksi...');
+    
+    fetch('<?= url('/crewing/settings/test-gemini-key') ?>', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'gemini_api_key=' + encodeURIComponent(apiKey) + '&csrf_token=<?= $_SESSION['csrf_token'] ?? '' ?>'
+    })
+    .then(r => r.json())
+    .then(data => showGeminiResult(data.success, data.message))
+    .catch(e => showGeminiResult(false, 'Network error: ' + e.message));
+}
+
+function saveGeminiKey() {
+    var apiKey = document.getElementById('geminiApiKey').value.trim();
+    if (!apiKey) { showGeminiResult(false, 'Masukkan API key terlebih dahulu'); return; }
+    
+    fetch('<?= url('/crewing/settings/save-gemini-key') ?>', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'gemini_api_key=' + encodeURIComponent(apiKey) + '&csrf_token=<?= $_SESSION['csrf_token'] ?? '' ?>'
+    })
+    .then(r => r.json())
+    .then(data => {
+        showGeminiResult(data.success, data.message);
+        if (data.success) {
+            document.getElementById('geminiStatus').innerHTML = '✅ API Key terkonfigurasi';
+            document.getElementById('geminiStatus').style.color = '#16a34a';
+        }
+    })
+    .catch(e => showGeminiResult(false, 'Network error: ' + e.message));
+}
+
 </script>

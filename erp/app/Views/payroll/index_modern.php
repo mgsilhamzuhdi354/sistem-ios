@@ -99,6 +99,11 @@ $periodStatus = $period['status'] ?? 'draft';
             background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 30%, #e2e8f0 100%);
             box-shadow: 0 25px 60px -15px rgba(0,0,0,0.3), 0 0 0 1px rgba(30,58,95,0.1);
         }
+
+        @keyframes scaleIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 
@@ -201,15 +206,12 @@ $periodStatus = $period['status'] ?? 'draft';
                     </span>
 
                     <?php if ($periodStatus === 'processing'): ?>
-                        <form method="POST" action="<?= BASE_URL ?>payroll/complete" class="ml-2">
-                            <input type="hidden" name="period_id" value="<?= $period['id'] ?>">
-                            <button type="submit"
-                                class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-bold hover:bg-emerald-600 transition-all"
-                                onclick="return confirm('<?= __('payroll.confirm_complete') ?>')">
-                                <span class="material-icons text-sm">check</span>
-                                <?= __('payroll.mark_complete') ?>
-                            </button>
-                        </form>
+                        <button id="btnMarkComplete" type="button"
+                            class="ml-2 flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-bold hover:bg-emerald-600 transition-all"
+                            onclick="markComplete(<?= (int)$period['id'] ?>)">
+                            <span class="material-icons text-sm">check</span>
+                            <?= __('payroll.mark_complete') ?>
+                        </button>
                     <?php endif; ?>
                 </div>
 
@@ -320,7 +322,7 @@ $periodStatus = $period['status'] ?? 'draft';
                                     <span class="material-icons-outlined text-amber-600">paid</span>
                                 </div>
                             </div>
-                            <p class="text-2xl font-bold text-slate-800"><?= number_format($totalGross, 2) ?></p>
+                            <p class="text-2xl font-bold text-slate-800">Rp <?= number_format($totalGross, 0, ',', '.') ?></p>
                             <p class="text-xs font-medium text-slate-400 mt-1"><?= __('payroll.gross_salary') ?></p>
                         </div>
 
@@ -331,7 +333,7 @@ $periodStatus = $period['status'] ?? 'draft';
                                     <span class="material-icons-outlined text-red-600">percent</span>
                                 </div>
                             </div>
-                            <p class="text-2xl font-bold text-slate-800"><?= number_format($totalTax, 2) ?></p>
+                            <p class="text-2xl font-bold text-slate-800">Rp <?= number_format($totalTax, 0, ',', '.') ?></p>
                             <p class="text-xs font-medium text-slate-400 mt-1"><?= __('payroll.total_tax') ?></p>
                         </div>
 
@@ -357,7 +359,7 @@ $periodStatus = $period['status'] ?? 'draft';
                             <canvas id="payrollTrendChart"></canvas>
                         </div>
                         <div class="flex justify-between items-center text-xs text-slate-400 mt-3 pt-3 border-t border-slate-100">
-                            <span>Current: <?= number_format($totalGross, 2) ?></span>
+                            <span>Current: Rp <?= number_format($totalGross, 0, ',', '.') ?></span>
                             <span class="text-emerald-500 font-semibold flex items-center gap-1">
                                 <span class="material-icons text-xs">trending_up</span>
                                 Period <?= $months[$month] ?>
@@ -432,7 +434,8 @@ $periodStatus = $period['status'] ?? 'draft';
                                         $totalAllowances = $overtime + $leavePay + $bonus + $otherAllowance;
                                         $crewInitials = strtoupper(substr($item['crew_name'] ?? 'C', 0, 2));
                                         $currCode = $item['currency_code'] ?? $item['original_currency'] ?? 'IDR';
-                                        $currSymbol = ($currCode === 'USD') ? '$' : (($currCode === 'MYR') ? 'RM ' : 'Rp ');
+                                        $origSymbols = ['USD' => '$', 'MYR' => 'RM ', 'SGD' => 'S$', 'EUR' => '€', 'GBP' => '£', 'AUD' => 'A$', 'JPY' => '¥', 'PHP' => '₱'];
+                                        $currSymbol = $origSymbols[$currCode] ?? 'Rp ';
                                     ?>
                                         <tr class="hover:bg-blue-50/60 transition-colors group crew-row cursor-pointer"
                                             data-name="<?= strtolower(htmlspecialchars($item['crew_name'] ?? '')) ?>"
@@ -463,18 +466,18 @@ $periodStatus = $period['status'] ?? 'draft';
                                                     <?= htmlspecialchars($item['vessel_name'] ?? '-') ?>
                                                 </span>
                                             </td>
-                                            <!-- Basic -->
+                                            <!-- Basic (original currency) -->
                                             <td class="px-6 py-4 text-right font-medium text-slate-800"><?= $currSymbol ?><?= number_format($basicSalary, 2) ?></td>
-                                            <!-- Allowances -->
+                                            <!-- Allowances (original currency) -->
                                             <td class="px-6 py-4 text-right <?= $totalAllowances > 0 ? 'text-slate-600' : 'text-slate-300' ?>">
                                                 <?= $currSymbol ?><?= number_format($totalAllowances, 2) ?>
                                             </td>
-                                            <!-- Gross -->
-                                            <td class="px-6 py-4 text-right font-semibold text-slate-800"><?= $currSymbol ?><?= number_format($grossSalary, 2) ?></td>
-                                            <!-- Tax -->
-                                            <td class="px-6 py-4 text-right font-medium text-red-500">-<?= $currSymbol ?><?= number_format($taxAmount, 2) ?></td>
-                                            <!-- Net -->
-                                            <td class="px-6 py-4 text-right font-bold text-emerald-600"><?= $currSymbol ?><?= number_format($netSalary, 2) ?></td>
+                                            <!-- Gross (always Rp - already converted to IDR) -->
+                                            <td class="px-6 py-4 text-right font-semibold text-slate-800">Rp <?= number_format($grossSalary, 0, ',', '.') ?></td>
+                                            <!-- Tax (always Rp) -->
+                                            <td class="px-6 py-4 text-right font-medium text-red-500">-Rp <?= number_format($taxAmount, 0, ',', '.') ?></td>
+                                            <!-- Net (always Rp) -->
+                                            <td class="px-6 py-4 text-right font-bold text-emerald-600">Rp <?= number_format($netSalary, 0, ',', '.') ?></td>
                                             <!-- Status -->
                                             <td class="px-6 py-4 text-center">
                                                 <?php
@@ -532,26 +535,69 @@ $periodStatus = $period['status'] ?? 'draft';
                                 <?= __('common.showing') ?> <span class="font-semibold text-slate-700" x-text="visibleCount"><?= $totalCrew ?></span> <?= __('common.of') ?> <?= $totalCrew ?> <?= __('common.entries') ?>
                             </div>
                             <div class="flex gap-3 items-center">
-                                <span>Rumus: <span class="text-slate-400">Gross ($<?= number_format($totalGross, 2) ?>) - Deductions ($<?= number_format($totalDeductions, 2) ?>) - Tax ($<?= number_format($totalTax, 2) ?>) = </span><span class="text-emerald-600 font-bold">Net $<?= number_format($totalNet, 2) ?></span></span>
+                                <span>Rumus: <span class="text-slate-400">Gross (Rp <?= number_format($totalGross, 0, ',', '.') ?>) - Deductions (Rp <?= number_format($totalDeductions, 0, ',', '.') ?>) - Tax (Rp <?= number_format($totalTax, 0, ',', '.') ?>) = </span><span class="text-emerald-600 font-bold">Net Rp <?= number_format($totalNet, 0, ',', '.') ?></span></span>
                             </div>
                         </div>
                     <?php endif; ?>
                 </div>
 
-                <!-- Send Emails Button -->
-                <?php if ($periodStatus === 'completed' && !empty($items)): ?>
+                <!-- Bulk Send Emails Button -->
+                <?php if (!empty($items)): ?>
                     <div class="mt-4 flex justify-end">
-                        <form method="POST" action="<?= BASE_URL ?>payroll/send-emails">
-                            <input type="hidden" name="period_id" value="<?= $period['id'] ?>">
-                            <button type="submit"
-                                class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
-                                onclick="return confirm('<?= __('payroll.confirm_send_payslips') ?>')">
-                                <span class="material-icons-outlined text-sm">email</span>
-                                <?= __('payroll.send_payslips') ?>
-                            </button>
-                        </form>
+                        <button id="btnBulkSend" onclick="startBulkSend()"
+                            class="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+                            <span class="material-icons-outlined text-sm">forward_to_inbox</span>
+                            Kirim Semua Slip Gaji via Email
+                        </button>
                     </div>
                 <?php endif; ?>
+
+    <!-- Bulk Send Progress Modal -->
+    <div id="bulkSendModal" class="hidden fixed inset-0 z-[250] flex items-center justify-center" style="background:rgba(15,23,42,0.75);backdrop-filter:blur(8px);">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+            <!-- Header -->
+            <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="material-icons">forward_to_inbox</span>
+                    <div>
+                        <h3 class="font-bold text-sm">Kirim Semua Slip Gaji</h3>
+                        <p id="bulkSendSubtitle" class="text-blue-200 text-xs">Mempersiapkan...</p>
+                    </div>
+                </div>
+                <button id="btnCloseBulkSend" onclick="closeBulkSendModal()" class="hidden p-1.5 rounded-lg hover:bg-white/20 transition-colors">
+                    <span class="material-icons text-sm">close</span>
+                </button>
+            </div>
+
+            <!-- Progress -->
+            <div class="px-6 py-5">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="bulkSendStatus" class="text-sm font-semibold text-slate-700">Memuat data kru...</span>
+                    <span id="bulkSendCounter" class="text-xs font-bold text-blue-600">0/0</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                    <div id="bulkSendProgress" class="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-300" style="width:0%"></div>
+                </div>
+                <div id="bulkSendStats" class="mt-4 grid grid-cols-3 gap-3 text-center">
+                    <div class="bg-emerald-50 rounded-xl p-3">
+                        <p id="bulkSendSuccess" class="text-lg font-bold text-emerald-600">0</p>
+                        <p class="text-[10px] text-emerald-500 font-medium">Berhasil</p>
+                    </div>
+                    <div class="bg-red-50 rounded-xl p-3">
+                        <p id="bulkSendFailed" class="text-lg font-bold text-red-500">0</p>
+                        <p class="text-[10px] text-red-400 font-medium">Gagal</p>
+                    </div>
+                    <div class="bg-slate-50 rounded-xl p-3">
+                        <p id="bulkSendSkipped" class="text-lg font-bold text-slate-400">0</p>
+                        <p class="text-[10px] text-slate-400 font-medium">Dilewati</p>
+                    </div>
+                </div>
+
+                <!-- Log -->
+                <div id="bulkSendLog" class="mt-4 max-h-40 overflow-y-auto space-y-1 text-xs"></div>
+            </div>
+        </div>
+    </div>
 
                 <div class="mt-4 text-right text-xs text-slate-400">
                     * <?= __('payroll.usd_note') ?>
@@ -579,15 +625,15 @@ $periodStatus = $period['status'] ?? 'draft';
                                     <div class="space-y-2 text-sm">
                                         <div class="flex justify-between">
                                             <span class="text-slate-500">Gross</span>
-                                            <span class="font-medium text-slate-700">$<?= number_format((float)($vesselSummary['total_gross'] ?? 0), 2) ?></span>
+                                            <span class="font-medium text-slate-700">Rp <?= number_format((float)($vesselSummary['total_gross'] ?? 0), 0, ',', '.') ?></span>
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="text-slate-500">Tax</span>
-                                            <span class="font-medium text-red-500">-$<?= number_format((float)($vesselSummary['total_tax'] ?? 0), 2) ?></span>
+                                            <span class="font-medium text-red-500">-Rp <?= number_format((float)($vesselSummary['total_tax'] ?? 0), 0, ',', '.') ?></span>
                                         </div>
                                         <div class="flex justify-between pt-2 border-t border-slate-100">
                                             <span class="font-semibold text-slate-700">Net</span>
-                                            <span class="font-bold text-emerald-600">$<?= number_format((float)($vesselSummary['total_net'] ?? 0), 2) ?></span>
+                                            <span class="font-bold text-emerald-600">Rp <?= number_format((float)($vesselSummary['total_net'] ?? 0), 0, ',', '.') ?></span>
                                         </div>
                                     </div>
                                 </div>
@@ -959,6 +1005,11 @@ $periodStatus = $period['status'] ?? 'draft';
                                     <span class="text-[10px] font-bold text-emerald-700">TERSIMPAN</span>
                                     <span id="savedTime" class="text-[9px] text-emerald-500 ml-auto"></span>
                                 </div>
+                                <div id="pdfIndicator" class="hidden flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <span class="material-icons text-blue-500" style="font-size:14px">picture_as_pdf</span>
+                                    <span class="text-[10px] font-bold text-blue-700">PDF TERSIMPAN</span>
+                                    <span class="text-[9px] text-blue-500 ml-auto">Otomatis</span>
+                                </div>
                                 <!-- Send Email -->
                                 <button id="btnSendPayslip" onclick="sendPayslipEmail()" 
                                     class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all">
@@ -970,12 +1021,12 @@ $periodStatus = $period['status'] ?? 'draft';
                                     <span class="text-[10px] font-bold text-blue-700">EMAIL TERKIRIM</span>
                                     <span id="emailedTime" class="text-[9px] text-blue-500 ml-auto"></span>
                                 </div>
-                                <!-- Print/PDF -->
-                                <a id="btnDownloadPayslip" href="#" target="_blank"
+                                <!-- Download PDF -->
+                                <button id="btnDownloadPayslip" onclick="openPdfWithAnimation()"
                                     class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-all">
-                                    <span class="material-icons text-sm">print</span>
-                                    Print / Save PDF
-                                </a>
+                                    <span class="material-icons text-sm" id="btnDownloadIcon">picture_as_pdf</span>
+                                    <span id="btnDownloadText">Download / Print PDF</span>
+                                </button>
                             </div>
                         </div>
                         
@@ -985,6 +1036,42 @@ $periodStatus = $period['status'] ?? 'draft';
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Generation Animation Overlay -->
+    <div id="pdfAnimationOverlay" class="hidden fixed inset-0 z-[300] flex items-center justify-center" style="background: rgba(15,23,42,0.75); backdrop-filter: blur(8px);">
+        <div id="pdfAnimationContent" class="text-center">
+            <div class="inline-block bg-white rounded-2xl shadow-2xl p-8 book-modal" style="min-width:320px">
+                <div class="relative mb-4">
+                    <div class="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30" style="animation: pulse 1.5s ease-in-out infinite">
+                        <span class="material-icons text-white text-4xl">description</span>
+                    </div>
+                    <div class="absolute -top-1 -right-1 w-6 h-6 bg-amber-400 rounded-full flex items-center justify-center shadow-md" style="animation: bounce 1s ease-in-out infinite; left: calc(50% + 24px);">
+                        <span class="material-icons text-white" style="font-size:14px">auto_awesome</span>
+                    </div>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800 mb-1">📄 Generating Payslip...</h3>
+                <p class="text-sm text-slate-500">Preparing your document for printing</p>
+                <div class="mt-4 flex items-center justify-center gap-1">
+                    <div class="w-2 h-2 bg-blue-500 rounded-full" style="animation: bounce 1s ease-in-out infinite"></div>
+                    <div class="w-2 h-2 bg-blue-400 rounded-full" style="animation: bounce 1s ease-in-out infinite; animation-delay: 0.15s"></div>
+                    <div class="w-2 h-2 bg-blue-300 rounded-full" style="animation: bounce 1s ease-in-out infinite; animation-delay: 0.3s"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Success Animation Overlay -->
+    <div id="emailSuccessOverlay" class="hidden fixed inset-0 z-[300] flex items-center justify-center" style="background: rgba(15,23,42,0.75); backdrop-filter: blur(8px);">
+        <div id="emailSuccessContent" class="text-center book-modal">
+            <div class="inline-block bg-white rounded-2xl shadow-2xl p-8" style="min-width:320px">
+                <div class="w-20 h-20 mx-auto bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/30 mb-4" style="animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)">
+                    <span class="material-icons text-white text-4xl">check</span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800 mb-1">✅ Email Terkirim!</h3>
+                <p id="emailSuccessDetail" class="text-sm text-slate-500">Slip gaji berhasil dikirim</p>
             </div>
         </div>
     </div>
@@ -1046,7 +1133,7 @@ $periodStatus = $period['status'] ?? 'draft';
             const content = document.getElementById('payslipBookContent');
             
             document.getElementById('payslipBookTitle').textContent = 'Slip Gaji: ' + crewName;
-            document.getElementById('btnDownloadPayslip').href = PAYROLL_BASE + 'index.php?url=payroll/payslip/' + itemId;
+            document.getElementById('btnDownloadPayslip').dataset.pdfUrl = PAYROLL_BASE + 'index.php?url=payroll/payslip/' + itemId;
             
             // Reset
             document.getElementById('emailTo').value = '';
@@ -1154,17 +1241,41 @@ $periodStatus = $period['status'] ?? 'draft';
             // Show status indicators based on saved data
             const savedInd = document.getElementById('savedIndicator');
             const emailedInd = document.getElementById('emailedIndicator');
+            const pdfInd = document.getElementById('pdfIndicator');
+            const dlBtn = document.getElementById('btnDownloadPayslip');
             const itemStatus = (item.status || '').toLowerCase();
             
-            // Reset indicators
+            // Reset all indicators
             savedInd.classList.add('hidden');
             emailedInd.classList.add('hidden');
+            pdfInd.classList.add('hidden');
+            
+            // Reset download button to default
+            dlBtn.dataset.savedPdf = 'false';
+            document.getElementById('btnDownloadIcon').textContent = 'picture_as_pdf';
+            document.getElementById('btnDownloadText').textContent = 'Download / Print PDF';
+            dlBtn.classList.remove('bg-blue-50', 'hover:bg-blue-100', 'text-blue-700', 'border', 'border-blue-200');
+            dlBtn.classList.add('bg-slate-100', 'hover:bg-slate-200', 'text-slate-700');
             
             // Show saved badge if confirmed/paid
             if (itemStatus === 'confirmed' || itemStatus === 'paid') {
                 savedInd.classList.remove('hidden');
                 savedInd.classList.add('flex');
                 document.getElementById('savedTime').textContent = item.confirmed_at ? formatDateShort(item.confirmed_at) : '';
+            }
+            
+            // Show PDF badge if saved PDF exists
+            if (item.pdf_path) {
+                pdfInd.classList.remove('hidden');
+                pdfInd.classList.add('flex');
+                
+                // Update download button to direct PDF download
+                dlBtn.dataset.pdfUrl = PAYROLL_BASE + item.pdf_path;
+                dlBtn.dataset.savedPdf = 'true';
+                document.getElementById('btnDownloadIcon').textContent = 'download';
+                document.getElementById('btnDownloadText').textContent = 'Download PDF Slip Gaji';
+                dlBtn.classList.remove('bg-slate-100', 'hover:bg-slate-200', 'text-slate-700');
+                dlBtn.classList.add('bg-blue-50', 'hover:bg-blue-100', 'text-blue-700', 'border', 'border-blue-200');
             }
             
             // Show emailed badge
@@ -1244,7 +1355,8 @@ $periodStatus = $period['status'] ?? 'draft';
                 const idrSalary = actualSalary * kurs;
                 const gross = idrSalary + reimbursement;
                 const totalDeduct = adminBank + insurance + otherDeduct + loans;
-                const taxAmount = (actualSalary * kurs) * (taxRate / 100);
+                const taxBase = gross - totalDeduct;
+                const taxAmount = taxBase > 0 ? taxBase * (taxRate / 100) : 0;
                 const net = gross - totalDeduct - taxAmount;
                 
                 const formData = new FormData();
@@ -1290,6 +1402,22 @@ $periodStatus = $period['status'] ?? 'draft';
                     savedInd.classList.remove('hidden');
                     savedInd.classList.add('flex');
                     document.getElementById('savedTime').textContent = 'Baru saja';
+                    
+                    // Show PDF indicator if PDF was generated
+                    if (data.pdf_url) {
+                        const pdfInd = document.getElementById('pdfIndicator');
+                        pdfInd.classList.remove('hidden');
+                        pdfInd.classList.add('flex');
+                        
+                        // Update download button to use saved PDF
+                        const dlBtn = document.getElementById('btnDownloadPayslip');
+                        dlBtn.dataset.pdfUrl = data.pdf_url;
+                        dlBtn.dataset.savedPdf = 'true';
+                        document.getElementById('btnDownloadIcon').textContent = 'download';
+                        document.getElementById('btnDownloadText').textContent = 'Download PDF Slip Gaji';
+                        dlBtn.classList.remove('bg-slate-100', 'hover:bg-slate-200', 'text-slate-700');
+                        dlBtn.classList.add('bg-blue-50', 'hover:bg-blue-100', 'text-blue-700', 'border', 'border-blue-200');
+                    }
                     
                     // Update table row status + values
                     updateTableRowStatus(currentPayslipItemId, 'confirmed', false);
@@ -1356,6 +1484,9 @@ $periodStatus = $period['status'] ?? 'draft';
                     
                     // Update table row status
                     updateTableRowStatus(currentPayslipItemId, null, true);
+                    
+                    // Show email success animation overlay
+                    showEmailSuccessAnimation(email);
                 } else {
                     statusContent.innerHTML = '<span class="material-icons text-red-500" style="font-size:16px">error</span><span class="text-xs text-red-600">' + (data.message || 'Gagal mengirim') + '</span>';
                     btn.innerHTML = '<span class="material-icons text-sm">send</span> Kirim via Email';
@@ -1373,6 +1504,203 @@ $periodStatus = $period['status'] ?? 'draft';
                 btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
                 btn.innerHTML = '<span class="material-icons text-sm">send</span> Kirim via Email';
             }, 5000);
+        }
+
+        // === Mark Complete via AJAX ===
+        async function markComplete(periodId) {
+            if (!confirm('<?= __('payroll.confirm_complete') ?>')) return;
+            
+            const btn = document.getElementById('btnMarkComplete');
+            const origHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-spin material-icons text-sm">sync</span> Memproses...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('period_id', periodId);
+                
+                const res = await fetch(PAYROLL_BASE + 'payroll/apiComplete', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    btn.innerHTML = '<span class="material-icons text-sm">check_circle</span> Selesai!';
+                    btn.classList.remove('bg-emerald-500');
+                    btn.classList.add('bg-emerald-700');
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    alert('Gagal: ' + (data.message || 'Unknown error'));
+                    btn.disabled = false;
+                    btn.innerHTML = origHTML;
+                }
+            } catch (err) {
+                console.error('markComplete error:', err);
+                alert('Error: ' + err.message);
+                btn.disabled = false;
+                btn.innerHTML = origHTML;
+            }
+        }
+
+        // === Bulk Send All Payslips ===
+        let bulkSendRunning = false;
+        
+        async function startBulkSend() {
+            if (bulkSendRunning) return;
+            
+            const periodId = <?= (int)($period['id'] ?? 0) ?>;
+            if (!periodId) { alert('Tidak ada period aktif'); return; }
+            
+            // Confirm
+            if (!confirm('Kirim slip gaji ke SEMUA kru yang memiliki email?\n\nProses ini akan mengirim email satu per satu. Pastikan SMTP sudah dikonfigurasi dengan benar.')) return;
+            
+            bulkSendRunning = true;
+            const modal = document.getElementById('bulkSendModal');
+            const statusEl = document.getElementById('bulkSendStatus');
+            const counterEl = document.getElementById('bulkSendCounter');
+            const progressEl = document.getElementById('bulkSendProgress');
+            const subtitleEl = document.getElementById('bulkSendSubtitle');
+            const successEl = document.getElementById('bulkSendSuccess');
+            const failedEl = document.getElementById('bulkSendFailed');
+            const skippedEl = document.getElementById('bulkSendSkipped');
+            const logEl = document.getElementById('bulkSendLog');
+            const closeBtn = document.getElementById('btnCloseBulkSend');
+            const mainBtn = document.getElementById('btnBulkSend');
+            
+            // Reset UI
+            modal.classList.remove('hidden');
+            closeBtn.classList.add('hidden');
+            logEl.innerHTML = '';
+            statusEl.textContent = 'Memuat data kru...';
+            counterEl.textContent = '0/0';
+            progressEl.style.width = '0%';
+            successEl.textContent = '0';
+            failedEl.textContent = '0';
+            skippedEl.textContent = '0';
+            subtitleEl.textContent = 'Mempersiapkan...';
+            mainBtn.disabled = true;
+            mainBtn.innerHTML = '<span class="animate-spin material-icons text-sm">sync</span> Mengirim...';
+            
+            try {
+                // Fetch all items
+                const listRes = await fetch(PAYROLL_BASE + 'api_payslip.php?action=bulk_list&period_id=' + periodId, {credentials: 'same-origin'});
+                const listData = await listRes.json();
+                
+                if (!listData.success || !listData.items?.length) {
+                    statusEl.textContent = 'Tidak ada data kru ditemukan';
+                    closeBtn.classList.remove('hidden');
+                    bulkSendRunning = false;
+                    resetBulkBtn();
+                    return;
+                }
+                
+                const items = listData.items;
+                const total = items.length;
+                let success = 0, failed = 0, skipped = 0;
+                
+                subtitleEl.textContent = total + ' kru ditemukan';
+                counterEl.textContent = '0/' + total;
+                
+                for (let i = 0; i < total; i++) {
+                    const crew = items[i];
+                    const current = i + 1;
+                    const pct = Math.round((current / total) * 100);
+                    
+                    counterEl.textContent = current + '/' + total;
+                    progressEl.style.width = pct + '%';
+                    statusEl.textContent = 'Mengirim ke ' + (crew.crew_name || 'Crew #' + crew.id) + '...';
+                    
+                    // Skip if no email
+                    if (!crew.email) {
+                        skipped++;
+                        skippedEl.textContent = skipped;
+                        addBulkLog('⏭️', crew.crew_name || 'ID:' + crew.id, 'Tidak ada email', 'text-slate-400');
+                        continue;
+                    }
+                    
+                    // Skip if already sent
+                    if (crew.email_sent_at) {
+                        skipped++;
+                        skippedEl.textContent = skipped;
+                        addBulkLog('✅', crew.crew_name || 'ID:' + crew.id, 'Sudah terkirim sebelumnya', 'text-blue-400');
+                        continue;
+                    }
+                    
+                    // Send email
+                    try {
+                        const formData = new FormData();
+                        formData.append('item_id', crew.id);
+                        formData.append('email', crew.email);
+                        
+                        const sendRes = await fetch(PAYROLL_BASE + 'api_payslip.php?action=send_email', {
+                            method: 'POST',
+                            body: formData,
+                            credentials: 'same-origin'
+                        });
+                        const sendData = await sendRes.json();
+                        
+                        if (sendData.success) {
+                            success++;
+                            successEl.textContent = success;
+                            addBulkLog('✅', crew.crew_name, crew.email, 'text-emerald-600');
+                            // Update table row
+                            updateTableRowStatus(crew.id, null, true);
+                        } else {
+                            failed++;
+                            failedEl.textContent = failed;
+                            addBulkLog('❌', crew.crew_name, sendData.message || 'Gagal', 'text-red-500');
+                        }
+                    } catch (e) {
+                        failed++;
+                        failedEl.textContent = failed;
+                        addBulkLog('❌', crew.crew_name, 'Error: ' + e.message, 'text-red-500');
+                    }
+                    
+                    // Small delay between sends to avoid overwhelming server
+                    await new Promise(r => setTimeout(r, 500));
+                }
+                
+                // Done
+                progressEl.style.width = '100%';
+                if (failed === 0 && skipped === 0) {
+                    statusEl.textContent = '🎉 Semua slip gaji berhasil dikirim!';
+                    progressEl.classList.remove('from-blue-500', 'to-blue-600');
+                    progressEl.classList.add('from-emerald-500', 'to-emerald-600');
+                } else {
+                    statusEl.textContent = 'Selesai — ' + success + ' berhasil, ' + failed + ' gagal, ' + skipped + ' dilewati';
+                }
+                subtitleEl.textContent = 'Proses selesai';
+                
+            } catch (e) {
+                statusEl.textContent = 'Error: ' + e.message;
+            }
+            
+            closeBtn.classList.remove('hidden');
+            bulkSendRunning = false;
+            resetBulkBtn();
+        }
+        
+        function addBulkLog(icon, name, detail, colorClass) {
+            const logEl = document.getElementById('bulkSendLog');
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2 py-1 px-2 rounded-lg bg-slate-50 ' + colorClass;
+            div.innerHTML = '<span>' + icon + '</span><span class="font-medium truncate flex-1">' + (name || '') + '</span><span class="text-slate-400 truncate max-w-[200px]">' + detail + '</span>';
+            logEl.appendChild(div);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        function closeBulkSendModal() {
+            document.getElementById('bulkSendModal').classList.add('hidden');
+        }
+        
+        function resetBulkBtn() {
+            const btn = document.getElementById('btnBulkSend');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<span class="material-icons-outlined text-sm">forward_to_inbox</span> Kirim Semua Slip Gaji via Email';
+            }
         }
 
         // === Helper: format date for indicators ===
@@ -1437,12 +1765,17 @@ $periodStatus = $period['status'] ?? 'draft';
             const cells = row.querySelectorAll('td');
             // Table columns: Name(0), Rank(1), Vessel(2), Basic(3), Allowances(4), Gross(5), Tax(6), Net(7), Status(8), Actions(9)
             if (cells.length >= 8) {
-                const f = (v) => '$' + Number(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                cells[3].innerHTML = '<span class="font-medium text-slate-800">' + f(basic) + '</span>';
-                cells[4].innerHTML = '<span class="' + (overtime > 0 ? 'text-slate-600' : 'text-slate-300') + '">' + f(overtime) + '</span>';
-                cells[5].innerHTML = '<span class="font-semibold text-slate-800">' + f(gross) + '</span>';
-                cells[6].innerHTML = '<span class="font-medium text-red-500">-' + f(tax) + '</span>';
-                cells[7].innerHTML = '<span class="font-bold text-emerald-600">' + f(net) + '</span>';
+                // Basic & Allowances stay in original currency, Gross/Tax/Net are always Rp
+                const fOrig = (v) => Number(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                const fRp = (v) => 'Rp ' + Number(v).toLocaleString('id-ID', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                // Get original currency symbol from the row's Basic column
+                const origText = cells[3].textContent.trim();
+                const origSym = origText.replace(/[\d.,\s]/g, '') || 'Rp ';
+                cells[3].innerHTML = '<span class="font-medium text-slate-800">' + origSym + ' ' + fOrig(basic) + '</span>';
+                cells[4].innerHTML = '<span class="' + (overtime > 0 ? 'text-slate-600' : 'text-slate-300') + '">' + origSym + ' ' + fOrig(overtime) + '</span>';
+                cells[5].innerHTML = '<span class="font-semibold text-slate-800">' + fRp(gross) + '</span>';
+                cells[6].innerHTML = '<span class="font-medium text-red-500">-' + fRp(tax) + '</span>';
+                cells[7].innerHTML = '<span class="font-bold text-emerald-600">' + fRp(net) + '</span>';
             }
         }
 
@@ -1538,6 +1871,86 @@ $periodStatus = $period['status'] ?? 'draft';
                 btn.disabled = false;
                 btn.innerHTML = '<span class="material-icons text-sm">save</span> Simpan';
             }
+        }
+
+        // === PDF Animation Functions ===
+        function openPdfWithAnimation() {
+            const dlBtn = document.getElementById('btnDownloadPayslip');
+            const pdfUrl = dlBtn.dataset.pdfUrl;
+            const isSavedPdf = dlBtn.dataset.savedPdf === 'true';
+            
+            if (isSavedPdf && pdfUrl) {
+                // Direct download of saved PDF — show quick animation
+                const overlay = document.getElementById('pdfAnimationOverlay');
+                const content = document.getElementById('pdfAnimationContent');
+                const animBox = content.querySelector('.book-modal');
+                
+                // Update animation text
+                if (animBox) {
+                    animBox.querySelector('h3').textContent = '📄 Downloading PDF...';
+                    animBox.querySelector('p').textContent = 'File PDF slip gaji sudah siap';
+                }
+                
+                overlay.classList.remove('hidden');
+                
+                // Open PDF after brief animation
+                setTimeout(() => {
+                    window.open(pdfUrl, '_blank');
+                    setTimeout(() => {
+                        if (animBox) animBox.classList.add('book-modal-closing');
+                        setTimeout(() => {
+                            overlay.classList.add('hidden');
+                            if (animBox) animBox.classList.remove('book-modal-closing');
+                            // Reset text
+                            if (animBox) {
+                                animBox.querySelector('h3').textContent = '📄 Generating Payslip...';
+                                animBox.querySelector('p').textContent = 'Preparing your document for printing';
+                            }
+                        }, 500);
+                    }, 300);
+                }, 600);
+            } else {
+                // Fallback: open HTML payslip (not saved yet)
+                const overlay = document.getElementById('pdfAnimationOverlay');
+                const content = document.getElementById('pdfAnimationContent');
+                
+                overlay.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    if (pdfUrl) {
+                        window.open(pdfUrl, '_blank');
+                    }
+                    setTimeout(() => {
+                        const bookEl = content.querySelector('.book-modal');
+                        if (bookEl) bookEl.classList.add('book-modal-closing');
+                        setTimeout(() => {
+                            overlay.classList.add('hidden');
+                            if (bookEl) bookEl.classList.remove('book-modal-closing');
+                        }, 500);
+                    }, 500);
+                }, 1200);
+            }
+        }
+
+        // === Email Success Animation ===
+        function showEmailSuccessAnimation(emailAddress) {
+            const overlay = document.getElementById('emailSuccessOverlay');
+            const detail = document.getElementById('emailSuccessDetail');
+            detail.textContent = 'Slip gaji berhasil dikirim ke ' + emailAddress;
+            
+            overlay.classList.remove('hidden');
+            
+            // Auto-close after 2.5s with book-close animation
+            setTimeout(() => {
+                const content = document.getElementById('emailSuccessContent');
+                content.classList.remove('book-modal');
+                content.classList.add('book-modal-closing');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    content.classList.remove('book-modal-closing');
+                    content.classList.add('book-modal');
+                }, 500);
+            }, 2500);
         }
     </script>
 

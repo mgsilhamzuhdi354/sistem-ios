@@ -98,7 +98,7 @@ coverage/
 *.sql
 *.sqlite
 *.db
-!database/migrations/*.sql
+!**/database/migrations/*.sql
 !docker/mysql/init.sql
 
 # =============================================================================
@@ -107,6 +107,25 @@ coverage/
 *.bak
 *.backup
 *.old
+
+# =============================================================================
+# Debug / Admin Scripts (SECURITY - JANGAN commit!)
+# =============================================================================
+check_*.php
+fix_*.php
+fix_*.sh
+deploy_*.php
+emergency_fix.php
+db_check.php
+init_db.php
+upgrade_db.php
+test_*.php
+*_db_export.sql
+
+# =============================================================================
+# Sensitive Config Files
+# =============================================================================
+erp/config/email.php
 
 # =============================================================================
 # Lock Files (opsional - beberapa prefer commit lock files)

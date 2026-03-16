@@ -74,9 +74,33 @@ class CrewModel extends BaseModel
         $whereClause = implode(' AND ', $where);
         $offset = ($page - 1) * $perPage;
 
-        $sql = "SELECT c.*, r.name as rank_name 
+        $sql = "SELECT c.*, r.name as rank_name,
+                    COALESCE(doc_stats.doc_count, 0) as doc_count,
+                    COALESCE(doc_stats.expired_count, 0) as expired_doc_count,
+                    latest_contract.sign_off_date as contract_end_date,
+                    latest_contract.sign_on_date as contract_start_date,
+                    latest_contract.contract_status,
+                    latest_contract.vessel_name as contract_vessel
                 FROM {$this->table} c
                 LEFT JOIN ranks r ON c.current_rank_id = r.id
+                LEFT JOIN (
+                    SELECT crew_id,
+                        COUNT(*) as doc_count,
+                        SUM(CASE WHEN expiry_date IS NOT NULL AND expiry_date < CURDATE() THEN 1 ELSE 0 END) as expired_count
+                    FROM crew_documents
+                    GROUP BY crew_id
+                ) doc_stats ON c.id = doc_stats.crew_id
+                LEFT JOIN (
+                    SELECT ct.crew_id, ct.sign_on_date, ct.sign_off_date, ct.status as contract_status,
+                           v.name as vessel_name
+                    FROM contracts ct
+                    LEFT JOIN vessels v ON ct.vessel_id = v.id
+                    WHERE ct.id = (
+                        SELECT ct2.id FROM contracts ct2 
+                        WHERE ct2.crew_id = ct.crew_id 
+                        ORDER BY ct2.sign_off_date DESC LIMIT 1
+                    )
+                ) latest_contract ON c.id = latest_contract.crew_id
                 WHERE {$whereClause} 
                 ORDER BY c.full_name ASC 
                 LIMIT {$perPage} OFFSET {$offset}";
@@ -172,7 +196,7 @@ class CrewModel extends BaseModel
         $sql = "SELECT c.id, c.full_name as name, c.employee_id, c.status, r.name as `rank`
                 FROM {$this->table} c
                 LEFT JOIN ranks r ON c.current_rank_id = r.id
-                WHERE c.status IN ('available', 'onboard', 'pending_approval', 'standby')
+                WHERE c.status IN ('available', 'onboard', 'pending_approval', 'standby', 'ready_operational', 'pending_checklist')
                 ORDER BY c.full_name ASC";
         return $this->query($sql);
     }

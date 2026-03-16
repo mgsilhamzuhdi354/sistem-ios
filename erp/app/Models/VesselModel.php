@@ -12,6 +12,41 @@ class VesselModel extends BaseModel
 {
     protected $table = 'vessels';
     protected $primaryKey = 'id';
+    private $_usdRate = null;
+
+    private function getUsdRate()
+    {
+        if ($this->_usdRate === null) {
+            $result = $this->query("SELECT exchange_rate_to_idr FROM currencies WHERE code = 'USD' LIMIT 1");
+            $this->_usdRate = (float)($result[0]['exchange_rate_to_idr'] ?? 15800);
+            if ($this->_usdRate <= 0) $this->_usdRate = 15800;
+        }
+        return $this->_usdRate;
+    }
+
+    private function convertToUsd($amount, $currencyCode, $rateToIdr = 0)
+    {
+        if ($amount == 0) return 0;
+        $currencyCode = strtoupper($currencyCode ?: 'USD');
+        if ($currencyCode === 'USD') return (float)$amount;
+        $usdRate = $this->getUsdRate();
+        if ($currencyCode === 'IDR') return $amount / $usdRate;
+        if ($rateToIdr > 0) return ($amount * $rateToIdr) / $usdRate;
+        $result = $this->query("SELECT exchange_rate_to_idr FROM currencies WHERE code = ? LIMIT 1", [$currencyCode], 's');
+        $fallback = (float)($result[0]['exchange_rate_to_idr'] ?? 0);
+        if ($fallback > 0) return ($amount * $fallback) / $usdRate;
+        $defaults = ['SGD' => 11800, 'EUR' => 17200, 'MYR' => 3500];
+        return ($amount * ($defaults[$currencyCode] ?? 1)) / $usdRate;
+    }
+
+    private function detectCurrency($currencyCode, $amount, $symbol = null)
+    {
+        if ((!$currencyCode || $currencyCode === 'USD') && $amount > 1000000) {
+            return ['code' => 'IDR', 'symbol' => 'Rp'];
+        }
+        if (!$currencyCode) return ['code' => 'USD', 'symbol' => '$'];
+        return ['code' => $currencyCode, 'symbol' => $symbol ?? $currencyCode];
+    }
     protected $allowedFields = [
         'name',
         'imo_number',
@@ -104,7 +139,6 @@ class VesselModel extends BaseModel
      */
     public function getTotalMonthlyCost($vesselId)
     {
-        // Get all crew costs with their currencies and exchange rates
         $sql = "SELECT cs.total_monthly, cs.exchange_rate AS contract_rate,
                     cur.code AS currency_code, cur.symbol AS currency_symbol
                 FROM contracts c
@@ -118,41 +152,18 @@ class VesselModel extends BaseModel
         $totalUSD = 0;
         $currencySymbols = [];
 
-        // Default exchange rates to USD
-        $defaultRates = [
-            'USD' => 1.0,
-            'IDR' => 0.000063,  // 1 IDR = 0.000063 USD (1 USD = ~15900 IDR)
-            'SGD' => 0.74,
-            'EUR' => 1.05,
-        ];
-
         foreach ($results as $row) {
             $amount = $row['total_monthly'] ?? 0;
             $contractRate = $row['contract_rate'] ?? 0;
+            $detected = $this->detectCurrency($row['currency_code'], $amount, $row['currency_symbol']);
+            $currency = $detected['code'];
 
-            // Auto-detect currency: if NULL or USD but amount > 1M, assume IDR
-            $currency = $row['currency_code'] ?? null;
-            if (!$currency || ($currency === 'USD' && $amount > 1000000)) {
-                $currency = 'IDR';
-            }
-
-            // Sum by currency
             if (!isset($byCurrency[$currency])) {
                 $byCurrency[$currency] = 0;
-                $currencySymbols[$currency] = $row['currency_symbol'] ?? $currency;
+                $currencySymbols[$currency] = $detected['symbol'];
             }
             $byCurrency[$currency] += $amount;
-
-            // Convert to USD
-            if ($currency === 'USD') {
-                $totalUSD += $amount;
-            } elseif ($contractRate > 0) {
-                // Use contract's custom exchange rate (1 USD = X currency)
-                $totalUSD += $amount / $contractRate;
-            } else {
-                // Use default rate
-                $totalUSD += $amount * ($defaultRates[$currency] ?? 0.000063);
-            }
+            $totalUSD += $this->convertToUsd($amount, $currency, $contractRate);
         }
 
         return [
@@ -220,7 +231,6 @@ class VesselModel extends BaseModel
      */
     public function getVesselProfit($vesselId)
     {
-        // Get total client rate (revenue) for this vessel
         $revenueSql = "SELECT 
                         SUM(cs.client_rate) as total_revenue,
                         SUM(cs.total_monthly) as total_cost,
@@ -237,37 +247,15 @@ class VesselModel extends BaseModel
         $totalRevenueUSD = 0;
         $totalCostUSD = 0;
 
-        // Default exchange rates to USD
-        $defaultRates = [
-            'USD' => 1.0,
-            'IDR' => 0.000063,
-            'SGD' => 0.74,
-            'EUR' => 1.05,
-        ];
-
         foreach ($results as $row) {
             $revenue = $row['total_revenue'] ?? 0;
             $cost = $row['total_cost'] ?? 0;
             $contractRate = $row['contract_rate'] ?? 0;
-            $currency = $row['currency_code'] ?? 'IDR';
+            $detected = $this->detectCurrency($row['currency_code'], max($revenue, $cost));
+            $currency = $detected['code'];
 
-            // Auto-detect currency
-            if (!$currency || ($currency === 'USD' && $revenue > 1000000)) {
-                $currency = 'IDR';
-            }
-
-            // Convert to USD
-            if ($currency === 'USD') {
-                $totalRevenueUSD += $revenue;
-                $totalCostUSD += $cost;
-            } elseif ($contractRate > 0) {
-                $totalRevenueUSD += $revenue / $contractRate;
-                $totalCostUSD += $cost / $contractRate;
-            } else {
-                $rate = $defaultRates[$currency] ?? 0.000063;
-                $totalRevenueUSD += $revenue * $rate;
-                $totalCostUSD += $cost * $rate;
-            }
+            $totalRevenueUSD += $this->convertToUsd($revenue, $currency, $contractRate);
+            $totalCostUSD += $this->convertToUsd($cost, $currency, $contractRate);
         }
 
         $profit = $totalRevenueUSD - $totalCostUSD;

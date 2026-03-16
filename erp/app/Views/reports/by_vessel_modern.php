@@ -29,9 +29,12 @@ $currentPage = 'reports';
                 <h1 class="text-base font-bold text-slate-800 tracking-tight"><?= __('reports.by_vessel') ?></h1>
                 <p class="text-[11px] text-slate-400"><?= __('reports.by_vessel_desc') ?></p>
             </div>
-            <a href="<?= BASE_URL ?>reports" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-colors">
-                <span class="material-icons text-sm">arrow_back</span> <?= __('common.back') ?>
-            </a>
+            <div class="flex items-center gap-2">
+                <span class="text-[11px] text-slate-400">💡 Click vessel crew count to download PDF</span>
+                <a href="<?= BASE_URL ?>reports" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-colors">
+                    <span class="material-icons text-sm">arrow_back</span> <?= __('common.back') ?>
+                </a>
+            </div>
         </header>
         <div class="flex-1 overflow-y-auto p-6">
             <?php if (empty($vessels)): ?>
@@ -48,7 +51,10 @@ $currentPage = 'reports';
                             <h3 class="text-sm font-bold text-slate-800"><?= htmlspecialchars($vessel['name']) ?></h3>
                         </div>
                         <div class="flex items-center gap-3">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700"><?= count($vessel['crew_list'] ?? []) ?> Crew</span>
+                            <a href="<?= BASE_URL ?>vessels/crew-list-pdf/<?= $vessel['id'] ?>" target="_blank"
+                               class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors">
+                                <span class="material-icons text-xs mr-0.5">picture_as_pdf</span> <?= count($vessel['crew_list'] ?? []) ?> Crew
+                            </a>
                             <span class="text-sm font-bold text-emerald-600">$<?= number_format($vessel['monthly_cost']['total_usd'] ?? 0, 2) ?>/mo</span>
                         </div>
                     </div>

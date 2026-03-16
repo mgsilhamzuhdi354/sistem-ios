@@ -92,11 +92,24 @@ ob_start();
                     <tr>
                         <td>
                             <?php if (!empty($candidate['avatar'])): ?>
-                                <img src="http://localhost/PT_indoocean/recruitment/uploads/avatars/<?= htmlspecialchars($candidate['avatar']) ?>"
-                                    alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%;">
+                                <?php
+                                $avatarVal = $candidate['avatar'];
+                                if (strpos($avatarVal, 'uploads/') === 0) {
+                                    $avatarUrl = BASE_URL . '../recruitment/public/' . htmlspecialchars($avatarVal);
+                                } else {
+                                    $avatarUrl = BASE_URL . '../recruitment/public/uploads/avatars/' . htmlspecialchars($avatarVal);
+                                }
+                                ?>
+                                <img src="<?= $avatarUrl ?>"
+                                    alt="Avatar" style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover;"
+                                    onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                <div
+                                    style="width: 56px; height: 56px; border-radius: 50%; background: var(--accent-gold); display: none; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                    <?= strtoupper(substr($candidate['full_name'] ?? 'N', 0, 1)) ?>
+                                </div>
                             <?php else: ?>
                                 <div
-                                    style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent-gold); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                    style="width: 56px; height: 56px; border-radius: 50%; background: var(--accent-gold); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
                                     <?= strtoupper(substr($candidate['full_name'] ?? 'N', 0, 1)) ?>
                                 </div>
                             <?php endif; ?>

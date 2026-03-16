@@ -112,7 +112,7 @@
                 <!-- Left: Main Client List -->
                 <div class="flex-1 overflow-y-auto p-6 scroll-smooth">
                     <?php
-                    // Calculate aggregated KPIs
+                    // Calculate aggregated KPIs from real data
                     $totalRevenue = 0;
                     $totalProfit = 0;
                     $clientCount = count($clients);
@@ -131,7 +131,13 @@
                     }
 
                     $avgMargin = $totalRevenue > 0 ? ($totalProfit / $totalRevenue * 100) : 0;
-                    $satisfaction = 4.9; // Mock data
+
+                    // Real KPI data from controller
+                    $revenueGrowth = $revenueGrowth ?? 0;
+                    $marginGrowth = $marginGrowth ?? 0;
+                    $activeContractCount = $activeContracts ?? 0;
+                    $contractGrowthPct = $contractGrowth ?? 0;
+                    $trendData = $revenueTrend ?? [];
                     ?>
 
                     <!-- KPI Cards -->
@@ -143,10 +149,15 @@
                                 <div class="p-2 bg-blue-50 rounded-lg">
                                     <i class="ph-fill ph-coins text-blue-600 text-xl"></i>
                                 </div>
-                                <span
-                                    class="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-700 flex items-center">
-                                    <i class="ph-bold ph-arrow-up-right mr-1"></i> 12.5%
+                                <?php if ($revenueGrowth != 0): ?>
+                                <span class="text-xs font-medium px-2 py-1 rounded-full <?= $revenueGrowth > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600' ?> flex items-center">
+                                    <i class="ph-bold <?= $revenueGrowth > 0 ? 'ph-arrow-up-right' : 'ph-arrow-down-right' ?> mr-1"></i> <?= abs($revenueGrowth) ?>%
                                 </span>
+                                <?php else: ?>
+                                <span class="text-xs font-medium px-2 py-1 rounded-full bg-slate-100 text-slate-500 flex items-center">
+                                    <i class="ph ph-minus mr-1"></i> 0%
+                                </span>
+                                <?php endif; ?>
                             </div>
                             <p class="text-sm text-slate-500 font-medium"><?= __('dashboard.total_revenue') ?></p>
                             <h3 class="text-2xl font-bold text-slate-900 mt-1">
@@ -162,10 +173,15 @@
                                 <div class="p-2 bg-primary/10 rounded-lg">
                                     <i class="ph-fill ph-chart-bar text-primary text-xl"></i>
                                 </div>
-                                <span
-                                    class="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-700 flex items-center">
-                                    <i class="ph-bold ph-arrow-up-right mr-1"></i> 3.2%
+                                <?php if ($marginGrowth != 0): ?>
+                                <span class="text-xs font-medium px-2 py-1 rounded-full <?= $marginGrowth > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600' ?> flex items-center">
+                                    <i class="ph-bold <?= $marginGrowth > 0 ? 'ph-arrow-up-right' : 'ph-arrow-down-right' ?> mr-1"></i> <?= abs($marginGrowth) ?>%
                                 </span>
+                                <?php else: ?>
+                                <span class="text-xs font-medium px-2 py-1 rounded-full bg-slate-100 text-slate-500 flex items-center">
+                                    <i class="ph ph-minus mr-1"></i> 0%
+                                </span>
+                                <?php endif; ?>
                             </div>
                             <p class="text-sm text-slate-500 font-medium"><?= __('dashboard.avg_margin') ?></p>
                             <h3 class="text-2xl font-bold text-slate-900 mt-1">
@@ -173,29 +189,29 @@
                             </h3>
                         </div>
 
-                        <!-- Satisfaction -->
+                        <!-- Active Contracts -->
                         <div
                             class="bg-surface-light p-5 rounded-xl border border-border-light shadow-soft hover:shadow-md transition-shadow">
                             <div class="flex justify-between items-start mb-4">
                                 <div class="p-2 bg-purple-50 rounded-lg">
-                                    <i class="ph-fill ph-smiley text-purple-600 text-xl"></i>
+                                    <i class="ph-fill ph-file-text text-purple-600 text-xl"></i>
                                 </div>
-                                <span class="text-xs font-medium px-2 py-1 rounded-full bg-slate-100 text-slate-600">
-                                    Top 5%
+                                <?php if ($contractGrowthPct > 0): ?>
+                                <span class="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-700 flex items-center">
+                                    <i class="ph-bold ph-arrow-up-right mr-1"></i> <?= $contractGrowthPct ?>% new
                                 </span>
+                                <?php else: ?>
+                                <span class="text-xs font-medium px-2 py-1 rounded-full bg-slate-100 text-slate-500">
+                                    <?= $activeContractCount > 0 ? 'Stable' : 'No Data' ?>
+                                </span>
+                                <?php endif; ?>
                             </div>
-                            <p class="text-sm text-slate-500 font-medium">Client Satisfaction</p>
+                            <p class="text-sm text-slate-500 font-medium"><?= __('dashboard.active_contracts') ?></p>
                             <div class="flex items-center mt-1">
                                 <h3 class="text-2xl font-bold text-slate-900 mr-2">
-                                    <?= number_format($satisfaction, 1) ?>
+                                    <?= $activeContractCount ?>
                                 </h3>
-                                <div class="flex text-yellow-400 text-sm">
-                                    <i class="ph-fill ph-star"></i>
-                                    <i class="ph-fill ph-star"></i>
-                                    <i class="ph-fill ph-star"></i>
-                                    <i class="ph-fill ph-star"></i>
-                                    <i class="ph-fill ph-star-half"></i>
-                                </div>
+                                <span class="text-sm text-slate-400">kontrak</span>
                             </div>
                         </div>
                     </div>
@@ -321,10 +337,16 @@
                                 </div>
 
                                 <!-- Action -->
-                                <div class="col-span-1 flex justify-center">
+                                <div class="col-span-1 flex justify-center items-center gap-1 relative z-10">
                                     <a href="<?= BASE_URL ?>clients/<?= $client['id'] ?>"
-                                        class="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-primary transition-colors">
+                                        class="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-primary transition-colors"
+                                        title="Detail">
                                         <i class="ph-bold ph-caret-right"></i>
+                                    </a>
+                                    <a href="<?= BASE_URL ?>clients/confirm-delete/<?= $client['id'] ?>"
+                                        class="p-1.5 hover:bg-red-50 rounded-full text-red-400 hover:text-red-600 transition-colors"
+                                        title="Hapus Client">
+                                        <i class="ph-bold ph-trash"></i>
                                     </a>
                                 </div>
                             </div>
@@ -341,45 +363,74 @@
                     </div>
 
                     <div class="p-6 overflow-y-auto flex-1">
-                        <!-- Trend Chart -->
+                        <!-- Trend Chart (Real Data) -->
                         <div class="mb-8">
                             <div class="flex items-center justify-between mb-2">
-                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Profit Per Client
-                                    Trend</h4>
-                                <select
-                                    class="text-xs border-none bg-transparent text-primary font-bold focus:ring-0 p-0 cursor-pointer">
-                                    <option>Last 6 Months</option>
-                                    <option>This Year</option>
-                                </select>
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Profit Trend</h4>
+                                <span class="text-xs text-primary font-bold">Last 6 Months</span>
                             </div>
-                            <div
-                                class="relative h-48 w-full bg-slate-50 rounded-lg border border-border-light p-2 overflow-hidden">
-                                <svg class="w-full h-full overflow-visible" preserveAspectRatio="none"
-                                    viewBox="0 0 300 120">
+                            <?php
+                            $hasChartData = false;
+                            $maxProfit_chart = 0;
+                            foreach ($trendData as $td) {
+                                if ($td['profit'] > 0) $hasChartData = true;
+                                if ($td['profit'] > $maxProfit_chart) $maxProfit_chart = $td['profit'];
+                            }
+                            ?>
+                            <?php if ($hasChartData && count($trendData) > 0): ?>
+                            <div class="relative h-48 w-full bg-slate-50 rounded-lg border border-border-light p-2 overflow-hidden">
+                                <?php
+                                $chartWidth = 300;
+                                $chartHeight = 120;
+                                $padding = 10;
+                                $points = [];
+                                $n = count($trendData);
+                                for ($ci = 0; $ci < $n; $ci++) {
+                                    $x = $padding + ($ci / max($n - 1, 1)) * ($chartWidth - 2 * $padding);
+                                    $y = $maxProfit_chart > 0
+                                        ? $chartHeight - $padding - (($trendData[$ci]['profit'] / $maxProfit_chart) * ($chartHeight - 2 * $padding))
+                                        : $chartHeight - $padding;
+                                    $points[] = ['x' => round($x, 1), 'y' => round($y, 1)];
+                                }
+                                $linePath = '';
+                                $areaPath = '';
+                                foreach ($points as $pi => $pt) {
+                                    $linePath .= ($pi === 0 ? 'M' : 'L') . $pt['x'] . ',' . $pt['y'] . ' ';
+                                }
+                                $areaPath = $linePath . 'V' . $chartHeight . ' H' . $points[0]['x'] . ' Z';
+                                ?>
+                                <svg class="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 <?= $chartWidth ?> <?= $chartHeight ?>">
                                     <defs>
                                         <linearGradient id="gradientProfit" x1="0" x2="0" y1="0" y2="1">
                                             <stop offset="0%" stop-color="#EAB308" stop-opacity="0.25"></stop>
                                             <stop offset="100%" stop-color="#EAB308" stop-opacity="0"></stop>
                                         </linearGradient>
                                     </defs>
-                                    <line stroke="#cbd5e1" stroke-dasharray="4 4" stroke-width="0.5" x1="0" x2="300"
-                                        y1="30" y2="30"></line>
-                                    <line stroke="#cbd5e1" stroke-dasharray="4 4" stroke-width="0.5" x1="0" x2="300"
-                                        y1="60" y2="60"></line>
-                                    <line stroke="#cbd5e1" stroke-dasharray="4 4" stroke-width="0.5" x1="0" x2="300"
-                                        y1="90" y2="90"></line>
-                                    <path class="chart-gradient-area"
-                                        d="M0,80 Q50,70 80,40 T160,50 T240,30 T300,10 V120 H0 Z"></path>
-                                    <path d="M0,80 Q50,70 80,40 T160,50 T240,30 T300,10" fill="none" stroke="#EAB308"
-                                        stroke-linecap="round" stroke-width="2.5"></path>
-                                    <circle cx="80" cy="40" fill="#EAB308" r="3" stroke-width="2" stroke="white">
-                                    </circle>
-                                    <circle cx="160" cy="50" fill="#EAB308" r="3" stroke-width="2" stroke="white">
-                                    </circle>
-                                    <circle cx="240" cy="30" fill="#EAB308" r="3" stroke-width="2" stroke="white">
-                                    </circle>
+                                    <line stroke="#cbd5e1" stroke-dasharray="4 4" stroke-width="0.5" x1="0" x2="<?= $chartWidth ?>" y1="30" y2="30"></line>
+                                    <line stroke="#cbd5e1" stroke-dasharray="4 4" stroke-width="0.5" x1="0" x2="<?= $chartWidth ?>" y1="60" y2="60"></line>
+                                    <line stroke="#cbd5e1" stroke-dasharray="4 4" stroke-width="0.5" x1="0" x2="<?= $chartWidth ?>" y1="90" y2="90"></line>
+                                    <path class="chart-gradient-area" d="<?= $areaPath ?>"></path>
+                                    <path d="<?= $linePath ?>" fill="none" stroke="#EAB308" stroke-linecap="round" stroke-width="2.5"></path>
+                                    <?php foreach ($points as $pt): ?>
+                                    <circle cx="<?= $pt['x'] ?>" cy="<?= $pt['y'] ?>" fill="#EAB308" r="3" stroke-width="2" stroke="white"></circle>
+                                    <?php endforeach; ?>
                                 </svg>
+                                <!-- Month Labels -->
+                                <div class="flex justify-between px-1 mt-1">
+                                    <?php foreach ($trendData as $td): ?>
+                                    <span class="text-[9px] text-slate-400 font-medium"><?= $td['month'] ?></span>
+                                    <?php endforeach; ?>
+                                </div>
                             </div>
+                            <?php else: ?>
+                            <div class="relative h-48 w-full bg-slate-50 rounded-lg border border-border-light flex items-center justify-center">
+                                <div class="text-center">
+                                    <i class="ph ph-chart-line text-4xl text-slate-300 mb-2"></i>
+                                    <p class="text-sm text-slate-400">Belum ada data kontrak</p>
+                                    <p class="text-xs text-slate-300 mt-1">Buat kontrak dengan client rate untuk melihat trend</p>
+                                </div>
+                            </div>
+                            <?php endif; ?>
                         </div>
 
                         <!-- Top/Bottom Performers -->
@@ -442,12 +493,12 @@
                         <div class="mt-8 border-t border-border-light pt-6">
                             <h4 class="text-xs font-bold text-slate-900 mb-4"><?= __('common.actions') ?></h4>
                             <div class="grid grid-cols-2 gap-3">
-                                <button
+                                <button onclick="alert('Fitur ekspor laporan akan segera tersedia.')"
                                     class="p-3 border border-border-light rounded-lg hover:border-primary hover:text-primary transition-colors text-xs font-medium text-slate-600 flex flex-col items-center justify-center gap-2">
                                     <i class="ph ph-file-pdf text-xl"></i>
                                     <?= __('common.export') ?> <?= __('reports.title') ?>
                                 </button>
-                                <button
+                                <button onclick="alert('Fitur email klien akan segera tersedia.')"
                                     class="p-3 border border-border-light rounded-lg hover:border-primary hover:text-primary transition-colors text-xs font-medium text-slate-600 flex flex-col items-center justify-center gap-2">
                                     <i class="ph ph-envelope-simple text-xl"></i>
                                     Email Clients

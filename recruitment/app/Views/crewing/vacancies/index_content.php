@@ -101,11 +101,19 @@
                 <button onclick="quickShare(<?= $vacancy['id'] ?>, '<?= htmlspecialchars(addslashes($vacancy['title']), ENT_QUOTES) ?>')" class="btn-share">
                     <i class="fas fa-share-alt"></i> Share
                 </button>
+                <button onclick="confirmDelete(<?= $vacancy['id'] ?>, '<?= htmlspecialchars(addslashes($vacancy['title']), ENT_QUOTES) ?>')" class="btn-delete-vacancy">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
             </div>
         </div>
         <?php endforeach; ?>
     </div>
 <?php endif; ?>
+
+<!-- Delete Form (hidden) -->
+<form id="deleteVacancyForm" method="POST" style="display:none">
+    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+</form>
 
 <!-- Quick Share Modal -->
 <div id="shareModal" class="modal-overlay" style="display:none">
@@ -198,6 +206,8 @@
 .btn-detail:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(59,130,246,0.3); color: white; }
 .btn-share { background: white; color: #6b7280; border: 2px solid #e5e7eb; }
 .btn-share:hover { background: #10b981; color: white; border-color: #10b981; transform: translateY(-2px); }
+.btn-delete-vacancy { width: 40px; min-width: 40px; flex: 0 !important; padding: 0.65rem; border-radius: 10px; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; transition: all 0.3s; cursor: pointer; border: 2px solid #fecaca; background: #fff5f5; color: #ef4444; font-family: inherit; }
+.btn-delete-vacancy:hover { background: #ef4444; color: white; border-color: #ef4444; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(239,68,68,0.3); }
 
 /* Share Modal */
 .share-title { margin: 0 0 1.25rem; font-size: 0.95rem; color: #374151; }
@@ -229,13 +239,13 @@ function quickShare(vacancyId, title) {
     currentVacancyId = vacancyId;
     
     // Generate share link via AJAX
+    var csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
     fetch('<?= url('/crewing/vacancies/share/') ?>' + vacancyId, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content
+            'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: JSON.stringify({ method: 'link' })
+        body: 'method=link&csrf_token=' + encodeURIComponent(csrfToken)
     })
     .then(res => res.json())
     .then(data => {
@@ -278,4 +288,17 @@ function copyLink() {
 document.getElementById('shareModal')?.addEventListener('click', function(e) {
     if (e.target === this) closeShareModal();
 });
+
+function confirmDelete(vacancyId, title) {
+    var lang = document.documentElement.lang || 'id';
+    var msg = 'Apakah Anda yakin ingin menghapus lowongan "' + title + '"?\n\nTindakan ini tidak dapat dibatalkan.';
+    if (lang === 'en') {
+        msg = 'Are you sure you want to delete vacancy "' + title + '"?\n\nThis action cannot be undone.';
+    }
+    if (confirm(msg)) {
+        var form = document.getElementById('deleteVacancyForm');
+        form.action = '<?= url('/crewing/vacancies/delete/') ?>' + vacancyId;
+        form.submit();
+    }
+}
 </script>

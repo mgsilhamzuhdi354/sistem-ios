@@ -12,6 +12,81 @@ class ClientModel extends BaseModel
 {
     protected $table = 'clients';
     protected $primaryKey = 'id';
+    private $_usdRate = null;
+
+    /**
+     * Get USD exchange rate to IDR from currencies table (cached)
+     */
+    private function getUsdRate()
+    {
+        if ($this->_usdRate === null) {
+            $result = $this->query("SELECT exchange_rate_to_idr FROM currencies WHERE code = 'USD' LIMIT 1");
+            $this->_usdRate = (float)($result[0]['exchange_rate_to_idr'] ?? 15800);
+            if ($this->_usdRate <= 0) $this->_usdRate = 15800;
+        }
+        return $this->_usdRate;
+    }
+
+    /**
+     * Convert any amount to USD using proper exchange rates
+     * @param float $amount - the amount in original currency
+     * @param string $currencyCode - currency code (USD, IDR, MYR, etc.)
+     * @param float $rateToIdr - the exchange_rate from contract (IDR per 1 unit of currency)
+     * @return float amount in USD
+     */
+    private function convertToUsd($amount, $currencyCode, $rateToIdr = 0)
+    {
+        if ($amount == 0) return 0;
+        $currencyCode = strtoupper($currencyCode ?: 'USD');
+
+        // USD needs no conversion
+        if ($currencyCode === 'USD') return (float)$amount;
+
+        $usdRate = $this->getUsdRate(); // e.g. 15800
+
+        // For IDR: always divide by USD rate, ignore contract rate
+        // (contract rate for IDR is 1.0 which is meaningless for USD conversion)
+        if ($currencyCode === 'IDR') {
+            return $amount / $usdRate;
+        }
+
+        // For other currencies (MYR, SGD, EUR, etc.):
+        // Convert to IDR first using contract rate, then to USD
+        // amount_usd = amount * rateToIdr / usdRate
+        if ($rateToIdr > 0) {
+            return ($amount * $rateToIdr) / $usdRate;
+        }
+
+        // Fallback: load rate from currencies table
+        $result = $this->query(
+            "SELECT exchange_rate_to_idr FROM currencies WHERE code = ? LIMIT 1",
+            [$currencyCode], 's'
+        );
+        $fallbackRate = (float)($result[0]['exchange_rate_to_idr'] ?? 0);
+        if ($fallbackRate > 0) {
+            return ($amount * $fallbackRate) / $usdRate;
+        }
+
+        // Last resort: hardcoded defaults
+        $defaults = ['SGD' => 11800, 'EUR' => 17200, 'MYR' => 3500];
+        $rate = $defaults[$currencyCode] ?? 1;
+        return ($amount * $rate) / $usdRate;
+    }
+
+    /**
+     * Auto-detect actual currency when DB data may be wrong
+     */
+    private function detectCurrency($currencyCode, $amount, $symbol = null)
+    {
+        // If currency is NULL or USD but amount > 1M, it's likely IDR
+        if ((!$currencyCode || $currencyCode === 'USD') && $amount > 1000000) {
+            return ['code' => 'IDR', 'symbol' => 'Rp'];
+        }
+        if (!$currencyCode) {
+            return ['code' => 'USD', 'symbol' => '$'];
+        }
+        return ['code' => $currencyCode, 'symbol' => $symbol ?? $currencyCode];
+    }
     protected $allowedFields = [
         'name',
         'short_name',
@@ -38,9 +113,11 @@ class ClientModel extends BaseModel
         if (!$client)
             return null;
 
-        // Get vessel count
+        // Get vessel count (only vessels with active contracts)
         $result = $this->query(
-            "SELECT COUNT(*) as count FROM vessels WHERE client_id = ? AND is_active = 1",
+            "SELECT COUNT(DISTINCT v.id) as count FROM vessels v
+             INNER JOIN contracts ct ON ct.vessel_id = v.id AND ct.client_id = ? AND ct.status IN ('active', 'onboard')
+             WHERE v.is_active = 1",
             [$id],
             'i'
         );
@@ -75,21 +152,15 @@ class ClientModel extends BaseModel
     {
         // First get basic client data
         $sql = "SELECT c.*,
-                    (SELECT COUNT(*) FROM vessels v WHERE v.client_id = c.id AND v.is_active = 1) AS vessel_count,
+                    (SELECT COUNT(DISTINCT v.id) FROM vessels v
+                     INNER JOIN contracts ct3 ON ct3.vessel_id = v.id AND ct3.client_id = c.id AND ct3.status IN ('active', 'onboard')
+                     WHERE v.is_active = 1) AS vessel_count,
                     (SELECT COUNT(*) FROM contracts ct WHERE ct.client_id = c.id AND ct.status IN ('active', 'onboard')) AS active_crew_count
                 FROM clients c
                 WHERE c.is_active = 1
                 ORDER BY c.name";
 
         $clients = $this->query($sql);
-
-        // Default exchange rates
-        $defaultRates = [
-            'USD' => 1.0,
-            'IDR' => 0.000063,
-            'SGD' => 0.74,
-            'EUR' => 1.05,
-        ];
 
         // For each client, calculate monthly cost with currency conversion
         foreach ($clients as &$client) {
@@ -108,34 +179,17 @@ class ClientModel extends BaseModel
 
             foreach ($costs as $cost) {
                 $amount = $cost['total_monthly'] ?? 0;
-                $currency = $cost['currency_code'] ?? null;
-                $symbol = $cost['currency_symbol'] ?? null;
                 $contractRate = $cost['contract_rate'] ?? 0;
+                $detected = $this->detectCurrency($cost['currency_code'], $amount, $cost['currency_symbol']);
+                $currency = $detected['code'];
+                $symbol = $detected['symbol'];
 
-                // Auto-detect currency: if amount > 1,000,000 and currency is USD or NULL, treat as IDR
-                if ((!$currency || $currency === 'USD') && $amount > 1000000) {
-                    $currency = 'IDR';
-                    $symbol = 'Rp';
-                } elseif (!$currency) {
-                    $currency = 'USD';
-                    $symbol = '$';
-                }
-
-                // Sum by currency
                 if (!isset($byCurrency[$currency])) {
                     $byCurrency[$currency] = 0;
-                    $symbols[$currency] = $symbol ?? $currency;
+                    $symbols[$currency] = $symbol;
                 }
                 $byCurrency[$currency] += $amount;
-
-                // Convert to USD
-                if ($currency === 'USD') {
-                    $totalUsd += $amount;
-                } elseif ($contractRate > 0) {
-                    $totalUsd += $amount / $contractRate;
-                } else {
-                    $totalUsd += $amount * ($defaultRates[$currency] ?? 0.000063);
-                }
+                $totalUsd += $this->convertToUsd($amount, $currency, $contractRate);
             }
 
             $client['monthly_cost'] = round($totalUsd, 2);
@@ -154,15 +208,20 @@ class ClientModel extends BaseModel
         $sql = "SELECT v.*, 
                     vt.name AS vessel_type_name,
                     fs.emoji AS flag_emoji,
+                    fs.name AS flag_state_name,
                     (SELECT COUNT(*) FROM contracts ct 
-                     WHERE ct.vessel_id = v.id AND ct.status IN ('active', 'onboard')) AS crew_count
+                     WHERE ct.vessel_id = v.id AND ct.client_id = ? AND ct.status IN ('active', 'onboard')) AS crew_count,
+                    (SELECT MAX(ct2.sign_off_date) FROM contracts ct2 
+                     WHERE ct2.vessel_id = v.id AND ct2.client_id = ? AND ct2.status IN ('active', 'onboard')) AS latest_sign_off
                 FROM vessels v
+                INNER JOIN contracts c ON c.vessel_id = v.id AND c.client_id = ? AND c.status IN ('active', 'onboard')
                 LEFT JOIN vessel_types vt ON v.vessel_type_id = vt.id
                 LEFT JOIN flag_states fs ON v.flag_state_id = fs.id
-                WHERE v.client_id = ? AND v.is_active = 1
+                WHERE v.is_active = 1
+                GROUP BY v.id
                 ORDER BY v.name";
 
-        return $this->query($sql, [$clientId], 'i');
+        return $this->query($sql, [$clientId, $clientId, $clientId], 'iii');
     }
 
     /**
@@ -213,33 +272,17 @@ class ClientModel extends BaseModel
         $contracts = $this->query($sql, [$clientId], 'i');
 
         // Add USD conversion for each contract
-        $defaultRates = [
-            'USD' => 1.0,
-            'IDR' => 0.000063,
-            'SGD' => 0.74,
-            'EUR' => 1.05,
-        ];
-
         foreach ($contracts as &$c) {
             $amount = $c['total_monthly'] ?? 0;
             $clientRateRaw = $c['client_rate'] ?? 0;
-
-            // Auto-detect currency: override if amounts look like IDR (> 1,000,000)
-            $currency = $c['currency_code'] ?? null;
-            $symbol = $c['currency_symbol'] ?? null;
-
-            // If currency is NULL or USD but amount is very large, it's likely IDR
-            if (!$currency || ($currency === 'USD' && ($amount > 1000000 || $clientRateRaw > 1000000))) {
-                $currency = 'IDR';
-                $symbol = 'Rp';
-            }
-
-            // Update the contract data with corrected currency
-            $c['currency_code'] = $currency;
-            $c['currency_symbol'] = $symbol ?? ($currency === 'IDR' ? 'Rp' : '$');
-
             $contractRate = $c['contract_rate'] ?? 0;
-            $clientRate = $clientRateRaw;
+
+            // Auto-detect currency
+            $maxAmt = max($amount, $clientRateRaw);
+            $detected = $this->detectCurrency($c['currency_code'], $maxAmt, $c['currency_symbol']);
+            $currency = $detected['code'];
+            $c['currency_code'] = $currency;
+            $c['currency_symbol'] = $detected['symbol'];
 
             // Calculate months active (from sign_on_date to now or sign_off_date)
             $signOn = $c['sign_on_date'] ?? null;
@@ -252,30 +295,16 @@ class ClientModel extends BaseModel
                 $c['months_active'] = max(1, ($diff->y * 12) + $diff->m + ($diff->d > 0 ? 1 : 0));
             }
 
-            // Calculate USD salary
-            if ($currency === 'USD') {
-                $c['salary_usd'] = $amount;
-            } elseif ($contractRate > 0) {
-                $c['salary_usd'] = $amount / $contractRate;
-            } else {
-                $c['salary_usd'] = $amount * ($defaultRates[$currency] ?? 0.000063);
-            }
+            // Calculate USD salary using proper conversion
+            $c['salary_usd'] = round($this->convertToUsd($amount, $currency, $contractRate), 2);
 
             // Calculate monthly profit (in original currency)
-            $c['profit'] = $clientRate > 0 ? ($clientRate - $amount) : 0;
+            $c['profit'] = $clientRateRaw > 0 ? ($clientRateRaw - $amount) : 0;
 
-            // Calculate monthly profit in USD
-            if ($clientRate > 0) {
-                if ($currency === 'USD') {
-                    $c['profit_usd'] = $c['profit'];
-                    $c['client_rate_usd'] = $clientRate;
-                } elseif ($contractRate > 0) {
-                    $c['profit_usd'] = $c['profit'] / $contractRate;
-                    $c['client_rate_usd'] = $clientRate / $contractRate;
-                } else {
-                    $c['profit_usd'] = $c['profit'] * ($defaultRates[$currency] ?? 0.000063);
-                    $c['client_rate_usd'] = $clientRate * ($defaultRates[$currency] ?? 0.000063);
-                }
+            // Calculate monthly profit and client rate in USD
+            if ($clientRateRaw > 0) {
+                $c['client_rate_usd'] = round($this->convertToUsd($clientRateRaw, $currency, $contractRate), 2);
+                $c['profit_usd'] = round($c['client_rate_usd'] - $c['salary_usd'], 2);
             } else {
                 $c['profit_usd'] = 0;
                 $c['client_rate_usd'] = 0;
@@ -285,7 +314,7 @@ class ClientModel extends BaseModel
             $c['total_profit'] = $c['profit'] * $c['months_active'];
             $c['total_profit_usd'] = $c['profit_usd'] * $c['months_active'];
             $c['total_salary'] = $amount * $c['months_active'];
-            $c['total_client_rate'] = $clientRate * $c['months_active'];
+            $c['total_client_rate'] = $clientRateRaw * $c['months_active'];
         }
 
         return $contracts;
@@ -305,13 +334,6 @@ class ClientModel extends BaseModel
 
         $costs = $this->query($sql, [$clientId], 'i');
 
-        $defaultRates = [
-            'USD' => 1.0,
-            'IDR' => 0.000063,
-            'SGD' => 0.74,
-            'EUR' => 1.05,
-        ];
-
         $byCurrency = [];
         $byCurrencyUsd = [];
         $symbols = [];
@@ -319,35 +341,20 @@ class ClientModel extends BaseModel
 
         foreach ($costs as $cost) {
             $amount = $cost['total_monthly'] ?? 0;
-            $currency = $cost['currency_code'] ?? null;
-            $symbol = $cost['currency_symbol'] ?? null;
             $contractRate = $cost['contract_rate'] ?? 0;
-
-            // Auto-detect currency: if amount > 1,000,000 and currency is USD or NULL, treat as IDR
-            if ((!$currency || $currency === 'USD') && $amount > 1000000) {
-                $currency = 'IDR';
-                $symbol = 'Rp';
-            } elseif (!$currency) {
-                $currency = 'USD';
-                $symbol = '$';
-            }
+            $detected = $this->detectCurrency($cost['currency_code'], $amount, $cost['currency_symbol']);
+            $currency = $detected['code'];
+            $symbol = $detected['symbol'];
 
             if (!isset($byCurrency[$currency])) {
                 $byCurrency[$currency] = 0;
                 $byCurrencyUsd[$currency] = 0;
-                $symbols[$currency] = $symbol ?? $currency;
+                $symbols[$currency] = $symbol;
             }
             $byCurrency[$currency] += $amount;
 
-            // Convert to USD
-            $amountUsd = 0;
-            if ($currency === 'USD') {
-                $amountUsd = $amount;
-            } elseif ($contractRate > 0) {
-                $amountUsd = $amount / $contractRate;
-            } else {
-                $amountUsd = $amount * ($defaultRates[$currency] ?? 0.000063);
-            }
+            // Convert to USD using proper conversion
+            $amountUsd = $this->convertToUsd($amount, $currency, $contractRate);
             $totalUsd += $amountUsd;
             $byCurrencyUsd[$currency] += $amountUsd;
         }
@@ -420,13 +427,6 @@ class ClientModel extends BaseModel
         // Get all vessels for this client
         $vessels = $this->getVessels($clientId);
 
-        $defaultRates = [
-            'USD' => 1.0,
-            'IDR' => 0.000063,
-            'SGD' => 0.74,
-            'EUR' => 1.05,
-        ];
-
         $profitData = [];
 
         foreach ($vessels as $vessel) {
@@ -453,25 +453,11 @@ class ClientModel extends BaseModel
                 $revenue = $row['total_revenue'] ?? 0;
                 $cost = $row['total_cost'] ?? 0;
                 $contractRate = $row['contract_rate'] ?? 0;
-                $currency = $row['currency_code'] ?? 'IDR';
+                $detected = $this->detectCurrency($row['currency_code'], max($revenue, $cost));
+                $currency = $detected['code'];
 
-                // Auto-detect currency
-                if (!$currency || ($currency === 'USD' && $revenue > 1000000)) {
-                    $currency = 'IDR';
-                }
-
-                // Convert to USD
-                if ($currency === 'USD') {
-                    $totalRevenueUSD += $revenue;
-                    $totalCostUSD += $cost;
-                } elseif ($contractRate > 0) {
-                    $totalRevenueUSD += $revenue / $contractRate;
-                    $totalCostUSD += $cost / $contractRate;
-                } else {
-                    $rate = $defaultRates[$currency] ?? 0.000063;
-                    $totalRevenueUSD += $revenue * $rate;
-                    $totalCostUSD += $cost * $rate;
-                }
+                $totalRevenueUSD += $this->convertToUsd($revenue, $currency, $contractRate);
+                $totalCostUSD += $this->convertToUsd($cost, $currency, $contractRate);
             }
 
             $profit = $totalRevenueUSD - $totalCostUSD;
@@ -499,5 +485,191 @@ class ClientModel extends BaseModel
         });
 
         return $profitData;
+    }
+
+    /**
+     * Get revenue growth percentage (current month vs previous month)
+     * Revenue = SUM(client_rate) from active contracts
+     */
+    public function getRevenueGrowth()
+    {
+        // Get contracts that were active this month vs last month
+        $currentSql = "SELECT cs.client_rate, cs.exchange_rate AS contract_rate, cur.code AS currency_code
+                        FROM contracts c
+                        JOIN contract_salaries cs ON c.id = cs.contract_id
+                        LEFT JOIN currencies cur ON cs.currency_id = cur.id
+                        WHERE c.status IN ('active', 'onboard')
+                        AND cs.client_rate > 0";
+
+        $currentContracts = $this->query($currentSql);
+
+        $currentRevenue = 0;
+        foreach ($currentContracts as $row) {
+            $rate = $row['client_rate'] ?? 0;
+            $contractRate = $row['contract_rate'] ?? 0;
+            $detected = $this->detectCurrency($row['currency_code'], $rate);
+            $currentRevenue += $this->convertToUsd($rate, $detected['code'], $contractRate);
+        }
+
+        // Previous month: contracts that were active last month
+        $prevSql = "SELECT cs.client_rate, cs.exchange_rate AS contract_rate, cur.code AS currency_code
+                    FROM contracts c
+                    JOIN contract_salaries cs ON c.id = cs.contract_id
+                    LEFT JOIN currencies cur ON cs.currency_id = cur.id
+                    WHERE c.status IN ('active', 'onboard', 'completed', 'terminated')
+                    AND cs.client_rate > 0
+                    AND c.sign_on_date <= LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+                    AND (c.sign_off_date IS NULL OR c.sign_off_date >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01'))";
+
+        $prevContracts = $this->query($prevSql);
+
+        $prevRevenue = 0;
+        foreach ($prevContracts as $row) {
+            $rate = $row['client_rate'] ?? 0;
+            $contractRate = $row['contract_rate'] ?? 0;
+            $detected = $this->detectCurrency($row['currency_code'], $rate);
+            $prevRevenue += $this->convertToUsd($rate, $detected['code'], $contractRate);
+        }
+
+        if ($prevRevenue <= 0) return 0;
+        $growth = round((($currentRevenue - $prevRevenue) / $prevRevenue) * 100, 1);
+        return max(-999, min(999, $growth));
+    }
+
+    /**
+     * Get margin growth percentage (current margin vs previous month margin)
+     */
+    public function getMarginGrowth()
+    {
+        // Current month active contracts
+        $currentSql = "SELECT cs.client_rate, cs.total_monthly, cs.exchange_rate AS contract_rate, cur.code AS currency_code
+                        FROM contracts c
+                        JOIN contract_salaries cs ON c.id = cs.contract_id
+                        LEFT JOIN currencies cur ON cs.currency_id = cur.id
+                        WHERE c.status IN ('active', 'onboard')
+                    AND cs.client_rate > 0";
+
+        $contracts = $this->query($currentSql);
+
+        $currentRevenue = 0;
+        $currentCost = 0;
+        foreach ($contracts as $row) {
+            $rate = $row['client_rate'] ?? 0;
+            $cost = $row['total_monthly'] ?? 0;
+            $contractRate = $row['contract_rate'] ?? 0;
+            $detected = $this->detectCurrency($row['currency_code'], max($rate, $cost));
+            $currency = $detected['code'];
+
+            $currentRevenue += $this->convertToUsd($rate, $currency, $contractRate);
+            $currentCost += $this->convertToUsd($cost, $currency, $contractRate);
+        }
+
+        $currentMargin = $currentRevenue > 0 ? (($currentRevenue - $currentCost) / $currentRevenue) * 100 : 0;
+
+        // Previous month contracts
+        $prevSql = "SELECT cs.client_rate, cs.total_monthly, cs.exchange_rate AS contract_rate, cur.code AS currency_code
+                    FROM contracts c
+                    JOIN contract_salaries cs ON c.id = cs.contract_id
+                    LEFT JOIN currencies cur ON cs.currency_id = cur.id
+                    WHERE c.status IN ('active', 'onboard', 'completed', 'terminated')
+                    AND cs.client_rate > 0
+                    AND c.sign_on_date <= LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))
+                    AND (c.sign_off_date IS NULL OR c.sign_off_date >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01'))";
+
+        $prevContracts = $this->query($prevSql);
+
+        $prevRevenue = 0;
+        $prevCost = 0;
+        foreach ($prevContracts as $row) {
+            $rate = $row['client_rate'] ?? 0;
+            $cost = $row['total_monthly'] ?? 0;
+            $contractRate = $row['contract_rate'] ?? 0;
+            $detected = $this->detectCurrency($row['currency_code'], max($rate, $cost));
+            $currency = $detected['code'];
+
+            $prevRevenue += $this->convertToUsd($rate, $currency, $contractRate);
+            $prevCost += $this->convertToUsd($cost, $currency, $contractRate);
+        }
+
+        $prevMargin = $prevRevenue > 0 ? (($prevRevenue - $prevCost) / $prevRevenue) * 100 : 0;
+
+        $growth = round($currentMargin - $prevMargin, 1);
+        return max(-999, min(999, $growth));
+    }
+
+    /**
+     * Get active contract count across all clients
+     */
+    public function getActiveContractCount()
+    {
+        $result = $this->query("SELECT COUNT(*) as cnt FROM contracts WHERE status IN ('active', 'onboard')");
+        return $result[0]['cnt'] ?? 0;
+    }
+
+    /**
+     * Get active contract growth (this month new contracts vs total)
+     */
+    public function getActiveContractGrowth()
+    {
+        $totalResult = $this->query("SELECT COUNT(*) as cnt FROM contracts WHERE status IN ('active', 'onboard')");
+        $total = $totalResult[0]['cnt'] ?? 0;
+
+        if ($total === 0) return 0;
+
+        $recentResult = $this->query(
+            "SELECT COUNT(*) as cnt FROM contracts 
+             WHERE status IN ('active', 'onboard') 
+             AND (created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) OR sign_on_date >= DATE_SUB(NOW(), INTERVAL 30 DAY))"
+        );
+        $recent = $recentResult[0]['cnt'] ?? 0;
+
+        return round(($recent / $total) * 100, 0);
+    }
+
+    /**
+     * Get monthly revenue data for the last 6 months (for analytics chart)
+     * Returns array of [month => revenue_usd]
+     */
+    public function getMonthlyRevenueTrend($months = 6)
+    {
+        $trend = [];
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $monthStart = date('Y-m-01', strtotime("-{$i} months"));
+            $monthEnd = date('Y-m-t', strtotime("-{$i} months"));
+            $monthLabel = date('M', strtotime("-{$i} months"));
+
+            // Contracts that were active during this month
+            $sql = "SELECT cs.client_rate, cs.total_monthly, cs.exchange_rate AS contract_rate, cur.code AS currency_code
+                    FROM contracts c
+                    JOIN contract_salaries cs ON c.id = cs.contract_id
+                    LEFT JOIN currencies cur ON cs.currency_id = cur.id
+                    WHERE c.sign_on_date <= ?
+                    AND (c.sign_off_date IS NULL OR c.sign_off_date >= ?)
+                    AND c.status NOT IN ('draft', 'cancelled', 'rejected')
+                    AND cs.client_rate > 0";
+
+            $contracts = $this->query($sql, [$monthEnd, $monthStart], 'ss');
+
+            $revenueUsd = 0;
+            $profitUsd = 0;
+            foreach ($contracts as $row) {
+                $rate = $row['client_rate'] ?? 0;
+                $cost = $row['total_monthly'] ?? 0;
+                $contractRate = $row['contract_rate'] ?? 0;
+                $detected = $this->detectCurrency($row['currency_code'], max($rate, $cost));
+                $currency = $detected['code'];
+
+                $revenueUsd += $this->convertToUsd($rate, $currency, $contractRate);
+                $profitUsd += $this->convertToUsd($rate - $cost, $currency, $contractRate);
+            }
+
+            $trend[] = [
+                'month' => $monthLabel,
+                'revenue' => round($revenueUsd, 2),
+                'profit' => round($profitUsd, 2),
+            ];
+        }
+
+        return $trend;
     }
 }

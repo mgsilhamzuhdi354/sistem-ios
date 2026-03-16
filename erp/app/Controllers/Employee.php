@@ -169,6 +169,7 @@ class Employee extends BaseController
             'year' => $year,
             'payrollData' => $result['data'] ?? [],
             'success' => $result['success'],
+            'dataSource' => $result['source'] ?? 'unknown',
             'flash' => $this->getFlash()
         ];
 

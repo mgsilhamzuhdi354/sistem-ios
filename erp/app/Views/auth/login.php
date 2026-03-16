@@ -1,4 +1,4 @@
-<?php
+ <?php
 /**
  * Login Page - Standalone (no layout)
  */

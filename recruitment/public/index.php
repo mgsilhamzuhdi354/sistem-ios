@@ -96,7 +96,7 @@ if (strpos($requestUri, $basePath) !== 0) {
 // Ensure base path is correctly set for Windows local dev
 if ($isWindows && strpos($basePath, '/PT_indoocean') === false && strpos($_SERVER['REQUEST_URI'], '/PT_indoocean') !== false) {
     // Windows localhost subfolder
-    $basePath = '/PT_indoocean/recruitment/public';
+    $basePath = '/PT_indoocean/PT_indoocean/recruitment/public';
 }
 
 $requestUri = str_replace($basePath, '', $requestUri);
@@ -132,7 +132,7 @@ function view($template, $data = []) {
 function redirect($url) {
     // Auto-prepend base path if URL starts with / and doesn't already include it
     global $isDirectDomain;
-    $base = $isDirectDomain ? '/recruitment/public' : '/PT_indoocean/recruitment/public';
+    $base = $isDirectDomain ? '/recruitment/public' : '/PT_indoocean/PT_indoocean/recruitment/public';
     if (strpos($url, '/') === 0 && strpos($url, $base) !== 0) {
         $url = $base . $url;
     }
@@ -256,6 +256,23 @@ function isCrewingOrAdmin() {
     // Any staff role (not applicant)
     return isset($_SESSION['role_id']) && in_array($_SESSION['role_id'], [ROLE_MASTER_ADMIN, ROLE_ADMIN, ROLE_LEADER, ROLE_CREWING]);
 }
+
+/**
+ * Get the correct dashboard URL for the current user's role
+ */
+function getRoleDashboard() {
+    if (!isLoggedIn()) return '/login';
+    $roleId = $_SESSION['role_id'] ?? 0;
+    switch ($roleId) {
+        case ROLE_MASTER_ADMIN: return '/master-admin/dashboard';
+        case ROLE_ADMIN:        return '/admin/dashboard';
+        case ROLE_LEADER:       return '/leader/dashboard';
+        case ROLE_CREWING:      return '/crewing/dashboard';
+        case ROLE_APPLICANT:    return '/applicant/dashboard';
+        default:                return '/login';
+    }
+}
+
 
 function canApproveRequests() {
     return isset($_SESSION['role_id']) && in_array($_SESSION['role_id'], [ROLE_MASTER_ADMIN, ROLE_LEADER]);
@@ -655,13 +672,13 @@ function old($key, $default = '') {
 
 function asset($path) {
     global $isDirectDomain;
-    $base = $isDirectDomain ? '/recruitment/public/assets/' : '/PT_indoocean/recruitment/public/assets/';
+    $base = $isDirectDomain ? '/recruitment/public/assets/' : '/PT_indoocean/PT_indoocean/recruitment/public/assets/';
     return $base . ltrim($path, '/');
 }
 
 function url($path = '') {
     global $isDirectDomain;
-    $base = $isDirectDomain ? '/recruitment/public' : '/PT_indoocean/recruitment/public';
+    $base = $isDirectDomain ? '/recruitment/public' : '/PT_indoocean/PT_indoocean/recruitment/public';
     return $base . $path;
 }
 

@@ -214,17 +214,23 @@
                 Arsip <span class="ml-1 opacity-60 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full"><?= $stats['archived'] ?? 0 ?></span>
             </a>
         </div>
-        <div class="relative w-full sm:w-80">
-            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span class="material-icons text-slate-400 text-[18px]">filter_list</span>
-            </span>
-            <input 
-                class="block w-full pl-10 pr-3 py-2.5 border border-border-light dark:border-border-dark rounded-lg bg-surface-light dark:bg-surface-dark text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm transition-shadow shadow-sm" 
-                placeholder="Cari nama, email, posisi..." 
-                type="text"
-                id="searchInput"
-                oninput="filterTable()"
-            />
+        <div class="flex items-center gap-3">
+            <div class="relative w-full sm:w-80">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span class="material-icons text-slate-400 text-[18px]">filter_list</span>
+                </span>
+                <input 
+                    class="block w-full pl-10 pr-3 py-2.5 border border-border-light dark:border-border-dark rounded-lg bg-surface-light dark:bg-surface-dark text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm transition-shadow shadow-sm" 
+                    placeholder="Cari nama, email, posisi..." 
+                    type="text"
+                    id="searchInput"
+                    oninput="filterTable()"
+                />
+            </div>
+            <a href="<?= url('/crewing/manual-entry') ?>" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm whitespace-nowrap shadow-sm shadow-blue-600/25">
+                <span class="material-icons text-[18px]">person_add</span>
+                + Tambah Pelamar
+            </a>
         </div>
     </div>
 

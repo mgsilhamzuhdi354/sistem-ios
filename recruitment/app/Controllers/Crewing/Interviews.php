@@ -551,4 +551,47 @@ class Interviews extends BaseController {
         flash('success', 'Question bank deleted');
         redirect(url('/crewing/interviews/questions'));
     }
+
+    /**
+     * Export interview result as PDF
+     */
+    public function exportPdf($sessionId) {
+        $stmt = $this->db->prepare("
+            SELECT is2.*, a.id as application_id, u.full_name, u.email, u.avatar,
+                   v.title as vacancy_title, qb.name as question_bank_name
+            FROM interview_sessions is2
+            JOIN applications a ON is2.application_id = a.id
+            JOIN users u ON a.user_id = u.id
+            JOIN job_vacancies v ON a.vacancy_id = v.id
+            JOIN interview_question_banks qb ON is2.question_bank_id = qb.id
+            WHERE is2.id = ?
+        ");
+        $stmt->bind_param('i', $sessionId);
+        $stmt->execute();
+        $session = $stmt->get_result()->fetch_assoc();
+        
+        if (!$session) {
+            flash('error', 'Interview session not found');
+            redirect(url('/crewing/interviews'));
+            return;
+        }
+        
+        // Get answers
+        $answersStmt = $this->db->prepare("
+            SELECT ia.*, iq.question_text, iq.question_type, iq.expected_keywords,
+                   iq.correct_answer, iq.max_score, iq.options
+            FROM interview_answers ia
+            JOIN interview_questions iq ON ia.question_id = iq.id
+            WHERE ia.session_id = ?
+            ORDER BY iq.sort_order
+        ");
+        $answersStmt->bind_param('i', $sessionId);
+        $answersStmt->execute();
+        $answers = $answersStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        
+        $this->view('crewing/interviews/interview_pdf', [
+            'session' => $session,
+            'answers' => $answers,
+        ]);
+    }
 }

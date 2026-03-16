@@ -153,7 +153,7 @@ class Auth extends BaseController
         $otpCode = $otpModel->generate($user['id'], 'login', 5); // 5 minutes expiry
         
         // Send OTP via email
-        $mailer = new Mailer();
+        $mailer = new Mailer('otp');
         $emailSent = $mailer->sendOtpCode($user['email'], $otpCode, $user['full_name']);
         
         if (!$emailSent) {
@@ -278,7 +278,7 @@ class Auth extends BaseController
         $this->activityModel->log($user['id'], 'login', 'user', $user['id'], 'User logged in with 2FA');
         
         // Send login notification email
-        $mailer = new Mailer();
+        $mailer = new Mailer('otp');
         $mailer->sendLoginNotification($user['email'], $user['full_name'], [
             'ip' => $_SERVER['REMOTE_ADDR'] ?? 'Unknown',
             'browser' => $this->getBrowserInfo(),
@@ -313,7 +313,7 @@ class Auth extends BaseController
         $otpCode = $otpModel->generate($userId, 'login', 5);
         
         // Send OTP via email
-        $mailer = new Mailer();
+        $mailer = new Mailer('otp');
         $emailSent = $mailer->sendOtpCode($user['email'], $otpCode, $user['full_name']);
         
         if ($emailSent) {
@@ -503,7 +503,7 @@ class Auth extends BaseController
             $this->activityModel->log($user['id'], 'password_reset_request', 'user', $user['id'], 'Password reset requested');
             
             // Try to send email
-            $mailer = new Mailer();
+            $mailer = new Mailer('otp');
             $emailSent = $mailer->sendPasswordReset($email, $token, $user['full_name']);
             
             // Development mode: If email cannot be sent, show direct link

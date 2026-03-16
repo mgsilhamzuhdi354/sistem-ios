@@ -1,4 +1,71 @@
-﻿<!-- ============ DETAIL MODAL ============ -->
+<!-- ============ CARD ACTION POPUP ============ -->
+<div class="card-action-overlay" id="cardActionOverlay" onclick="if(event.target===this)closeCardActionPopup()">
+    <div class="card-action-popup">
+        <div class="card-action-popup-header">
+            <div class="card-action-popup-avatar" id="cardActionAvatar"></div>
+            <div class="card-action-popup-info">
+                <h4 id="cardActionName">-</h4>
+                <p id="cardActionVacancy">-</p>
+            </div>
+        </div>
+        <div class="card-action-popup-body">
+            <div class="action-label">Pilih Aksi</div>
+            
+            <button class="card-action-btn btn-action-view" onclick="closeCardActionPopup(); showDetail(window._cardActionAppId)">
+                <div class="action-icon"><i class="fas fa-eye"></i></div>
+                <div class="action-text">
+                    <h5>Lihat Detail</h5>
+                    <p>Lihat profil lengkap kandidat</p>
+                </div>
+            </button>
+            
+            <button class="card-action-btn btn-action-status" onclick="closeCardActionPopup(); openStatusModal(window._cardActionAppId, document.getElementById('cardActionName').textContent, window._cardActionStatusId)">
+                <div class="action-icon"><i class="fas fa-exchange-alt"></i></div>
+                <div class="action-text">
+                    <h5>Ubah Status</h5>
+                    <p>Pindahkan ke tahap berikutnya</p>
+                </div>
+            </button>
+            
+            <button class="card-action-btn btn-action-erp" id="cardActionErpBtn" style="display:none" onclick="closeCardActionPopup(); openErpModal(window._cardActionAppId, document.getElementById('cardActionName').textContent)">
+                <div class="action-icon" style="background:#f3e8ff;color:#7c3aed"><i class="fas fa-paper-plane"></i></div>
+                <div class="action-text">
+                    <h5>Kirim ke ERP</h5>
+                    <p>Sinkronkan data ke sistem ERP</p>
+                </div>
+            </button>
+            
+            <button class="card-action-btn btn-action-archive" onclick="closeCardActionPopup(); archiveApplication(window._cardActionAppId)">
+                <div class="action-icon"><i class="fas fa-archive"></i></div>
+                <div class="action-text">
+                    <h5>Pindahkan ke Arsip</h5>
+                    <p>Arsipkan kandidat ini</p>
+                </div>
+            </button>
+        </div>
+        <button class="card-action-close" onclick="closeCardActionPopup()">
+            <i class="fas fa-times"></i> Tutup
+        </button>
+    </div>
+</div>
+
+<!-- ============ CONFIRM MODAL (replace native confirm) ============ -->
+<div class="p-modal" id="confirmModal" style="z-index:99999">
+    <div class="p-modal-box" style="max-width:420px">
+        <div class="p-modal-header" id="confirmModalHeader" style="background:linear-gradient(135deg,#1e293b,#334155)">
+            <h3 id="confirmModalTitle"><i class="fas fa-question-circle me-2"></i>Konfirmasi</h3>
+        </div>
+        <div class="p-modal-body">
+            <p id="confirmModalMessage" style="font-size:0.95rem;color:#374151;margin:0;"></p>
+        </div>
+        <div class="p-modal-footer">
+            <button class="btn-modal-cancel" onclick="closeModal('confirmModal');if(window._confirmReject)window._confirmReject();">Batal</button>
+            <button id="confirmModalOkBtn" class="btn-modal-submit" onclick="closeModal('confirmModal');if(window._confirmResolve)window._confirmResolve();">Ya, Lanjutkan</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============ DETAIL MODAL ============ -->
 <div class="p-modal" id="detailModal">
     <div class="p-modal-box">
         <div class="p-modal-header" style="background:linear-gradient(135deg, #1e3a5f, #3b82f6);">
@@ -212,6 +279,38 @@ function showDetail(appId) {
                         <div class="detail-item"><label>Ditugaskan</label><span>${d.assigned_at ? new Date(d.assigned_at).toLocaleDateString('id-ID') : '-'}</span></div>
                     </div>
                 </div>` : ''}
+
+                ${d.sent_to_erp_at ? (function() {
+                    const cl = d.erp_checklist || {};
+                    const items = [
+                        {key:'document_check', label:'Doc Check'},
+                        {key:'owner_interview', label:'Interview'},
+                        {key:'pengantar_mcu', label:'MCU'},
+                        {key:'agreement_kontrak', label:'Kontrak'},
+                        {key:'admin_charge', label:'Admin'},
+                        {key:'ok_to_board', label:'OK Board'}
+                    ];
+                    let passed = 0, rejected = 0, total = items.length;
+                    items.forEach(i => { const v = parseInt(cl[i.key]||0); if(v===1) passed++; if(v===2) rejected++; });
+                    const pct = total > 0 ? Math.round((passed/total)*100) : 0;
+                    const barColor = rejected > 0 ? '#ef4444' : (pct===100 ? '#22c55e' : '#3b82f6');
+                    let checkHtml = items.map(i => {
+                        const v = parseInt(cl[i.key]||0);
+                        const bg = v===1 ? 'rgba(34,197,94,0.12)' : (v===2 ? 'rgba(239,68,68,0.12)' : 'rgba(148,163,184,0.08)');
+                        const color = v===1 ? '#166534' : (v===2 ? '#991b1b' : '#64748b');
+                        const icon = v===1 ? '✓' : (v===2 ? '✗' : '○');
+                        return '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px;font-size:0.75rem;font-weight:600;background:'+bg+';color:'+color+'"><b>'+icon+'</b>'+i.label+'</span>';
+                    }).join('');
+                    let statusLine = '';
+                    if (rejected > 0) statusLine = '<small style="color:#ef4444;font-weight:600;margin-top:6px;display:block"><i class="fas fa-times-circle"></i> Rejected</small>';
+                    else if (pct===100) statusLine = '<small style="color:#22c55e;font-weight:600;margin-top:6px;display:block"><i class="fas fa-check-circle"></i> Siap Deploy</small>';
+                    else statusLine = '<small style="color:#1e40af;margin-top:6px;display:block">ERP ID: '+(d.erp_crew_id||'')+ ' • Proses di ERP</small>';
+                    return '<div class="detail-section">'+
+                        '<div class="detail-section-title"><i class="fas fa-tasks me-1"></i>Admin Checklist <span style="float:right;font-weight:600">'+passed+'/'+total+'</span></div>'+
+                        '<div style="height:6px;background:#e5e7eb;border-radius:3px;margin-bottom:10px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+barColor+';border-radius:3px;transition:width 0.3s"></div></div>'+
+                        '<div style="display:flex;flex-wrap:wrap;gap:4px">'+checkHtml+'</div>'+
+                        statusLine+'</div>';
+                })() : (d.erp_crew_id ? '<div class="detail-section"><div class="detail-section-title"><i class="fas fa-tasks me-1"></i>Admin Checklist</div><p style="color:#9ca3af;font-size:0.85rem">Sent to ERP - ERP ID: '+d.erp_crew_id+'</p></div>' : '')}
             `;
         })
         .catch(err => {
@@ -345,8 +444,9 @@ function archiveApplication(appId) {
     .then(data => {
         if (data.success) {
             showToast(data.message || 'Aplikasi berhasil diarsipkan', 'success');
-            // Remove card from view with animation
-            const card = document.querySelector(`.app-card-modern[data-app-id="${appId}"]`);
+            // Remove card from view - support both class selectors
+            const card = document.getElementById('appCard-' + appId)
+                      || document.querySelector(`[data-app-id="${appId}"]`);
             if (card) {
                 card.style.transition = 'all 0.4s ease';
                 card.style.transform = 'translateX(100%)';
@@ -354,14 +454,21 @@ function archiveApplication(appId) {
                 setTimeout(() => {
                     card.remove();
                     // Update column counts
-                    document.querySelectorAll('.status-column').forEach(col => {
-                        const cards = col.querySelectorAll('.app-card-modern').length;
-                        const countEl = col.querySelector('.status-count');
+                    document.querySelectorAll('.pipeline-column').forEach(col => {
+                        const statusId = col.dataset.statusId;
+                        const cards = col.querySelectorAll('.app-card').length;
+                        const countEl = statusId
+                            ? col.querySelector(`[data-count-for="${statusId}"]`) || col.querySelector('.count')
+                            : col.querySelector('.count');
                         if (countEl) countEl.textContent = cards;
+                        // Show empty placeholder if no cards left
+                        const body = col.querySelector('.column-body');
+                        if (body && cards === 0 && !body.querySelector('.empty-column')) {
+                            body.innerHTML = '<div class="empty-column"><i class="fas fa-inbox"></i><small>Belum ada lamaran</small></div>';
+                        }
                     });
                 }, 400);
             } else {
-                // Fallback: reload page
                 setTimeout(() => location.reload(), 500);
             }
         } else {
@@ -373,148 +480,232 @@ function archiveApplication(appId) {
 
 // ===== LOAD ARCHIVED VIEW =====
 function loadArchivedView() {
-    // Update tab highlights
-    document.querySelectorAll('.view-toggle-tab').forEach(tab => {
-        tab.classList.remove('active');
-    });
+    document.querySelectorAll('.view-tab').forEach(tab => tab.classList.remove('active'));
     const archivedTab = document.getElementById('archivedTab');
     if (archivedTab) archivedTab.classList.add('active');
-    
-    // Hide candidate alerts and pending alerts when viewing archive
-    const candidateAlert = document.getElementById('newCandidateAlert');
-    if (candidateAlert) candidateAlert.style.display = 'none';
-    const pendingAlert = document.querySelector('.pending-alert');
-    if (pendingAlert) pendingAlert.style.display = 'none';
-    
-    // Get the pipeline scroll container
-    const scrollContainer = document.querySelector('.pipeline-scroll-container');
-    if (!scrollContainer) return;
-    
-    scrollContainer.innerHTML = '<div class="detail-loading"><i class="fas fa-spinner fa-spin"></i><span>Loading archived applications...</span></div>';
-    
+
+    // Hide alerts
+    var ao = document.getElementById('alertOverlay');
+    if (ao) ao.style.display = 'none';
+    var po = document.getElementById('pendingOverlay');
+    if (po) po.style.display = 'none';
+
+    // Hide pipeline board scroll wrapper, show archive container
+    var pipelineBoard = document.getElementById('pipelineBoard');
+    var pipelineScroll = pipelineBoard ? pipelineBoard.parentElement : null;
+    if (pipelineScroll) pipelineScroll.style.display = 'none';
+
+    var container = document.getElementById('archiveContainer');
+    if (!container) { console.error('archiveContainer not found'); return; }
+    container.style.display = 'block';
+    container.innerHTML = '<div style="text-align:center;padding:60px;color:#fff;"><i class="fas fa-spinner fa-spin" style="font-size:2rem;display:block;margin-bottom:12px;"></i>Memuat arsip...</div>';
+
     fetch('<?= url('/crewing/pipeline/archived') ?>')
-    .then(r => r.json())
-    .then(res => {
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
         if (!res.success) {
-            scrollContainer.innerHTML = '<p style="color:#ef4444;text-align:center;padding:40px;">Failed to load archived applications</p>';
+            container.innerHTML = '<p style="color:#fca5a5;text-align:center;padding:40px;">Gagal memuat arsip</p>';
             return;
         }
-        
-        const archived = res.data;
-        if (archived.length === 0) {
-            scrollContainer.innerHTML = `
-                <div class="empty-state" style="width:100%;text-align:center;padding:80px 20px;">
-                    <i class="fas fa-archive" style="font-size:4rem;color:#cbd5e1;margin-bottom:20px;"></i>
-                    <h4 style="color:#64748b;font-weight:600;margin-bottom:10px;">Tidak Ada Arsip</h4>
-                    <p style="color:#94a3b8;font-size:0.95rem;">Aplikasi yang diarsipkan akan muncul di sini</p>
-                </div>
-            `;
+        var archived = res.data;
+        if (!archived || archived.length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:80px;color:#94a3b8;"><i class="fas fa-archive" style="font-size:4rem;margin-bottom:20px;display:block;opacity:0.4;"></i><h4 style="font-size:1.1rem;margin-bottom:8px;">Tidak Ada Arsip</h4><p style="font-size:0.9rem;">Aplikasi yang diarsipkan akan muncul di sini</p></div>';
             return;
         }
-        
-        let html = '<div style="max-width:900px;margin:0 auto;padding:20px;">';
-        archived.forEach(app => {
-            const nameParts = (app.applicant_name || 'U').split(' ');
-            let initials = nameParts[0][0].toUpperCase();
-            if (nameParts[1]) initials += nameParts[1][0].toUpperCase();
-            
-            const avatarHtml = app.applicant_avatar 
-                ? `<img src="<?= url('/') ?>${app.applicant_avatar}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:3px solid white;box-shadow:0 3px 12px rgba(99,102,241,0.3);">`
-                : `<div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;border:3px solid white;box-shadow:0 3px 12px rgba(99,102,241,0.3);">${initials}</div>`;
-            
-            html += `
-                <div class="app-card-modern" data-app-id="${app.id}" style="max-width:600px;margin:0 auto 20px;background:linear-gradient(135deg,rgba(255,255,255,0.95),rgba(255,255,255,0.85));">
-                    <div style="display:flex;align-items:center;gap:15px;margin-bottom:15px;">
-                        ${avatarHtml}
-                        <div style="flex:1;min-width:0;">
-                            <h4 style="margin:0 0 4px;font-size:1.1rem;font-weight:700;color:#1e293b;">${app.applicant_name}</h4>
-                            <div class="vacancy" style="font-size:0.9rem;color:#64748b;margin-bottom:4px;">
-                                <i class="fas fa-briefcase"></i> ${app.vacancy_title || 'N/A'}
-                            </div>
-                            <span class="detail-status-badge" style="background:${app.status_color || '#6c757d'};padding:4px 10px;border-radius:16px;font-size:0.75rem;display:inline-block;">${app.status_name || '-'}</span>
-                        </div>
-                    </div>
-                    <div class="email" style="font-size:0.85rem;color:#94a3b8;margin-bottom:12px;">
-                        <i class="fas fa-envelope"></i> ${app.applicant_email || ''}
-                    </div>
-                    <div style="background:rgba(241,245,249,0.8);padding:10px 14px;border-radius:12px;margin-bottom:15px;font-size:0.85rem;color:#64748b;border-left:3px solid #94a3b8;">
-                        <i class="fas fa-archive" style="margin-right:6px;"></i> Diarsipkan oleh <strong>${app.archived_by_name || 'Unknown'}</strong> 
-                        pada ${new Date(app.archived_at).toLocaleDateString('id-ID')}
-                    </div>
-                    <div style="display:flex;gap:10px;">
-                        <button class="btn-modern btn-view" onclick="showDetail(${app.id})">
-                            <i class="fas fa-eye"></i> Detail
-                        </button>
-                        <button class="btn-modern" style="flex:1.5;background:linear-gradient(135deg,#10b981,#059669);color:white;box-shadow:0 4px 12px rgba(16,185,129,0.25);" 
-                                onclick="restoreApplication(${app.id})">
-                            <i class="fas fa-undo"></i> Kembalikan
-                        </button>
-                        <button class="btn-modern" style="background:white;color:#ef4444;border:2px solid #fca5a5;box-shadow:none;" 
-                                onclick="permanentDeleteApplication(${app.id})" 
-                                title="Hapus Permanen">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-        });
+        var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;padding:4px 2px;">';
+        for (var i = 0; i < archived.length; i++) {
+            var app = archived[i];
+            var nameParts = (app.applicant_name || 'U').split(' ');
+            var initials = nameParts[0][0].toUpperCase() + (nameParts[1] ? nameParts[1][0].toUpperCase() : '');
+            var avatarHtml = app.applicant_avatar
+                ? '<img src="<?= url('/') ?>' + app.applicant_avatar + '" style="width:44px;height:44px;border-radius:12px;object-fit:cover;flex-shrink:0;">'
+                : '<div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.95rem;flex-shrink:0;">' + initials + '</div>';
+            var archivedDate = app.archived_at ? new Date(app.archived_at).toLocaleDateString('id-ID') : '-';
+            html += '<div style="background:white;border-radius:14px;padding:16px;border:1px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,0.1);">'
+                + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">'
+                + avatarHtml
+                + '<div style="flex:1;min-width:0;">'
+                + '<div style="font-size:0.9rem;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (app.applicant_name || '-') + '</div>'
+                + '<div style="font-size:0.75rem;color:#64748b;">' + (app.vacancy_title || 'N/A') + '</div>'
+                + '<span style="background:' + (app.status_color || '#6c757d') + ';color:white;padding:2px 8px;border-radius:20px;font-size:0.7rem;font-weight:600;display:inline-block;margin-top:3px;">' + (app.status_name || '-') + '</span>'
+                + '</div></div>'
+                + '<div style="font-size:0.78rem;color:#94a3b8;margin-bottom:8px;"><i class="fas fa-envelope" style="margin-right:4px;"></i>' + (app.applicant_email || '') + '</div>'
+                + '<div style="background:#f8fafc;padding:8px 10px;border-radius:8px;margin-bottom:10px;font-size:0.78rem;color:#64748b;border-left:3px solid #94a3b8;">'
+                + '<i class="fas fa-archive" style="margin-right:4px;"></i>Oleh <strong>' + (app.archived_by_name || 'Unknown') + '</strong> &bull; ' + archivedDate
+                + '</div>'
+                + '<div style="display:flex;gap:8px;">'
+                + '<button data-action="detail" data-id="' + app.id + '" style="padding:7px 12px;border:1px solid #e5e7eb;border-radius:8px;background:white;color:#374151;cursor:pointer;font-size:0.8rem;font-weight:600;display:flex;align-items:center;gap:4px;"><i class="fas fa-eye"></i> Detail</button>'
+                + '<button data-action="restore" data-id="' + app.id + '" style="flex:1;padding:7px 0;border:none;border-radius:8px;background:linear-gradient(135deg,#10b981,#059669);color:white;cursor:pointer;font-size:0.8rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px;"><i class="fas fa-undo"></i> Kembalikan</button>'
+                + '<button data-action="delete" data-id="' + app.id + '" style="padding:7px 10px;border:2px solid #fca5a5;border-radius:8px;background:white;color:#ef4444;cursor:pointer;font-size:0.8rem;" title="Hapus Permanen"><i class="fas fa-trash"></i></button>'
+                + '</div></div>';
+        }
         html += '</div>';
-        
-        scrollContainer.innerHTML = html;
+        container.innerHTML = html;
     })
-    .catch(err => {
-        scrollContainer.innerHTML = '<p style="color:#ef4444;text-align:center;padding:40px;">Error: ' + err.message + '</p>';
+    .catch(function(err) {
+        container.innerHTML = '<p style="color:#fca5a5;text-align:center;padding:40px;">Error: ' + err.message + '</p>';
+    });
+}
+
+
+// Event delegation for archive buttons (works with dynamically rendered content)
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const action = btn.dataset.action;
+    const id = parseInt(btn.dataset.id);
+    if (!id) return;
+    if (action === 'detail') { showDetail(id); }
+    else if (action === 'restore') { restoreApplication(id); }
+    else if (action === 'delete') { permanentDeleteApplication(id); }
+});
+
+
+// ===== CUSTOM CONFIRM HELPER =====
+function showConfirm(message, okLabel, okColor) {
+    return new Promise(function(resolve, reject) {
+        window._confirmResolve = resolve;
+        window._confirmReject = reject;
+        document.getElementById('confirmModalMessage').textContent = message;
+        var okBtn = document.getElementById('confirmModalOkBtn');
+        okBtn.textContent = okLabel || 'Ya, Lanjutkan';
+        okBtn.style.background = okColor || '#0f3460';
+        openModal('confirmModal');
     });
 }
 
 // ===== RESTORE APPLICATION =====
 function restoreApplication(appId) {
-    if (!confirm('Kembalikan aplikasi ini dari arsip?')) {
-        return;
-    }
-    
-    fetch('<?= url('/crewing/pipeline/restore') ?>', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `csrf_token=<?= csrf_token() ?>&application_id=${appId}`
+    showConfirm('Kembalikan aplikasi ini ke pipeline?', 'Ya, Kembalikan', '#059669')
+    .then(function() {
+        fetch('<?= url('/crewing/pipeline/restore') ?>', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'csrf_token=<?= csrf_token() ?>&application_id=' + appId
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                showToast(data.message || 'Aplikasi berhasil dikembalikan', 'success');
+                loadArchivedView();
+            } else {
+                showToast(data.message || 'Gagal mengembalikan', 'error');
+            }
+        })
+        .catch(function(err) { showToast('Error: ' + err.message, 'error'); });
     })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            showToast(data.message || 'Aplikasi berhasil dikembalikan', 'success');
-            // Reload archived view
-            loadArchivedView();
-        } else {
-            showToast(data.message || 'Gagal mengembalikan', 'error');
-        }
-    })
-    .catch(err => showToast('Error: ' + err.message, 'error'));
+    .catch(function() {}); // user cancelled
 }
 
 // ===== PERMANENT DELETE APPLICATION =====
 function permanentDeleteApplication(appId) {
-    if (!confirm('⚠️ PERHATIAN! Aplikasi akan dihapus PERMANEN dan tidak bisa dikembalikan. Lanjutkan?')) {
-        return;
+    showConfirm('PERHATIAN! Aplikasi akan dihapus PERMANEN dan tidak bisa dikembalikan. Lanjutkan?', 'Hapus Permanen', '#dc2626')
+    .then(function() {
+        fetch('<?= url('/crewing/pipeline/delete-permanent') ?>', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `csrf_token=<?= csrf_token() ?>&application_id=${appId}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'Aplikasi berhasil dihapus permanen', 'success');
+                loadArchivedView();
+            } else {
+                showToast(data.message || 'Gagal menghapus', 'error');
+            }
+        })
+        .catch(err => showToast('Error: ' + err.message, 'error'));
+    })
+    .catch(function() {}); // user cancelled
+}
+
+// ===== DISMISS NEW CANDIDATE ALERTS =====
+function dismissAlert(appId) {
+    const item = document.getElementById('alertItem-' + appId);
+    if (item) {
+        item.style.transition = 'all 0.3s ease';
+        item.style.opacity = '0';
+        item.style.transform = 'translateX(40px)';
+        setTimeout(() => {
+            item.remove();
+            // Hide the whole overlay if no items left
+            const box = document.getElementById('newCandidateAlert');
+            if (box && box.querySelectorAll('[id^="alertItem-"]').length === 0) {
+                var overlay = document.getElementById('alertOverlay');
+                if (overlay) overlay.style.display = 'none';
+            }
+        }, 320);
     }
-    
-    fetch('<?= url('/crewing/pipeline/delete-permanent') ?>', {
+    fetch('<?= url('/crewing/pipeline/dismiss-alert') ?>', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `csrf_token=<?= csrf_token() ?>&application_id=${appId}`
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            showToast(data.message || 'Aplikasi berhasil dihapus permanen', 'success');
-            // Reload archived view
-            loadArchivedView();
-        } else {
-            showToast(data.message || 'Gagal menghapus', 'error');
-        }
-    })
-    .catch(err => showToast('Error: ' + err.message, 'error'));
+    }).catch(err => console.warn('dismissAlert error:', err));
 }
 
-</script>
+function dismissAllAlerts() {
+    var overlay = document.getElementById('alertOverlay');
+    if (overlay) {
+        overlay.style.transition = 'opacity 0.3s ease';
+        overlay.style.opacity = '0';
+        setTimeout(() => { overlay.style.display = 'none'; }, 320);
+    }
+    fetch('<?= url('/crewing/pipeline/dismiss-alert') ?>', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `csrf_token=<?= csrf_token() ?>&application_id=0`
+    }).catch(err => console.warn('dismissAllAlerts error:', err));
+}
 
-<?php include __DIR__ . '/erp_modal.php'; ?>
+// ===== CARD ACTION POPUP =====
+window._cardActionAppId = null;
+window._cardActionStatusId = null;
+
+function openCardActionPopup(appId, name, vacancy, avatar, statusId, showErp) {
+    window._cardActionAppId = appId;
+    window._cardActionStatusId = statusId;
+    
+    document.getElementById('cardActionName').textContent = name;
+    document.getElementById('cardActionVacancy').innerHTML = '<i class="fas fa-briefcase" style="margin-right:4px;"></i>' + vacancy;
+    
+    // Show/hide ERP button
+    var erpBtn = document.getElementById('cardActionErpBtn');
+    if (erpBtn) erpBtn.style.display = showErp ? 'flex' : 'none';
+    
+    // Set avatar
+    var avatarEl = document.getElementById('cardActionAvatar');
+    if (avatar) {
+        avatarEl.innerHTML = '<img src="<?= url('/') ?>' + avatar + '" alt="">';
+    } else {
+        var parts = name.split(' ');
+        var initials = parts[0][0].toUpperCase() + (parts[1] ? parts[1][0].toUpperCase() : '');
+        avatarEl.textContent = initials;
+    }
+    
+    document.getElementById('cardActionOverlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeCardActionPopup() {
+    var overlay = document.getElementById('cardActionOverlay');
+    var popup = overlay.querySelector('.card-action-popup');
+    popup.style.animation = 'none';
+    popup.offsetHeight; // trigger reflow
+    popup.style.animation = 'cardActionPopOut 0.25s ease forwards';
+    overlay.style.animation = 'cardActionFadeOut 0.25s ease forwards';
+    
+    setTimeout(function() {
+        overlay.classList.remove('show');
+        overlay.style.animation = '';
+        popup.style.animation = '';
+        document.body.style.overflow = '';
+    }, 250);
+}
+
+// Inject close animations
+var cardActionStyle = document.createElement('style');
+cardActionStyle.textContent = '@keyframes cardActionPopOut{from{transform:scale(1);opacity:1}to{transform:scale(0.85) translateY(20px);opacity:0}}@keyframes cardActionFadeOut{from{opacity:1}to{opacity:0}}';
+document.head.appendChild(cardActionStyle);
+
+</script>

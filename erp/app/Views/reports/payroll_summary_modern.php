@@ -38,10 +38,16 @@ $months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'O
                 <h1 class="text-base font-bold text-slate-800 tracking-tight"><?= __('reports.payroll_summary') ?> — <?= $year ?? date('Y') ?></h1>
                 <p class="text-[11px] text-slate-400"><?= __('reports.payroll_summary_desc') ?></p>
             </div>
-            <a href="<?= BASE_URL ?>reports"
-               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-colors">
-                <span class="material-icons text-sm">arrow_back</span> <?= __('common.back') ?>
-            </a>
+            <div class="flex items-center gap-2">
+                <a href="<?= BASE_URL ?>reports/export-pdf/payroll?year=<?= $year ?? date('Y') ?>" target="_blank"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition-colors">
+                    <span class="material-icons text-sm">picture_as_pdf</span> Export PDF
+                </a>
+                <a href="<?= BASE_URL ?>reports"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-colors">
+                    <span class="material-icons text-sm">arrow_back</span> <?= __('common.back') ?>
+                </a>
+            </div>
         </header>
 
         <div class="flex-1 overflow-y-auto p-6">

@@ -23,13 +23,13 @@ if (!function_exists('getRecruitmentEnvVar')) {
 $isWindows = (PHP_OS_FAMILY === 'Windows' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
 
 if (!$isWindows) {
-    // DOCKER / LINUX / NAS - HARDCODED
-    $nas_ip             = '172.17.0.3';
-    $nas_user           = 'root';
-    $nas_password       = 'rahasia123';
-    $nas_port           = 3306;
-    $nas_db_recruitment = 'recruitment_db';
-    $nas_db_erp         = 'erp_db';
+    // DOCKER / LINUX / NAS - read from ENV
+    $nas_ip             = getRecruitmentEnvVar(['DB_HOST'], 'mysql');
+    $nas_user           = getRecruitmentEnvVar(['DB_USER', 'DB_USERNAME'], 'root');
+    $nas_password       = getRecruitmentEnvVar(['DB_PASS', 'DB_PASSWORD'], '');
+    $nas_port           = (int) getRecruitmentEnvVar(['DB_PORT'], 3306);
+    $nas_db_recruitment = getRecruitmentEnvVar(['RECRUITMENT_DB_NAME', 'DB_DATABASE'], 'recruitment_db');
+    $nas_db_erp         = getRecruitmentEnvVar(['ERP_DB_NAME'], 'erp_db');
 } else {
     // WINDOWS / LARAGON (baca dari .env)
     $nas_ip             = getRecruitmentEnvVar(['DB_HOST'], 'localhost');

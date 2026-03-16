@@ -242,6 +242,81 @@
                             </div>
                         </div>
 
+                        <!-- Crew Info Panel (auto-filled from crew data) -->
+                        <div x-show="crewInfo" x-transition class="mt-6 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200" x-cloak>
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-lg" x-text="crewInfo?.full_name?.charAt(0)?.toUpperCase() || '?'"></div>
+                                    <div>
+                                        <h4 class="font-bold text-blue-900" x-text="crewInfo?.full_name || '-'"></h4>
+                                        <p class="text-xs text-blue-600" x-text="(crewInfo?.employee_id || '') + (crewInfo?.rank_name ? ' • ' + crewInfo.rank_name : '')"></p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-bold" :class="crewInfo?.source === 'recruitment' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'" x-text="crewInfo?.source === 'recruitment' ? '📋 Dari Recruitment' : '✏️ Manual Entry'"></span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <!-- Personal Info -->
+                                <div class="bg-white/80 p-4 rounded-xl">
+                                    <h5 class="text-xs font-bold text-blue-700 uppercase tracking-wider mb-3"><i class="fas fa-user"></i> Informasi Pribadi</h5>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between"><span class="text-gray-500">Gender</span><span class="font-medium text-gray-800" x-text="crewInfo?.gender ? (crewInfo.gender === 'male' ? 'Laki-laki' : 'Perempuan') : '-'"></span></div>
+                                        <div class="flex justify-between"><span class="text-gray-500">Tgl Lahir</span><span class="font-medium text-gray-800" x-text="crewInfo?.birth_date || '-'"></span></div>
+                                        <div class="flex justify-between"><span class="text-gray-500">Tempat Lahir</span><span class="font-medium text-gray-800" x-text="crewInfo?.birth_place || '-'"></span></div>
+                                        <div class="flex justify-between"><span class="text-gray-500">Kebangsaan</span><span class="font-medium text-gray-800" x-text="crewInfo?.nationality || '-'"></span></div>
+                                        <div class="flex justify-between"><span class="text-gray-500">Agama</span><span class="font-medium text-gray-800" x-text="crewInfo?.religion || '-'"></span></div>
+                                        <div class="flex justify-between"><span class="text-gray-500">Status</span><span class="font-medium text-gray-800" x-text="crewInfo?.marital_status || '-'"></span></div>
+                                    </div>
+                                </div>
+
+                                <!-- Contact & Address -->
+                                <div class="bg-white/80 p-4 rounded-xl">
+                                    <h5 class="text-xs font-bold text-blue-700 uppercase tracking-wider mb-3"><i class="fas fa-address-card"></i> Kontak & Alamat</h5>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between"><span class="text-gray-500">Email</span><span class="font-medium text-gray-800 truncate ml-2" x-text="crewInfo?.email || '-'"></span></div>
+                                        <div class="flex justify-between"><span class="text-gray-500">Telepon</span><span class="font-medium text-gray-800" x-text="crewInfo?.phone || '-'"></span></div>
+                                        <div class="flex justify-between"><span class="text-gray-500">WhatsApp</span><span class="font-medium text-gray-800" x-text="crewInfo?.whatsapp || '-'"></span></div>
+                                        <div class="flex justify-between"><span class="text-gray-500">Alamat</span><span class="font-medium text-gray-800 truncate ml-2" x-text="crewInfo?.address || '-'"></span></div>
+                                        <div class="flex justify-between"><span class="text-gray-500">Kota</span><span class="font-medium text-gray-800" x-text="crewInfo?.city || '-'"></span></div>
+                                    </div>
+                                </div>
+
+                                <!-- Bank & Emergency -->
+                                <div class="space-y-4">
+                                    <div class="bg-white/80 p-4 rounded-xl">
+                                        <h5 class="text-xs font-bold text-blue-700 uppercase tracking-wider mb-3"><i class="fas fa-university"></i> Informasi Bank</h5>
+                                        <div class="space-y-2 text-sm">
+                                            <div class="flex justify-between"><span class="text-gray-500">Bank</span><span class="font-medium text-gray-800" x-text="crewInfo?.bank_name || '-'"></span></div>
+                                            <div class="flex justify-between"><span class="text-gray-500">No. Rek</span><span class="font-medium text-gray-800" x-text="crewInfo?.bank_account || '-'"></span></div>
+                                            <div class="flex justify-between"><span class="text-gray-500">Atas Nama</span><span class="font-medium text-gray-800" x-text="crewInfo?.bank_holder || '-'"></span></div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white/80 p-4 rounded-xl">
+                                        <h5 class="text-xs font-bold text-red-600 uppercase tracking-wider mb-3"><i class="fas fa-phone-alt"></i> Kontak Darurat</h5>
+                                        <div class="space-y-2 text-sm">
+                                            <div class="flex justify-between"><span class="text-gray-500">Nama</span><span class="font-medium text-gray-800" x-text="crewInfo?.emergency_name || '-'"></span></div>
+                                            <div class="flex justify-between"><span class="text-gray-500">Hubungan</span><span class="font-medium text-gray-800" x-text="crewInfo?.emergency_relation || '-'"></span></div>
+                                            <div class="flex justify-between"><span class="text-gray-500">Telepon</span><span class="font-medium text-gray-800" x-text="crewInfo?.emergency_phone || '-'"></span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Experience Bar -->
+                            <div x-show="crewInfo?.years_experience || crewInfo?.total_sea_time_months" class="mt-4 flex items-center gap-4 p-3 bg-white/60 rounded-xl">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-ship text-blue-500"></i>
+                                    <span class="text-sm text-gray-600">Pengalaman:</span>
+                                    <span class="font-bold text-blue-800" x-text="(crewInfo?.years_experience || 0) + ' tahun'"></span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-water text-teal-500"></i>
+                                    <span class="text-sm text-gray-600">Sea Time:</span>
+                                    <span class="font-bold text-teal-800" x-text="(crewInfo?.total_sea_time_months || 0) + ' bulan'"></span>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Vessel, Client, Rank -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
                             <div>
@@ -367,11 +442,11 @@
 
                             <div x-show="showExchangeRate" x-cloak>
                                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                    Exchange Rate to USD
+                                    Exchange Rate <span x-text="getSelectedCurrencyCode()"></span> to IDR
                                 </label>
                                 <input type="text" name="exchange_rate"
                                     class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none"
-                                    placeholder="Contoh: 15800 (1 USD = Rp15.800)">
+                                    :placeholder="'Contoh: 15000 (1 ' + getSelectedCurrencyCode() + ' = Rp15.000)'">
                                 <p class="text-xs text-gray-400 mt-2"><?= __('contracts.exchange_rate_hint') ?></p>
                             </div>
                         </div>
@@ -425,6 +500,24 @@
                                     class="w-full bg-transparent border-none p-0 text-2xl font-bold text-gray-900 focus:ring-0 outline-none"
                                     placeholder="0">
                                 <p class="text-xs text-gray-400 mt-2"><?= __('contracts.other_allowance_hint') ?></p>
+                            </div>
+                        </div>
+
+                        <!-- Salary Warning Banner -->
+                        <div x-show="salaryWarning" x-transition x-cloak
+                            class="mb-6 p-4 bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-300 rounded-xl shadow-sm">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                                    <span class="material-icons text-red-600">warning</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-red-800 mb-1">Peringatan Salary</h4>
+                                    <p class="text-sm text-red-700" x-text="salaryWarning"></p>
+                                    <div class="mt-3 flex items-center gap-2 text-xs text-red-600">
+                                        <span class="material-icons text-sm">lightbulb</span>
+                                        <span>Tip: Periksa kembali mata uang yang dipilih di atas. Gaji IDR biasanya jutaan (misal: 5.000.000), sedangkan USD biasanya ratusan sampai ribuan (misal: 1.500).</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -615,11 +708,23 @@
                     duration: 9,
                     currencyId: 1
                 },
+                crewInfo: null,
                 showExchangeRate: false,
+                salaryWarning: '',
                 currencyMap: {
                     <?php foreach ($currencies as $cur): ?>
                         '<?= $cur['id'] ?>': '<?= $cur['code'] ?>',
                     <?php endforeach; ?>
+                },
+                // Reasonable max monthly salary thresholds per currency (for crew/maritime)
+                salaryMaxThresholds: {
+                    'USD': 25000,
+                    'EUR': 25000,
+                    'SGD': 30000,
+                    'MYR': 50000,
+                    'IDR': 100000000,
+                    'GBP': 20000,
+                    'AUD': 30000,
                 },
                 totalSalary: 0,
                 clientRate: 0,
@@ -630,7 +735,7 @@
                     this.formData.crewId = String(crew.id);
                     this.formData.crewName = crew.full_name;
                     if (crew.current_rank_id) {
-                        this.formData.rankId = crew.current_rank_id;
+                        this.formData.rankId = String(crew.current_rank_id);
                     }
 
                     // Visual feedback
@@ -639,18 +744,45 @@
                     });
                     event.currentTarget.classList.add('selected');
 
-                    // Smooth scroll to the dropdown
+                    // Fetch full crew detail via AJAX and populate info panel
+                    this.fetchCrewDetail(crew.id);
+
+                    // Smooth scroll to crew info panel
                     setTimeout(() => {
-                        document.querySelector('select[name="crew_id"]').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 100);
+                        const panel = document.querySelector('[x-show="crewInfo"]');
+                        if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 300);
                 },
 
                 updateCrewName() {
                     const select = document.querySelector('select[name="crew_id"]');
                     if (select && select.selectedIndex > 0) {
                         this.formData.crewName = select.options[select.selectedIndex].dataset.name || '';
+                        // Fetch full crew detail via AJAX
+                        this.fetchCrewDetail(select.value);
                     } else {
                         this.formData.crewName = '';
+                        this.crewInfo = null;
+                    }
+                },
+
+                async fetchCrewDetail(crewId) {
+                    try {
+                        const res = await fetch(`<?= BASE_URL ?>contracts/crew-detail/${crewId}`);
+                        const json = await res.json();
+                        if (json.success && json.data) {
+                            this.crewInfo = json.data;
+                            // Auto-fill rank if available
+                            if (json.data.current_rank_id) {
+                                this.formData.rankId = String(json.data.current_rank_id);
+                            }
+                            // Clear recruitment card selections if using dropdown
+                            document.querySelectorAll('.recruitment-crew-card').forEach(card => {
+                                card.classList.toggle('selected', card.dataset?.crewId == crewId);
+                            });
+                        }
+                    } catch (e) {
+                        console.error('Failed to fetch crew detail:', e);
                     }
                 },
 
@@ -720,6 +852,24 @@
                     deductionInputs.forEach(input => {
                         this.totalDeductions += this.parseCurrency(input.value);
                     });
+
+                    // Salary sanity check
+                    this.checkSalarySanity(basic);
+                },
+
+                checkSalarySanity(basicSalary) {
+                    const curCode = this.getSelectedCurrencyCode();
+                    const maxThreshold = this.salaryMaxThresholds[curCode] || 50000;
+                    
+                    if (basicSalary > 0 && basicSalary > maxThreshold) {
+                        const formattedMax = maxThreshold.toLocaleString('id-ID');
+                        const formattedSalary = basicSalary.toLocaleString('id-ID');
+                        this.salaryWarning = `⚠️ Peringatan: Gaji pokok ${curCode} ${formattedSalary} melebihi batas wajar untuk mata uang ${curCode} (maks ~${curCode} ${formattedMax}/bulan). Pastikan mata uang dan nominal sudah benar. Jika bermaksud memasukkan IDR, ubah mata uang ke IDR.`;
+                    } else if (curCode !== 'IDR' && basicSalary >= 1000000) {
+                        this.salaryWarning = `⚠️ Peringatan: Nominal ${curCode} ${basicSalary.toLocaleString('id-ID')} terlihat sangat besar untuk mata uang ${curCode}. Mungkin ini seharusnya dalam IDR? Silakan periksa kembali.`;
+                    } else {
+                        this.salaryWarning = '';
+                    }
                 },
 
                 formatMoney(value) {
@@ -748,9 +898,13 @@
                     }
                 },
 
+                getSelectedCurrencyCode() {
+                    return this.currencyMap[this.formData.currencyId] || 'USD';
+                },
+
                 toggleExchangeRate() {
-                    const code = this.currencyMap[this.formData.currencyId] || 'USD';
-                    this.showExchangeRate = (code !== 'USD');
+                    const code = this.getSelectedCurrencyCode();
+                    this.showExchangeRate = (code !== 'IDR');
                     // Reformat all salary inputs when currency changes
                     this.reformatAllInputs();
                     this.calculateTotals();
@@ -849,6 +1003,18 @@
                         this.$nextTick(() => alert('Sign On Date dan Sign Off Date wajib diisi!'));
                         return;
                     }
+
+                    // Salary sanity check before submit
+                    if (this.salaryWarning) {
+                        const confirmed = confirm(
+                            'PERINGATAN GAJI!\n\n' + this.salaryWarning.replace('⚠️ ', '') +
+                            '\n\nApakah Anda yakin data gaji sudah benar dan ingin melanjutkan?'
+                        );
+                        if (!confirmed) {
+                            this.currentStep = 2;
+                            return;
+                        }
+                    }
                     
                     // Add hidden input for submit_approval flag
                     let approvalInput = form.querySelector('input[name="submit_approval"]');
@@ -870,6 +1036,36 @@
                     
                     // Store instance globally for access from dynamic HTML
                     window.contractFormInstance = this;
+
+                    // Auto-select crew from URL parameter (?crew_id=X)
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const preselectedCrewId = urlParams.get('crew_id');
+                    if (preselectedCrewId) {
+                        // Set the dropdown value
+                        const select = document.querySelector('select[name="crew_id"]');
+                        if (select) {
+                            select.value = preselectedCrewId;
+                            this.formData.crewId = preselectedCrewId;
+                            // Get crew name from selected option
+                            if (select.selectedIndex > 0) {
+                                this.formData.crewName = select.options[select.selectedIndex].dataset.name || '';
+                            }
+                        }
+                        // Fetch full crew detail and show info panel
+                        this.fetchCrewDetail(preselectedCrewId);
+                        
+                        // Highlight matching recruitment crew card if present
+                        this.$nextTick(() => {
+                            document.querySelectorAll('.recruitment-crew-card').forEach(card => {
+                                try {
+                                    const cardData = JSON.parse(card.getAttribute('@click')?.match(/selectRecruitmentCrew\((.*)\)/)?.[1] || '{}');
+                                    if (String(cardData.id) === String(preselectedCrewId)) {
+                                        card.classList.add('selected');
+                                    }
+                                } catch(e) {}
+                            });
+                        });
+                    }
                 }
             }
         }

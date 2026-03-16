@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once APPPATH . 'Controllers/BaseController.php';
 
 /**
@@ -10,9 +10,7 @@ class Email extends BaseController
     public function __construct()
     {
         parent::__construct();
-        if (!isLoggedIn() || !isCrewingOrAdmin()) {
-            redirect(url('/login'));
-        }
+        if (!isLoggedIn()) { redirect(url('/login')); } elseif (!isCrewingOrAdmin()) { redirect(getRoleDashboard()); }
     }
 
     /**

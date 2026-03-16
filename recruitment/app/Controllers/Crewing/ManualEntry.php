@@ -153,50 +153,119 @@ class ManualEntry extends BaseController {
             redirect(url('/crewing/manual-entry'));
         }
         
-        // Check email uniqueness
+        // Check if email already exists - if so, reuse the existing user
+        $existingUser = null;
         $stmt = $this->db->prepare("SELECT id FROM users WHERE email = ?");
         $stmt->bind_param('s', $email);
         $stmt->execute();
-        if ($stmt->get_result()->fetch_assoc()) {
-            flash('error', 'Email sudah terdaftar di sistem!');
-            redirect(url('/crewing/manual-entry'));
+        $existingUser = $stmt->get_result()->fetch_assoc();
+        
+        // If user exists, check if they already applied to this same vacancy
+        if ($existingUser) {
+            $dupCheck = $this->db->prepare("SELECT id FROM applications WHERE user_id = ? AND vacancy_id = ?");
+            $dupCheck->bind_param('ii', $existingUser['id'], $vacancyId);
+            $dupCheck->execute();
+            if ($dupCheck->get_result()->fetch_assoc()) {
+                flash('error', 'Kandidat dengan email ini sudah melamar untuk lowongan yang sama!');
+                redirect(url('/crewing/manual-entry'));
+            }
         }
         
         try {
             $this->db->begin_transaction();
             
-            // 1. Create user
-            $password = password_hash(bin2hex(random_bytes(8)), PASSWORD_DEFAULT);
-            $roleId = 3;
-            $stmt = $this->db->prepare("
-                INSERT INTO users (role_id, full_name, email, phone, password, is_active, is_manual_entry, requires_activation, created_at)
-                VALUES (?, ?, ?, ?, ?, 1, 1, 1, NOW())
-            ");
-            $stmt->bind_param('issss', $roleId, $fullName, $email, $phone, $password);
-            $stmt->execute();
-            $userId = $this->db->insert_id;
-            
-            // 2. Create full applicant profile
-            $stmt = $this->db->prepare("
-                INSERT INTO applicant_profiles (
-                    user_id, ktp_number, date_of_birth, gender, nationality, place_of_birth,
-                    address, city, country, postal_code, blood_type,
-                    seaman_book_no, seaman_book_expiry, passport_no, passport_expiry,
-                    height_cm, weight_kg, shoe_size, overall_size,
-                    emergency_name, emergency_phone, emergency_relation,
-                    total_sea_service_months, last_rank, last_vessel_name, last_vessel_type, last_sign_off,
-                    created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-            ");
-            $stmt->bind_param('issssssssssssssiisisssissss',
-                $userId, $ktpNumber, $dob, $gender, $nationality, $placeOfBirth,
-                $address, $city, $country, $postalCode, $bloodType,
-                $seamanBookNo, $seamanBookExpiry, $passportNo, $passportExpiry,
-                $heightCm, $weightKg, $shoeSize, $overallSize,
-                $emergencyName, $emergencyPhone, $emergencyRelation,
-                $totalSeaMonths, $lastRank, $lastVesselName, $lastVesselType, $lastSignOff
-            );
-            $stmt->execute();
+            if ($existingUser) {
+                // Reuse existing user - update their info
+                $userId = $existingUser['id'];
+                $stmt = $this->db->prepare("UPDATE users SET full_name = ?, phone = ? WHERE id = ?");
+                $stmt->bind_param('ssi', $fullName, $phone, $userId);
+                $stmt->execute();
+                
+                // Check if profile exists, update or create
+                $profileCheck = $this->db->prepare("SELECT id FROM applicant_profiles WHERE user_id = ?");
+                $profileCheck->bind_param('i', $userId);
+                $profileCheck->execute();
+                $hasProfile = $profileCheck->get_result()->fetch_assoc();
+                
+                if ($hasProfile) {
+                    // Update existing profile
+                    $stmt = $this->db->prepare("
+                        UPDATE applicant_profiles SET
+                            ktp_number = ?, date_of_birth = ?, gender = ?, nationality = ?, place_of_birth = ?,
+                            address = ?, city = ?, country = ?, postal_code = ?, blood_type = ?,
+                            seaman_book_no = ?, seaman_book_expiry = ?, passport_no = ?, passport_expiry = ?,
+                            height_cm = ?, weight_kg = ?, shoe_size = ?, overall_size = ?,
+                            emergency_name = ?, emergency_phone = ?, emergency_relation = ?,
+                            total_sea_service_months = ?, last_rank = ?, last_vessel_name = ?, last_vessel_type = ?, last_sign_off = ?
+                        WHERE user_id = ?
+                    ");
+                    $stmt->bind_param('ssssssssssssssiisssissssssi',
+                        $ktpNumber, $dob, $gender, $nationality, $placeOfBirth,
+                        $address, $city, $country, $postalCode, $bloodType,
+                        $seamanBookNo, $seamanBookExpiry, $passportNo, $passportExpiry,
+                        $heightCm, $weightKg, $shoeSize, $overallSize,
+                        $emergencyName, $emergencyPhone, $emergencyRelation,
+                        $totalSeaMonths, $lastRank, $lastVesselName, $lastVesselType, $lastSignOff,
+                        $userId
+                    );
+                    $stmt->execute();
+                } else {
+                    // Create new profile for existing user
+                    $stmt = $this->db->prepare("
+                        INSERT INTO applicant_profiles (
+                            user_id, ktp_number, date_of_birth, gender, nationality, place_of_birth,
+                            address, city, country, postal_code, blood_type,
+                            seaman_book_no, seaman_book_expiry, passport_no, passport_expiry,
+                            height_cm, weight_kg, shoe_size, overall_size,
+                            emergency_name, emergency_phone, emergency_relation,
+                            total_sea_service_months, last_rank, last_vessel_name, last_vessel_type, last_sign_off,
+                            created_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                    ");
+                    $stmt->bind_param('issssssssssssssiisisssissss',
+                        $userId, $ktpNumber, $dob, $gender, $nationality, $placeOfBirth,
+                        $address, $city, $country, $postalCode, $bloodType,
+                        $seamanBookNo, $seamanBookExpiry, $passportNo, $passportExpiry,
+                        $heightCm, $weightKg, $shoeSize, $overallSize,
+                        $emergencyName, $emergencyPhone, $emergencyRelation,
+                        $totalSeaMonths, $lastRank, $lastVesselName, $lastVesselType, $lastSignOff
+                    );
+                    $stmt->execute();
+                }
+            } else {
+                // Create new user
+                $password = password_hash(bin2hex(random_bytes(8)), PASSWORD_DEFAULT);
+                $roleId = 3;
+                $stmt = $this->db->prepare("
+                    INSERT INTO users (role_id, full_name, email, phone, password, is_active, is_manual_entry, requires_activation, created_at)
+                    VALUES (?, ?, ?, ?, ?, 1, 1, 1, NOW())
+                ");
+                $stmt->bind_param('issss', $roleId, $fullName, $email, $phone, $password);
+                $stmt->execute();
+                $userId = $this->db->insert_id;
+                
+                // Create new profile
+                $stmt = $this->db->prepare("
+                    INSERT INTO applicant_profiles (
+                        user_id, ktp_number, date_of_birth, gender, nationality, place_of_birth,
+                        address, city, country, postal_code, blood_type,
+                        seaman_book_no, seaman_book_expiry, passport_no, passport_expiry,
+                        height_cm, weight_kg, shoe_size, overall_size,
+                        emergency_name, emergency_phone, emergency_relation,
+                        total_sea_service_months, last_rank, last_vessel_name, last_vessel_type, last_sign_off,
+                        created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                ");
+                $stmt->bind_param('issssssssssssssiisisssissss',
+                    $userId, $ktpNumber, $dob, $gender, $nationality, $placeOfBirth,
+                    $address, $city, $country, $postalCode, $bloodType,
+                    $seamanBookNo, $seamanBookExpiry, $passportNo, $passportExpiry,
+                    $heightCm, $weightKg, $shoeSize, $overallSize,
+                    $emergencyName, $emergencyPhone, $emergencyRelation,
+                    $totalSeaMonths, $lastRank, $lastVesselName, $lastVesselType, $lastSignOff
+                );
+                $stmt->execute();
+            }
             
             // 3. Create application
             $crewingId = $_SESSION['user_id'];

@@ -8,9 +8,11 @@ class Dashboard extends BaseController {
     
     public function __construct() {
         parent::__construct();
-        if (!isLoggedIn() || !isMasterAdmin()) {
+        if (!isLoggedIn()) {
             flash('error', 'Access denied. Master Admin only.');
             redirect('/login');
+        } elseif (!isMasterAdmin()) {
+            redirect(getRoleDashboard());
         }
     }
     

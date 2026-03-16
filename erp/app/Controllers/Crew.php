@@ -29,6 +29,14 @@ class Crew extends BaseController
     }
 
     /**
+     * Alias for index() — supports /crews/modern URL
+     */
+    public function modern()
+    {
+        return $this->index();
+    }
+
+    /**
      * List all crews
      */
     public function index()
@@ -36,8 +44,22 @@ class Crew extends BaseController
         $this->requireAuth();
         $this->requirePermission('crews', 'view');
 
+        // Auto-sync crew status from active contracts
+        $this->db->query("
+            UPDATE crews cr
+            JOIN contracts c ON cr.id = c.crew_id AND c.status IN ('active', 'onboard')
+            SET cr.status = 'onboard'
+            WHERE cr.status NOT IN ('onboard', 'terminated')
+        ");
+        $this->db->query("
+            UPDATE crews cr
+            LEFT JOIN contracts c ON cr.id = c.crew_id AND c.status IN ('active', 'onboard')
+            SET cr.status = 'available'
+            WHERE c.id IS NULL AND cr.status = 'onboard'
+        ");
+
         // Check UI mode from session
-        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
 
         $filters = [
             'search' => $this->input('search'),
@@ -47,10 +69,39 @@ class Crew extends BaseController
 
         $page = (int) ($this->input('page') ?? 1);
 
+        // Cost summary from active contracts
+        $costSummary = ['idr' => 0, 'usd' => 0, 'other' => 0, 'other_currency' => '', 'active_crew' => 0];
+        $costQuery = $this->db->query("
+            SELECT 
+                UPPER(COALESCE(cur.code, 'IDR')) as currency,
+                SUM(COALESCE(cs.total_monthly, cs.basic_salary, 0)) as total_salary,
+                COUNT(DISTINCT c.crew_id) as crew_count
+            FROM contracts c
+            JOIN contract_salaries cs ON cs.contract_id = c.id
+            LEFT JOIN currencies cur ON cs.currency_id = cur.id
+            WHERE c.status = 'active'
+            GROUP BY UPPER(COALESCE(cur.code, 'IDR'))
+        ");
+        if ($costQuery) {
+            while ($row = $costQuery->fetch_assoc()) {
+                $cur = strtoupper($row['currency']);
+                $costSummary['active_crew'] += (int)$row['crew_count'];
+                if ($cur === 'IDR') {
+                    $costSummary['idr'] = (float)$row['total_salary'];
+                } elseif ($cur === 'USD') {
+                    $costSummary['usd'] = (float)$row['total_salary'];
+                } else {
+                    $costSummary['other'] += (float)$row['total_salary'];
+                    $costSummary['other_currency'] = $cur;
+                }
+            }
+        }
+
         $data = [
             'title' => 'Crew Database',
             'crews' => $this->crewModel->getList($filters, $page, 20),
             'total' => $this->crewModel->countCrews($filters),
+            'costSummary' => $costSummary,
             'filters' => $filters,
             'page' => $page,
             'flash' => $this->getFlash()
@@ -81,6 +132,53 @@ class Crew extends BaseController
         $expModel = new CrewExperienceModel($this->db);
         $docModel = new CrewDocumentModel($this->db);
 
+        // Active contract with salary details
+        $activeContract = null;
+        $acStmt = $this->db->prepare("
+            SELECT c.*, v.name as vessel_name, r.name as rank_name, cl.name as client_name,
+                   cs.basic_salary, cs.overtime_allowance, cs.leave_pay, cs.bonus, 
+                   cs.other_allowance, cs.total_monthly, cs.exchange_rate,
+                   COALESCE(cur.code, 'IDR') as currency_code
+            FROM contracts c
+            LEFT JOIN vessels v ON c.vessel_id = v.id
+            LEFT JOIN ranks r ON c.rank_id = r.id
+            LEFT JOIN clients cl ON c.client_id = cl.id
+            LEFT JOIN contract_salaries cs ON cs.contract_id = c.id
+            LEFT JOIN currencies cur ON cs.currency_id = cur.id
+            WHERE c.crew_id = ? AND c.status IN ('active','onboard')
+            ORDER BY c.sign_on_date DESC LIMIT 1
+        ");
+        $acStmt->bind_param('i', $id);
+        $acStmt->execute();
+        $activeContract = $acStmt->get_result()->fetch_assoc();
+        $acStmt->close();
+
+        // Recent payroll (last 3 months)
+        $recentPayroll = [];
+        $rpStmt = $this->db->prepare("
+            SELECT pi.id, pi.crew_name, pi.rank_name, pi.vessel_name,
+                   pi.basic_salary, pi.gross_salary, pi.net_salary, pi.total_deductions,
+                   pi.currency_code, pi.status, pi.email_status, pi.payment_date,
+                   pp.period_month, pp.period_year,
+                   CONCAT(
+                       ELT(pp.period_month, 'Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'),
+                       ' ', pp.period_year
+                   ) as period_name
+            FROM payroll_items pi
+            JOIN contracts c ON pi.contract_id = c.id
+            JOIN payroll_periods pp ON pi.payroll_period_id = pp.id
+            WHERE c.crew_id = ?
+            ORDER BY pp.period_year DESC, pp.period_month DESC
+            LIMIT 3
+        ");
+        $rpStmt->bind_param('i', $id);
+        $rpStmt->execute();
+        $rpResult = $rpStmt->get_result();
+        while ($row = $rpResult->fetch_assoc()) {
+            $recentPayroll[] = $row;
+        }
+        $rpStmt->close();
+
         $data = [
             'title' => $crew['full_name'],
             'crew' => $crew,
@@ -88,43 +186,18 @@ class Crew extends BaseController
             'experiences' => $expModel->getByCrew($id),
             'documents' => $docModel->getByCrew($id),
             'contractHistory' => $this->crewModel->getContractHistory($id),
+            'activeContract' => $activeContract,
+            'recentPayroll' => $recentPayroll,
             'flash' => $this->getFlash()
         ];
 
         // Check UI mode preference
-        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
         $view = $uiMode === 'modern' ? 'crews/view_modern' : 'crews/view';
 
         return $this->view($view, $data);
     }
 
-    /**
-     * Display crew list in modern UI
-     */
-    public function modern()
-    {
-        $this->requireAuth();
-        $this->requirePermission('crews', 'view');
-
-        $filters = [
-            'search' => $this->input('search'),
-            'status' => $this->input('status'),
-            'rank_id' => $this->input('rank_id')
-        ];
-
-        $page = (int) ($this->input('page') ?? 1);
-
-        $data = [
-            'title' => 'Crew Database',
-            'crews' => $this->crewModel->getList($filters, $page, 20),
-            'total' => $this->crewModel->countCrews($filters),
-            'filters' => $filters,
-            'page' => $page,
-            'flash' => $this->getFlash()
-        ];
-
-        return $this->view('crews/modern', $data);
-    }
 
 
     /**
@@ -143,7 +216,9 @@ class Crew extends BaseController
             'flash' => $this->getFlash()
         ];
 
-        return $this->view('crews/form', $data);
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
+        $view = $uiMode === 'modern' ? 'crews/form_modern' : 'crews/form';
+        return $this->view($view, $data);
     }
 
     /**
@@ -220,7 +295,9 @@ class Crew extends BaseController
             'flash' => $this->getFlash()
         ];
 
-        return $this->view('crews/form', $data);
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
+        $view = $uiMode === 'modern' ? 'crews/form_modern' : 'crews/form';
+        return $this->view($view, $data);
     }
 
     /**
@@ -279,7 +356,7 @@ class Crew extends BaseController
     }
 
     /**
-     * Delete crew
+     * Delete crew (with cascading delete of related data)
      */
     public function delete($id)
     {
@@ -294,18 +371,93 @@ class Crew extends BaseController
             return;
         }
 
+        // Delete payroll_items linked through contracts first
+        $sqlPayroll = "DELETE FROM payroll_items WHERE contract_id IN (SELECT id FROM contracts WHERE crew_id = ?)";
+        $stmtP = $this->db->prepare($sqlPayroll);
+        if ($stmtP) {
+            $stmtP->bind_param('i', $id);
+            $stmtP->execute();
+            $stmtP->close();
+        }
+
+        // Cascade delete related records
+        $tables = ['crew_skills', 'crew_experiences', 'crew_documents', 'contracts'];
+        foreach ($tables as $table) {
+            $sql = "DELETE FROM {$table} WHERE crew_id = ?";
+            $stmt = $this->db->prepare($sql);
+            if ($stmt) {
+                $stmt->bind_param('i', $id);
+                $stmt->execute();
+                $stmt->close();
+            }
+        }
+
+        // Delete the crew record
         $this->crewModel->delete($id);
+
+        // Delete crew photo file if exists
+        if ($crew['photo'] && file_exists($crew['photo'])) {
+            unlink($crew['photo']);
+        }
 
         $this->activityModel->log(
             $this->getCurrentUser()['id'],
             'delete',
             'crew',
             $id,
-            "Deleted crew: {$crew['full_name']}"
+            "Deleted crew: {$crew['full_name']} (cascade: contracts, payroll_items, skills, documents, experiences)"
         );
 
-        $this->setFlash('success', 'Crew berhasil dihapus');
+        $this->setFlash('success', 'Crew dan semua data terkait berhasil dihapus');
         $this->redirect('crews');
+    }
+
+    /**
+     * Get related data counts for delete confirmation (AJAX)
+     */
+    public function deleteInfo($id)
+    {
+        $this->requireAuth();
+
+        $counts = [
+            'contracts' => 0,
+            'payroll_items' => 0,
+            'skills' => 0,
+            'documents' => 0,
+            'experiences' => 0
+        ];
+
+        $tables = [
+            'contracts' => 'contracts',
+            'skills' => 'crew_skills',
+            'documents' => 'crew_documents',
+            'experiences' => 'crew_experiences'
+        ];
+
+        foreach ($tables as $key => $table) {
+            $stmt = $this->db->prepare("SELECT COUNT(*) as cnt FROM {$table} WHERE crew_id = ?");
+            if ($stmt) {
+                $stmt->bind_param('i', $id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $counts[$key] = $result->fetch_assoc()['cnt'] ?? 0;
+                $stmt->close();
+            }
+        }
+
+        // Payroll items are linked through contracts
+        $stmt = $this->db->prepare("SELECT COUNT(*) as cnt FROM payroll_items WHERE contract_id IN (SELECT id FROM contracts WHERE crew_id = ?)");
+        if ($stmt) {
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $counts['payroll_items'] = $result->fetch_assoc()['cnt'] ?? 0;
+            $stmt->close();
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($counts);
+        exit;
     }
 
 
@@ -479,7 +631,7 @@ class Crew extends BaseController
         ];
 
         // Check UI mode preference
-        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
         $view = $uiMode === 'modern' ? 'crews/skill_matrix_modern' : 'crews/skill_matrix';
 
         return $this->view($view, $data);

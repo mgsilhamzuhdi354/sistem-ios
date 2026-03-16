@@ -349,12 +349,12 @@ if (isset($contract['currency_code'])) {
 
                             <div x-show="showExchangeRate" x-cloak>
                                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                    Exchange Rate to USD
+                                    Exchange Rate <span x-text="getSelectedCurrencyCode()"></span> to IDR
                                 </label>
                                 <input type="text" name="exchange_rate"
                                     value="<?= isset($contract['exchange_rate']) && $contract['exchange_rate'] > 0 ? number_format($contract['exchange_rate'], 0, '', '') : '' ?>"
                                     class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none"
-                                    placeholder="Contoh: 15800 (1 USD = Rp15.800)">
+                                    :placeholder="'Contoh: 15000 (1 ' + getSelectedCurrencyCode() + ' = Rp15.000)'">
                                 <p class="text-xs text-gray-400 mt-2"><?= __('contracts.exchange_rate_hint') ?></p>
                             </div>
                         </div>
@@ -414,6 +414,24 @@ if (isset($contract['currency_code'])) {
                                     class="w-full bg-transparent border-none p-0 text-2xl font-bold text-gray-900 focus:ring-0 outline-none"
                                     placeholder="0">
                                 <p class="text-xs text-gray-400 mt-2"><?= __('contracts.other_allowance_hint') ?></p>
+                            </div>
+                        </div>
+
+                        <!-- Salary Warning Banner -->
+                        <div x-show="salaryWarning" x-transition x-cloak
+                            class="mb-6 p-4 bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-300 rounded-xl shadow-sm">
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                                    <span class="material-icons text-red-600">warning</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-red-800 mb-1">Peringatan Salary</h4>
+                                    <p class="text-sm text-red-700" x-text="salaryWarning"></p>
+                                    <div class="mt-3 flex items-center gap-2 text-xs text-red-600">
+                                        <span class="material-icons text-sm">lightbulb</span>
+                                        <span>Tip: Periksa kembali mata uang yang dipilih. Gaji IDR biasanya jutaan (misal: 5.000.000), sedangkan USD biasanya ratusan sampai ribuan (misal: 1.500).</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -695,11 +713,22 @@ if (isset($contract['currency_code'])) {
                     duration: <?= $contract['duration_months'] ?? 9 ?>,
                     currencyId: <?= $currentCurrencyId ?>
                 },
-                showExchangeRate: <?= ($contract['currency_code'] ?? 'USD') !== 'USD' ? 'true' : 'false' ?>,
+                showExchangeRate: <?= ($contract['currency_code'] ?? 'IDR') !== 'IDR' ? 'true' : 'false' ?>,
+                salaryWarning: '',
                 currencyMap: {
                     <?php foreach ($currencies as $cur): ?>
                         '<?= $cur['id'] ?>': '<?= $cur['code'] ?>',
                     <?php endforeach; ?>
+                },
+                // Reasonable max monthly salary thresholds per currency (for crew/maritime)
+                salaryMaxThresholds: {
+                    'USD': 25000,
+                    'EUR': 25000,
+                    'SGD': 30000,
+                    'MYR': 50000,
+                    'IDR': 100000000,
+                    'GBP': 20000,
+                    'AUD': 30000,
                 },
                 totalSalary: 0,
                 clientRate: 0,
@@ -773,6 +802,24 @@ if (isset($contract['currency_code'])) {
                     deductionInputs.forEach(input => {
                         this.totalDeductions += this.parseCurrency(input.value);
                     });
+
+                    // Salary sanity check
+                    this.checkSalarySanity(basic);
+                },
+
+                checkSalarySanity(basicSalary) {
+                    const curCode = this.getSelectedCurrencyCode();
+                    const maxThreshold = this.salaryMaxThresholds[curCode] || 50000;
+                    
+                    if (basicSalary > 0 && basicSalary > maxThreshold) {
+                        const formattedMax = maxThreshold.toLocaleString('id-ID');
+                        const formattedSalary = basicSalary.toLocaleString('id-ID');
+                        this.salaryWarning = `⚠️ Peringatan: Gaji pokok ${curCode} ${formattedSalary} melebihi batas wajar untuk mata uang ${curCode} (maks ~${curCode} ${formattedMax}/bulan). Pastikan mata uang dan nominal sudah benar.`;
+                    } else if (curCode !== 'IDR' && basicSalary >= 1000000) {
+                        this.salaryWarning = `⚠️ Peringatan: Nominal ${curCode} ${basicSalary.toLocaleString('id-ID')} terlihat sangat besar untuk mata uang ${curCode}. Mungkin ini seharusnya dalam IDR?`;
+                    } else {
+                        this.salaryWarning = '';
+                    }
                 },
 
                 formatMoney(value) {
@@ -801,9 +848,13 @@ if (isset($contract['currency_code'])) {
                     }
                 },
 
+                getSelectedCurrencyCode() {
+                    return this.currencyMap[this.formData.currencyId] || 'USD';
+                },
+
                 toggleExchangeRate() {
-                    const code = this.currencyMap[this.formData.currencyId] || 'USD';
-                    this.showExchangeRate = (code !== 'USD');
+                    const code = this.getSelectedCurrencyCode();
+                    this.showExchangeRate = (code !== 'IDR');
                     this.reformatAllInputs();
                     this.calculateTotals();
                 },
@@ -899,6 +950,18 @@ if (isset($contract['currency_code'])) {
                         this.currentStep = 2;
                         this.$nextTick(() => alert('Sign On Date dan Sign Off Date wajib diisi!'));
                         return;
+                    }
+
+                    // Salary sanity check before submit
+                    if (this.salaryWarning) {
+                        const confirmed = confirm(
+                            'PERINGATAN GAJI!\n\n' + this.salaryWarning.replace('⚠️ ', '') +
+                            '\n\nApakah Anda yakin data gaji sudah benar dan ingin melanjutkan?'
+                        );
+                        if (!confirmed) {
+                            this.currentStep = 2;
+                            return;
+                        }
                     }
                     
                     // Submit the form
