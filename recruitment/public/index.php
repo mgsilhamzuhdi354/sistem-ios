@@ -66,6 +66,7 @@ function getDB() {
         if (!$isWindows) {
             $hostsToTry = [
                 $config['hostname'],
+                'mariadb-1', // Common NAS Docker container name
                 '172.17.0.1', // Gateway / NAS Host
                 '172.17.0.2',
                 '172.17.0.3',

@@ -130,6 +130,7 @@ class BaseController
             // Docker: try primary host first, then fallback IPs
             $hostsToTry = [
                 $config['hostname'],  // Primary (from env or default)
+                'mariadb-1',          // Common NAS Docker container name
                 '172.17.0.1',         // Docker Gateway / NAS Host
                 '172.17.0.2',
                 '172.17.0.3',
