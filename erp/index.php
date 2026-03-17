@@ -22,7 +22,16 @@ if (file_exists(BASEPATH . 'vendor/autoload.php')) {
 }
 
 // Dynamic BASE_URL detection
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+// Check multiple sources for HTTPS (Cloudflare terminates SSL and forwards via HTTP)
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+if (!$isHttps && !empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+    $isHttps = (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https');
+}
+if (!$isHttps && !empty($_SERVER['HTTP_CF_VISITOR'])) {
+    $cfVisitor = json_decode($_SERVER['HTTP_CF_VISITOR'], true);
+    $isHttps = (($cfVisitor['scheme'] ?? '') === 'https');
+}
+$protocol = $isHttps ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 
 // Get base path - handle Apache rewrite where SCRIPT_NAME may be the original URL

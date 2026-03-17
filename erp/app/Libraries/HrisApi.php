@@ -37,16 +37,17 @@ class HrisApi
         $password = $_ENV['HRIS_DB_PASSWORD'] ?? '';
 
         try {
-            $this->hrisDb = new \mysqli($host, $username, $password, $database, $port);
+            // Suppress warnings - HRIS DB may not exist on NAS
+            mysqli_report(MYSQLI_REPORT_OFF);
+            $this->hrisDb = @new \mysqli($host, $username, $password, $database, (int)$port);
             if ($this->hrisDb->connect_error) {
-                error_log("HRIS DB Connection Error: " . $this->hrisDb->connect_error);
+                // Silently fallback - this is expected on NAS/Docker
                 $this->hrisDb = null;
                 $this->useDirectDb = false;
             } else {
                 $this->hrisDb->set_charset('utf8mb4');
             }
         } catch (\Exception $e) {
-            error_log("HRIS DB Exception: " . $e->getMessage());
             $this->hrisDb = null;
             $this->useDirectDb = false;
         }
