@@ -320,11 +320,13 @@ class Client extends BaseController
             $deletedContracts = $stmt->affected_rows;
             $stmt->close();
 
-            // 4. Delete finance invoices for this client
+            // 4. Delete finance invoices for this client (table may not exist)
             $stmt = $db->prepare("DELETE FROM finance_invoices WHERE client_id = ?");
-            $stmt->bind_param('i', $id);
-            $stmt->execute();
-            $stmt->close();
+            if ($stmt) {
+                $stmt->bind_param('i', $id);
+                $stmt->execute();
+                $stmt->close();
+            }
 
             // 5. Delete all vessels owned by this client
             $stmt = $db->prepare("DELETE FROM vessels WHERE client_id = ?");

@@ -895,7 +895,9 @@ class Contract extends BaseController
             'ranks' => $rankModel->getForDropdown(),
         ];
 
-        return $this->view('contracts/renew', $data);
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
+        $view = $uiMode === 'modern' ? 'contracts/renew_modern' : 'contracts/renew';
+        return $this->view($view, $data);
     }
 
     /**
