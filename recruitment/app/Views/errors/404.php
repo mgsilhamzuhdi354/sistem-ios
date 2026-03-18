@@ -1,9 +1,10 @@
 <?php
-// Detect Laragon Pretty URL
+// Detect environment for correct URL (must match index.php logic)
+$isWindows = (PHP_OS_FAMILY === 'Windows' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$isLaragon = (strpos($host, '.test') !== false || strpos($host, '.local') !== false);
-$basePath = $isLaragon ? '' : '/indoocean';
-$recruitmentPath = $basePath . '/recruitment/public';
+$isLaragonPrettyUrl = (strpos($host, '.test') !== false || strpos($host, '.local') !== false);
+$isDirectDomain = (!$isWindows || $isLaragonPrettyUrl);
+$recruitmentPath = $isDirectDomain ? '/recruitment/public' : '/PT_indoocean/PT_indoocean/recruitment/public';
 ?>
 <!DOCTYPE html>
 <html lang="id">

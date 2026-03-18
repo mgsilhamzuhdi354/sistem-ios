@@ -234,7 +234,7 @@ $layout = 'main';
                 <div class="about-text">
                     <h2>Siapa Kami</h2>
                     <p>PT Indo Ocean Crew Services adalah perusahaan penyedia jasa awak kapal profesional yang berkomitmen menyediakan tenaga kerja maritim berkualitas tinggi untuk industri pelayaran nasional dan internasional.</p>
-                    <p>Dengan pengalaman lebih dari 14 tahun, kami telah berhasil menempatkan ribuan pelaut terampil di berbagai jenis kapal, mulai dari kapal tanker, cargo, offshore, hingga kapal pesiar.</p>
+                    <p>Dengan pengalaman lebih dari 2 tahun, kami telah berhasil menempatkan ratusan pelaut terampil di berbagai jenis kapal, mulai dari kapal tanker, cargo, offshore, hingga kapal pesiar.</p>
                     <div class="cert-badges">
                         <span class="cert-badge"><i class="fas fa-certificate"></i> SIUPPAK</span>
                         <span class="cert-badge"><i class="fas fa-check-circle"></i> ISO 9001:2015</span>
@@ -253,16 +253,16 @@ $layout = 'main';
         <div class="container">
             <div class="stats-row">
                 <div class="stat-item">
-                    <span class="number">14+</span>
+                    <span class="number">2+</span>
                     <span class="label">Tahun Pengalaman</span>
                 </div>
                 <div class="stat-item">
-                    <span class="number">5000+</span>
-                    <span class="label">Pelaut Ditempatkan</span>
+                    <span class="number">500+</span>
+                    <span class="label">Penempatan</span>
                 </div>
                 <div class="stat-item">
-                    <span class="number">50+</span>
-                    <span class="label">Partner Perusahaan</span>
+                    <span class="number">10+</span>
+                    <span class="label">Customer</span>
                 </div>
                 <div class="stat-item">
                     <span class="number">24/7</span>
