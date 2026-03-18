@@ -552,13 +552,27 @@ if ($action === 'get' && $id > 0) {
         if (file_exists($mailerFile)) {
             require_once $mailerFile;
             if (class_exists('App\\Libraries\\Mailer')) {
-                $mailer = new \App\Libraries\Mailer();
-                $mailerSent = $mailer->sendPayslip($email, $item['crew_name'], $period, $item, $attachmentPath);
-                if (!$mailerSent) {
-                    $mailerErrors = implode('; ', $mailer->getErrors());
-                    error_log("[PAYSLIP_EMAIL] SMTP failed for {$email}: {$mailerErrors}");
+                try {
+                    $mailer = new \App\Libraries\Mailer();
+                    error_log("[PAYSLIP_EMAIL] Mailer loaded. Sending to {$email}, attachment=" . ($attachmentPath ?? 'none'));
+                    $mailerSent = $mailer->sendPayslip($email, $item['crew_name'], $period, $item, $attachmentPath);
+                    if (!$mailerSent) {
+                        $mailerErrors = implode('; ', $mailer->getErrors());
+                        error_log("[PAYSLIP_EMAIL] SMTP failed for {$email}: {$mailerErrors}");
+                    } else {
+                        error_log("[PAYSLIP_EMAIL] Sent OK to {$email}");
+                    }
+                } catch (\Throwable $e) {
+                    $mailerErrors = 'Mailer error: ' . $e->getMessage();
+                    error_log("[PAYSLIP_EMAIL] Exception: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
                 }
+            } else {
+                $mailerErrors = 'Mailer class not found';
+                error_log("[PAYSLIP_EMAIL] class_exists failed");
             }
+        } else {
+            $mailerErrors = 'Mailer.php not found';
+            error_log("[PAYSLIP_EMAIL] File not found: {$mailerFile}");
         }
         
         // Don't delete permanent PDF files (only delete temp ones)
