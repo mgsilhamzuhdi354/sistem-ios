@@ -23,7 +23,15 @@ if (!is_dir($payslipsDir)) {
     @mkdir($payslipsDir, 0755, true);
 }
 
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$isHttpsProto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+if (!$isHttpsProto && !empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+    $isHttpsProto = (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https');
+}
+if (!$isHttpsProto && !empty($_SERVER['HTTP_CF_VISITOR'])) {
+    $cfv = json_decode($_SERVER['HTTP_CF_VISITOR'], true);
+    $isHttpsProto = (($cfv['scheme'] ?? '') === 'https');
+}
+$protocol = $isHttpsProto ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
 $basePath = rtrim($scriptDir, '/') . '/';
@@ -32,7 +40,7 @@ define('BASE_URL', $protocol . '://' . $host . $basePath);
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
-$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+$isHttps = $isHttpsProto;
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
 ini_set('session.cookie_samesite', 'Lax');

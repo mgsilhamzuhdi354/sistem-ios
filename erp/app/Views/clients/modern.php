@@ -489,22 +489,7 @@
                             <?php endif; ?>
                         </div>
 
-                        <!-- Quick Actions -->
-                        <div class="mt-8 border-t border-border-light pt-6">
-                            <h4 class="text-xs font-bold text-slate-900 mb-4"><?= __('common.actions') ?></h4>
-                            <div class="grid grid-cols-2 gap-3">
-                                <button onclick="alert('Fitur ekspor laporan akan segera tersedia.')"
-                                    class="p-3 border border-border-light rounded-lg hover:border-primary hover:text-primary transition-colors text-xs font-medium text-slate-600 flex flex-col items-center justify-center gap-2">
-                                    <i class="ph ph-file-pdf text-xl"></i>
-                                    <?= __('common.export') ?> <?= __('reports.title') ?>
-                                </button>
-                                <button onclick="alert('Fitur email klien akan segera tersedia.')"
-                                    class="p-3 border border-border-light rounded-lg hover:border-primary hover:text-primary transition-colors text-xs font-medium text-slate-600 flex flex-col items-center justify-center gap-2">
-                                    <i class="ph ph-envelope-simple text-xl"></i>
-                                    Email Clients
-                                </button>
-                            </div>
-                        </div>
+
                     </div>
                 </div>
             </div>
