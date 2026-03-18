@@ -1493,7 +1493,7 @@ $periodStatus = $period['status'] ?? 'draft';
                     btn.disabled = false;
                 }
             } catch (e) {
-                statusContent.innerHTML = '<span class="material-icons text-red-500" style="font-size:16px">error</span><span class="text-xs text-red-600">Gagal mengirim email</span>';
+                statusContent.innerHTML = '<span class="material-icons text-red-500" style="font-size:16px">error</span><span class="text-xs text-red-600">' + (e.message || 'Gagal mengirim email') + '</span>';
                 btn.innerHTML = '<span class="material-icons text-sm">send</span> Kirim via Email';
                 btn.disabled = false;
             }

@@ -38,7 +38,21 @@ $basePath = rtrim($scriptDir, '/') . '/';
 define('BASE_URL', $protocol . '://' . $host . $basePath);
 
 error_reporting(E_ALL);
-ini_set('display_errors', 0);
+ini_set('display_errors', 1);
+
+// Catch fatal errors and return as JSON
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        if (!headers_sent()) {
+            header('Content-Type: application/json');
+        }
+        echo json_encode([
+            'success' => false,
+            'message' => 'PHP Fatal: ' . $error['message'] . ' in ' . basename($error['file']) . ':' . $error['line']
+        ]);
+    }
+});
 
 $isHttps = $isHttpsProto;
 ini_set('session.cookie_httponly', 1);
