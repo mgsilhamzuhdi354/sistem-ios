@@ -330,6 +330,9 @@ class RecruitmentHub extends BaseController
                     updated_at = NOW()
                 WHERE id = ? AND status = 'pending_approval'
             ");
+            if (!$stmt) {
+                throw new \Exception('DB prepare error (crews UPDATE): ' . $this->db->error . '. Cek kolom: approved_at, approved_by');
+            }
             $stmt->bind_param('issi', $userId, $approvalNotes, $approvalNotes, $crewId);
             $stmt->execute();
 
@@ -341,12 +344,19 @@ class RecruitmentHub extends BaseController
             // Auto-create admin checklist entry
             $this->ensureAdminChecklistTable();
             $clStmt = $this->db->prepare("INSERT IGNORE INTO admin_checklists (crew_id) VALUES (?)");
-            $clStmt->bind_param('i', $crewId);
-            $clStmt->execute();
-            $clStmt->close();
+            if ($clStmt) {
+                $clStmt->bind_param('i', $crewId);
+                $clStmt->execute();
+                $clStmt->close();
+            } else {
+                error_log('Failed to create admin checklist entry: ' . $this->db->error);
+            }
 
             // Get crew name for notification
             $nameStmt = $this->db->prepare("SELECT full_name, current_rank_id FROM crews WHERE id = ?");
+            if (!$nameStmt) {
+                throw new \Exception('DB prepare error (crew name query): ' . $this->db->error);
+            }
             $nameStmt->bind_param('i', $crewId);
             $nameStmt->execute();
             $crew = $nameStmt->get_result()->fetch_assoc();
@@ -601,6 +611,9 @@ class RecruitmentHub extends BaseController
 
             // Check if already synced
             $checkStmt = $this->db->prepare("SELECT crew_id FROM recruitment_sync WHERE recruitment_applicant_id = ?");
+            if (!$checkStmt) {
+                throw new \Exception('DB prepare error (recruitment_sync check): ' . $this->db->error);
+            }
             $checkStmt->bind_param('i', $applicationId);
             $checkStmt->execute();
             $existing = $checkStmt->get_result()->fetch_assoc();
@@ -684,6 +697,9 @@ class RecruitmentHub extends BaseController
                 JOIN job_vacancies v ON a.vacancy_id = v.id
                 WHERE a.id = ?
             ");
+            if (!$stmt) {
+                throw new \Exception('DB prepare error (recruitment app query): ' . $this->recruitmentDb->error);
+            }
             $stmt->bind_param('i', $applicationId);
             $stmt->execute();
             $application = $stmt->get_result()->fetch_assoc();
@@ -698,6 +714,9 @@ class RecruitmentHub extends BaseController
             // Generate employee_id (format: CRW-YYYY-XXXX)
             $year = date('Y');
             $countStmt = $this->db->prepare("SELECT COUNT(*) as count FROM crews WHERE employee_id LIKE ?");
+            if (!$countStmt) {
+                throw new \Exception('DB prepare error (employee_id count): ' . $this->db->error);
+            }
             $pattern = "CRW-{$year}-%";
             $countStmt->bind_param('s', $pattern);
             $countStmt->execute();
@@ -717,6 +736,9 @@ class RecruitmentHub extends BaseController
                     notes, created_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_checklist', 'recruitment', ?, NOW(), ?, ?, NOW())
             ");
+            if (!$stmt) {
+                throw new \Exception('DB prepare error (crews INSERT): ' . $this->db->error . '. Pastikan tabel crews memiliki kolom: source, candidate_id, approved_at, approved_by');
+            }
 
             $rankId = 1; // Default rank
             $userId = $_SESSION['user_id'] ?? 1;
@@ -756,6 +778,9 @@ class RecruitmentHub extends BaseController
                 (recruitment_applicant_id, crew_id, sync_status, synced_at, created_at)
                 VALUES (?, ?, 'onboarded', NOW(), NOW())
             ");
+            if (!$syncStmt) {
+                throw new \Exception('DB prepare error (recruitment_sync INSERT): ' . $this->db->error);
+            }
             $syncStmt->bind_param('ii', $applicationId, $crewId);
             $syncStmt->execute();
             $syncStmt->close();
@@ -792,9 +817,21 @@ class RecruitmentHub extends BaseController
             // Auto-create admin checklist entry
             $this->ensureAdminChecklistTable();
             $clStmt = $this->db->prepare("INSERT IGNORE INTO admin_checklists (crew_id, application_id) VALUES (?, ?)");
-            $clStmt->bind_param('ii', $crewId, $applicationId);
-            $clStmt->execute();
-            $clStmt->close();
+            if ($clStmt) {
+                $clStmt->bind_param('ii', $crewId, $applicationId);
+                $clStmt->execute();
+                $clStmt->close();
+            } else {
+                // Try without application_id (column may not exist)
+                $clStmt2 = $this->db->prepare("INSERT IGNORE INTO admin_checklists (crew_id) VALUES (?)");
+                if ($clStmt2) {
+                    $clStmt2->bind_param('i', $crewId);
+                    $clStmt2->execute();
+                    $clStmt2->close();
+                } else {
+                    error_log('Failed to create admin checklist: ' . $this->db->error);
+                }
+            }
 
             // Create notification — redirect to Admin Checklist
             $this->createNotification(
