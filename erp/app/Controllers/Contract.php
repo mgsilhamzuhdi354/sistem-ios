@@ -183,19 +183,19 @@ class Contract extends BaseController
                 c.birth_date,
                 c.nationality,
                 c.current_rank_id,
-                c.approved_at,
+                COALESCE(c.approved_at, c.created_at) as approved_at,
                 c.source,
                 r.name as rank_name,
-                DATEDIFF(NOW(), c.approved_at) as days_since_approval
+                DATEDIFF(NOW(), COALESCE(c.approved_at, c.created_at)) as days_since_approval
             FROM crews c
             LEFT JOIN ranks r ON c.current_rank_id = r.id
             WHERE c.source = 'recruitment'
-            AND c.status IN ('standby', 'available', 'ready_operational', 'pending_checklist')
+            AND c.status IN ('standby', 'available', 'ready_operational', 'pending_checklist', 'contracted')
             AND c.id NOT IN (
                 SELECT crew_id FROM contracts
-                WHERE status IN ('active', 'pending_approval', 'draft', 'onboard')
+                WHERE status IN ('active', 'onboard')
             )
-            ORDER BY c.approved_at DESC
+            ORDER BY COALESCE(c.approved_at, c.created_at) DESC
             LIMIT 50
         ";
 
@@ -417,6 +417,20 @@ class Contract extends BaseController
             );
 
             $this->setFlash('success', 'Contract created successfully');
+
+            // Sync crew status to 'contracted' when contract is created
+            $syncCrewId = (int) $crewId;
+            if ($syncCrewId > 0) {
+                $crewUpdStmt = $this->db->prepare("UPDATE crews SET status = 'contracted', updated_at = NOW() WHERE id = ?");
+                if ($crewUpdStmt) {
+                    $crewUpdStmt->bind_param('i', $syncCrewId);
+                    $crewUpdStmt->execute();
+                    $crewUpdStmt->close();
+                }
+
+                // Sync recruitment pipeline status to 'Processing' (status_id=5)
+                $this->syncRecruitmentPipelineStatus($syncCrewId, 5);
+            }
             
             // Send notification: New Contract Created (Crew Sign-On)
             try {
@@ -690,13 +704,18 @@ class Contract extends BaseController
             if ($allApproved) {
                 $this->contractModel->update($id, ['status' => CONTRACT_STATUS_ACTIVE]);
                 
-                // Sync crew status to 'contracted'
+                // Sync crew status to 'onboard' (contract fully approved)
                 $contract = $this->contractModel->find($id);
                 if (!empty($contract['crew_id'])) {
-                    $crewStmt = $this->db->prepare("UPDATE crews SET status = 'contracted', updated_at = NOW() WHERE id = ?");
-                    $crewStmt->bind_param('i', $contract['crew_id']);
-                    $crewStmt->execute();
-                    $crewStmt->close();
+                    $crewStmt = $this->db->prepare("UPDATE crews SET status = 'onboard', updated_at = NOW() WHERE id = ?");
+                    if ($crewStmt) {
+                        $crewStmt->bind_param('i', $contract['crew_id']);
+                        $crewStmt->execute();
+                        $crewStmt->close();
+                    }
+
+                    // Sync recruitment pipeline status to 'On Board' (status_id=11)
+                    $this->syncRecruitmentPipelineStatus((int)$contract['crew_id'], 11);
                 }
                 
                 // Notify: Crew ON Board
@@ -998,6 +1017,232 @@ class Contract extends BaseController
     }
 
     /**
+     * Feature: Suspend contract (OFF) - removes from all calculations
+     */
+    public function suspend($id)
+    {
+        $this->requirePermission('contracts', 'edit');
+        $contract = $this->contractModel->find($id);
+
+        if (!$contract) {
+            $this->setFlash('error', 'Contract not found');
+            $this->redirect('contracts');
+            return;
+        }
+
+        // Only active/onboard contracts can be suspended
+        if (!in_array($contract['status'], ['active', 'onboard'])) {
+            $this->setFlash('error', 'Hanya kontrak Active/Onboard yang bisa di-suspend.');
+            $this->redirect('contracts/' . $id);
+            return;
+        }
+
+        if ($this->isPost()) {
+            $this->db->begin_transaction();
+
+            try {
+                $previousStatus = $contract['status'];
+                $suspendReason = $this->input('suspend_reason', '');
+
+                // 1. Update contract status to suspended, save previous status in notes for restore
+                $notesPrefix = "[SUSPENDED from:{$previousStatus}] ";
+                $existingNotes = $contract['notes'] ?? '';
+                $this->contractModel->update($id, [
+                    'status' => CONTRACT_STATUS_SUSPENDED,
+                    'notes' => $notesPrefix . ($suspendReason ? $suspendReason . ' | ' : '') . $existingNotes,
+                    'updated_by' => $this->getCurrentUser()['id'] ?? null,
+                ]);
+
+                // 2. Update crew status to standby
+                if (!empty($contract['crew_id'])) {
+                    $crewStmt = $this->db->prepare("UPDATE crews SET status = 'standby', updated_at = NOW() WHERE id = ?");
+                    $crewStmt->bind_param('i', $contract['crew_id']);
+                    $crewStmt->execute();
+                    $crewStmt->close();
+                }
+
+                // 3. Cleanup pending payroll items for this contract
+                $affectedPeriods = $this->db->query(
+                    "SELECT DISTINCT payroll_period_id FROM payroll_items WHERE contract_id = " . intval($id) . " AND status IN ('pending', 'draft')"
+                );
+                $this->db->query(
+                    "DELETE FROM payroll_items WHERE contract_id = " . intval($id) . " AND status IN ('pending', 'draft')"
+                );
+                if ($affectedPeriods) {
+                    require_once APPPATH . 'Models/PayrollModel.php';
+                    $periodModel = new \App\Models\PayrollPeriodModel($this->db);
+                    while ($row = $affectedPeriods->fetch_assoc()) {
+                        $periodModel->updateTotals($row['payroll_period_id']);
+                    }
+                }
+
+                // 4. Log
+                $logModel = new ContractLogModel($this->db);
+                $logModel->log($id, 'suspended', [
+                    'field' => 'status',
+                    'old' => $previousStatus,
+                    'new' => 'suspended'
+                ], $this->getCurrentUser()['id'] ?? null, $this->getCurrentUser()['name'] ?? 'System');
+
+                $this->db->commit();
+
+                // 5. Notify
+                try {
+                    $notifModel = new \App\Models\NotificationModel($this->db);
+                    $crewName = $contract['crew_name'] ?? 'Unknown';
+                    $contractNo = $contract['contract_no'] ?? '';
+                    $vesselName = '-'; $rankName = '-';
+                    $infoQ = $this->db->query("SELECT v.name as vessel_name, r.name as rank_name FROM contracts c LEFT JOIN vessels v ON c.vessel_id=v.id LEFT JOIN ranks r ON c.rank_id=r.id WHERE c.id=" . intval($id) . " LIMIT 1");
+                    if ($infoQ && $info = $infoQ->fetch_assoc()) { $vesselName = $info['vessel_name'] ?? '-'; $rankName = $info['rank_name'] ?? '-'; }
+                    $reasonText = $suspendReason ?: 'Tidak ada alasan';
+                    $msg = "⏸️ *KONTRAK DI-SUSPEND (OFF)*\n━━━━━━━━━━━━━━━━━━\n\n"
+                         . "👤 *Crew:* {$crewName}\n🎖️ *Rank:* {$rankName}\n🚢 *Vessel:* {$vesselName}\n"
+                         . "📋 *Kontrak:* {$contractNo}\n\n"
+                         . "⚠️ *Status:* SUSPENDED\n"
+                         . "📝 *Alasan:* {$reasonText}\n\n"
+                         . "ℹ️ Semua perhitungan payroll, margin, pendapatan otomatis dikurangi.\n"
+                         . "Kontrak bisa di-reactivate kapan saja.\n\n"
+                         . "⏰ " . date('d M Y, H:i') . "\n━━━━━━━━━━━━━━━━━━\n— _IndoOcean ERP_ 🌊";
+                    $notifModel->notify('warning', 'Kontrak Di-Suspend', $msg, 'contracts/' . $id);
+                } catch (\Exception $e) {
+                    error_log('Suspend notification failed: ' . $e->getMessage());
+                }
+
+                $this->setFlash('success', 'Kontrak berhasil di-suspend. Semua perhitungan otomatis disesuaikan.');
+                $this->redirect('contracts/' . $id);
+
+            } catch (\Exception $e) {
+                $this->db->rollback();
+                $this->setFlash('error', 'Gagal suspend kontrak: ' . $e->getMessage());
+                $this->redirect('contracts/' . $id);
+            }
+            return;
+        }
+
+        // Show confirm page (GET request) - redirect to detail with flash
+        $data = [
+            'title' => 'Suspend Contract - ' . $contract['contract_no'],
+            'contract' => $contract,
+        ];
+        return $this->view('contracts/suspend_modern', $data);
+    }
+
+    /**
+     * Feature: Reactivate suspended contract (ON) - restores to all calculations
+     */
+    public function reactivate($id)
+    {
+        $this->requirePermission('contracts', 'edit');
+        $contract = $this->contractModel->find($id);
+
+        if (!$contract) {
+            $this->setFlash('error', 'Contract not found');
+            $this->redirect('contracts');
+            return;
+        }
+
+        // Only suspended contracts can be reactivated
+        if ($contract['status'] !== CONTRACT_STATUS_SUSPENDED) {
+            $this->setFlash('error', 'Hanya kontrak Suspended yang bisa di-reactivate.');
+            $this->redirect('contracts/' . $id);
+            return;
+        }
+
+        if (!$this->isPost()) {
+            $this->redirect('contracts/' . $id);
+            return;
+        }
+
+        $this->db->begin_transaction();
+
+        try {
+            // 1. Restore previous status from notes
+            $restoredStatus = 'active'; // default
+            $notes = $contract['notes'] ?? '';
+            if (preg_match('/\[SUSPENDED from:(\w+)\]/', $notes, $matches)) {
+                $restoredStatus = $matches[1];
+                // Clean the suspend marker from notes
+                $notes = trim(preg_replace('/\[SUSPENDED from:\w+\]\s*/', '', $notes));
+                // Also clean the suspend reason part if present
+                $notes = preg_replace('/^[^|]*\|\s*/', '', $notes);
+            }
+
+            // Ensure restored status is valid
+            if (!in_array($restoredStatus, ['active', 'onboard'])) {
+                $restoredStatus = 'active';
+            }
+
+            // 2. Update contract status
+            $this->contractModel->update($id, [
+                'status' => $restoredStatus,
+                'notes' => $notes,
+                'updated_by' => $this->getCurrentUser()['id'] ?? null,
+            ]);
+
+            // 3. Update crew status to contracted
+            if (!empty($contract['crew_id'])) {
+                $crewStmt = $this->db->prepare("UPDATE crews SET status = 'contracted', updated_at = NOW() WHERE id = ?");
+                $crewStmt->bind_param('i', $contract['crew_id']);
+                $crewStmt->execute();
+                $crewStmt->close();
+            }
+
+            // 4. Auto-regenerate payroll for current period if exists
+            try {
+                require_once APPPATH . 'Models/PayrollModel.php';
+                $periodModel = new \App\Models\PayrollPeriodModel($this->db);
+                $currentMonth = date('n');
+                $currentYear = date('Y');
+                $currentPeriod = $periodModel->getOrCreate($currentMonth, $currentYear);
+                if ($currentPeriod && $currentPeriod['status'] !== 'locked') {
+                    $itemModel = new \App\Models\PayrollItemModel($this->db);
+                    $itemModel->generateForPeriod($currentPeriod['id']);
+                }
+            } catch (\Exception $e) {
+                error_log('Reactivate payroll regen failed: ' . $e->getMessage());
+            }
+
+            // 5. Log
+            $logModel = new ContractLogModel($this->db);
+            $logModel->log($id, 'reactivated', [
+                'field' => 'status',
+                'old' => 'suspended',
+                'new' => $restoredStatus
+            ], $this->getCurrentUser()['id'] ?? null, $this->getCurrentUser()['name'] ?? 'System');
+
+            $this->db->commit();
+
+            // 6. Notify
+            try {
+                $notifModel = new \App\Models\NotificationModel($this->db);
+                $crewName = $contract['crew_name'] ?? 'Unknown';
+                $contractNo = $contract['contract_no'] ?? '';
+                $vesselName = '-'; $rankName = '-';
+                $infoQ = $this->db->query("SELECT v.name as vessel_name, r.name as rank_name FROM contracts c LEFT JOIN vessels v ON c.vessel_id=v.id LEFT JOIN ranks r ON c.rank_id=r.id WHERE c.id=" . intval($id) . " LIMIT 1");
+                if ($infoQ && $info = $infoQ->fetch_assoc()) { $vesselName = $info['vessel_name'] ?? '-'; $rankName = $info['rank_name'] ?? '-'; }
+                $msg = "▶️ *KONTRAK DI-REACTIVATE (ON)*\n━━━━━━━━━━━━━━━━━━\n\n"
+                     . "👤 *Crew:* {$crewName}\n🎖️ *Rank:* {$rankName}\n🚢 *Vessel:* {$vesselName}\n"
+                     . "📋 *Kontrak:* {$contractNo}\n\n"
+                     . "✅ *Status:* " . strtoupper($restoredStatus) . "\n\n"
+                     . "ℹ️ Semua perhitungan payroll, margin, pendapatan otomatis kembali.\n"
+                     . "Kontrak sudah aktif kembali.\n\n"
+                     . "⏰ " . date('d M Y, H:i') . "\n━━━━━━━━━━━━━━━━━━\n— _IndoOcean ERP_ 🌊";
+                $notifModel->notify('success', 'Kontrak Di-Reactivate', $msg, 'contracts/' . $id);
+            } catch (\Exception $e) {
+                error_log('Reactivate notification failed: ' . $e->getMessage());
+            }
+
+            $this->setFlash('success', 'Kontrak berhasil di-reactivate! Semua perhitungan otomatis kembali normal.');
+            $this->redirect('contracts/' . $id);
+
+        } catch (\Exception $e) {
+            $this->db->rollback();
+            $this->setFlash('error', 'Gagal reactivate kontrak: ' . $e->getMessage());
+            $this->redirect('contracts/' . $id);
+        }
+    }
+
+    /**
      * Feature 10: Get expiring contracts for alerts
      */
     public function expiring($days = null)
@@ -1293,5 +1538,63 @@ class Contract extends BaseController
         ];
 
         return $this->view('contracts/timeline_modern', $data);
+    }
+
+    /**
+     * Sync recruitment pipeline status when contract status changes.
+     * Maps crew_id → recruitment application via recruitment_sync table,
+     * then updates recruitment DB applications.status_id.
+     * 
+     * Status IDs in recruitment DB:
+     *   5 = Processing (contract created/pending)
+     *   6 = Approved (checklist completed)
+     *   9 = Admin Review
+     *   11 = On Board (contract approved & active)
+     */
+    private function syncRecruitmentPipelineStatus(int $crewId, int $statusId): void
+    {
+        try {
+            // Look up the recruitment application ID from sync table
+            $syncStmt = $this->db->prepare("SELECT recruitment_applicant_id FROM recruitment_sync WHERE crew_id = ? LIMIT 1");
+            if (!$syncStmt) return;
+            
+            $syncStmt->bind_param('i', $crewId);
+            $syncStmt->execute();
+            $syncRow = $syncStmt->get_result()->fetch_assoc();
+            $syncStmt->close();
+
+            if (!$syncRow || empty($syncRow['recruitment_applicant_id'])) {
+                return; // Not from recruitment — nothing to sync
+            }
+
+            $applicationId = (int) $syncRow['recruitment_applicant_id'];
+
+            // Update sync table status
+            $syncStatus = $statusId == 6 ? 'onboard' : 'processing';
+            $updSync = $this->db->prepare("UPDATE recruitment_sync SET sync_status = ?, synced_at = NOW() WHERE crew_id = ?");
+            if ($updSync) {
+                $updSync->bind_param('si', $syncStatus, $crewId);
+                $updSync->execute();
+                $updSync->close();
+            }
+
+            // Update recruitment DB if connected
+            if (!empty($this->recruitmentDb) && !$this->recruitmentDb->connect_error) {
+                $updApp = $this->recruitmentDb->prepare("
+                    UPDATE applications 
+                    SET status_id = ?, status_updated_at = NOW(), updated_at = NOW() 
+                    WHERE id = ?
+                ");
+                if ($updApp) {
+                    $updApp->bind_param('ii', $statusId, $applicationId);
+                    $updApp->execute();
+                    $updApp->close();
+                }
+            }
+
+            error_log("Pipeline sync: crew_id={$crewId}, app_id={$applicationId}, status_id={$statusId}");
+        } catch (\Throwable $e) {
+            error_log("syncRecruitmentPipelineStatus error: " . $e->getMessage());
+        }
     }
 }

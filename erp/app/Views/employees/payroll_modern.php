@@ -2,6 +2,7 @@
 /**
  * Modern Payroll Dashboard View
  * PT Indo Ocean - ERP System
+ * With Professional Print Layout
  */
 $currentPage = $currentPage ?? 'payroll';
 $months = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -23,20 +24,35 @@ $totalTunjangan = 0;
 $totalLembur = 0;
 $totalPotongan = 0;
 $totalGaji = 0;
+$totalBonus = 0;
+$totalReimbursement = 0;
+$totalBpjsJht = 0;
+$totalBpjsKes = 0;
+$totalPph21 = 0;
 
 if (!empty($payrollData)) {
     $totalEmployees = count($payrollData);
     foreach ($payrollData as $row) {
         $gajiPokok = $row['gaji_pokok'] ?? 0;
-        $tunjangan = $row['tunjangan'] ?? 0;
-        $lembur = $row['lembur'] ?? 0;
+        $tunjangan = $row['tunjangan'] ?? ($row['uang_transport'] ?? 0) + ($row['uang_makan'] ?? 0);
+        $lembur = $row['lembur'] ?? $row['total_lembur'] ?? 0;
         $potongan = $row['potongan'] ?? 0;
+        $bonus = ($row['bonus_pribadi'] ?? 0) + ($row['bonus_team'] ?? 0) + ($row['bonus_jackpot'] ?? 0);
+        $reimbursement = $row['total_reimbursement'] ?? 0;
+        $bpjsJht = $row['bpjs_jht_amount'] ?? 0;
+        $bpjsKes = $row['bpjs_kes_amount'] ?? 0;
+        $pph21 = $row['pph21_amount'] ?? 0;
         
         $totalGajiPokok += $gajiPokok;
         $totalTunjangan += $tunjangan;
         $totalLembur += $lembur;
         $totalPotongan += $potongan;
-        $totalGaji += ($gajiPokok + $tunjangan + $lembur - $potongan);
+        $totalBonus += $bonus;
+        $totalReimbursement += $reimbursement;
+        $totalBpjsJht += $bpjsJht;
+        $totalBpjsKes += $bpjsKes;
+        $totalPph21 += $pph21;
+        $totalGaji += ($row['grand_total'] ?? ($gajiPokok + $tunjangan + $lembur - $potongan));
     }
 }
 
@@ -119,9 +135,300 @@ $avatarColors = [
         }
         body { font-family: 'Inter', sans-serif; }
     </style>
+
+    <!-- Professional Print Styles -->
+    <style>
+        /* ===== PRINT-ONLY STYLES ===== */
+        @media print {
+            /* Reset */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            
+            /* Hide sidebar - it's an <aside> with inline styles */
+            aside { display: none !important; }
+            
+            /* Hide all screen-only elements */
+            .no-print, header, .glass-card, 
+            .animate-float, .animate-float-delayed, 
+            #erpSidebar, button, form, .filter-section,
+            .stats-section, .back-button-section,
+            .screen-only-table { display: none !important; }
+
+            /* Hide animated backgrounds */
+            [class*="absolute"][class*="blur"] { display: none !important; }
+            .absolute { display: none !important; }
+
+            html, body {
+                font-family: 'Inter', Arial, sans-serif !important;
+                font-size: 9pt !important;
+                color: #000 !important;
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                height: auto !important;
+            }
+
+            /* Main container reset — remove sidebar margin */
+            .flex.h-screen { display: block !important; height: auto !important; overflow: visible !important; }
+            [class*="ml-64"], .ml-64 { margin-left: 0 !important; }
+            .flex-1 { flex: none !important; }
+            main { padding: 0 !important; overflow: visible !important; height: auto !important; }
+            .overflow-hidden, .overflow-y-auto { overflow: visible !important; }
+
+            /* Show print header */
+            .print-header { display: block !important; }
+            .print-footer { display: block !important; }
+
+            /* Table styling for print */
+            .print-table-container {
+                display: block !important;
+                background: white !important;
+                border: none !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                overflow: visible !important;
+            }
+
+            .print-table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                font-size: 7.5pt !important;
+                page-break-inside: auto;
+            }
+
+            .print-table th {
+                background-color: #1a365d !important;
+                color: white !important;
+                font-weight: 700 !important;
+                padding: 6px 4px !important;
+                border: 1px solid #1a365d !important;
+                text-align: center !important;
+                font-size: 7pt !important;
+                white-space: nowrap !important;
+            }
+
+            .print-table td {
+                padding: 4px 4px !important;
+                border: 1px solid #cbd5e1 !important;
+                font-size: 7.5pt !important;
+                vertical-align: middle !important;
+            }
+
+            .print-table tbody tr:nth-child(even) {
+                background-color: #f8fafc !important;
+            }
+
+            .print-table tfoot td {
+                background-color: #e2e8f0 !important;
+                font-weight: 700 !important;
+                border: 1px solid #94a3b8 !important;
+                padding: 6px 4px !important;
+                font-size: 8pt !important;
+            }
+
+            .text-right-print { text-align: right !important; }
+            .text-center-print { text-align: center !important; }
+            .fw-bold-print { font-weight: 700 !important; }
+            .text-red-print { color: #dc2626 !important; }
+            .text-green-print { color: #16a34a !important; }
+
+            /* Page settings */
+            @page {
+                size: A4 landscape;
+                margin: 12mm 10mm 15mm 10mm;
+            }
+
+            /* Screen-only table hide */
+            .screen-only-table { display: none !important; }
+        }
+
+        /* Hide print elements on screen */
+        @media screen {
+            .print-header { display: none !important; }
+            .print-footer { display: none !important; }
+            .print-table-container.print-only { display: none !important; }
+        }
+    </style>
 </head>
 
 <body class="bg-slate-50 text-slate-900 antialiased overflow-hidden">
+
+    <!-- ===== PRINT HEADER (Hidden on screen, shows on print) ===== -->
+    <div class="print-header" style="display:none; margin-bottom: 20px;">
+        <table style="width:100%; border:none; margin-bottom: 8px;">
+            <tr>
+                <td style="width:80px; vertical-align:middle; border:none; padding:0;">
+                    <img src="<?= BASE_URL ?>assets/images/logo.png" alt="IndoOcean Logo" style="width:65px; height:65px;">
+                </td>
+                <td style="vertical-align:middle; border:none; padding:0 0 0 10px;">
+                    <div style="font-size: 18pt; font-weight: 800; color: #1a365d; letter-spacing: 1px; line-height: 1.2;">
+                        PT INDO OCEAN CREW SERVICE
+                    </div>
+                    <div style="font-size: 8pt; color: #475569; margin-top: 2px;">
+                        Menara Cakrawala Lt. 5 Suite 503 • Jl. MH Thamrin No.9, Jakarta Pusat 10340
+                    </div>
+                    <div style="font-size: 8pt; color: #475569;">
+                        Tel: (021) 3101-488 • Email: info@indooceancrew.com • www.indooceancrew.com
+                    </div>
+                </td>
+                <td style="width:80px; vertical-align:middle; text-align:right; border:none; padding:0;">
+                    <img src="<?= BASE_URL ?>assets/images/logo.png" alt="Company Logo" style="width:65px; height:65px;">
+                </td>
+            </tr>
+        </table>
+        
+        <div style="border-top: 3px solid #1a365d; border-bottom: 1px solid #1a365d; padding: 4px 0; margin-bottom: 12px;"></div>
+        
+        <div style="text-align:center; margin-bottom: 12px;">
+            <div style="font-size: 14pt; font-weight: 800; color: #1a365d; letter-spacing: 2px;">
+                LAPORAN PENGGAJIAN KARYAWAN
+            </div>
+            <div style="font-size: 10pt; font-weight: 600; color: #475569; margin-top: 4px;">
+                Periode: <?= $months[$month] ?> <?= $year ?>
+            </div>
+        </div>
+
+        <table style="width: 100%; border:none; margin-bottom: 10px; font-size: 8pt;">
+            <tr>
+                <td style="border:none; padding:2px 0;">
+                    <strong>Tanggal Cetak:</strong> <?= date('d/m/Y H:i') ?> WIB
+                </td>
+                <td style="border:none; padding:2px 0; text-align:right;">
+                    <strong>Total Karyawan:</strong> <?= $totalEmployees ?> orang
+                </td>
+            </tr>
+            <tr>
+                <td style="border:none; padding:2px 0;">
+                    <strong>Sumber Data:</strong> 
+                    <?php 
+                    $ds = $dataSource ?? 'unknown';
+                    echo $ds === 'database' ? 'HRIS Live Database' : ($ds === 'api_live' ? 'HRIS API Live' : 'Data Lokal');
+                    ?>
+                </td>
+                <td style="border:none; padding:2px 0; text-align:right;">
+                    <strong>Status:</strong> <span style="color:#16a34a; font-weight:700;">FINAL</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ===== PRINT TABLE (Hidden on screen, shown on print) ===== -->
+    <?php if (!empty($payrollData)): ?>
+    <div class="print-table-container print-only" style="display:none;">
+        <table class="print-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width:25px;">No</th>
+                    <th rowspan="2" style="width:80px;">No. Gaji</th>
+                    <th rowspan="2" style="min-width:120px;">Nama Karyawan</th>
+                    <th rowspan="2" style="min-width:80px;">Jabatan</th>
+                    <th colspan="5" style="background-color:#166534 !important; border-color:#166534 !important;">PENDAPATAN</th>
+                    <th colspan="5" style="background-color:#991b1b !important; border-color:#991b1b !important;">POTONGAN</th>
+                    <th rowspan="2" style="background-color:#0c4a6e !important; border-color:#0c4a6e !important; min-width:80px;">GRAND TOTAL</th>
+                </tr>
+                <tr>
+                    <th style="background-color:#15803d !important; border-color:#15803d !important;">Gaji Pokok</th>
+                    <th style="background-color:#15803d !important; border-color:#15803d !important;">Tunjangan</th>
+                    <th style="background-color:#15803d !important; border-color:#15803d !important;">Lembur</th>
+                    <th style="background-color:#15803d !important; border-color:#15803d !important;">Bonus</th>
+                    <th style="background-color:#15803d !important; border-color:#15803d !important;">Reimburse</th>
+                    <th style="background-color:#b91c1c !important; border-color:#b91c1c !important;">Mangkir/Telat</th>
+                    <th style="background-color:#b91c1c !important; border-color:#b91c1c !important;">Kasbon</th>
+                    <th style="background-color:#b91c1c !important; border-color:#b91c1c !important;">BPJS</th>
+                    <th style="background-color:#b91c1c !important; border-color:#b91c1c !important;">PPH 21</th>
+                    <th style="background-color:#b91c1c !important; border-color:#b91c1c !important;">Lainnya</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php 
+                $no = 1;
+                foreach ($payrollData as $row):
+                    $gajiPokok = $row['gaji_pokok'] ?? 0;
+                    $tunjangan = $row['tunjangan'] ?? ($row['uang_transport'] ?? 0) + ($row['uang_makan'] ?? 0);
+                    $lembur = $row['lembur'] ?? $row['total_lembur'] ?? 0;
+                    $bonus = ($row['bonus_pribadi'] ?? 0) + ($row['bonus_team'] ?? 0) + ($row['bonus_jackpot'] ?? 0);
+                    $reimburse = $row['total_reimbursement'] ?? 0;
+                    $mangkirTelat = ($row['total_mangkir'] ?? 0) + ($row['total_terlambat'] ?? 0);
+                    $kasbon = $row['bayar_kasbon'] ?? 0;
+                    $bpjs = ($row['bpjs_jht_amount'] ?? 0) + ($row['bpjs_kes_amount'] ?? 0);
+                    $pph21 = $row['pph21_amount'] ?? 0;
+                    $loss = $row['loss'] ?? 0;
+                    $totalIzin = $row['total_izin'] ?? 0;
+                    $potonganLain = $loss + $totalIzin;
+                    $grandTotal = $row['grand_total'] ?? ($gajiPokok + $tunjangan + $lembur + $bonus + $reimburse - $mangkirTelat - $kasbon - $bpjs - $pph21 - $potonganLain);
+                ?>
+                    <tr>
+                        <td class="text-center-print"><?= $no++ ?></td>
+                        <td style="font-size:7pt;"><?= htmlspecialchars($row['nik'] ?? $row['no_gaji'] ?? '-') ?></td>
+                        <td class="fw-bold-print"><?= htmlspecialchars($row['nama'] ?? '-') ?></td>
+                        <td><?= htmlspecialchars($row['jabatan'] ?? '-') ?></td>
+                        <td class="text-right-print"><?= number_format($gajiPokok, 0, ',', '.') ?></td>
+                        <td class="text-right-print"><?= number_format($tunjangan, 0, ',', '.') ?></td>
+                        <td class="text-right-print"><?= number_format($lembur, 0, ',', '.') ?></td>
+                        <td class="text-right-print"><?= number_format($bonus, 0, ',', '.') ?></td>
+                        <td class="text-right-print"><?= number_format($reimburse, 0, ',', '.') ?></td>
+                        <td class="text-right-print text-red-print"><?= $mangkirTelat > 0 ? number_format($mangkirTelat, 0, ',', '.') : '-' ?></td>
+                        <td class="text-right-print text-red-print"><?= $kasbon > 0 ? number_format($kasbon, 0, ',', '.') : '-' ?></td>
+                        <td class="text-right-print text-red-print"><?= $bpjs > 0 ? number_format($bpjs, 0, ',', '.') : '-' ?></td>
+                        <td class="text-right-print text-red-print"><?= $pph21 > 0 ? number_format($pph21, 0, ',', '.') : '-' ?></td>
+                        <td class="text-right-print text-red-print"><?= $potonganLain > 0 ? number_format($potonganLain, 0, ',', '.') : '-' ?></td>
+                        <td class="text-right-print fw-bold-print text-green-print"><?= number_format($grandTotal, 0, ',', '.') ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" class="text-right-print" style="font-size:8pt;">TOTAL</td>
+                    <td class="text-right-print"><?= number_format($totalGajiPokok, 0, ',', '.') ?></td>
+                    <td class="text-right-print"><?= number_format($totalTunjangan, 0, ',', '.') ?></td>
+                    <td class="text-right-print"><?= number_format($totalLembur, 0, ',', '.') ?></td>
+                    <td class="text-right-print"><?= number_format($totalBonus, 0, ',', '.') ?></td>
+                    <td class="text-right-print"><?= number_format($totalReimbursement, 0, ',', '.') ?></td>
+                    <td class="text-right-print text-red-print"><?= number_format(array_sum(array_map(function($r){ return ($r['total_mangkir']??0)+($r['total_terlambat']??0); }, $payrollData)), 0, ',', '.') ?></td>
+                    <td class="text-right-print text-red-print"><?= number_format(array_sum(array_map(function($r){ return $r['bayar_kasbon']??0; }, $payrollData)), 0, ',', '.') ?></td>
+                    <td class="text-right-print text-red-print"><?= number_format($totalBpjsJht + $totalBpjsKes, 0, ',', '.') ?></td>
+                    <td class="text-right-print text-red-print"><?= number_format($totalPph21, 0, ',', '.') ?></td>
+                    <td class="text-right-print text-red-print"><?= number_format(array_sum(array_map(function($r){ return ($r['loss']??0)+($r['total_izin']??0); }, $payrollData)), 0, ',', '.') ?></td>
+                    <td class="text-right-print fw-bold-print text-green-print" style="font-size:9pt !important;"><?= number_format($totalGaji, 0, ',', '.') ?></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <?php endif; ?>
+
+    <!-- ===== PRINT FOOTER (signatures) ===== -->
+    <div class="print-footer" style="display:none; margin-top: 30px; page-break-inside: avoid;">
+        <table style="width:100%; border:none;">
+            <tr>
+                <td style="width:33%; text-align:center; border:none; padding-top:20px; vertical-align:top;">
+                    <div style="font-size:8pt; color:#475569;">Dibuat oleh,</div>
+                    <div style="height:60px;"></div>
+                    <div style="border-top:1px solid #000; display:inline-block; padding-top:4px; min-width:150px;">
+                        <div style="font-size:8pt; font-weight:700;">HRD / Finance</div>
+                    </div>
+                </td>
+                <td style="width:33%; text-align:center; border:none; padding-top:20px; vertical-align:top;">
+                    <div style="font-size:8pt; color:#475569;">Diperiksa oleh,</div>
+                    <div style="height:60px;"></div>
+                    <div style="border-top:1px solid #000; display:inline-block; padding-top:4px; min-width:150px;">
+                        <div style="font-size:8pt; font-weight:700;">Manager Operasional</div>
+                    </div>
+                </td>
+                <td style="width:33%; text-align:center; border:none; padding-top:20px; vertical-align:top;">
+                    <div style="font-size:8pt; color:#475569;">Disetujui oleh,</div>
+                    <div style="height:60px;"></div>
+                    <div style="border-top:1px solid #000; display:inline-block; padding-top:4px; min-width:150px;">
+                        <div style="font-size:8pt; font-weight:700;">Direktur</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        <div style="text-align:center; margin-top:15px; font-size:7pt; color:#94a3b8;">
+            Dokumen ini dicetak secara otomatis dari IndoOcean ERP System • <?= date('d/m/Y H:i:s') ?> WIB
+        </div>
+    </div>
+
+    <!-- ===== SCREEN LAYOUT ===== -->
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
         <?php include APPPATH . 'Views/partials/modern_sidebar.php'; ?>
@@ -134,7 +441,7 @@ $avatarColors = [
             <div class="absolute top-[20%] left-[10%] w-64 h-64 bg-blue-400/5 rounded-full blur-3xl animate-float-delayed"></div>
 
             <!-- Header -->
-            <header class="h-20 bg-white/70 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-8 z-20 sticky top-0">
+            <header class="h-20 bg-white/70 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-8 z-20 sticky top-0 no-print">
                 <nav aria-label="Breadcrumb" class="flex">
                     <ol class="flex items-center space-x-2">
                         <li><a class="text-slate-400 hover:text-primary transition-colors" href="<?= BASE_URL ?>"><span class="material-symbols-outlined text-[20px]">home</span></a></li>
@@ -154,7 +461,7 @@ $avatarColors = [
             <!-- Main Content Area -->
             <main class="flex-1 overflow-y-auto p-8 relative scroll-smooth">
                 <!-- Page Header -->
-                <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10 animate-slide-up">
+                <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10 animate-slide-up no-print">
                     <div>
                         <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
                             <?= __('employees.payroll_title') ?>
@@ -181,7 +488,7 @@ $avatarColors = [
                             <?php endif; ?>
                         </p>
                     </div>
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 back-button-section">
                         <a href="<?= BASE_URL ?>employees" class="inline-flex items-center px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 shadow-sm hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-300 transform hover:-translate-y-0.5">
                             <span class="material-symbols-outlined mr-2 text-sm">arrow_back</span>
                             Back
@@ -190,7 +497,7 @@ $avatarColors = [
                 </div>
 
                 <!-- Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 stats-section no-print">
                     <div class="glass-card p-6 rounded-2xl animate-float delay-100">
                         <div class="flex items-center justify-between mb-4">
                             <div class="p-3 bg-blue-50 text-blue-600 rounded-xl shadow-sm ring-1 ring-blue-100">
@@ -251,7 +558,7 @@ $avatarColors = [
                 </div>
 
                 <!-- Filter Section -->
-                <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200 p-6 mb-8 shadow-sm animate-slide-up delay-100">
+                <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200 p-6 mb-8 shadow-sm animate-slide-up delay-100 filter-section no-print">
                     <form method="GET" action="<?= BASE_URL ?>employees/payroll" class="flex flex-col md:flex-row md:items-end gap-5">
                         <div class="w-full md:w-1/4 group">
                             <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide group-focus-within:text-primary transition-colors"><?= __('common.month') ?></label>
@@ -301,7 +608,7 @@ $avatarColors = [
                 <!-- Payroll Table -->
                 <?php if (!$success): ?>
                     <!-- Error State -->
-                    <div class="bg-white rounded-2xl border border-red-200 p-12 text-center">
+                    <div class="bg-white rounded-2xl border border-red-200 p-12 text-center no-print">
                         <div class="inline-block p-4 bg-red-50 rounded-full mb-4">
                             <span class="material-symbols-outlined text-5xl text-red-500">error</span>
                         </div>
@@ -310,7 +617,7 @@ $avatarColors = [
                     </div>
                 <?php elseif (empty($payrollData)): ?>
                     <!-- Empty State -->
-                    <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+                    <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center no-print">
                         <div class="inline-block p-4 bg-slate-50 rounded-full mb-4">
                             <span class="material-symbols-outlined text-5xl text-slate-400">payments</span>
                         </div>
@@ -319,7 +626,7 @@ $avatarColors = [
                     </div>
                 <?php else: ?>
                     <!-- Table with Data -->
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden animate-slide-up delay-200">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden animate-slide-up delay-200 screen-only-table">
                         <div class="px-8 py-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-gradient-to-r from-white to-slate-50">
                             <div class="flex items-center gap-3">
                                 <div class="p-2.5 bg-gradient-to-br from-primary/20 to-yellow-100 rounded-xl text-primary shadow-sm">
@@ -355,10 +662,10 @@ $avatarColors = [
                                     $no = 1;
                                     foreach ($payrollData as $i => $row):
                                         $gajiPokok = $row['gaji_pokok'] ?? 0;
-                                        $tunjangan = $row['tunjangan'] ?? 0;
-                                        $lembur = $row['lembur'] ?? 0;
+                                        $tunjangan = $row['tunjangan'] ?? ($row['uang_transport'] ?? 0) + ($row['uang_makan'] ?? 0);
+                                        $lembur = $row['lembur'] ?? $row['total_lembur'] ?? 0;
                                         $potongan = $row['potongan'] ?? 0;
-                                        $total = $gajiPokok + $tunjangan + $lembur - $potongan;
+                                        $total = $row['grand_total'] ?? ($gajiPokok + $tunjangan + $lembur - $potongan);
                                         
                                         $nama = $row['nama'] ?? '-';
                                         $initials = strtoupper(substr($nama, 0, 1));
@@ -407,7 +714,7 @@ $avatarColors = [
                     </div>
                 <?php endif; ?>
 
-                <div class="mt-12 text-center pb-4">
+                <div class="mt-12 text-center pb-4 no-print">
                     <p class="text-xs font-medium text-slate-400">© <?= date('Y') ?> IndoOcean ERP. All rights reserved.</p>
                 </div>
             </main>

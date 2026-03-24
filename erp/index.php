@@ -59,7 +59,13 @@ define('BASE_URL', $protocol . '://' . $host . $basePath);
 
 // Error reporting (disable in production)
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// For AJAX requests, suppress display_errors to prevent PHP warnings from corrupting JSON responses
+if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+    ini_set('display_errors', 0);
+    ini_set('log_errors', 1);
+} else {
+    ini_set('display_errors', 1);
+}
 
 // Start session with ngrok-compatible settings
 $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');

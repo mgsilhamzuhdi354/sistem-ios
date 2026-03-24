@@ -27,7 +27,7 @@ class Home extends BaseController {
         $stats = [
             'total_vacancies' => $this->getCount("SELECT COUNT(*) FROM job_vacancies WHERE status = 'published'"),
             'total_applicants' => $this->getCount("SELECT COUNT(*) FROM users WHERE role_id = 3"),
-            'total_hired' => $this->getCount("SELECT COUNT(*) FROM applications WHERE status_id = 6"),
+            'total_hired' => $this->getCount("SELECT COUNT(*) FROM applications WHERE status_id = 6 AND created_at >= DATE_SUB(CURDATE(), INTERVAL 3 YEAR)"),
         ];
         
         // Get departments (excluding Hotel Department and Entertainment)

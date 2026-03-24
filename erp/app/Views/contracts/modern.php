@@ -194,7 +194,8 @@
                                             'onboard' => 'blue',
                                             'completed' => 'blue',
                                             'terminated' => 'red',
-                                            'cancelled' => 'slate'
+                                            'cancelled' => 'slate',
+                                            'suspended' => 'orange',
                                         ];
                                         $statusColor = $statusColors[$contract['status']] ?? 'slate';
 

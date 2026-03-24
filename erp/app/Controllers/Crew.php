@@ -148,10 +148,12 @@ class Crew extends BaseController
             WHERE c.crew_id = ? AND c.status IN ('active','onboard')
             ORDER BY c.sign_on_date DESC LIMIT 1
         ");
-        $acStmt->bind_param('i', $id);
-        $acStmt->execute();
-        $activeContract = $acStmt->get_result()->fetch_assoc();
-        $acStmt->close();
+        if ($acStmt) {
+            $acStmt->bind_param('i', $id);
+            $acStmt->execute();
+            $activeContract = $acStmt->get_result()->fetch_assoc();
+            $acStmt->close();
+        }
 
         // Recent payroll (last 3 months)
         $recentPayroll = [];
@@ -171,13 +173,15 @@ class Crew extends BaseController
             ORDER BY pp.period_year DESC, pp.period_month DESC
             LIMIT 3
         ");
-        $rpStmt->bind_param('i', $id);
-        $rpStmt->execute();
-        $rpResult = $rpStmt->get_result();
-        while ($row = $rpResult->fetch_assoc()) {
-            $recentPayroll[] = $row;
+        if ($rpStmt) {
+            $rpStmt->bind_param('i', $id);
+            $rpStmt->execute();
+            $rpResult = $rpStmt->get_result();
+            while ($row = $rpResult->fetch_assoc()) {
+                $recentPayroll[] = $row;
+            }
+            $rpStmt->close();
         }
-        $rpStmt->close();
 
         $data = [
             'title' => $crew['full_name'],

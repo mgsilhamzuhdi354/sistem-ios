@@ -15,7 +15,7 @@
         <div class="container">
             <nav class="navbar">
                 <a href="<?= url('/') ?>" class="logo">
-                    <img src="<?= asset('images/logo.jpg') ?>" alt="Indo Ocean" style="height: 28px;">
+                    <img src="<?= asset('images/logo.jpg') ?>" alt="Indo Ocean" style="height: 45px; object-fit: contain;">
                     <span>Indo Ocean Crew</span>
                 </a>
                 
@@ -67,7 +67,7 @@
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-about">
-                    <h3><img src="<?= asset('images/logo.jpg') ?>" alt="Indo Ocean" style="height: 24px; margin-right: 8px;"> PT Indo Ocean Crew Services</h3>
+                    <h3><img src="<?= asset('images/logo.jpg') ?>" alt="Indo Ocean" style="height: 40px; margin-right: 8px; object-fit: contain; vertical-align: middle;"> PT Indo Ocean Crew Services</h3>
                     <p>Professional maritime recruitment services for global shipping industry.</p>
                     <div class="social-links">
                         <a href="#"><i class="fab fa-linkedin"></i></a>

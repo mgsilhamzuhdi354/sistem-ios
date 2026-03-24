@@ -14,7 +14,7 @@
         <div class="container">
             <nav class="navbar">
                 <a href="<?= url('/') ?>" class="logo">
-                    <img src="<?= asset('images/logo.jpg') ?>" alt="Indo Ocean" style="height: 28px;">
+                    <img src="<?= asset('images/logo.jpg') ?>" alt="Indo Ocean" style="height: 45px; object-fit: contain;">
                     <span>Indo Ocean Crew</span>
                 </a>
                 <ul class="nav-menu">
@@ -48,7 +48,7 @@
             <div class="hero-content">
                 <div class="hero-badge">
                     <i class="fas fa-anchor"></i>
-                    <span>Maritime Excellence Since 2010</span>
+                    <span>Maritime Excellence Since 2023</span>
                 </div>
                 <h1>Start Your <span class="gradient-text">Maritime Career</span> Today</h1>
                 <p>Join thousands of professional seafarers working with world-class shipping companies across the globe. Competitive salaries, career growth, and worldwide opportunities await.</p>
@@ -228,7 +228,7 @@
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-about">
-                    <h3><img src="<?= asset('images/logo.jpg') ?>" alt="Indo Ocean" style="height: 24px; margin-right: 8px;"> PT Indo Ocean Crew Services</h3>
+                    <h3><img src="<?= asset('images/logo.jpg') ?>" alt="Indo Ocean" style="height: 40px; margin-right: 8px; object-fit: contain; vertical-align: middle;"> PT Indo Ocean Crew Services</h3>
                     <p>Professional maritime recruitment services connecting skilled seafarers with world-class shipping opportunities.</p>
                     <div class="social-links">
                         <a href="#"><i class="fab fa-linkedin"></i></a>

@@ -26,6 +26,61 @@ $months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'O
         @keyframes fadeInUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
         .animate-fade-in{animation:fadeInUp .4s ease-out forwards}
         .animate-d1{animation-delay:.05s}.animate-d2{animation-delay:.1s}.animate-d3{animation-delay:.15s}
+
+        /* === PRINT STYLES === */
+        .print-header { display: none; }
+
+        @media print {
+            /* Hide sidebar completely */
+            aside, #erpSidebar, [style*="width:256px"] { display: none !important; }
+
+            /* Remove sidebar margin, make full width */
+            main { margin-left: 0 !important; width: 100% !important; max-width: 100% !important; }
+            body { background: #fff !important; }
+            .flex.h-screen { display: block !important; }
+
+            /* Show print header */
+            .print-header {
+                display: flex !important;
+                align-items: center;
+                gap: 16px;
+                padding: 20px 0;
+                border-bottom: 3px solid #1e3a5f;
+                margin-bottom: 20px;
+            }
+            .print-header img { width: 60px; height: 60px; }
+            .print-header .print-company-name { font-size: 18px; font-weight: 800; color: #1e3a5f; }
+            .print-header .print-company-sub { font-size: 11px; color: #475569; }
+
+            /* Hide interactive/screen-only elements */
+            .no-print, header button, header a, form, .sb-item, .sb-section,
+            [onclick], select { display: none !important; }
+
+            /* Keep the page header visible but hide action buttons */
+            header { border-bottom: 1px solid #e2e8f0 !important; }
+            header > div:last-child { display: none !important; }
+
+            /* Full width content */
+            .flex-1.overflow-y-auto { overflow: visible !important; padding: 0 !important; }
+
+            /* Table optimizations */
+            table { font-size: 11px !important; }
+            tr { page-break-inside: avoid; }
+            thead { display: table-header-group; }
+            .hover\:bg-blue-50\/40:hover { background: transparent !important; }
+
+            /* Card borders for print */
+            .bg-white.rounded-xl { border: 1px solid #e2e8f0 !important; box-shadow: none !important; break-inside: avoid; }
+
+            /* Reset animations */
+            .animate-fade-in, .animate-d1, .animate-d2, .animate-d3 { opacity: 1 !important; animation: none !important; }
+
+            /* Footer */
+            .mt-6.text-center { margin-top: 30px !important; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+
+            /* Page setup */
+            @page { size: A4 landscape; margin: 15mm; }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
@@ -39,20 +94,33 @@ $months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'O
                 <p class="text-[11px] text-slate-400"><?= __('reports.payroll_summary_desc') ?></p>
             </div>
             <div class="flex items-center gap-2">
+                <button onclick="window.print()"
+                   class="no-print inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold rounded-lg transition-colors">
+                    <span class="material-icons text-sm">print</span> Print
+                </button>
                 <a href="<?= BASE_URL ?>reports/export-pdf/payroll?year=<?= $year ?? date('Y') ?>" target="_blank"
-                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition-colors">
+                   class="no-print inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition-colors">
                     <span class="material-icons text-sm">picture_as_pdf</span> Export PDF
                 </a>
                 <a href="<?= BASE_URL ?>reports"
-                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-colors">
+                   class="no-print inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-colors">
                     <span class="material-icons text-sm">arrow_back</span> <?= __('common.back') ?>
                 </a>
             </div>
         </header>
 
         <div class="flex-1 overflow-y-auto p-6">
+            <!-- Print-only Company Header -->
+            <div class="print-header">
+                <img src="<?= BASE_URL ?>assets/images/logo.png" alt="Logo" style="border-radius:8px;">
+                <div>
+                    <div class="print-company-name">PT. INDO OCEAN SHIP MANAGEMENT</div>
+                    <div class="print-company-sub">LAPORAN PENGGAJIAN PERUSAHAAN — <?= $year ?? date('Y') ?></div>
+                    <div class="print-company-sub">Dicetak: <?= date('d F Y, H:i') ?> WIB</div>
+                </div>
+            </div>
             <!-- Year Filter -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-6 inline-flex items-center gap-3">
+            <div class="no-print bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-6 inline-flex items-center gap-3">
                 <span class="text-xs font-semibold text-slate-500">Year:</span>
                 <form method="GET" action="<?= BASE_URL ?>reports/payroll-summary">
                     <select name="year" onchange="this.form.submit()"

@@ -223,7 +223,7 @@ $layout = 'main';
     <section class="about-hero">
         <div class="container">
             <h1>About PT Indo Ocean Crew Services</h1>
-            <p>Professional maritime crew recruitment and management services since 2010</p>
+            <p>Professional maritime crew recruitment and management services since 2023</p>
         </div>
     </section>
 

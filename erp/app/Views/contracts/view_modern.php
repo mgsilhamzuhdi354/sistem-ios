@@ -13,6 +13,7 @@ $statusColors = [
     'completed' => ['bg-indigo-100 text-indigo-700', 'bg-indigo-400'],
     'terminated' => ['bg-red-100 text-red-700', 'bg-red-400'],
     'cancelled' => ['bg-gray-100 text-gray-500', 'bg-gray-400'],
+    'suspended' => ['bg-orange-100 text-orange-700', 'bg-orange-400'],
 ];
 $sColor = $statusColors[$contract['status'] ?? 'draft'] ?? $statusColors['draft'];
 $daysRemaining = $daysRemaining ?? null;
@@ -80,9 +81,19 @@ $daysRemaining = $daysRemaining ?? null;
                             <a href="<?= BASE_URL ?>contracts/renew/<?= $contract['id'] ?>" class="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 transition-colors">
                                 <span class="material-icons-outlined text-sm">autorenew</span> <?= __('contracts.renew') ?>
                             </a>
+                            <a href="<?= BASE_URL ?>contracts/suspend/<?= $contract['id'] ?>" class="inline-flex items-center gap-1 rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600 transition-colors">
+                                <span class="material-icons-outlined text-sm">pause_circle</span> Suspend
+                            </a>
                             <a href="<?= BASE_URL ?>contracts/terminate/<?= $contract['id'] ?>" class="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 transition-colors">
                                 <span class="material-icons-outlined text-sm">close</span> <?= __('contracts.terminate') ?>
                             </a>
+                        <?php endif; ?>
+                        <?php if (($contract['status'] ?? '') === 'suspended'): ?>
+                            <form method="POST" action="<?= BASE_URL ?>contracts/reactivate/<?= $contract['id'] ?>" class="inline">
+                                <button type="submit" class="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 transition-colors shadow-sm">
+                                    <span class="material-icons-outlined text-sm">play_circle</span> Reactivate (ON)
+                                </button>
+                            </form>
                         <?php endif; ?>
                         <a href="<?= BASE_URL ?>contracts/export-pdf/<?= $contract['id'] ?>" target="_blank" class="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors">
                             <span class="material-icons-outlined text-sm">picture_as_pdf</span> PDF

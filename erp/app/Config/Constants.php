@@ -14,6 +14,7 @@ define('CONTRACT_STATUS_ONBOARD', 'onboard');
 define('CONTRACT_STATUS_COMPLETED', 'completed');
 define('CONTRACT_STATUS_TERMINATED', 'terminated');
 define('CONTRACT_STATUS_CANCELLED', 'cancelled');
+define('CONTRACT_STATUS_SUSPENDED', 'suspended');
 
 define('CONTRACT_STATUSES', [
     CONTRACT_STATUS_DRAFT => 'Draft',
@@ -23,6 +24,7 @@ define('CONTRACT_STATUSES', [
     CONTRACT_STATUS_COMPLETED => 'Completed',
     CONTRACT_STATUS_TERMINATED => 'Terminated',
     CONTRACT_STATUS_CANCELLED => 'Cancelled',
+    CONTRACT_STATUS_SUSPENDED => 'Suspended',
 ]);
 
 define('CONTRACT_STATUS_COLORS', [
@@ -33,6 +35,7 @@ define('CONTRACT_STATUS_COLORS', [
     CONTRACT_STATUS_COMPLETED => 'primary',
     CONTRACT_STATUS_TERMINATED => 'danger',
     CONTRACT_STATUS_CANCELLED => 'dark',
+    CONTRACT_STATUS_SUSPENDED => 'warning',
 ]);
 
 // =====================================================

@@ -498,14 +498,20 @@ class RecruitmentHub extends BaseController
     public function rejectRecruitment($applicationId = null)
     {
         $this->requireAuth();
+        
+        // Buffer output to prevent PHP warnings from corrupting JSON response
+        ob_start();
+        
         header('Content-Type: application/json');
 
         if (!$applicationId) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'message' => 'ID aplikasi tidak valid']);
             return;
         }
 
         if (!$this->recruitmentDb || $this->recruitmentDb->connect_error) {
+            ob_end_clean();
             echo json_encode(['success' => false, 'message' => 'Koneksi ke database recruitment gagal']);
             return;
         }
@@ -523,6 +529,7 @@ class RecruitmentHub extends BaseController
             $nameStmt->close();
 
             if (!$candidate) {
+                ob_end_clean();
                 echo json_encode(['success' => false, 'message' => 'Kandidat tidak ditemukan']);
                 return;
             }
@@ -537,8 +544,13 @@ class RecruitmentHub extends BaseController
 
             $this->logActivity('reject_recruitment', "Rejected recruitment candidate: {$candidate['full_name']} (App ID: {$applicationId}). Reason: {$reason}");
 
+            $buffered = ob_get_clean();
+            if ($buffered) error_log("RejectRecruitment buffered output: " . $buffered);
             echo json_encode(['success' => true, 'message' => "Kandidat {$candidate['full_name']} telah ditolak."]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            $buffered = ob_get_clean();
+            if ($buffered) error_log("RejectRecruitment buffered output on error: " . $buffered);
+            error_log("RejectRecruitment error: " . $e->getMessage());
             echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
         }
     }
@@ -551,7 +563,11 @@ class RecruitmentHub extends BaseController
     {
         $this->requireAuth();
 
+        // Buffer output to prevent PHP warnings from corrupting JSON response
+        ob_start();
+
         if (!$applicationId) {
+            ob_end_clean();
             if ($this->isAjax()) {
                 header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'message' => 'ID aplikasi tidak valid']);
@@ -563,6 +579,7 @@ class RecruitmentHub extends BaseController
         }
 
         if (!$this->recruitmentDb || $this->recruitmentDb->connect_error) {
+            ob_end_clean();
             if ($this->isAjax()) {
                 header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'message' => 'Koneksi ke database recruitment gagal']);
@@ -626,6 +643,9 @@ class RecruitmentHub extends BaseController
                 $crewUpd->close();
 
                 if ($this->isAjax()) {
+                    // Log any buffered warnings then clean
+                    $buffered = ob_get_clean();
+                    if ($buffered) error_log("ApproveRecruitment buffered output: " . $buffered);
                     header('Content-Type: application/json');
                     echo json_encode([
                         'success' => true,
@@ -634,6 +654,7 @@ class RecruitmentHub extends BaseController
                     ]);
                     return;
                 }
+                ob_end_clean();
                 $this->setFlash('success', 'Kandidat sudah di-approve! Silakan proses Admin Checklist.');
                 $this->redirect("AdminChecklist/detail/{$crewId}");
                 return;
@@ -815,6 +836,9 @@ class RecruitmentHub extends BaseController
             $this->db->commit();
 
             if ($this->isAjax()) {
+                // Log any buffered warnings then clean
+                $buffered = ob_get_clean();
+                if ($buffered) error_log("ApproveRecruitment buffered output: " . $buffered);
                 header('Content-Type: application/json');
                 echo json_encode([
                     'success' => true,
@@ -824,11 +848,17 @@ class RecruitmentHub extends BaseController
                 return;
             }
 
+            ob_end_clean();
             $this->setFlash('success', "✅ Kandidat {$application['full_name']} berhasil di-import (ID: {$employeeId})! Lanjut ke Admin Checklist.");
             $this->redirect("AdminChecklist/detail/{$crewId}");
-        } catch (\Exception $e) {
-            $this->db->rollback();
-            error_log("ApproveRecruitment error: " . $e->getMessage());
+        } catch (\Throwable $e) {
+            if ($this->db->connect_error === null) {
+                $this->db->rollback();
+            }
+            // Log any buffered output + error
+            $buffered = ob_get_clean();
+            if ($buffered) error_log("ApproveRecruitment buffered output on error: " . $buffered);
+            error_log("ApproveRecruitment error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
             if ($this->isAjax()) {
                 header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'message' => 'Gagal approve: ' . $e->getMessage()]);
