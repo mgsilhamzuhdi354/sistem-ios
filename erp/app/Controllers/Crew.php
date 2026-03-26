@@ -594,25 +594,100 @@ class Crew extends BaseController
             mkdir($uploadDir, 0755, true);
         }
 
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        if (!in_array($file['type'], $allowedTypes)) {
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+        // Use server-side MIME detection (more reliable than browser)
+        $detectedType = $file['type'];
+        if (function_exists('finfo_open')) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo) {
+                $serverMime = finfo_file($finfo, $file['tmp_name']);
+                finfo_close($finfo);
+                if ($serverMime) {
+                    $detectedType = $serverMime;
+                }
+            }
+        }
+
+        $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+        // Accept any size - check MIME or extension
+        if (!in_array($detectedType, $allowedTypes) && !in_array($extension, $allowedExtensions)) {
+            error_log("Photo upload rejected: MIME={$detectedType}, ext={$extension}");
             return null;
         }
 
-        $maxSize = 2 * 1024 * 1024; // 2MB
+        // Max 10MB for photos
+        $maxSize = 10 * 1024 * 1024;
         if ($file['size'] > $maxSize) {
+            error_log("Photo upload rejected: size={$file['size']} exceeds 10MB");
             return null;
         }
 
-        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        // Normalize extension
+        if ($extension === 'jpeg') $extension = 'jpg';
+
         $filename = 'crew_' . time() . '_' . uniqid() . '.' . $extension;
         $filepath = $uploadDir . $filename;
 
-        if (move_uploaded_file($file['tmp_name'], $filepath)) {
-            return $filepath;
+        if (!move_uploaded_file($file['tmp_name'], $filepath)) {
+            error_log("Photo upload failed: move_uploaded_file() returned false");
+            return null;
         }
 
-        return null;
+        // Auto-resize if image is too large (save disk space)
+        if (function_exists('imagecreatefromjpeg') && in_array($detectedType, ['image/jpeg', 'image/png', 'image/webp'])) {
+            try {
+                $imageInfo = @getimagesize($filepath);
+                if ($imageInfo && ($imageInfo[0] > 1200 || $imageInfo[1] > 1200)) {
+                    $srcWidth = $imageInfo[0];
+                    $srcHeight = $imageInfo[1];
+                    $maxDim = 1200;
+
+                    // Calculate new dimensions maintaining aspect ratio
+                    if ($srcWidth > $srcHeight) {
+                        $newWidth = $maxDim;
+                        $newHeight = (int)round($srcHeight * ($maxDim / $srcWidth));
+                    } else {
+                        $newHeight = $maxDim;
+                        $newWidth = (int)round($srcWidth * ($maxDim / $srcHeight));
+                    }
+
+                    $src = null;
+                    switch ($detectedType) {
+                        case 'image/jpeg': $src = @imagecreatefromjpeg($filepath); break;
+                        case 'image/png': $src = @imagecreatefrompng($filepath); break;
+                        case 'image/webp': $src = function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($filepath) : null; break;
+                    }
+
+                    if ($src) {
+                        $dst = imagecreatetruecolor($newWidth, $newHeight);
+                        // Preserve transparency for PNG
+                        if ($detectedType === 'image/png') {
+                            imagealphablending($dst, false);
+                            imagesavealpha($dst, true);
+                        }
+                        imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $srcWidth, $srcHeight);
+
+                        // Save resized - always save as JPEG for consistency and smaller size
+                        $jpgPath = $uploadDir . 'crew_' . time() . '_' . uniqid() . '.jpg';
+                        imagejpeg($dst, $jpgPath, 85);
+                        imagedestroy($src);
+                        imagedestroy($dst);
+
+                        // Remove original, use resized
+                        @unlink($filepath);
+                        $filepath = $jpgPath;
+                    }
+                }
+            } catch (\Exception $e) {
+                error_log("Photo resize warning: " . $e->getMessage());
+                // Keep original if resize fails
+            }
+        }
+
+        return $filepath;
     }
 
     /**

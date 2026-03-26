@@ -364,12 +364,19 @@ function getStatusIcon($status) {
                                                 <span class="material-icons text-lg">visibility</span>
                                             </a>
                                             <?php if ($statusName === 'Approved' && !empty($candidate['erp_crew_id'])): ?>
-                                                <a href="<?= BASE_URL ?>contracts/create?crew_id=<?= $candidate['erp_crew_id'] ?>"
-                                                   class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-semibold rounded-md transition-colors shadow-sm"
-                                                   title="Buat Kontrak">
-                                                    <span class="material-icons text-sm">description</span>
-                                                    Kontrak
-                                                </a>
+                                                <?php if (!empty($candidate['has_contract'])): ?>
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-semibold rounded-full">
+                                                        <span class="material-icons text-[12px]">task_alt</span>
+                                                        Sudah Kontrak
+                                                    </span>
+                                                <?php else: ?>
+                                                    <a href="<?= BASE_URL ?>contracts/create?crew_id=<?= $candidate['erp_crew_id'] ?>"
+                                                       class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-semibold rounded-md transition-colors shadow-sm"
+                                                       title="Buat Kontrak">
+                                                        <span class="material-icons text-sm">description</span>
+                                                        Kontrak
+                                                    </a>
+                                                <?php endif; ?>
                                             <?php elseif (!empty($candidate['sent_to_erp_at']) && empty($candidate['erp_crew_id'])): ?>
                                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-semibold rounded-full">
                                                     <span class="material-icons text-[12px]">hourglass_empty</span>

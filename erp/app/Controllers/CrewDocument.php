@@ -157,7 +157,7 @@ class CrewDocument extends BaseController
         $fileInfo = $this->uploadDocument($_FILES['document'], $crewId);
 
         if (!$fileInfo) {
-            $this->setFlash('error', 'Gagal upload file. Pastikan format dan ukuran file sesuai.');
+            $this->setFlash('error', 'Gagal upload file. Format yang diterima: PDF, JPG, PNG, GIF, WebP, DOC, DOCX. Ukuran maksimal: 20MB.');
             $this->redirect('documents/upload/' . $crewId);
             return;
         }
@@ -350,20 +350,42 @@ class CrewDocument extends BaseController
             'image/jpeg',
             'image/png',
             'image/gif',
+            'image/webp',
+            'image/bmp',
+            'image/tiff',
             'application/msword',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         ];
 
-        if (!in_array($file['type'], $allowedTypes)) {
+        // Allowed extensions as fallback
+        $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tiff', 'tif', 'doc', 'docx'];
+
+        // Use server-side MIME detection (more reliable than browser Content-Type)
+        $detectedType = $file['type'];
+        if (function_exists('finfo_open')) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo) {
+                $serverMime = finfo_file($finfo, $file['tmp_name']);
+                finfo_close($finfo);
+                if ($serverMime) {
+                    $detectedType = $serverMime;
+                }
+            }
+        }
+
+        // Check MIME type OR file extension (be lenient)
+        $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($detectedType, $allowedTypes) && !in_array($extension, $allowedExtensions)) {
+            error_log("Document upload rejected: MIME={$detectedType}, ext={$extension}, file={$file['name']}");
             return null;
         }
 
-        $maxSize = 10 * 1024 * 1024; // 10MB
+        $maxSize = 20 * 1024 * 1024; // 20MB
         if ($file['size'] > $maxSize) {
+            error_log("Document upload rejected: size={$file['size']} exceeds 20MB limit");
             return null;
         }
 
-        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
         $filename = 'doc_' . time() . '_' . uniqid() . '.' . $extension;
         $filepath = $uploadDir . $filename;
 
@@ -372,10 +394,11 @@ class CrewDocument extends BaseController
                 'path' => $filepath,
                 'name' => $file['name'],
                 'size' => $file['size'],
-                'type' => $file['type']
+                'type' => $detectedType
             ];
         }
 
+        error_log("Document upload failed: move_uploaded_file() returned false for {$file['name']}");
         return null;
     }
 

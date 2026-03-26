@@ -85,6 +85,29 @@ class RecruitmentHub extends BaseController
             }
         }
 
+        // Check which candidates already have contracts in ERP (to hide "Buat Kontrak" button)
+        $crewIdsWithContracts = [];
+        $erpCrewIds = array_filter(array_column($candidates, 'erp_crew_id'));
+        if (!empty($erpCrewIds)) {
+            $idList = implode(',', array_map('intval', $erpCrewIds));
+            $contractCheckResult = $this->db->query("
+                SELECT DISTINCT crew_id FROM contracts 
+                WHERE crew_id IN ($idList) 
+                AND status IN ('active', 'onboard', 'pending_approval', 'draft')
+            ");
+            if ($contractCheckResult) {
+                while ($row = $contractCheckResult->fetch_assoc()) {
+                    $crewIdsWithContracts[] = (int)$row['crew_id'];
+                }
+            }
+        }
+
+        // Add has_contract flag to each candidate
+        foreach ($candidates as &$c) {
+            $c['has_contract'] = in_array((int)($c['erp_crew_id'] ?? 0), $crewIdsWithContracts);
+        }
+        unset($c);
+
         $data = [
             'title' => 'Recruitment Pipeline',
             'currentPage' => 'recruitment-pipeline',
@@ -439,9 +462,21 @@ class RecruitmentHub extends BaseController
                     rejection_reason = ?,
                     notes = CONCAT(IFNULL(notes,''), '\n[REJECTED] ', ?),
                     updated_at = NOW()
-                WHERE id = ? AND status = 'pending_approval'
+                WHERE id = ? AND status IN ('pending_approval', 'pending_checklist')
             ");
-            $stmt->bind_param('issi', $userId, $reason, $reason, $crewId);
+            if (!$stmt) {
+                // Fallback: try simpler UPDATE without optional columns
+                $stmt = $this->db->prepare("
+                    UPDATE crews SET status = 'rejected', updated_at = NOW()
+                    WHERE id = ? AND status IN ('pending_approval', 'pending_checklist')
+                ");
+                if (!$stmt) {
+                    throw new \Exception('DB prepare error (crews reject): ' . $this->db->error);
+                }
+                $stmt->bind_param('i', $crewId);
+            } else {
+                $stmt->bind_param('issi', $userId, $reason, $reason, $crewId);
+            }
             $stmt->execute();
 
             if ($stmt->affected_rows === 0) {
@@ -451,6 +486,9 @@ class RecruitmentHub extends BaseController
 
             // Get crew info
             $nameStmt = $this->db->prepare("SELECT full_name, candidate_id FROM crews WHERE id = ?");
+            if (!$nameStmt) {
+                throw new \Exception('DB prepare error (crew name): ' . $this->db->error);
+            }
             $nameStmt->bind_param('i', $crewId);
             $nameStmt->execute();
             $crew = $nameStmt->get_result()->fetch_assoc();

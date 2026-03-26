@@ -171,8 +171,8 @@ class Contract extends BaseController
     private function getRecruitmentCrews()
     {
         // Get crews from recruitment source that are ready for contract
-        // Only show crews that have COMPLETED the pipeline (available/standby/ready_operational)
-        // Exclude pending_checklist (still in admin review) and contracted (already has contract)
+        // Include pending_checklist (just approved from pipeline) and available/standby/ready_operational
+        // Exclude crews that already have an active/pending/draft contract
         $query = "
             SELECT 
                 c.id, 
@@ -186,12 +186,13 @@ class Contract extends BaseController
                 c.current_rank_id,
                 COALESCE(c.approved_at, c.created_at) as approved_at,
                 c.source,
+                c.status as crew_status,
                 r.name as rank_name,
                 DATEDIFF(NOW(), COALESCE(c.approved_at, c.created_at)) as days_since_approval
             FROM crews c
             LEFT JOIN ranks r ON c.current_rank_id = r.id
             WHERE c.source = 'recruitment'
-            AND c.status IN ('standby', 'available', 'ready_operational')
+            AND c.status IN ('standby', 'available', 'ready_operational', 'pending_checklist')
             AND c.id NOT IN (
                 SELECT crew_id FROM contracts
                 WHERE status IN ('active', 'onboard', 'pending_approval', 'draft')

@@ -334,6 +334,113 @@ class AdminChecklist extends BaseController
 
         $userId = $_SESSION['user_id'] ?? $_SESSION['user']['id'] ?? 1;
 
+        // ── SEQUENTIAL ENFORCEMENT ────────────────────────────────
+        // When setting an item to PASSED (value=1), enforce sequential order:
+        //   1. Document Check → 2. Owner Interview → 3. Pengantar MCU →
+        //   4. Agreement Kontrak → 5. Admin Charge → 6. OK to Board
+        // Each requires all previous items to be passed first.
+        // Also perform real data validation for certain items.
+        if ($value == 1) {
+            // Get current checklist + crew_id
+            $clCheck = $this->db->prepare("SELECT * FROM admin_checklists WHERE id = ?");
+            if (!$clCheck) {
+                return $this->json(['success' => false, 'message' => 'DB error: ' . $this->db->error]);
+            }
+            $clCheck->bind_param('i', $checklistId);
+            $clCheck->execute();
+            $currentCl = $clCheck->get_result()->fetch_assoc();
+            $clCheck->close();
+
+            if (!$currentCl) {
+                return $this->json(['success' => false, 'message' => 'Checklist tidak ditemukan']);
+            }
+
+            $crewIdForCheck = (int)$currentCl['crew_id'];
+
+            // Define sequential order and their display names
+            $sequence = [
+                'document_check'    => 'Document Check',
+                'owner_interview'   => 'Owner Interview',
+                'pengantar_mcu'     => 'Pengantar MCU',
+                'agreement_kontrak' => 'Agreement Kontrak',
+                'admin_charge'      => 'Admin Charge',
+                'ok_to_board'       => 'OK to Board',
+            ];
+            $sequenceKeys = array_keys($sequence);
+            $currentIndex = array_search($item, $sequenceKeys);
+
+            // Check all PRECEDING items are passed (value == 1)
+            for ($i = 0; $i < $currentIndex; $i++) {
+                $prevItem = $sequenceKeys[$i];
+                if (($currentCl[$prevItem] ?? 0) != 1) {
+                    $prevLabel = $sequence[$prevItem];
+                    $currentLabel = $sequence[$item];
+                    return $this->json([
+                        'success' => false,
+                        'message' => "⚠️ Tidak bisa mencentang \"{$currentLabel}\" — \"{$prevLabel}\" harus diselesaikan terlebih dahulu.",
+                        'blocked_by' => $prevItem,
+                        'blocked_by_label' => $prevLabel
+                    ]);
+                }
+            }
+
+            // ── REAL DATA VALIDATION per item ────────────────────
+            // 1) Document Check: verify crew actually has uploaded documents
+            if ($item === 'document_check') {
+                $docCountStmt = $this->db->prepare("SELECT COUNT(*) as cnt FROM crew_documents WHERE crew_id = ?");
+                if ($docCountStmt) {
+                    $docCountStmt->bind_param('i', $crewIdForCheck);
+                    $docCountStmt->execute();
+                    $docCount = $docCountStmt->get_result()->fetch_assoc()['cnt'] ?? 0;
+                    $docCountStmt->close();
+                    if ($docCount == 0) {
+                        return $this->json([
+                            'success' => false,
+                            'message' => '⚠️ Tidak bisa pass Document Check — belum ada dokumen yang di-upload untuk crew ini. Silakan upload dokumen terlebih dahulu.',
+                            'blocked_by' => 'no_documents'
+                        ]);
+                    }
+                }
+            }
+
+            // 4) Agreement Kontrak: verify a contract exists for this crew
+            if ($item === 'agreement_kontrak') {
+                $ctCheckStmt = $this->db->prepare("SELECT COUNT(*) as cnt FROM contracts WHERE crew_id = ?");
+                if ($ctCheckStmt) {
+                    $ctCheckStmt->bind_param('i', $crewIdForCheck);
+                    $ctCheckStmt->execute();
+                    $ctCount = $ctCheckStmt->get_result()->fetch_assoc()['cnt'] ?? 0;
+                    $ctCheckStmt->close();
+                    if ($ctCount == 0) {
+                        return $this->json([
+                            'success' => false,
+                            'message' => '⚠️ Tidak bisa pass Agreement Kontrak — belum ada kontrak dibuat untuk crew ini. Silakan buat kontrak terlebih dahulu.',
+                            'blocked_by' => 'no_contract'
+                        ]);
+                    }
+                }
+            }
+
+            // 6) OK to Board: verify all previous 5 items are passed (final gate)
+            if ($item === 'ok_to_board') {
+                $allPrev = true;
+                for ($i = 0; $i < 5; $i++) {
+                    if (($currentCl[$sequenceKeys[$i]] ?? 0) != 1) {
+                        $allPrev = false;
+                        break;
+                    }
+                }
+                if (!$allPrev) {
+                    return $this->json([
+                        'success' => false,
+                        'message' => '⚠️ Tidak bisa mencentang OK to Board — semua 5 item sebelumnya harus sudah PASSED.',
+                        'blocked_by' => 'incomplete_checklist'
+                    ]);
+                }
+            }
+        }
+        // ── END SEQUENTIAL ENFORCEMENT ────────────────────────────
+
         // Update the item
         $notesCol = $item . '_notes';
         $atCol = $item . '_at';
@@ -347,6 +454,9 @@ class AdminChecklist extends BaseController
                 updated_at = NOW()
             WHERE id = ?
         ");
+        if (!$stmt) {
+            return $this->json(['success' => false, 'message' => 'DB prepare error: ' . $this->db->error]);
+        }
         $stmt->bind_param('isii', $value, $notes, $userId, $checklistId);
         $stmt->execute();
         $stmt->close();
