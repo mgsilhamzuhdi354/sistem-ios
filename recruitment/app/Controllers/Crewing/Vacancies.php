@@ -10,6 +10,11 @@ class Vacancies extends BaseController {
     public function __construct() {
         parent::__construct();
         
+        // Allow large file uploads (up to 100MB)
+        @ini_set('upload_max_filesize', '100M');
+        @ini_set('post_max_size', '110M');
+        @ini_set('max_execution_time', '300');
+        @ini_set('memory_limit', '256M');
         if (!isLoggedIn() || !isCrewing()) {
             flash('error', 'Access denied');
             redirect(url('/login'));
@@ -719,14 +724,26 @@ class Vacancies extends BaseController {
      * Handle ship photo upload
      */
     private function handleShipPhotoUpload($file) {
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-        if (!in_array($file['type'], $allowedTypes)) return false;
-        if ($file['size'] > 5 * 1024 * 1024) return false;
+        // Allow all common image types
+        $allowedTypes = [
+            'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+            'image/bmp', 'image/svg+xml', 'image/tiff', 'image/x-icon',
+            'image/heic', 'image/heif', 'image/avif'
+        ];
+        
+        // Also allow by extension as fallback (some servers report wrong MIME)
+        $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg', 'tiff', 'tif', 'ico', 'heic', 'heif', 'avif'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        
+        $typeOk = in_array($file['type'], $allowedTypes) || in_array($ext, $allowedExts);
+        if (!$typeOk) return false;
+        
+        // Max 100MB
+        if ($file['size'] > 100 * 1024 * 1024) return false;
         
         $uploadDir = dirname(APPPATH) . '/public/uploads/ships/';
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
         
-        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
         $filename = 'ship_' . time() . '_' . uniqid() . '.' . $ext;
         
         if (move_uploaded_file($file['tmp_name'], $uploadDir . $filename)) {
