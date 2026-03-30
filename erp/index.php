@@ -113,7 +113,18 @@ if (strpos($method, '-') !== false) {
 
 // Load routes configuration
 $controllerMap = require APPPATH . 'Config/Routes.php';
-$controllerName = $controllerMap[$controllerName] ?? $controllerName;
+
+// Try route map with original segment first (for kebab-case like 'admin-checklist')
+$originalSegment = $segments[0] ?? 'Dashboard';
+if (isset($controllerMap[$originalSegment])) {
+    $controllerName = $controllerMap[$originalSegment];
+} elseif (isset($controllerMap[$controllerName])) {
+    $controllerName = $controllerMap[$controllerName];
+} elseif (strpos($originalSegment, '-') !== false) {
+    // Convert kebab-case to PascalCase: admin-checklist → AdminChecklist
+    $controllerName = str_replace(' ', '', ucwords(str_replace('-', ' ', $originalSegment)));
+    $controllerName = $controllerMap[$controllerName] ?? $controllerName;
+}
 $controllerFile = APPPATH . 'Controllers/' . $controllerName . '.php';
 
 // Check if controller exists
