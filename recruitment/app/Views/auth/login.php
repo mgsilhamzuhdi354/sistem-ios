@@ -134,7 +134,13 @@
                 <!-- ERP System Access -->
                 <div style="text-align: center;">
                     <p style="color: #666; font-size: 14px; margin-bottom: 12px;" data-translate="auth.erpAccess">Access Internal System</p>
-                    <a href="/erp/" class="btn-erp" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: linear-gradient(135deg, #0A2463, #1E3A5F); color: white; padding: 12px 28px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(10, 36, 99, 0.3);">
+                    <?php
+                    $isWindowsLocal = (PHP_OS_FAMILY === 'Windows' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
+                    $hostCheck = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                    $isLaragonUrl = (strpos($hostCheck, '.test') !== false || strpos($hostCheck, '.local') !== false);
+                    $erpBase = (!$isWindowsLocal || $isLaragonUrl) ? '/erp/' : '/PT_indoocean/PT_indoocean/erp/';
+                    ?>
+                    <a href="<?= $erpBase ?>" class="btn-erp" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: linear-gradient(135deg, #0A2463, #1E3A5F); color: white; padding: 12px 28px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(10, 36, 99, 0.3);">
                         <i class="fas fa-building"></i> <span data-translate="auth.erpBtn">ERP System Login</span>
                     </a>
                 </div>

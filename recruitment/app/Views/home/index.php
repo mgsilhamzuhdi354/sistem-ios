@@ -91,26 +91,7 @@
         </div>
     </section>
 
-    <!-- Departments Section -->
-    <section class="departments-section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Explore Departments</h2>
-                <p>Find opportunities in your area of expertise</p>
-            </div>
-            <div class="departments-grid">
-                <?php foreach ($departments as $dept): ?>
-                    <a href="<?= url('/jobs?department=' . $dept['id']) ?>" class="department-card">
-                        <div class="dept-icon" style="background: <?= $dept['color'] ?? '#0A2463' ?>">
-                            <i class="fas <?= $dept['icon'] ?? 'fa-ship' ?>"></i>
-                        </div>
-                        <h3><?= htmlspecialchars($dept['name']) ?></h3>
-                        <p><?= htmlspecialchars($dept['description'] ?? 'Explore career opportunities') ?></p>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    </section>
+
 
     <!-- Featured Jobs Section -->
     <?php if (!empty($featuredJobs)): ?>
@@ -561,12 +542,7 @@
         100% { opacity: 1; transform: translateY(0); }
     }
 
-    /* Departments Section */
-    .departments-section {
-        padding: 100px 0;
-        background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
-    }
-    
+    /* Section Header (used by Featured, Why sections) */
     .section-header {
         text-align: center;
         margin-bottom: 60px;
@@ -584,76 +560,6 @@
         font-size: 18px;
         max-width: 500px;
         margin: 0 auto;
-    }
-    
-    .departments-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 30px;
-    }
-    
-    .department-card {
-        background: white;
-        padding: 40px 30px;
-        border-radius: 20px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.06);
-        text-align: center;
-        transition: all 0.4s ease;
-        border: 1px solid rgba(0,0,0,0.05);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .department-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 4px;
-        background: linear-gradient(90deg, #0A2463, #1E5AA8);
-        transform: scaleX(0);
-        transition: transform 0.4s ease;
-    }
-    
-    .department-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 20px 60px rgba(10,36,99,0.15);
-    }
-    
-    .department-card:hover::before {
-        transform: scaleX(1);
-    }
-    
-    .dept-icon {
-        width: 80px;
-        height: 80px;
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 32px;
-        color: white;
-        margin: 0 auto 25px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        transition: all 0.4s ease;
-    }
-    
-    .department-card:hover .dept-icon {
-        transform: scale(1.1) rotate(5deg);
-    }
-    
-    .department-card h3 {
-        font-size: 20px;
-        color: #1a1a2e;
-        margin-bottom: 12px;
-        font-weight: 600;
-    }
-    
-    .department-card p {
-        font-size: 15px;
-        color: #6c757d;
-        line-height: 1.6;
     }
 
     /* Job Recruiter Info */

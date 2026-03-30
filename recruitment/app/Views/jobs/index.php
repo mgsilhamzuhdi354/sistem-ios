@@ -41,8 +41,8 @@
                 <ul class="nav-menu">
                     <li><a href="<?= url('/') ?>" data-translate="nav.home">Home</a></li>
                     <li><a href="<?= url('/jobs') ?>" class="active" data-translate="nav.jobs">Jobs</a></li>
-                    <li><a href="/PT_indoocean/about.html">About</a></li>
-                    <li><a href="/PT_indoocean/contact.html">Contact</a></li>
+                    <li><a href="<?= url('/about') ?>">About</a></li>
+                    <li><a href="<?= url('/contact') ?>">Contact</a></li>
                 </ul>
                 <div class="nav-actions">
                     <div class="language-selector">

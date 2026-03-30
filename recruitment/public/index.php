@@ -163,6 +163,15 @@ if ($isWindows && strpos($basePath, '/PT_indoocean') === false && strpos($_SERVE
 $requestUri = str_replace($basePath, '', $requestUri);
 $requestUri = $requestUri ?: '/';
 
+// Normalize: strip stale /public prefix that may appear when root .htaccess
+// rewrites /recruitment/public/... to recruitment/public/index.php?url=public/...
+if (strpos($requestUri, '/public/') === 0) {
+    $requestUri = substr($requestUri, strlen('/public'));
+}
+if ($requestUri === '/public') {
+    $requestUri = '/';
+}
+
 // Load Language Helper
 require_once APPPATH . 'Helpers/Language.php';
 
