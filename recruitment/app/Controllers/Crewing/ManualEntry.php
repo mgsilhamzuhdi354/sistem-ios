@@ -199,16 +199,22 @@ class ManualEntry extends BaseController {
                             total_sea_service_months = ?, last_rank = ?, last_vessel_name = ?, last_vessel_type = ?, last_sign_off = ?
                         WHERE user_id = ?
                     ");
-                    $stmt->bind_param('ssssssssssssssiisssissssssi',
-                        $ktpNumber, $dob, $gender, $nationality, $placeOfBirth,
-                        $address, $city, $country, $postalCode, $bloodType,
-                        $seamanBookNo, $seamanBookExpiry, $passportNo, $passportExpiry,
-                        $heightCm, $weightKg, $shoeSize, $overallSize,
-                        $emergencyName, $emergencyPhone, $emergencyRelation,
-                        $totalSeaMonths, $lastRank, $lastVesselName, $lastVesselType, $lastSignOff,
-                        $userId
-                    );
-                    $stmt->execute();
+                    if ($stmt) {
+                        $stmt->bind_param('ssssssssssssssiisssissssssi',
+                            $ktpNumber, $dob, $gender, $nationality, $placeOfBirth,
+                            $address, $city, $country, $postalCode, $bloodType,
+                            $seamanBookNo, $seamanBookExpiry, $passportNo, $passportExpiry,
+                            $heightCm, $weightKg, $shoeSize, $overallSize,
+                            $emergencyName, $emergencyPhone, $emergencyRelation,
+                            $totalSeaMonths, $lastRank, $lastVesselName, $lastVesselType, $lastSignOff,
+                            $userId
+                        );
+                        $stmt->execute();
+                    } else {
+                        // Fallback: update only core columns
+                        $stmt = $this->db->prepare("UPDATE applicant_profiles SET date_of_birth=?, gender=?, nationality=?, address=?, city=?, emergency_name=?, emergency_phone=?, passport_no=? WHERE user_id=?");
+                        if ($stmt) { $stmt->bind_param('ssssssssi', $dob, $gender, $nationality, $address, $city, $emergencyName, $emergencyPhone, $passportNo, $userId); $stmt->execute(); }
+                    }
                 } else {
                     // Create new profile for existing user
                     $stmt = $this->db->prepare("
@@ -222,15 +228,21 @@ class ManualEntry extends BaseController {
                             created_at
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
                     ");
-                    $stmt->bind_param('issssssssssssssiisisssissss',
-                        $userId, $ktpNumber, $dob, $gender, $nationality, $placeOfBirth,
-                        $address, $city, $country, $postalCode, $bloodType,
-                        $seamanBookNo, $seamanBookExpiry, $passportNo, $passportExpiry,
-                        $heightCm, $weightKg, $shoeSize, $overallSize,
-                        $emergencyName, $emergencyPhone, $emergencyRelation,
-                        $totalSeaMonths, $lastRank, $lastVesselName, $lastVesselType, $lastSignOff
-                    );
-                    $stmt->execute();
+                    if ($stmt) {
+                        $stmt->bind_param('issssssssssssssiisisssissss',
+                            $userId, $ktpNumber, $dob, $gender, $nationality, $placeOfBirth,
+                            $address, $city, $country, $postalCode, $bloodType,
+                            $seamanBookNo, $seamanBookExpiry, $passportNo, $passportExpiry,
+                            $heightCm, $weightKg, $shoeSize, $overallSize,
+                            $emergencyName, $emergencyPhone, $emergencyRelation,
+                            $totalSeaMonths, $lastRank, $lastVesselName, $lastVesselType, $lastSignOff
+                        );
+                        $stmt->execute();
+                    } else {
+                        // Fallback: insert only core columns
+                        $stmt = $this->db->prepare("INSERT INTO applicant_profiles (user_id, date_of_birth, gender, nationality, address, city, emergency_name, emergency_phone, passport_no, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                        if ($stmt) { $stmt->bind_param('issssssss', $userId, $dob, $gender, $nationality, $address, $city, $emergencyName, $emergencyPhone, $passportNo); $stmt->execute(); }
+                    }
                 }
             } else {
                 // Create new user
@@ -240,6 +252,10 @@ class ManualEntry extends BaseController {
                     INSERT INTO users (role_id, full_name, email, phone, password, is_active, is_manual_entry, requires_activation, created_at)
                     VALUES (?, ?, ?, ?, ?, 1, 1, 1, NOW())
                 ");
+                if (!$stmt) {
+                    // Fallback without is_manual_entry and requires_activation columns
+                    $stmt = $this->db->prepare("INSERT INTO users (role_id, full_name, email, phone, password, is_active, created_at) VALUES (?, ?, ?, ?, ?, 1, NOW())");
+                }
                 $stmt->bind_param('issss', $roleId, $fullName, $email, $phone, $password);
                 $stmt->execute();
                 $userId = $this->db->insert_id;
@@ -256,15 +272,21 @@ class ManualEntry extends BaseController {
                         created_at
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
                 ");
-                $stmt->bind_param('issssssssssssssiisisssissss',
-                    $userId, $ktpNumber, $dob, $gender, $nationality, $placeOfBirth,
-                    $address, $city, $country, $postalCode, $bloodType,
-                    $seamanBookNo, $seamanBookExpiry, $passportNo, $passportExpiry,
-                    $heightCm, $weightKg, $shoeSize, $overallSize,
-                    $emergencyName, $emergencyPhone, $emergencyRelation,
-                    $totalSeaMonths, $lastRank, $lastVesselName, $lastVesselType, $lastSignOff
-                );
-                $stmt->execute();
+                if ($stmt) {
+                    $stmt->bind_param('issssssssssssssiisisssissss',
+                        $userId, $ktpNumber, $dob, $gender, $nationality, $placeOfBirth,
+                        $address, $city, $country, $postalCode, $bloodType,
+                        $seamanBookNo, $seamanBookExpiry, $passportNo, $passportExpiry,
+                        $heightCm, $weightKg, $shoeSize, $overallSize,
+                        $emergencyName, $emergencyPhone, $emergencyRelation,
+                        $totalSeaMonths, $lastRank, $lastVesselName, $lastVesselType, $lastSignOff
+                    );
+                    $stmt->execute();
+                } else {
+                    // Fallback: insert only core columns
+                    $stmt = $this->db->prepare("INSERT INTO applicant_profiles (user_id, date_of_birth, gender, nationality, address, city, emergency_name, emergency_phone, passport_no, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                    if ($stmt) { $stmt->bind_param('issssssss', $userId, $dob, $gender, $nationality, $address, $city, $emergencyName, $emergencyPhone, $passportNo); $stmt->execute(); }
+                }
             }
             
             // 3. Create application
@@ -277,11 +299,17 @@ class ManualEntry extends BaseController {
                     current_crewing_id, preferred_recruiter_id, recruiter_assignment_type, created_at
                 ) VALUES (?, ?, ?, ?, ?, ?, NOW(), 'manual', ?, ?, ?, 'manual', NOW())
             ");
-            $stmt->bind_param('iiisdsiii',
-                $userId, $vacancyId, $statusId, $coverLetter, $expectedSalary, $availableDate,
-                $crewingId, $crewingId, $crewingId
-            );
-            $stmt->execute();
+            if (!$stmt) {
+                // Fallback without recruiter columns
+                $stmt = $this->db->prepare("INSERT INTO applications (user_id, vacancy_id, status_id, cover_letter, expected_salary, available_date, submitted_at, entry_source, entered_by, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), 'manual', ?, NOW())");
+                if ($stmt) { $stmt->bind_param('iiisdsi', $userId, $vacancyId, $statusId, $coverLetter, $expectedSalary, $availableDate, $crewingId); $stmt->execute(); }
+            } else {
+                $stmt->bind_param('iiisdsiii',
+                    $userId, $vacancyId, $statusId, $coverLetter, $expectedSalary, $availableDate,
+                    $crewingId, $crewingId, $crewingId
+                );
+                $stmt->execute();
+            }
             $applicationId = $this->db->insert_id;
             
             // 4. Create assignment
@@ -290,8 +318,10 @@ class ManualEntry extends BaseController {
                 VALUES (?, ?, ?, ?, 'active', NOW())
             ");
             $assignNote = "Manual entry" . ($notes ? " - " . $notes : "");
-            $stmt->bind_param('iiis', $applicationId, $crewingId, $crewingId, $assignNote);
-            $stmt->execute();
+            if ($stmt) {
+                $stmt->bind_param('iiis', $applicationId, $crewingId, $crewingId, $assignNote);
+                $stmt->execute();
+            }
             
             // 5. Handle document uploads
             $this->handleDocumentUploads($userId);
