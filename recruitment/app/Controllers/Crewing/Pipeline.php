@@ -58,7 +58,7 @@ class Pipeline extends BaseController
         foreach ($statuses as $status) {
             if ($view === 'my') {
                 // My assigned applications
-                $archiveFilter = $hasArchive ? 'AND a.is_archived = 0' : '';
+                $archiveFilter = $hasArchive ? 'AND COALESCE(a.is_archived, 0) = 0' : '';
                 $query = "
                     SELECT a.id, a.user_id, a.vacancy_id, a.status_id, a.created_at, a.medical_email_sent_at,
                            a.sent_to_erp_at, a.erp_crew_id,
@@ -79,7 +79,7 @@ class Pipeline extends BaseController
                 $stmt->bind_param('iiii', $status['id'], $crewingId, $crewingId, $crewingId);
             } else {
                 // Available applications (unassigned or all)
-                $archiveFilter = $hasArchive ? 'AND a.is_archived = 0' : '';
+                $archiveFilter = $hasArchive ? 'AND COALESCE(a.is_archived, 0) = 0' : '';
                 $query = "
                     SELECT a.id, a.user_id, a.vacancy_id, a.status_id, a.created_at, a.medical_email_sent_at,
                            a.sent_to_erp_at, a.erp_crew_id,
@@ -498,6 +498,16 @@ class Pipeline extends BaseController
         
         if (!$applicationId) {
             return $this->json(['success' => false, 'message' => 'Application ID required']);
+        }
+        
+        // Auto-create archive columns if they don't exist
+        $colCheck = $this->db->query("SHOW COLUMNS FROM applications LIKE 'is_archived'");
+        if ($colCheck && $colCheck->num_rows == 0) {
+            $this->db->query("ALTER TABLE applications ADD COLUMN is_archived TINYINT(1) DEFAULT 0");
+            $this->db->query("ALTER TABLE applications ADD COLUMN archived_at DATETIME NULL");
+            $this->db->query("ALTER TABLE applications ADD COLUMN archived_by INT NULL");
+            // Set all existing rows to 0
+            $this->db->query("UPDATE applications SET is_archived = 0 WHERE is_archived IS NULL");
         }
         
         $stmt = $this->db->prepare("

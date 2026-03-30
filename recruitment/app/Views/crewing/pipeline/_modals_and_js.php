@@ -431,51 +431,53 @@ function submitStatusRequest() {
 
 // ===== ARCHIVE APPLICATION =====
 function archiveApplication(appId) {
-    if (!confirm('Arsipkan aplikasi ini? Anda bisa mengembalikannya nanti dari tab Arsip.')) {
-        return;
-    }
-    
-    fetch('<?= url('/crewing/pipeline/archive') ?>', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `csrf_token=<?= csrf_token() ?>&application_id=${appId}`
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            showToast(data.message || 'Aplikasi berhasil diarsipkan', 'success');
-            // Remove card from view - support both class selectors
-            const card = document.getElementById('appCard-' + appId)
-                      || document.querySelector(`[data-app-id="${appId}"]`);
-            if (card) {
-                card.style.transition = 'all 0.4s ease';
-                card.style.transform = 'translateX(100%)';
-                card.style.opacity = '0';
-                setTimeout(() => {
-                    card.remove();
-                    // Update column counts
-                    document.querySelectorAll('.pipeline-column').forEach(col => {
-                        const statusId = col.dataset.statusId;
-                        const cards = col.querySelectorAll('.app-card').length;
-                        const countEl = statusId
-                            ? col.querySelector(`[data-count-for="${statusId}"]`) || col.querySelector('.count')
-                            : col.querySelector('.count');
-                        if (countEl) countEl.textContent = cards;
-                        // Show empty placeholder if no cards left
-                        const body = col.querySelector('.column-body');
-                        if (body && cards === 0 && !body.querySelector('.empty-column')) {
-                            body.innerHTML = '<div class="empty-column"><i class="fas fa-inbox"></i><small>Belum ada lamaran</small></div>';
+    showConfirm('Arsipkan aplikasi ini? Anda bisa mengembalikannya nanti dari tab Arsip.', 'Ya, Arsipkan', '#ef4444')
+    .then(function() {
+        fetch('<?= url('/crewing/pipeline/archive') ?>', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `csrf_token=<?= csrf_token() ?>&application_id=${appId}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'Aplikasi berhasil diarsipkan', 'success');
+                // Remove only this card from view
+                const card = document.getElementById('appCard-' + appId)
+                          || document.querySelector(`[data-app-id="${appId}"]`);
+                if (card) {
+                    card.style.transition = 'all 0.4s ease';
+                    card.style.transform = 'translateX(100%)';
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        // Find parent column before removing card
+                        const column = card.closest('.pl-col') || card.closest('td');
+                        card.remove();
+                        // Update count for this column only
+                        if (column) {
+                            const statusId = column.dataset.statusId;
+                            const cards = column.querySelectorAll('.app-card').length;
+                            const countEl = statusId
+                                ? column.querySelector(`[data-count-for="${statusId}"]`)
+                                : column.querySelector('.count');
+                            if (countEl) countEl.textContent = cards;
+                            // Show empty placeholder if no cards left in this column
+                            const body = column.querySelector('.column-body');
+                            if (body && cards === 0 && !body.querySelector('.empty-column')) {
+                                body.innerHTML = '<div class="empty-column"><i class="fas fa-inbox"></i><small>Belum ada lamaran</small></div>';
+                            }
                         }
-                    });
-                }, 400);
+                    }, 400);
+                } else {
+                    setTimeout(() => location.reload(), 500);
+                }
             } else {
-                setTimeout(() => location.reload(), 500);
+                showToast(data.message || 'Gagal mengarsipkan', 'error');
             }
-        } else {
-            showToast(data.message || 'Gagal mengarsipkan', 'error');
-        }
+        })
+        .catch(err => showToast('Error: ' + err.message, 'error'));
     })
-    .catch(err => showToast('Error: ' + err.message, 'error'));
+    .catch(function() {}); // user cancelled
 }
 
 // ===== LOAD ARCHIVED VIEW =====
@@ -707,5 +709,16 @@ function closeCardActionPopup() {
 var cardActionStyle = document.createElement('style');
 cardActionStyle.textContent = '@keyframes cardActionPopOut{from{transform:scale(1);opacity:1}to{transform:scale(0.85) translateY(20px);opacity:0}}@keyframes cardActionFadeOut{from{opacity:1}to{opacity:0}}';
 document.head.appendChild(cardActionStyle);
+
+// ===== FIX: Move overlays to document.body =====
+// When .admin-main has transform:scale(), position:fixed children
+// become relative to the transformed parent, not the viewport.
+// Moving overlays to body fixes centering.
+(function() {
+    var overlays = document.querySelectorAll('.card-action-overlay, .p-modal, #alertOverlay, #pendingOverlay, #confirmModal');
+    overlays.forEach(function(el) {
+        document.body.appendChild(el);
+    });
+})();
 
 </script>
