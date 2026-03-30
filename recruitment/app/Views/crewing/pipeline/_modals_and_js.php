@@ -19,22 +19,8 @@
                 </div>
             </button>
             
-            <button class="card-action-btn btn-action-status" onclick="closeCardActionPopup(); openStatusModal(window._cardActionAppId, document.getElementById('cardActionName').textContent, window._cardActionStatusId)">
-                <div class="action-icon"><i class="fas fa-exchange-alt"></i></div>
-                <div class="action-text">
-                    <h5>Ubah Status</h5>
-                    <p>Pindahkan ke tahap berikutnya</p>
-                </div>
-            </button>
             
-            <button class="card-action-btn btn-action-erp" id="cardActionErpBtn" style="display:none" onclick="closeCardActionPopup(); openErpModal(window._cardActionAppId, document.getElementById('cardActionName').textContent)">
-                <div class="action-icon" style="background:#f3e8ff;color:#7c3aed"><i class="fas fa-paper-plane"></i></div>
-                <div class="action-text">
-                    <h5>Kirim ke ERP</h5>
-                    <p>Sinkronkan data ke sistem ERP</p>
-                </div>
-            </button>
-            
+
             <button class="card-action-btn btn-action-archive" onclick="closeCardActionPopup(); archiveApplication(window._cardActionAppId)">
                 <div class="action-icon"><i class="fas fa-archive"></i></div>
                 <div class="action-text">
