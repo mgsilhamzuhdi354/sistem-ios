@@ -29,7 +29,7 @@ if (!$isWindows) {
     // =================================================
     // DOCKER / LINUX / NAS UGREEN
     // =================================================
-    $nas_ip             = getEnvVar(['DB_HOST'], 'mariadb-1');
+    $nas_ip             = getEnvVar(['DB_HOST'], 'mysql');
     $nas_user           = getEnvVar(['DB_USER', 'DB_USERNAME'], 'root');
     $nas_password       = getEnvVar(['DB_PASS', 'DB_PASSWORD'], 'rahasia123');
     $nas_port           = (int) getEnvVar(['DB_PORT'], 3306);
