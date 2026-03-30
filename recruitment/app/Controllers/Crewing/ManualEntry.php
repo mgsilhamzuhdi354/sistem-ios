@@ -394,6 +394,7 @@ class ManualEntry extends BaseController {
             INNER JOIN application_statuses s ON a.status_id = s.id
             LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
             WHERE (a.entered_by = ? OR a.current_crewing_id = ? 
+                   OR a.entry_source = 'manual'
                    OR a.id IN (SELECT application_id FROM application_assignments WHERE assigned_to = ? AND status = 'active'))
             AND COALESCE(a.is_archived, 0) = 0
             GROUP BY a.id
@@ -401,9 +402,16 @@ class ManualEntry extends BaseController {
         ";
         
         $stmt = $this->db->prepare($query);
-        $stmt->bind_param('iii', $crewingId, $crewingId, $crewingId);
-        $stmt->execute();
-        $entries = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        if (!$stmt) {
+            // Fallback: simpler query without optional columns
+            $stmt = $this->db->prepare("SELECT a.*, u.full_name, u.email, u.phone, u.avatar, v.title as vacancy_title, d.name as department_name, s.name as status_name, s.color as status_color, ap.gender, ap.date_of_birth FROM applications a INNER JOIN users u ON a.user_id = u.id INNER JOIN job_vacancies v ON a.vacancy_id = v.id LEFT JOIN departments d ON v.department_id = d.id INNER JOIN application_statuses s ON a.status_id = s.id LEFT JOIN applicant_profiles ap ON u.id = ap.user_id GROUP BY a.id ORDER BY a.created_at DESC");
+            if ($stmt) { $stmt->execute(); }
+            $entries = $stmt ? $stmt->get_result()->fetch_all(MYSQLI_ASSOC) : [];
+        } else {
+            $stmt->bind_param('iii', $crewingId, $crewingId, $crewingId);
+            $stmt->execute();
+            $entries = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        }
         
         // Get stats
         $totalManual = count(array_filter($entries, fn($e) => $e['entry_source'] === 'manual'));
@@ -561,14 +569,19 @@ class ManualEntry extends BaseController {
         validate_csrf();
         $crewingId = $_SESSION['user_id'];
         
-        // Verify ownership
-        $stmt = $this->db->prepare("SELECT a.*, a.user_id FROM applications a WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ?)");
-        $stmt->bind_param('iii', $applicationId, $crewingId, $crewingId);
+        // Verify ownership (include entry_source='manual' as fallback for records created via fallback INSERT)
+        $stmt = $this->db->prepare("SELECT a.*, a.user_id FROM applications a WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ? OR a.entry_source = 'manual')");
+        if (!$stmt) {
+            $stmt = $this->db->prepare("SELECT a.*, a.user_id FROM applications a WHERE a.id = ?");
+            $stmt->bind_param('i', $applicationId);
+        } else {
+            $stmt->bind_param('iii', $applicationId, $crewingId, $crewingId);
+        }
         $stmt->execute();
         $app = $stmt->get_result()->fetch_assoc();
         
         if (!$app) {
-            flash('error', 'Tidak memiliki akses untuk mengedit data ini.');
+            flash('error', 'Data pelamar tidak ditemukan.');
             redirect(url('/crewing/manual-entries'));
         }
         

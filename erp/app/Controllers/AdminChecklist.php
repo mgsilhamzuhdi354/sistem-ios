@@ -396,7 +396,7 @@ class AdminChecklist extends BaseController
                     if ($docCount == 0) {
                         return $this->json([
                             'success' => false,
-                            'message' => '⚠️ Tidak bisa pass Document Check — belum ada dokumen yang di-upload untuk crew ini. Silakan upload dokumen terlebih dahulu.',
+                            'message' => 'ℹ️ Upload dokumen crew terlebih dahulu sebelum mencentang Document Check. Buka halaman detail crew untuk upload dokumen.',
                             'blocked_by' => 'no_documents'
                         ]);
                     }
