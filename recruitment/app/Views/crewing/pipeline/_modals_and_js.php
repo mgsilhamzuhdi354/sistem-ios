@@ -42,6 +42,14 @@
                     <p>Arsipkan kandidat ini</p>
                 </div>
             </button>
+            
+            <button class="card-action-btn btn-action-delete" onclick="closeCardActionPopup(); deleteCandidatePermanent(window._cardActionAppId, document.getElementById('cardActionName').textContent)" style="border-color:#fecaca;">
+                <div class="action-icon" style="background:#fef2f2;color:#dc2626"><i class="fas fa-trash-alt"></i></div>
+                <div class="action-text">
+                    <h5 style="color:#dc2626">Hapus Permanen</h5>
+                    <p>Hapus semua data kandidat ini</p>
+                </div>
+            </button>
         </div>
         <button class="card-action-close" onclick="closeCardActionPopup()">
             <i class="fas fa-times"></i> Tutup
@@ -720,5 +728,66 @@ document.head.appendChild(cardActionStyle);
         document.body.appendChild(el);
     });
 })();
+
+// ===== DELETE CANDIDATE PERMANENTLY =====
+function deleteCandidatePermanent(appId, name) {
+    // Create confirmation modal dynamically
+    var existing = document.getElementById('deleteConfirmOverlay');
+    if (existing) existing.remove();
+    
+    var overlay = document.createElement('div');
+    overlay.id = 'deleteConfirmOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;backdrop-filter:blur(4px);animation:fadeIn 0.2s ease';
+    overlay.innerHTML = '<div style="background:#fff;border-radius:16px;padding:28px 24px;max-width:420px;width:90%;box-shadow:0 25px 50px rgba(0,0,0,0.25);animation:slideUp 0.3s ease">' +
+        '<div style="width:56px;height:56px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><i class="fas fa-exclamation-triangle" style="font-size:24px;color:#dc2626"></i></div>' +
+        '<h3 style="text-align:center;font-size:18px;font-weight:700;color:#1e293b;margin:0 0 8px">Hapus Permanen?</h3>' +
+        '<p style="text-align:center;color:#64748b;font-size:14px;margin:0 0 8px">Anda akan menghapus data kandidat:</p>' +
+        '<p style="text-align:center;font-weight:700;color:#1e293b;font-size:15px;margin:0 0 12px">' + name + '</p>' +
+        '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;margin:0 0 20px;text-align:center">' +
+        '<span style="color:#dc2626;font-size:13px;font-weight:500">⚠️ Semua data (aplikasi, dokumen, profil) akan dihapus permanen dan tidak dapat dikembalikan.</span></div>' +
+        '<div style="display:flex;gap:10px">' +
+        '<button onclick="document.getElementById(\'deleteConfirmOverlay\').remove()" style="flex:1;padding:10px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;color:#64748b;font-weight:600;cursor:pointer;font-size:14px">Batal</button>' +
+        '<button onclick="executeDeleteCandidate(' + appId + ')" style="flex:1;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;font-weight:600;cursor:pointer;font-size:14px;box-shadow:0 4px 12px rgba(220,38,38,0.3)"><i class="fas fa-trash-alt" style="margin-right:6px"></i>Hapus</button>' +
+        '</div></div>';
+    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+    document.body.appendChild(overlay);
+}
+
+function executeDeleteCandidate(appId) {
+    var overlay = document.getElementById('deleteConfirmOverlay');
+    var btn = overlay.querySelector('button:last-child');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghapus...';
+    btn.disabled = true;
+    
+    var formData = new FormData();
+    formData.append('application_id', appId);
+    formData.append('csrf_token', '<?= csrf_token() ?>');
+    
+    fetch('<?= url('/crewing/pipeline/delete-permanent') ?>', {
+        method: 'POST',
+        body: formData
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        overlay.remove();
+        if (data.success) {
+            // Remove card from DOM
+            var card = document.getElementById('appCard-' + appId);
+            if (card) {
+                card.style.transition = 'all 0.3s ease';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.8)';
+                setTimeout(function() { card.remove(); }, 300);
+            }
+            showAlert('success', data.message || '✓ Kandidat berhasil dihapus.', 3000);
+        } else {
+            showAlert('error', data.message || 'Gagal menghapus.', 4000);
+        }
+    })
+    .catch(function(err) {
+        overlay.remove();
+        showAlert('error', 'Network error: ' + err.message, 4000);
+    });
+}
 
 </script>

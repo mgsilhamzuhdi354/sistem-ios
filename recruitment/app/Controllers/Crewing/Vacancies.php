@@ -53,11 +53,11 @@ class Vacancies extends BaseController {
             LEFT JOIN departments d ON jv.department_id = d.id
             LEFT JOIN vessel_types vt ON jv.vessel_type_id = vt.id
             LEFT JOIN applications a ON jv.id = a.vacancy_id
-            WHERE jv.status = 'published' AND jv.created_by = ?
+            WHERE jv.status = 'published'
         ";
         
-        $params = [$crewingId];
-        $types = 'i';
+        $params = [];
+        $types = '';
         
         if (!empty($search)) {
             $query .= " AND (jv.title LIKE ? OR jv.description LIKE ?)";

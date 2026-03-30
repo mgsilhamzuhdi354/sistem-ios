@@ -696,4 +696,101 @@ class Pipeline extends BaseController
             'pipeline' => $pipeline,
         ]);
     }
+    /**
+     * Permanently delete a candidate and all related data
+     */
+    public function permanentDelete()
+    {
+        if (!$this->isPost()) {
+            return $this->json(['success' => false, 'message' => 'Invalid request']);
+        }
+
+        $applicationId = intval($this->input('application_id'));
+        $crewingId = $_SESSION['user_id'];
+
+        if (!$applicationId) {
+            return $this->json(['success' => false, 'message' => 'Application ID tidak valid']);
+        }
+
+        // Verify ownership
+        $stmt = $this->db->prepare("SELECT a.user_id, u.full_name FROM applications a JOIN users u ON a.user_id = u.id WHERE a.id = ? AND (a.current_crewing_id = ? OR a.entered_by = ? OR a.id IN (SELECT application_id FROM application_assignments WHERE assigned_to = ? AND status = 'active'))");
+        $stmt->bind_param('iiii', $applicationId, $crewingId, $crewingId, $crewingId);
+        $stmt->execute();
+        $app = $stmt->get_result()->fetch_assoc();
+
+        if (!$app) {
+            return $this->json(['success' => false, 'message' => 'Tidak memiliki akses untuk menghapus data ini']);
+        }
+
+        $userId = $app['user_id'];
+        $name = $app['full_name'];
+
+        try {
+            $this->db->begin_transaction();
+            $this->db->query("SET FOREIGN_KEY_CHECKS = 0");
+
+            // Delete related records
+            $tables = [
+                'application_assignments' => 'application_id',
+                'pipeline_requests' => 'application_id',
+                'medical_checkups' => 'application_id',
+                'status_change_requests' => 'application_id',
+                'application_status_history' => 'application_id',
+                'archived_applications' => 'application_id',
+                'job_claim_requests' => 'application_id',
+            ];
+            foreach ($tables as $table => $col) {
+                $delStmt = @$this->db->prepare("DELETE FROM `$table` WHERE `$col` = ?");
+                if ($delStmt) {
+                    $delStmt->bind_param('i', $applicationId);
+                    $delStmt->execute();
+                }
+            }
+
+            // Delete interview data
+            @$this->db->query("DELETE ia FROM interview_answers ia JOIN interview_sessions s ON ia.session_id = s.id WHERE s.application_id = $applicationId");
+            $delStmt = @$this->db->prepare("DELETE FROM interview_sessions WHERE application_id = ?");
+            if ($delStmt) { $delStmt->bind_param('i', $applicationId); $delStmt->execute(); }
+
+            // Delete notifications
+            $delStmt = @$this->db->prepare("DELETE FROM notifications WHERE user_id = ?");
+            if ($delStmt) { $delStmt->bind_param('i', $userId); $delStmt->execute(); }
+
+            // Delete document files from disk
+            $docStmt = @$this->db->prepare("SELECT file_path FROM documents WHERE user_id = ?");
+            if ($docStmt) {
+                $docStmt->bind_param('i', $userId);
+                $docStmt->execute();
+                $docs = $docStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                foreach ($docs as $doc) {
+                    $filePath = FCPATH . $doc['file_path'];
+                    if (file_exists($filePath)) @unlink($filePath);
+                }
+            }
+            $delStmt = @$this->db->prepare("DELETE FROM documents WHERE user_id = ?");
+            if ($delStmt) { $delStmt->bind_param('i', $userId); $delStmt->execute(); }
+
+            // Delete ALL applications for this user
+            $delStmt = $this->db->prepare("DELETE FROM applications WHERE user_id = ?");
+            $delStmt->bind_param('i', $userId);
+            $delStmt->execute();
+
+            // Delete profile & user
+            $delStmt = @$this->db->prepare("DELETE FROM applicant_profiles WHERE user_id = ?");
+            if ($delStmt) { $delStmt->bind_param('i', $userId); $delStmt->execute(); }
+
+            $delStmt = $this->db->prepare("DELETE FROM users WHERE id = ?");
+            $delStmt->bind_param('i', $userId);
+            $delStmt->execute();
+
+            $this->db->query("SET FOREIGN_KEY_CHECKS = 1");
+            $this->db->commit();
+
+            return $this->json(['success' => true, 'message' => "✓ Data pelamar {$name} berhasil dihapus permanen."]);
+        } catch (\Throwable $e) {
+            $this->db->query("SET FOREIGN_KEY_CHECKS = 1");
+            $this->db->rollback();
+            return $this->json(['success' => false, 'message' => 'Gagal menghapus: ' . $e->getMessage()]);
+        }
+    }
 }
