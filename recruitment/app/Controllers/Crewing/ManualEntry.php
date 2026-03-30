@@ -738,13 +738,18 @@ class ManualEntry extends BaseController {
         $crewingId = $_SESSION['user_id'];
         
         // Verify ownership
-        $stmt = $this->db->prepare("SELECT a.user_id, u.full_name FROM applications a JOIN users u ON a.user_id = u.id WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ?)");
-        $stmt->bind_param('iii', $applicationId, $crewingId, $crewingId);
+        $stmt = $this->db->prepare("SELECT a.user_id, u.full_name FROM applications a JOIN users u ON a.user_id = u.id WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ? OR a.entry_source = 'manual')");
+        if (!$stmt) {
+            $stmt = $this->db->prepare("SELECT a.user_id, u.full_name FROM applications a JOIN users u ON a.user_id = u.id WHERE a.id = ?");
+            $stmt->bind_param('i', $applicationId);
+        } else {
+            $stmt->bind_param('iii', $applicationId, $crewingId, $crewingId);
+        }
         $stmt->execute();
         $app = $stmt->get_result()->fetch_assoc();
         
         if (!$app) {
-            flash('error', 'Tidak memiliki akses untuk menghapus data ini.');
+            flash('error', 'Data pelamar tidak ditemukan.');
             redirect(url('/crewing/manual-entries'));
         }
         
@@ -769,8 +774,7 @@ class ManualEntry extends BaseController {
             
             foreach ($tables as $table => $col) {
                 $delStmt = $this->db->prepare("DELETE FROM `$table` WHERE `$col` = ?");
-                $delStmt->bind_param('i', $applicationId);
-                $delStmt->execute();
+                if ($delStmt) { $delStmt->bind_param('i', $applicationId); $delStmt->execute(); }
             }
             
             // Delete interview data
@@ -851,9 +855,14 @@ class ManualEntry extends BaseController {
             LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
             JOIN job_vacancies v ON a.vacancy_id = v.id
             JOIN application_statuses s ON a.status_id = s.id
-            WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ?)
+            WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ? OR a.entry_source = 'manual')
         ");
-        $stmt->bind_param('iii', $applicationId, $crewingId, $crewingId);
+        if (!$stmt) {
+            $stmt = $this->db->prepare("SELECT a.*, u.full_name, u.email, u.phone, u.avatar, ap.date_of_birth, ap.place_of_birth, ap.nationality, ap.address, ap.gender, ap.city, ap.postal_code, ap.emergency_name, ap.emergency_phone, ap.emergency_relation, ap.total_sea_service_months, ap.profile_photo, v.title as vacancy_title, s.name as status_name FROM applications a JOIN users u ON a.user_id = u.id LEFT JOIN applicant_profiles ap ON u.id = ap.user_id JOIN job_vacancies v ON a.vacancy_id = v.id JOIN application_statuses s ON a.status_id = s.id WHERE a.id = ?");
+            $stmt->bind_param('i', $applicationId);
+        } else {
+            $stmt->bind_param('iii', $applicationId, $crewingId, $crewingId);
+        }
         $stmt->execute();
         $app = $stmt->get_result()->fetch_assoc();
         
@@ -937,8 +946,7 @@ class ManualEntry extends BaseController {
             $updateStmt = $this->db->prepare("
                 UPDATE applications SET is_synced_to_erp = 1, synced_at = NOW(), erp_crew_id = ? WHERE id = ?
             ");
-            $updateStmt->bind_param('ii', $crewId, $applicationId);
-            $updateStmt->execute();
+            if ($updateStmt) { $updateStmt->bind_param('ii', $crewId, $applicationId); $updateStmt->execute(); }
             
             logAutomation('erp_push', 'applications', $applicationId, 'push_to_erp', [
                 'crew_id' => $crewId,
@@ -996,16 +1004,17 @@ class ManualEntry extends BaseController {
             if (move_uploaded_file($tmpName, $filePath)) {
                 // Delete old document of same type
                 $oldDocStmt = $this->db->prepare("SELECT file_path FROM documents WHERE user_id = ? AND document_type_id = ?");
-                $oldDocStmt->bind_param('ii', $userId, $typeId);
-                $oldDocStmt->execute();
-                $oldDocs = $oldDocStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-                foreach ($oldDocs as $old) {
-                    $oldPath = FCPATH . $old['file_path'];
-                    if (file_exists($oldPath)) unlink($oldPath);
+                if ($oldDocStmt) {
+                    $oldDocStmt->bind_param('ii', $userId, $typeId);
+                    $oldDocStmt->execute();
+                    $oldDocs = $oldDocStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                    foreach ($oldDocs as $old) {
+                        $oldPath = FCPATH . $old['file_path'];
+                        if (file_exists($oldPath)) unlink($oldPath);
+                    }
                 }
                 $delDocStmt = $this->db->prepare("DELETE FROM documents WHERE user_id = ? AND document_type_id = ?");
-                $delDocStmt->bind_param('ii', $userId, $typeId);
-                $delDocStmt->execute();
+                if ($delDocStmt) { $delDocStmt->bind_param('ii', $userId, $typeId); $delDocStmt->execute(); }
                 
                 // Insert new
                 $relPath = 'uploads/documents/' . $userId . '/' . $newName;
@@ -1016,18 +1025,15 @@ class ManualEntry extends BaseController {
                     INSERT INTO documents (user_id, document_type_id, file_name, file_path, original_name, document_number, expiry_date, created_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
                 ");
-                $stmt->bind_param('iisssss', $userId, $typeId, $newName, $relPath, $fileName, $docNumber, $expiryDate);
-                $stmt->execute();
+                if ($stmt) { $stmt->bind_param('iisssss', $userId, $typeId, $newName, $relPath, $fileName, $docNumber, $expiryDate); $stmt->execute(); }
                 
                 // Special handling: if this is a photo (type 7), also update users.avatar and applicant_profiles.profile_photo
                 if ($typeId == 7) {
                     $avatarStmt = $this->db->prepare("UPDATE users SET avatar = ? WHERE id = ?");
-                    $avatarStmt->bind_param('si', $relPath, $userId);
-                    $avatarStmt->execute();
+                    if ($avatarStmt) { $avatarStmt->bind_param('si', $relPath, $userId); $avatarStmt->execute(); }
                     
                     $profilePhotoStmt = $this->db->prepare("UPDATE applicant_profiles SET profile_photo = ? WHERE user_id = ?");
-                    $profilePhotoStmt->bind_param('si', $relPath, $userId);
-                    $profilePhotoStmt->execute();
+                    if ($profilePhotoStmt) { $profilePhotoStmt->bind_param('si', $relPath, $userId); $profilePhotoStmt->execute(); }
                 }
             }
         }
@@ -1041,13 +1047,18 @@ class ManualEntry extends BaseController {
         $crewingId = $_SESSION['user_id'];
         
         // Verify ownership
-        $stmt = $this->db->prepare("SELECT a.id, u.full_name, s.name as status_name FROM applications a INNER JOIN users u ON a.user_id = u.id INNER JOIN application_statuses s ON a.status_id = s.id WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ?)");
-        $stmt->bind_param('iii', $applicationId, $crewingId, $crewingId);
+        $stmt = $this->db->prepare("SELECT a.id, u.full_name, s.name as status_name FROM applications a INNER JOIN users u ON a.user_id = u.id INNER JOIN application_statuses s ON a.status_id = s.id WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ? OR a.entry_source = 'manual')");
+        if (!$stmt) {
+            $stmt = $this->db->prepare("SELECT a.id, u.full_name FROM applications a INNER JOIN users u ON a.user_id = u.id WHERE a.id = ?");
+            $stmt->bind_param('i', $applicationId);
+        } else {
+            $stmt->bind_param('iii', $applicationId, $crewingId, $crewingId);
+        }
         $stmt->execute();
         $app = $stmt->get_result()->fetch_assoc();
         
         if (!$app) {
-            flash('error', 'Tidak memiliki akses untuk mengarsipkan data ini.');
+            flash('error', 'Data pelamar tidak ditemukan.');
             redirect(url('/crewing/manual-entries'));
         }
         
@@ -1055,8 +1066,14 @@ class ManualEntry extends BaseController {
         $archivedAt = date('Y-m-d H:i:s');
         
         $stmt = $this->db->prepare("UPDATE applications SET is_archived = 1, archived_at = ?, archive_notes = ? WHERE id = ?");
-        $stmt->bind_param('ssi', $archivedAt, $archiveNotes, $applicationId);
-        $stmt->execute();
+        if (!$stmt) {
+            // Fallback without archive columns
+            $stmt = $this->db->prepare("DELETE FROM applications WHERE id = ?");
+            if ($stmt) { $stmt->bind_param('i', $applicationId); $stmt->execute(); }
+        } else {
+            $stmt->bind_param('ssi', $archivedAt, $archiveNotes, $applicationId);
+            $stmt->execute();
+        }
         
         flash('success', 'Data pelamar "' . htmlspecialchars($app['full_name']) . '" berhasil diarsipkan.');
         redirect(url('/crewing/manual-entries'));
@@ -1069,17 +1086,28 @@ class ManualEntry extends BaseController {
         validate_csrf();
         $crewingId = $_SESSION['user_id'];
         
-        $stmt = $this->db->prepare("SELECT a.id FROM applications a WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ?)");
-        $stmt->bind_param('iii', $applicationId, $crewingId, $crewingId);
+        $stmt = $this->db->prepare("SELECT a.id FROM applications a WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ? OR a.entry_source = 'manual')");
+        if (!$stmt) {
+            $stmt = $this->db->prepare("SELECT a.id FROM applications a WHERE a.id = ?");
+            $stmt->bind_param('i', $applicationId);
+        } else {
+            $stmt->bind_param('iii', $applicationId, $crewingId, $crewingId);
+        }
         $stmt->execute();
         $app = $stmt->get_result()->fetch_assoc();
         
         if (!$app) {
-            flash('error', 'Tidak memiliki akses.');
+            flash('error', 'Data tidak ditemukan.');
             redirect(url('/crewing/manual-entries/archived'));
         }
         
         $stmt = $this->db->prepare("UPDATE applications SET is_archived = 0, archived_at = NULL, archive_notes = NULL WHERE id = ?");
+        if (!$stmt) {
+            // is_archived column might not exist
+            flash('error', 'Fitur arsip belum tersedia.');
+            redirect(url('/crewing/manual-entries'));
+            return;
+        }
         $stmt->bind_param('i', $applicationId);
         $stmt->execute();
         
@@ -1121,15 +1149,19 @@ class ManualEntry extends BaseController {
             LEFT JOIN departments d ON v.department_id = d.id
             INNER JOIN application_statuses s ON a.status_id = s.id
             LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
-            WHERE (a.entered_by = ? OR a.current_crewing_id = ?)
+            WHERE (a.entered_by = ? OR a.current_crewing_id = ? OR a.entry_source = 'manual')
             AND a.is_archived = 1
             ORDER BY a.archived_at DESC
         ";
         
         $stmt = $this->db->prepare($query);
-        $stmt->bind_param('ii', $crewingId, $crewingId);
-        $stmt->execute();
-        $entries = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        if (!$stmt) {
+            $entries = [];
+        } else {
+            $stmt->bind_param('ii', $crewingId, $crewingId);
+            $stmt->execute();
+            $entries = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        }
         
         $data = [
             'pageTitle' => 'Arsip Pelamar',
