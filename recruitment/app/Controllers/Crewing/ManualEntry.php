@@ -5,6 +5,11 @@
  * Shows all applicants managed by this crewing (manual + pipeline + assigned)
  */
 
+// Force clear PHP opcache for this file
+if (function_exists('opcache_invalidate')) {
+    opcache_invalidate(__FILE__, true);
+}
+
 require_once APPPATH . 'Controllers/BaseController.php';
 require_once APPPATH . 'Libraries/ErpSync.php';
 
@@ -600,7 +605,7 @@ class ManualEntry extends BaseController {
         $app = $stmt->get_result()->fetch_assoc();
         
         if (!$app) {
-            flash('error', 'Data pelamar tidak ditemukan.');
+            flash('error', '[UPDATE-v7] Aplikasi ID=' . $applicationId . ' tidak ditemukan di update.');
             redirect(url('/crewing/manual-entries'));
         }
         
@@ -759,7 +764,7 @@ class ManualEntry extends BaseController {
         $app = $stmt->get_result()->fetch_assoc();
         
         if (!$app) {
-            flash('error', 'Data pelamar tidak ditemukan.');
+            flash('error', '[DELETE-v7] Aplikasi ID=' . $applicationId . ' tidak ditemukan di delete.');
             redirect(url('/crewing/manual-entries'));
         }
         
@@ -1068,7 +1073,7 @@ class ManualEntry extends BaseController {
         $app = $stmt->get_result()->fetch_assoc();
         
         if (!$app) {
-            flash('error', 'Data pelamar tidak ditemukan.');
+            flash('error', '[ARCHIVE-v7] Aplikasi ID=' . $applicationId . ' tidak ditemukan di archive.');
             redirect(url('/crewing/manual-entries'));
         }
         
