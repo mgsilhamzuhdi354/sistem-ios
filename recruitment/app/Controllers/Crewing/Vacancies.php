@@ -136,23 +136,29 @@ class Vacancies extends BaseController {
         $crewingId = $_SESSION['user_id'];
         
         // Get crewing user's referral code
-        $refStmt = $this->db->prepare("SELECT referral_code FROM users WHERE id = ?");
-        $refStmt->bind_param('i', $crewingId);
-        $refStmt->execute();
-        $refResult = $refStmt->get_result()->fetch_assoc();
-        $referralCode = $refResult['referral_code'] ?? '';
+        $referralCode = '';
+        $refStmt = @$this->db->prepare("SELECT referral_code FROM users WHERE id = ?");
+        if ($refStmt) {
+            $refStmt->bind_param('i', $crewingId);
+            $refStmt->execute();
+            $refResult = $refStmt->get_result()->fetch_assoc();
+            $referralCode = $refResult['referral_code'] ?? '';
+        }
         
         $shareUrl = url("/jobs/{$id}?ref=crewing&recruiter_id={$crewingId}" . (!empty($referralCode) ? "&referral_code={$referralCode}" : ''));
         
         // Get share statistics for this vacancy by current crewing
-        $statsStmt = $this->db->prepare("
+        $stats = ['total_shares' => 0];
+        $statsStmt = @$this->db->prepare("
             SELECT COUNT(*) as total_shares
             FROM vacancy_shares 
             WHERE vacancy_id = ? AND shared_by = ?
         ");
-        $statsStmt->bind_param('ii', $id, $crewingId);
-        $statsStmt->execute();
-        $stats = $statsStmt->get_result()->fetch_assoc();
+        if ($statsStmt) {
+            $statsStmt->bind_param('ii', $id, $crewingId);
+            $statsStmt->execute();
+            $stats = $statsStmt->get_result()->fetch_assoc() ?: $stats;
+        }
         
         $data = [
             'pageTitle' => $vacancy['title'],
@@ -179,7 +185,10 @@ class Vacancies extends BaseController {
         $crewingId = $_SESSION['user_id'];
         
         // Check vacancy exists
-        $stmt = $this->db->prepare("SELECT id, title FROM job_vacancies WHERE id = ? AND status = 'published'");
+        $stmt = @$this->db->prepare("SELECT id, title FROM job_vacancies WHERE id = ? AND status = 'published'");
+        if (!$stmt) {
+            return $this->json(['success' => false, 'message' => 'Database error']);
+        }
         $stmt->bind_param('i', $id);
         $stmt->execute();
         $vacancy = $stmt->get_result()->fetch_assoc();
@@ -189,22 +198,27 @@ class Vacancies extends BaseController {
         }
         
         // Get crewing user's referral code
-        $refStmt = $this->db->prepare("SELECT referral_code FROM users WHERE id = ?");
-        $refStmt->bind_param('i', $crewingId);
-        $refStmt->execute();
-        $refResult = $refStmt->get_result()->fetch_assoc();
-        $referralCode = $refResult['referral_code'] ?? '';
+        $referralCode = '';
+        $refStmt = @$this->db->prepare("SELECT referral_code FROM users WHERE id = ?");
+        if ($refStmt) {
+            $refStmt->bind_param('i', $crewingId);
+            $refStmt->execute();
+            $refResult = $refStmt->get_result()->fetch_assoc();
+            $referralCode = $refResult['referral_code'] ?? '';
+        }
         
         // Generate share URL with referral code
         $shareUrl = url("/jobs/{$id}?ref=crewing&recruiter_id={$crewingId}" . (!empty($referralCode) ? "&referral_code={$referralCode}" : ''));
         
         // Track the share
-        $trackStmt = $this->db->prepare("
+        $trackStmt = @$this->db->prepare("
             INSERT INTO vacancy_shares (vacancy_id, shared_by, share_method, share_url, created_at)
             VALUES (?, ?, ?, ?, NOW())
         ");
-        $trackStmt->bind_param('iiss', $id, $crewingId, $shareMethod, $shareUrl);
-        $trackStmt->execute();
+        if ($trackStmt) {
+            $trackStmt->bind_param('iiss', $id, $crewingId, $shareMethod, $shareUrl);
+            $trackStmt->execute();
+        }
         
         // Generate WhatsApp message with referral code
         $whatsappMessage = "🚢 *Lowongan Kerja PT Indo Ocean*\n\n";
