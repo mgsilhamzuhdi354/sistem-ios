@@ -20,7 +20,7 @@ class ErpSync {
         $dbConfig = require APPPATH . 'Config/Database.php';
         $erp = $dbConfig['erp'] ?? $dbConfig['default'];
         
-        $conn = new mysqli(
+        $conn = @new mysqli(
             $erp['hostname'] ?? 'localhost',
             $erp['username'] ?? 'root',
             $erp['password'] ?? '',

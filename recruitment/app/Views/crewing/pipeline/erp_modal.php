@@ -154,4 +154,10 @@ function submitErpTransfer() {
         btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Send to ERP';
     });
 }
+
+// Move ERP modal to body to fix position:fixed inside transform:scale() parent
+(function() {
+    var erpModal = document.getElementById('erpModal');
+    if (erpModal) document.body.appendChild(erpModal);
+})();
 </script>

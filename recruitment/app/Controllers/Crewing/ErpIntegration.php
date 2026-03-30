@@ -224,9 +224,36 @@ class ErpIntegration extends BaseController {
             ]);
         } catch (Exception $e) {
             error_log("ERP getRanks error: " . $e->getMessage());
+            
+            // Fallback: return default maritime ranks when ERP DB is unreachable
+            $fallbackRanks = [
+                ['id' => 1, 'name' => 'Master', 'category' => 'Deck'],
+                ['id' => 2, 'name' => 'Chief Officer', 'category' => 'Deck'],
+                ['id' => 3, 'name' => '2nd Officer', 'category' => 'Deck'],
+                ['id' => 4, 'name' => '3rd Officer', 'category' => 'Deck'],
+                ['id' => 5, 'name' => 'Deck Cadet', 'category' => 'Deck'],
+                ['id' => 6, 'name' => 'Bosun', 'category' => 'Deck'],
+                ['id' => 7, 'name' => 'AB Seaman', 'category' => 'Deck'],
+                ['id' => 8, 'name' => 'OS Seaman', 'category' => 'Deck'],
+                ['id' => 9, 'name' => 'Pumpman', 'category' => 'Deck'],
+                ['id' => 10, 'name' => 'Chief Engineer', 'category' => 'Engine'],
+                ['id' => 11, 'name' => '2nd Engineer', 'category' => 'Engine'],
+                ['id' => 12, 'name' => '3rd Engineer', 'category' => 'Engine'],
+                ['id' => 13, 'name' => '4th Engineer', 'category' => 'Engine'],
+                ['id' => 14, 'name' => 'Engine Cadet', 'category' => 'Engine'],
+                ['id' => 15, 'name' => 'Fitter', 'category' => 'Engine'],
+                ['id' => 16, 'name' => 'Oiler', 'category' => 'Engine'],
+                ['id' => 17, 'name' => 'Wiper', 'category' => 'Engine'],
+                ['id' => 18, 'name' => 'Electrician', 'category' => 'Engine'],
+                ['id' => 19, 'name' => 'Chief Cook', 'category' => 'Catering'],
+                ['id' => 20, 'name' => 'Cook', 'category' => 'Catering'],
+                ['id' => 21, 'name' => 'Messman', 'category' => 'Catering'],
+                ['id' => 22, 'name' => 'Steward', 'category' => 'Catering'],
+            ];
+            
             return $this->json([
-                'success' => false,
-                'message' => $e->getMessage()
+                'success' => true,
+                'ranks' => $fallbackRanks
             ]);
         }
     }

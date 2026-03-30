@@ -321,6 +321,7 @@
                     </div>
 <?php endif; ?>
                 </div>
+            </div>
            <?php endforeach; endif; ?>
         </div>
     </td>
