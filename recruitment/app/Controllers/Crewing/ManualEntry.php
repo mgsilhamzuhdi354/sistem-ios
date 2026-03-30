@@ -466,28 +466,28 @@ class ManualEntry extends BaseController {
     public function detail($applicationId) {
         $crewingId = $_SESSION['user_id'];
         
-        // Simple query - no ownership check, no ap.* to avoid missing column issues
+        // Use ALL LEFT JOINs to prevent missing related data from killing the query
         $stmt = $this->db->prepare("
             SELECT 
                 a.id, a.user_id, a.vacancy_id, a.status_id, a.created_at,
                 u.full_name, u.email, u.phone, u.avatar, u.created_at as user_created_at,
-                v.title as vacancy_title, v.id as vid,
+                v.title as vacancy_title,
                 d.name as department_name,
                 s.name as status_name, s.color as status_color
             FROM applications a
-            INNER JOIN users u ON a.user_id = u.id
-            INNER JOIN job_vacancies v ON a.vacancy_id = v.id
+            LEFT JOIN users u ON a.user_id = u.id
+            LEFT JOIN job_vacancies v ON a.vacancy_id = v.id
             LEFT JOIN departments d ON v.department_id = d.id
-            INNER JOIN application_statuses s ON a.status_id = s.id
+            LEFT JOIN application_statuses s ON a.status_id = s.id
             WHERE a.id = ?
         ");
-        if (!$stmt) { flash('error', 'Query error: ' . $this->db->error); redirect(url('/crewing/manual-entries')); return; }
+        if (!$stmt) { flash('error', 'DB Error: ' . $this->db->error); redirect(url('/crewing/manual-entries')); return; }
         $stmt->bind_param('i', $applicationId);
         $stmt->execute();
         $entry = $stmt->get_result()->fetch_assoc();
         
         // Try to get profile data separately
-        if ($entry) {
+        if ($entry && !empty($entry['user_id'])) {
             $profStmt = $this->db->prepare("SELECT * FROM applicant_profiles WHERE user_id = ?");
             if ($profStmt) {
                 $profStmt->bind_param('i', $entry['user_id']);
@@ -498,7 +498,10 @@ class ManualEntry extends BaseController {
         }
         
         if (!$entry) {
-            flash('error', 'Data pelamar tidak ditemukan.');
+            // Debug: check if application exists at all
+            $chk = $this->db->query("SELECT COUNT(*) as cnt FROM applications WHERE id = " . intval($applicationId));
+            $cnt = $chk ? $chk->fetch_assoc()['cnt'] : 'err';
+            flash('error', "Aplikasi ID={$applicationId} tidak ditemukan (exists={$cnt}). Mungkin data sudah dihapus.");
             redirect(url('/crewing/manual-entries'));
         }
         
@@ -531,24 +534,24 @@ class ManualEntry extends BaseController {
     public function editForm($applicationId) {
         $crewingId = $_SESSION['user_id'];
         
-        // Simple query - no ownership check
+        // Simple query - ALL LEFT JOINs
         $stmt = $this->db->prepare("
             SELECT 
                 a.id, a.user_id, a.vacancy_id, a.status_id,
                 u.full_name, u.email, u.phone, u.id as uid, u.avatar,
                 v.id as vacancy_id
             FROM applications a
-            INNER JOIN users u ON a.user_id = u.id
-            INNER JOIN job_vacancies v ON a.vacancy_id = v.id
+            LEFT JOIN users u ON a.user_id = u.id
+            LEFT JOIN job_vacancies v ON a.vacancy_id = v.id
             WHERE a.id = ?
         ");
-        if (!$stmt) { flash('error', 'Query error.'); redirect(url('/crewing/manual-entries')); return; }
+        if (!$stmt) { flash('error', 'DB Error: ' . $this->db->error); redirect(url('/crewing/manual-entries')); return; }
         $stmt->bind_param('i', $applicationId);
         $stmt->execute();
         $entry = $stmt->get_result()->fetch_assoc();
         
         // Get profile separately
-        if ($entry) {
+        if ($entry && !empty($entry['user_id'])) {
             $profStmt = $this->db->prepare("SELECT * FROM applicant_profiles WHERE user_id = ?");
             if ($profStmt) {
                 $profStmt->bind_param('i', $entry['user_id']);
@@ -559,7 +562,9 @@ class ManualEntry extends BaseController {
         }
         
         if (!$entry) {
-            flash('error', 'Data pelamar tidak ditemukan.');
+            $chk = $this->db->query("SELECT COUNT(*) as cnt FROM applications WHERE id = " . intval($applicationId));
+            $cnt = $chk ? $chk->fetch_assoc()['cnt'] : 'err';
+            flash('error', "Aplikasi ID={$applicationId} tidak ditemukan untuk edit (exists={$cnt}).");
             redirect(url('/crewing/manual-entries'));
         }
         
