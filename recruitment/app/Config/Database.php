@@ -24,7 +24,7 @@ $isWindows = (PHP_OS_FAMILY === 'Windows' || strtoupper(substr(PHP_OS, 0, 3)) ==
 
 if (!$isWindows) {
     // DOCKER / LINUX / NAS UGREEN - read from ENV with production defaults
-    $nas_ip             = getRecruitmentEnvVar(['DB_HOST'], 'mariadb-1');
+    $nas_ip             = getRecruitmentEnvVar(['DB_HOST'], 'mysql');
     $nas_user           = getRecruitmentEnvVar(['DB_USER', 'DB_USERNAME'], 'root');
     $nas_password       = getRecruitmentEnvVar(['DB_PASS', 'DB_PASSWORD'], 'rahasia123');
     $nas_port           = (int) getRecruitmentEnvVar(['DB_PORT'], 3306);
