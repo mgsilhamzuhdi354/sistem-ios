@@ -596,107 +596,6 @@ class Pipeline extends BaseController
     }
     
     /**
-     * Permanently delete application from archive
-     */
-    public function permanentDelete()
-    {
-        if (!$this->isPost()) {
-            return $this->json(['success' => false, 'message' => 'Invalid request']);
-        }
-        
-        $applicationId = intval($this->input('application_id'));
-        
-        if (!$applicationId) {
-            return $this->json(['success' => false, 'message' => 'Application ID required']);
-        }
-        
-        // First verify it's archived
-        $checkStmt = $this->db->prepare("SELECT is_archived FROM applications WHERE id = ?");
-        $checkStmt->bind_param('i', $applicationId);
-        $checkStmt->execute();
-        $result = $checkStmt->get_result()->fetch_assoc();
-        
-        if (!$result || $result['is_archived'] != 1) {
-            return $this->json(['success' => false, 'message' => 'Hanya bisa menghapus aplikasi yang sudah diarsipkan']);
-        }
-        
-        try {
-            // Delete all related records (each in try-catch to handle missing tables)
-            $relatedTables = [
-                'application_assignments',
-                'status_change_requests',
-                'job_claim_requests',
-                'pipeline_requests',
-                'applicant_documents',
-                'email_logs',
-            ];
-            
-            foreach ($relatedTables as $table) {
-                try {
-                    $stmt = $this->db->prepare("DELETE FROM `{$table}` WHERE application_id = ?");
-                    if ($stmt) {
-                        $stmt->bind_param('i', $applicationId);
-                        $stmt->execute();
-                        $stmt->close();
-                    }
-                } catch (\Throwable $e) {
-                    // Table might not exist, continue
-                }
-            }
-            
-            // Delete the application
-            $stmt = $this->db->prepare("DELETE FROM applications WHERE id = ?");
-            $stmt->bind_param('i', $applicationId);
-            
-            if ($stmt->execute()) {
-                return $this->json(['success' => true, 'message' => 'Aplikasi berhasil dihapus permanen']);
-            }
-            
-            return $this->json(['success' => false, 'message' => 'Gagal menghapus: ' . $this->db->error]);
-        } catch (\Throwable $e) {
-            return $this->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Export Pipeline Summary as PDF
-     */
-    public function exportPdf()
-    {
-        $crewingId = $_SESSION['user_id'];
-
-        // Get statuses
-        $statusResult = $this->db->query("SELECT * FROM application_statuses WHERE id NOT IN (9, 10, 11) ORDER BY sort_order");
-        $statuses = $statusResult ? $statusResult->fetch_all(MYSQLI_ASSOC) : [];
-
-        // Get pipeline data - all applications (not just assigned)
-        $pipeline = [];
-        foreach ($statuses as $status) {
-            $query = "
-                SELECT a.id, a.user_id, a.created_at,
-                       u.full_name as applicant_name,
-                       jv.title as vacancy_title,
-                       uc.full_name as crewing_name
-                FROM applications a
-                JOIN users u ON a.user_id = u.id
-                LEFT JOIN job_vacancies jv ON a.vacancy_id = jv.id
-                LEFT JOIN application_assignments aa ON a.id = aa.application_id AND aa.status = 'active'
-                LEFT JOIN users uc ON aa.assigned_to = uc.id
-                WHERE a.status_id = ?
-                ORDER BY a.created_at DESC
-            ";
-            $stmt = $this->db->prepare($query);
-            $stmt->bind_param('i', $status['id']);
-            $stmt->execute();
-            $pipeline[$status['id']] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-        }
-
-        $this->view('crewing/pipeline/pipeline_pdf', [
-            'statuses' => $statuses,
-            'pipeline' => $pipeline,
-        ]);
-    }
-    /**
      * Permanently delete a candidate and all related data
      */
     public function permanentDelete()
@@ -713,8 +612,8 @@ class Pipeline extends BaseController
         }
 
         // Verify ownership
-        $stmt = $this->db->prepare("SELECT a.user_id, u.full_name FROM applications a JOIN users u ON a.user_id = u.id WHERE a.id = ? AND (a.current_crewing_id = ? OR a.entered_by = ? OR a.id IN (SELECT application_id FROM application_assignments WHERE assigned_to = ? AND status = 'active'))");
-        $stmt->bind_param('iiii', $applicationId, $crewingId, $crewingId, $crewingId);
+        $stmt = $this->db->prepare("SELECT a.user_id, u.full_name FROM applications a JOIN users u ON a.user_id = u.id WHERE a.id = ? AND (a.current_crewing_id = ? OR a.entered_by = ? OR a.archived_by = ? OR a.id IN (SELECT application_id FROM application_assignments WHERE assigned_to = ? AND status = 'active'))");
+        $stmt->bind_param('iiiii', $applicationId, $crewingId, $crewingId, $crewingId, $crewingId);
         $stmt->execute();
         $app = $stmt->get_result()->fetch_assoc();
 
@@ -738,6 +637,8 @@ class Pipeline extends BaseController
                 'application_status_history' => 'application_id',
                 'archived_applications' => 'application_id',
                 'job_claim_requests' => 'application_id',
+                'applicant_documents' => 'application_id',
+                'email_logs' => 'application_id',
             ];
             foreach ($tables as $table => $col) {
                 $delStmt = @$this->db->prepare("DELETE FROM `$table` WHERE `$col` = ?");
@@ -792,5 +693,44 @@ class Pipeline extends BaseController
             $this->db->rollback();
             return $this->json(['success' => false, 'message' => 'Gagal menghapus: ' . $e->getMessage()]);
         }
+    }
+
+    /**
+     * Export Pipeline Summary as PDF
+     */
+    public function exportPdf()
+    {
+        $crewingId = $_SESSION['user_id'];
+
+        // Get statuses
+        $statusResult = $this->db->query("SELECT * FROM application_statuses WHERE id NOT IN (9, 10, 11) ORDER BY sort_order");
+        $statuses = $statusResult ? $statusResult->fetch_all(MYSQLI_ASSOC) : [];
+
+        // Get pipeline data
+        $pipeline = [];
+        foreach ($statuses as $status) {
+            $query = "
+                SELECT a.id, a.user_id, a.created_at,
+                       u.full_name as applicant_name,
+                       jv.title as vacancy_title,
+                       uc.full_name as crewing_name
+                FROM applications a
+                JOIN users u ON a.user_id = u.id
+                LEFT JOIN job_vacancies jv ON a.vacancy_id = jv.id
+                LEFT JOIN application_assignments aa ON a.id = aa.application_id AND aa.status = 'active'
+                LEFT JOIN users uc ON aa.assigned_to = uc.id
+                WHERE a.status_id = ?
+                ORDER BY a.created_at DESC
+            ";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param('i', $status['id']);
+            $stmt->execute();
+            $pipeline[$status['id']] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        }
+
+        $this->view('crewing/pipeline/pipeline_pdf', [
+            'statuses' => $statuses,
+            'pipeline' => $pipeline,
+        ]);
     }
 }
