@@ -138,30 +138,38 @@ function getDB() {
 
 // Simple Router
 $requestMethod = $_SERVER['REQUEST_METHOD'];
-$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// Helper to get relative base path
-$scriptDir = dirname($_SERVER['SCRIPT_NAME']);
-$scriptDir = str_replace('\\', '/', $scriptDir); // normalize windows paths
-$basePath = rtrim($scriptDir, '/');
+// --- Robust URL Detection ---
+// Priority 1: Use ?url= parameter passed by .htaccess rewrite rules
+// Priority 2: Parse from REQUEST_URI by stripping basePath
+if (isset($_GET['url']) && $_GET['url'] !== '') {
+    $requestUri = '/' . ltrim($_GET['url'], '/');
+} else {
+    $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// Check if we are being accessed via rewritten URL (e.g. /recruitment/ instead of /recruitment/public/index.php)
-if (strpos($requestUri, $basePath) !== 0) {
-    // Maybe we are in the parent folder via rewrite?
-    $parentDir = dirname($basePath);
-    if (strpos($requestUri, $parentDir) === 0) {
-       $basePath = $parentDir;
+    // Helper to get relative base path
+    $scriptDir = dirname($_SERVER['SCRIPT_NAME']);
+    $scriptDir = str_replace('\\', '/', $scriptDir); // normalize windows paths
+    $basePath = rtrim($scriptDir, '/');
+
+    // Check if we are being accessed via rewritten URL (e.g. /recruitment/ instead of /recruitment/public/index.php)
+    if (strpos($requestUri, $basePath) !== 0) {
+        // Maybe we are in the parent folder via rewrite?
+        $parentDir = dirname($basePath);
+        if (strpos($requestUri, $parentDir) === 0) {
+           $basePath = $parentDir;
+        }
     }
-}
 
-// Ensure base path is correctly set for Windows local dev
-if ($isWindows && strpos($basePath, '/PT_indoocean') === false && strpos($_SERVER['REQUEST_URI'], '/PT_indoocean') !== false) {
-    // Windows localhost subfolder
-    $basePath = '/PT_indoocean/PT_indoocean/recruitment/public';
-}
+    // Ensure base path is correctly set for Windows local dev
+    if ($isWindows && strpos($basePath, '/PT_indoocean') === false && strpos($_SERVER['REQUEST_URI'], '/PT_indoocean') !== false) {
+        // Windows localhost subfolder
+        $basePath = '/PT_indoocean/PT_indoocean/recruitment/public';
+    }
 
-$requestUri = str_replace($basePath, '', $requestUri);
-$requestUri = $requestUri ?: '/';
+    $requestUri = str_replace($basePath, '', $requestUri);
+    $requestUri = $requestUri ?: '/';
+}
 
 // Normalize: strip stale /public prefix that may appear when root .htaccess
 // rewrites /recruitment/public/... to recruitment/public/index.php?url=public/...
