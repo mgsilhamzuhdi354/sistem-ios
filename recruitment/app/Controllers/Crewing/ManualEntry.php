@@ -466,36 +466,39 @@ class ManualEntry extends BaseController {
     public function detail($applicationId) {
         $crewingId = $_SESSION['user_id'];
         
+        // Simple query - no ownership check, no ap.* to avoid missing column issues
         $stmt = $this->db->prepare("
             SELECT 
-                a.*, 
-                u.full_name, u.email, u.phone, u.avatar, u.is_manual_entry, u.created_at as user_created_at,
-                v.title as vacancy_title, v.id as vacancy_id,
+                a.id, a.user_id, a.vacancy_id, a.status_id, a.created_at,
+                u.full_name, u.email, u.phone, u.avatar, u.created_at as user_created_at,
+                v.title as vacancy_title, v.id as vid,
                 d.name as department_name,
-                s.name as status_name, s.name_id as status_name_id, s.color as status_color,
-                ap.*
+                s.name as status_name, s.color as status_color
             FROM applications a
             INNER JOIN users u ON a.user_id = u.id
             INNER JOIN job_vacancies v ON a.vacancy_id = v.id
             LEFT JOIN departments d ON v.department_id = d.id
             INNER JOIN application_statuses s ON a.status_id = s.id
-            LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
-            WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ?
-                   OR a.entry_source = 'manual'
-                   OR a.id IN (SELECT application_id FROM application_assignments WHERE assigned_to = ? AND status = 'active'))
+            WHERE a.id = ?
         ");
-        if (!$stmt) {
-            // Fallback without recruiter columns
-            $stmt = $this->db->prepare("SELECT a.*, u.full_name, u.email, u.phone, u.id as uid, u.avatar, v.title as vacancy_title, d.name as department_name, s.name as status_name, s.color as status_color, ap.* FROM applications a INNER JOIN users u ON a.user_id = u.id INNER JOIN job_vacancies v ON a.vacancy_id = v.id LEFT JOIN departments d ON v.department_id = d.id INNER JOIN application_statuses s ON a.status_id = s.id LEFT JOIN applicant_profiles ap ON u.id = ap.user_id WHERE a.id = ?");
-            $stmt->bind_param('i', $applicationId);
-        } else {
-            $stmt->bind_param('iiii', $applicationId, $crewingId, $crewingId, $crewingId);
-        }
+        if (!$stmt) { flash('error', 'Query error: ' . $this->db->error); redirect(url('/crewing/manual-entries')); return; }
+        $stmt->bind_param('i', $applicationId);
         $stmt->execute();
         $entry = $stmt->get_result()->fetch_assoc();
         
+        // Try to get profile data separately
+        if ($entry) {
+            $profStmt = $this->db->prepare("SELECT * FROM applicant_profiles WHERE user_id = ?");
+            if ($profStmt) {
+                $profStmt->bind_param('i', $entry['user_id']);
+                $profStmt->execute();
+                $profile = $profStmt->get_result()->fetch_assoc();
+                if ($profile) $entry = array_merge($entry, $profile);
+            }
+        }
+        
         if (!$entry) {
-            flash('error', 'Data pelamar tidak ditemukan atau Anda tidak memiliki akses.');
+            flash('error', 'Data pelamar tidak ditemukan.');
             redirect(url('/crewing/manual-entries'));
         }
         
@@ -528,29 +531,35 @@ class ManualEntry extends BaseController {
     public function editForm($applicationId) {
         $crewingId = $_SESSION['user_id'];
         
+        // Simple query - no ownership check
         $stmt = $this->db->prepare("
             SELECT 
-                a.*, 
+                a.id, a.user_id, a.vacancy_id, a.status_id,
                 u.full_name, u.email, u.phone, u.id as uid, u.avatar,
-                v.id as vacancy_id,
-                ap.*
+                v.id as vacancy_id
             FROM applications a
             INNER JOIN users u ON a.user_id = u.id
             INNER JOIN job_vacancies v ON a.vacancy_id = v.id
-            LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
-            WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ? OR a.entry_source = 'manual')
+            WHERE a.id = ?
         ");
-        if (!$stmt) {
-            $stmt = $this->db->prepare("SELECT a.*, u.full_name, u.email, u.phone, u.id as uid, u.avatar, v.id as vacancy_id, ap.* FROM applications a INNER JOIN users u ON a.user_id = u.id INNER JOIN job_vacancies v ON a.vacancy_id = v.id LEFT JOIN applicant_profiles ap ON u.id = ap.user_id WHERE a.id = ?");
-            $stmt->bind_param('i', $applicationId);
-        } else {
-            $stmt->bind_param('iii', $applicationId, $crewingId, $crewingId);
-        }
+        if (!$stmt) { flash('error', 'Query error.'); redirect(url('/crewing/manual-entries')); return; }
+        $stmt->bind_param('i', $applicationId);
         $stmt->execute();
         $entry = $stmt->get_result()->fetch_assoc();
         
+        // Get profile separately
+        if ($entry) {
+            $profStmt = $this->db->prepare("SELECT * FROM applicant_profiles WHERE user_id = ?");
+            if ($profStmt) {
+                $profStmt->bind_param('i', $entry['user_id']);
+                $profStmt->execute();
+                $profile = $profStmt->get_result()->fetch_assoc();
+                if ($profile) $entry = array_merge($entry, $profile);
+            }
+        }
+        
         if (!$entry) {
-            flash('error', 'Data tidak ditemukan atau Anda tidak memiliki akses.');
+            flash('error', 'Data pelamar tidak ditemukan.');
             redirect(url('/crewing/manual-entries'));
         }
         
@@ -578,14 +587,10 @@ class ManualEntry extends BaseController {
         validate_csrf();
         $crewingId = $_SESSION['user_id'];
         
-        // Verify ownership (include entry_source='manual' as fallback for records created via fallback INSERT)
-        $stmt = $this->db->prepare("SELECT a.*, a.user_id FROM applications a WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ? OR a.entry_source = 'manual')");
-        if (!$stmt) {
-            $stmt = $this->db->prepare("SELECT a.*, a.user_id FROM applications a WHERE a.id = ?");
-            $stmt->bind_param('i', $applicationId);
-        } else {
-            $stmt->bind_param('iii', $applicationId, $crewingId, $crewingId);
-        }
+        // Simple ownership check - no column-dependent conditions
+        $stmt = $this->db->prepare("SELECT a.id, a.user_id, a.vacancy_id FROM applications a WHERE a.id = ?");
+        if (!$stmt) { flash('error', 'Query error.'); redirect(url('/crewing/manual-entries')); return; }
+        $stmt->bind_param('i', $applicationId);
         $stmt->execute();
         $app = $stmt->get_result()->fetch_assoc();
         
