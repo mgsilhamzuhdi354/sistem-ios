@@ -110,14 +110,16 @@ class Pipeline extends BaseController
         try {
             global $dbConfig;
             $erpCfg = $dbConfig['erp'] ?? [];
-            $erpDb = new \mysqli(
+            $erpDb = @new \mysqli(
                 $erpCfg['hostname'] ?? 'localhost',
                 $erpCfg['username'] ?? 'root',
                 $erpCfg['password'] ?? '',
                 $erpCfg['database'] ?? 'erp_db',
                 $erpCfg['port'] ?? 3306
             );
-            if (!$erpDb->connect_error) {
+            if ($erpDb->connect_errno) {
+                throw new \Exception('ERP DB connection failed');
+            }
                 // Get all erp_crew_ids from pipeline
                 $erpCrewIds = [];
                 foreach ($pipeline as $statusApps) {
@@ -159,7 +161,6 @@ class Pipeline extends BaseController
                     }
                 }
                 $erpDb->close();
-            }
         } catch (\Throwable $e) {
             // Silently fail - ERP data is supplementary
         }
@@ -307,14 +308,14 @@ class Pipeline extends BaseController
             try {
                 global $dbConfig;
                 $erpCfg = $dbConfig['erp'] ?? [];
-                $erpDb = new \mysqli(
+                $erpDb = @new \mysqli(
                     $erpCfg['hostname'] ?? 'localhost',
                     $erpCfg['username'] ?? 'root',
                     $erpCfg['password'] ?? '',
                     $erpCfg['database'] ?? 'erp_db',
                     $erpCfg['port'] ?? 3306
                 );
-                if (!$erpDb->connect_error) {
+                if (!$erpDb->connect_errno) {
                     $erpStmt = $erpDb->prepare("SELECT document_check, owner_interview, pengantar_mcu, agreement_kontrak, admin_charge, ok_to_board, status as checklist_status FROM admin_checklists WHERE crew_id = ?");
                     $crewId = intval($app['erp_crew_id']);
                     $erpStmt->bind_param('i', $crewId);

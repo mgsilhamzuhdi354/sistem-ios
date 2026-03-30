@@ -96,7 +96,7 @@
         <div class="sidebar-header">
             <a href="<?= url('/crewing/dashboard') ?>" class="logo">
                 <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;width:100%;padding:0.5rem 0.75rem;">
-                    <img src="<?= asset('images/logo.jpg') ?>" alt="PT Indo Ocean Crew Services" style="width:100%;max-width:140px;height:auto;object-fit:contain;background:white;border-radius:12px;padding:8px;box-shadow:0 4px 16px rgba(0,0,0,0.25);border:2px solid rgba(255,255,255,0.15);">
+                    <img src="<?= asset('images/logo-circle.png') ?>" alt="PT Indo Ocean Crew Services" style="width:80px;height:80px;object-fit:cover;border-radius:50%;background:white;padding:4px;box-shadow:0 4px 16px rgba(0,0,0,0.25);border:2px solid rgba(255,255,255,0.3);">
                 </div>
             </a>
         </div>

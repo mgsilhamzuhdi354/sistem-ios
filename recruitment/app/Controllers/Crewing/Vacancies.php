@@ -25,18 +25,23 @@ class Vacancies extends BaseController {
         $vesselType = $_GET['vessel_type'] ?? '';
         
         // Get departments for filter
-        $departments = $this->db->query("SELECT id, name FROM departments ORDER BY name")->fetch_all(MYSQLI_ASSOC);
+        $deptResult = $this->db->query("SELECT id, name FROM departments ORDER BY name");
+        $departments = $deptResult ? $deptResult->fetch_all(MYSQLI_ASSOC) : [];
         
         // Get vessel types for filter
-        $vesselTypes = $this->db->query("SELECT id, name FROM vessel_types ORDER BY name")->fetch_all(MYSQLI_ASSOC);
+        $vtResult = $this->db->query("SELECT id, name FROM vessel_types ORDER BY name");
+        $vesselTypes = $vtResult ? $vtResult->fetch_all(MYSQLI_ASSOC) : [];
         
         // Get current crewing user's referral code
         $crewingId = $_SESSION['user_id'];
         $refStmt = $this->db->prepare("SELECT referral_code FROM users WHERE id = ?");
-        $refStmt->bind_param('i', $crewingId);
-        $refStmt->execute();
-        $refResult = $refStmt->get_result()->fetch_assoc();
-        $referralCode = $refResult['referral_code'] ?? '';
+        $referralCode = '';
+        if ($refStmt) {
+            $refStmt->bind_param('i', $crewingId);
+            $refStmt->execute();
+            $refResult = $refStmt->get_result()->fetch_assoc();
+            $referralCode = $refResult['referral_code'] ?? '';
+        }
         
         // Build query - only show vacancies created by this crewing user
         $query = "
@@ -78,13 +83,16 @@ class Vacancies extends BaseController {
         
         if (!empty($params)) {
             $stmt = $this->db->prepare($query);
-            $stmt->bind_param($types, ...$params);
-            $stmt->execute();
-            $vacancies = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            if ($stmt) {
+                $stmt->bind_param($types, ...$params);
+                $stmt->execute();
+                $vacancies = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            } else {
+                $vacancies = [];
+            }
         } else {
-            // This block should ideally not be reached if created_by is always filtered
-            // but keeping it for robustness if $params somehow becomes empty.
-            $vacancies = $this->db->query($query)->fetch_all(MYSQLI_ASSOC);
+            $result = $this->db->query($query);
+            $vacancies = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
         }
         
         $data = [
