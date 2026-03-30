@@ -95,10 +95,22 @@ $params = [];
 // Parse segments - if second segment is numeric, treat it as ID for 'show' method
 if (isset($segments[1])) {
     if (is_numeric($segments[1])) {
-        // /contracts/2 → Contract::show(2)
-        $method = 'show';
-        $params = [$segments[1]];
-        // Check for additional method after ID (e.g., /contracts/edit/2)
+        if (isset($segments[2])) {
+            // /crews/1/documents/add → Crew::documentsAdd(1)
+            // /crews/1/skills/add → Crew::skillsAdd(1)
+            // Join remaining segments into camelCase method name
+            $subParts = array_slice($segments, 2);
+            $methodParts = [];
+            foreach ($subParts as $i => $part) {
+                $methodParts[] = $i === 0 ? lcfirst(ucfirst($part)) : ucfirst($part);
+            }
+            $method = implode('', $methodParts);
+            $params = [$segments[1]];
+        } else {
+            // /contracts/2 → Contract::show(2)
+            $method = 'show';
+            $params = [$segments[1]];
+        }
     } else {
         // /contracts/create or /contracts/edit/2
         $method = $segments[1];

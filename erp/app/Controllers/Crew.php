@@ -893,4 +893,125 @@ class Crew extends BaseController
             echo json_encode(['success' => false, 'message' => 'Failed to delete skill']);
         }
     }
+
+    /**
+     * Route alias: crews/{id}/documents/add → documentsAdd($crewId)
+     * Handles document upload from the crew profile modal
+     */
+    public function documentsAdd($crewId)
+    {
+        $this->requireAuth();
+        $this->requirePermission('crews', 'edit');
+
+        $crew = $this->crewModel->find($crewId);
+        if (!$crew) {
+            $this->setFlash('error', 'Crew tidak ditemukan');
+            $this->redirect('crews');
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('crews/view/' . $crewId);
+            return;
+        }
+
+        require_once APPPATH . 'Models/CrewModel.php';
+
+        // Handle file upload
+        if (empty($_FILES['document_file']['name'])) {
+            // No file, just save document metadata
+            $filePath = null;
+        } else {
+            $file = $_FILES['document_file'];
+            $uploadDir = 'uploads/documents/' . $crewId . '/';
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $filename = 'doc_' . time() . '_' . uniqid() . '.' . $ext;
+            $filepath = $uploadDir . $filename;
+            if (!move_uploaded_file($file['tmp_name'], $filepath)) {
+                $this->setFlash('error', 'Gagal upload file');
+                $this->redirect('crews/view/' . $crewId);
+                return;
+            }
+            $filePath = $filepath;
+        }
+
+        $docModel = new \App\Models\CrewDocumentModel($this->db);
+        $data = [
+            'crew_id' => $crewId,
+            'document_type' => trim($_POST['document_type'] ?? ''),
+            'document_name' => trim($_POST['document_type'] ?? ''),
+            'document_number' => trim($_POST['document_number'] ?? ''),
+            'file_path' => $filePath,
+            'file_name' => $_FILES['document_file']['name'] ?? '',
+            'file_size' => $_FILES['document_file']['size'] ?? 0,
+            'mime_type' => $_FILES['document_file']['type'] ?? '',
+            'issue_date' => !empty($_POST['issue_date']) ? $_POST['issue_date'] : null,
+            'expiry_date' => !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null,
+            'status' => 'valid',
+            'uploaded_by' => $this->getCurrentUser()['id']
+        ];
+
+        $docId = $docModel->insert($data);
+        if ($docId) {
+            $this->setFlash('success', 'Document berhasil diupload');
+        } else {
+            $this->setFlash('error', 'Gagal menyimpan document: ' . $this->db->error);
+        }
+        $this->redirect('crews/view/' . $crewId);
+    }
+
+    /**
+     * Route alias: crews/{id}/skills/add → skillsAdd($crewId)
+     * Handles skill addition from the crew profile modal (form POST, not AJAX)
+     */
+    public function skillsAdd($crewId)
+    {
+        $this->requireAuth();
+        $this->requirePermission('crews', 'edit');
+
+        $crew = $this->crewModel->find($crewId);
+        if (!$crew) {
+            $this->setFlash('error', 'Crew tidak ditemukan');
+            $this->redirect('crews');
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('crews/view/' . $crewId);
+            return;
+        }
+
+        require_once APPPATH . 'Models/CrewSkillModel.php';
+        $skillModel = new \App\Models\CrewSkillModel($this->db);
+
+        $skillName = trim($_POST['skill_name'] ?? '');
+        $skillLevel = $_POST['level'] ?? $_POST['skill_level'] ?? 'BASIC';
+        $certificateId = trim($_POST['certificate_id'] ?? '');
+        $notes = trim($_POST['notes'] ?? '');
+
+        if (empty($skillName)) {
+            $this->setFlash('error', 'Nama skill wajib diisi');
+            $this->redirect('crews/view/' . $crewId);
+            return;
+        }
+
+        $skillData = [
+            'crew_id' => $crewId,
+            'skill_name' => $skillName,
+            'skill_level' => $skillLevel,
+            'certificate_id' => $certificateId ?: null,
+            'notes' => $notes ?: null
+        ];
+
+        $skillId = $skillModel->insert($skillData);
+        if ($skillId) {
+            $this->setFlash('success', 'Skill "' . htmlspecialchars($skillName) . '" berhasil ditambahkan');
+        } else {
+            $this->setFlash('error', 'Gagal menambahkan skill: ' . $this->db->error);
+        }
+        $this->redirect('crews/view/' . $crewId);
+    }
 }
