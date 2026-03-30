@@ -403,23 +403,9 @@ class AdminChecklist extends BaseController
                 }
             }
 
-            // 4) Agreement Kontrak: verify a contract exists for this crew
-            if ($item === 'agreement_kontrak') {
-                $ctCheckStmt = $this->db->prepare("SELECT COUNT(*) as cnt FROM contracts WHERE crew_id = ?");
-                if ($ctCheckStmt) {
-                    $ctCheckStmt->bind_param('i', $crewIdForCheck);
-                    $ctCheckStmt->execute();
-                    $ctCount = $ctCheckStmt->get_result()->fetch_assoc()['cnt'] ?? 0;
-                    $ctCheckStmt->close();
-                    if ($ctCount == 0) {
-                        return $this->json([
-                            'success' => false,
-                            'message' => '⚠️ Tidak bisa pass Agreement Kontrak — belum ada kontrak dibuat untuk crew ini. Silakan buat kontrak terlebih dahulu.',
-                            'blocked_by' => 'no_contract'
-                        ]);
-                    }
-                }
-            }
+            // 4) Agreement Kontrak: crew agrees to contract terms
+            // Note: No contract validation needed here — contract is created AFTER operational stage
+            // This step is for the crew member to agree to the employment terms
 
             // 6) OK to Board: verify all previous 5 items are passed (final gate)
             if ($item === 'ok_to_board') {
@@ -1724,5 +1710,96 @@ class AdminChecklist extends BaseController
             default:
                 return ['success' => false, 'message' => 'Sub-item tidak valid'];
         }
+    }
+
+    /**
+     * Clean all test data from ERP and Recruitment databases
+     * Access via: /erp/admin-checklist/cleanup-test-data
+     * Uses the app's own DB connection (guaranteed to work)
+     */
+    public function cleanupTestData()
+    {
+        $this->requireAuth();
+        header('Content-Type: text/html; charset=utf-8');
+        echo "<h1>🧹 Database Cleanup</h1><pre>";
+
+        // ERP cleanup
+        $this->db->query("SET FOREIGN_KEY_CHECKS = 0");
+
+        $erpTables = [
+            'payroll_items', 'payroll_periods',
+            'contract_deductions', 'contract_salaries', 'contract_taxes',
+            'contract_approvals', 'contract_logs', 'contract_documents', 'contracts',
+            'crew_skills', 'crew_experiences', 'crew_documents', 'crews',
+            'admin_checklists', 'crew_operationals',
+            'finance_invoice_items', 'finance_invoices', 'finance_payments',
+            'finance_journal_entries', 'finance_journal_items',
+            'activity_logs', 'notifications', 'recruitment_sync'
+        ];
+
+        foreach ($erpTables as $table) {
+            $r = @$this->db->query("TRUNCATE TABLE `$table`");
+            if ($r) { echo "  ✅ ERP: $table\n"; }
+            else {
+                $r2 = @$this->db->query("DELETE FROM `$table`");
+                echo ($r2 ? "  ✅ ERP: $table (delete)\n" : "  ⚠️ ERP: $table — " . $this->db->error . "\n");
+            }
+        }
+
+        $this->db->query("SET FOREIGN_KEY_CHECKS = 1");
+
+        echo "\n--- ERP Verify ---\n";
+        foreach (['crews','contracts','payroll_items','admin_checklists'] as $t) {
+            $r = @$this->db->query("SELECT COUNT(*) as c FROM `$t`");
+            echo "  $t: " . ($r ? $r->fetch_assoc()['c'] : '?') . "\n";
+        }
+
+        // Recruitment cleanup
+        echo "\n━━━━━━━━━━━━━━━━━━\n\n";
+        if ($this->recruitmentDb && !$this->recruitmentDb->connect_error) {
+            echo "✅ Connected to Recruitment DB\n\n";
+            $this->recruitmentDb->query("SET FOREIGN_KEY_CHECKS = 0");
+
+            @$this->recruitmentDb->query("DELETE FROM applicant_profiles WHERE user_id IN (SELECT id FROM users WHERE role_id = 3)");
+            @$this->recruitmentDb->query("DELETE FROM documents WHERE user_id IN (SELECT id FROM users WHERE role_id = 3)");
+            @$this->recruitmentDb->query("DELETE FROM notifications WHERE user_id IN (SELECT id FROM users WHERE role_id = 3)");
+
+            $recTables = [
+                'application_assignments', 'application_status_history',
+                'pipeline_requests', 'status_change_requests', 'job_claim_requests',
+                'medical_checkups', 'interview_answers', 'interview_sessions',
+                'archived_applications', 'applicant_documents', 'email_logs',
+                'applications'
+            ];
+
+            foreach ($recTables as $table) {
+                $r = @$this->recruitmentDb->query("TRUNCATE TABLE `$table`");
+                if ($r) { echo "  ✅ REC: $table\n"; }
+                else {
+                    $r2 = @$this->recruitmentDb->query("DELETE FROM `$table`");
+                    echo ($r2 ? "  ✅ REC: $table (delete)\n" : "  ⚠️ REC: $table\n");
+                }
+            }
+
+            @$this->recruitmentDb->query("DELETE FROM users WHERE role_id = 3");
+            echo "  ✅ Deleted " . $this->recruitmentDb->affected_rows . " applicant users\n";
+
+            $this->recruitmentDb->query("SET FOREIGN_KEY_CHECKS = 1");
+
+            echo "\n--- Recruitment Verify ---\n";
+            $r = @$this->recruitmentDb->query("SELECT COUNT(*) as c FROM applications");
+            echo "  applications: " . ($r ? $r->fetch_assoc()['c'] : '?') . "\n";
+            $r = @$this->recruitmentDb->query("SELECT COUNT(*) as c FROM users WHERE role_id = 3");
+            echo "  applicants: " . ($r ? $r->fetch_assoc()['c'] : '?') . "\n";
+        } else {
+            echo "⚠️ Recruitment DB not connected\n";
+        }
+
+        echo "\n</pre><h2 style='color:green'>🎉 Cleanup Selesai!</h2>";
+        echo "<p><a href='" . BASE_URL . "contracts'>→ Contracts</a> | ";
+        echo "<a href='" . BASE_URL . "crews'>→ Crews</a> | ";
+        echo "<a href='" . BASE_URL . "payroll'>→ Payroll</a> | ";
+        echo "<a href='" . BASE_URL . "recruitment/pipeline'>→ Pipeline</a></p>";
+        exit;
     }
 }

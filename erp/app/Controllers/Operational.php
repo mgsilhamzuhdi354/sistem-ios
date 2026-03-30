@@ -234,18 +234,119 @@ class Operational extends BaseController
             $crewStmt->execute();
             $crewStmt->close();
 
+            // AUTO-CREATE CONTRACT if none exists
+            $contractCreated = $this->autoCreateContract($crewId);
+
             $this->db->commit();
 
             // Sync On Board status to recruitment DB
             $this->syncToRecruitmentDb($crewId, 'on_board');
 
-            $this->setFlash('success', '✅ Operational selesai! Crew sudah On Board.');
+            $msg = '✅ Operational selesai! Crew sudah On Board.';
+            if ($contractCreated) {
+                $msg .= ' 📄 Draft kontrak otomatis dibuat.';
+            }
+            $this->setFlash('success', $msg);
         } catch (\Exception $e) {
             $this->db->rollback();
             $this->setFlash('error', 'Gagal: ' . $e->getMessage());
         }
 
         $this->redirect('Operational');
+    }
+
+    /**
+     * Auto-create a draft contract for a crew member
+     * Called when Operational stage completes
+     */
+    private function autoCreateContract($crewId)
+    {
+        // Check if crew already has a contract
+        $checkStmt = $this->db->prepare("SELECT id FROM contracts WHERE crew_id = ? LIMIT 1");
+        $checkStmt->bind_param('i', $crewId);
+        $checkStmt->execute();
+        $existing = $checkStmt->get_result()->fetch_assoc();
+        $checkStmt->close();
+
+        if ($existing) {
+            return false; // Already has contract
+        }
+
+        // Get crew data
+        $crewStmt = $this->db->prepare("
+            SELECT c.*, r.name as rank_name 
+            FROM crews c 
+            LEFT JOIN ranks r ON c.current_rank_id = r.id 
+            WHERE c.id = ?
+        ");
+        $crewStmt->bind_param('i', $crewId);
+        $crewStmt->execute();
+        $crew = $crewStmt->get_result()->fetch_assoc();
+        $crewStmt->close();
+
+        if (!$crew) return false;
+
+        // Generate contract number
+        $year = date('Y');
+        $countResult = $this->db->query("SELECT COUNT(*) as c FROM contracts WHERE contract_number LIKE 'CTR-{$year}-%'");
+        $count = $countResult ? $countResult->fetch_assoc()['c'] : 0;
+        $contractNumber = sprintf("CTR-%s-%04d", $year, $count + 1);
+
+        // Get first available vessel (if any)
+        $vesselResult = $this->db->query("SELECT id FROM vessels WHERE status = 'active' LIMIT 1");
+        $vesselId = $vesselResult ? ($vesselResult->fetch_assoc()['id'] ?? null) : null;
+
+        // Get first available client (if any)
+        $clientResult = $this->db->query("SELECT id FROM clients LIMIT 1");
+        $clientId = $clientResult ? ($clientResult->fetch_assoc()['id'] ?? null) : null;
+
+        // Get default currency (IDR = 2, or first available)
+        $currResult = $this->db->query("SELECT id FROM currencies WHERE code = 'IDR' LIMIT 1");
+        $currencyId = $currResult ? ($currResult->fetch_assoc()['id'] ?? 1) : 1;
+
+        $userId = $_SESSION['user_id'] ?? $_SESSION['user']['id'] ?? 1;
+        $startDate = date('Y-m-d');
+        $endDate = date('Y-m-d', strtotime('+12 months'));
+        $rankId = $crew['current_rank_id'] ?? 1;
+
+        // Insert draft contract
+        $insertStmt = $this->db->prepare("
+            INSERT INTO contracts (
+                contract_number, crew_id, vessel_id, client_id,
+                rank_id, contract_type, start_date, end_date,
+                currency_id, status, created_by, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, 'fixed_term', ?, ?, ?, 'draft', ?, NOW(), NOW())
+        ");
+        $insertStmt->bind_param('siiiissii',
+            $contractNumber, $crewId, $vesselId, $clientId,
+            $rankId, $startDate, $endDate, $currencyId, $userId
+        );
+        $insertStmt->execute();
+        $contractId = $this->db->insert_id;
+        $insertStmt->close();
+
+        if ($contractId) {
+            // Insert default salary entry (0 — to be filled by admin)
+            $salStmt = $this->db->prepare("
+                INSERT INTO contract_salaries (contract_id, component, amount, currency_id)
+                VALUES (?, 'basic_salary', 0, ?)
+            ");
+            $salStmt->bind_param('ii', $contractId, $currencyId);
+            $salStmt->execute();
+            $salStmt->close();
+
+            // Log
+            @$this->db->query("INSERT INTO contract_logs (contract_id, action, description, created_by, created_at) 
+                VALUES ({$contractId}, 'created', 'Auto-created from Operational completion for {$crew['full_name']}', {$userId}, NOW())");
+
+            // Update crew status to contracted
+            $updCrew = $this->db->prepare("UPDATE crews SET status = 'contracted', updated_at = NOW() WHERE id = ?");
+            $updCrew->bind_param('i', $crewId);
+            $updCrew->execute();
+            $updCrew->close();
+        }
+
+        return $contractId > 0;
     }
 
     /**
