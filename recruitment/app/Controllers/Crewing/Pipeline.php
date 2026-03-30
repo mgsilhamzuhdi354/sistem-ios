@@ -108,18 +108,13 @@ class Pipeline extends BaseController
         // Fetch ERP Admin Checklist progress for candidates sent to ERP
         $erpProgress = [];
         try {
-            global $dbConfig;
-            $erpCfg = $dbConfig['erp'] ?? [];
-            $erpDb = @new \mysqli(
-                $erpCfg['hostname'] ?? 'localhost',
-                $erpCfg['username'] ?? 'root',
-                $erpCfg['password'] ?? '',
-                $erpCfg['database'] ?? 'erp_db',
-                $erpCfg['port'] ?? 3306
-            );
-            if ($erpDb->connect_errno) {
-                throw new \Exception('ERP DB connection failed');
-            }
+            $dbConfig = require APPPATH . 'Config/Database.php';
+            $erpDbName = $dbConfig['erp']['database'] ?? 'erp_db';
+            $recruitDbName = $dbConfig['default']['database'] ?? 'recruitment_db';
+            
+            // Switch to ERP database (same MySQL server)
+            $this->db->select_db($erpDbName);
+            
                 // Get all erp_crew_ids from pipeline
                 $erpCrewIds = [];
                 foreach ($pipeline as $statusApps) {
@@ -132,7 +127,7 @@ class Pipeline extends BaseController
                 
                 if (!empty($erpCrewIds)) {
                     $idList = implode(',', $erpCrewIds);
-                    $erpResult = $erpDb->query("
+                    $erpResult = $this->db->query("
                         SELECT crew_id,
                                document_check, owner_interview, pengantar_mcu,
                                agreement_kontrak, admin_charge, ok_to_board,
@@ -160,9 +155,12 @@ class Pipeline extends BaseController
                         }
                     }
                 }
-                $erpDb->close();
+                // Switch back to recruitment DB
+                $this->db->select_db($recruitDbName);
         } catch (\Throwable $e) {
             // Silently fail - ERP data is supplementary
+            // Switch back to recruitment DB on error
+            if (isset($recruitDbName)) $this->db->select_db($recruitDbName);
         }
 
         // Get my pending claim requests
@@ -306,27 +304,28 @@ class Pipeline extends BaseController
         // Fetch ERP Admin Checklist progress if sent to ERP
         if (!empty($app['erp_crew_id'])) {
             try {
-                global $dbConfig;
-                $erpCfg = $dbConfig['erp'] ?? [];
-                $erpDb = @new \mysqli(
-                    $erpCfg['hostname'] ?? 'localhost',
-                    $erpCfg['username'] ?? 'root',
-                    $erpCfg['password'] ?? '',
-                    $erpCfg['database'] ?? 'erp_db',
-                    $erpCfg['port'] ?? 3306
-                );
-                if (!$erpDb->connect_errno) {
-                    $erpStmt = $erpDb->prepare("SELECT document_check, owner_interview, pengantar_mcu, agreement_kontrak, admin_charge, ok_to_board, status as checklist_status FROM admin_checklists WHERE crew_id = ?");
-                    $crewId = intval($app['erp_crew_id']);
-                    $erpStmt->bind_param('i', $crewId);
-                    $erpStmt->execute();
-                    $erpData = $erpStmt->get_result()->fetch_assoc();
-                    if ($erpData) {
-                        $app['erp_checklist'] = $erpData;
+                $dbConfig = require APPPATH . 'Config/Database.php';
+                $erpDbName = $dbConfig['erp']['database'] ?? 'erp_db';
+                $recruitDbName = $dbConfig['default']['database'] ?? 'recruitment_db';
+                
+                // Switch to ERP database
+                $this->db->select_db($erpDbName);
+                    $erpStmt = $this->db->prepare("SELECT document_check, owner_interview, pengantar_mcu, agreement_kontrak, admin_charge, ok_to_board, status as checklist_status FROM admin_checklists WHERE crew_id = ?");
+                    if ($erpStmt) {
+                        $crewId = intval($app['erp_crew_id']);
+                        $erpStmt->bind_param('i', $crewId);
+                        $erpStmt->execute();
+                        $erpData = $erpStmt->get_result()->fetch_assoc();
+                        if ($erpData) {
+                            $app['erp_checklist'] = $erpData;
+                        }
                     }
-                    $erpDb->close();
-                }
-            } catch (\Throwable $e) {}
+                // Switch back
+                $this->db->select_db($recruitDbName);
+            } catch (\Throwable $e) {
+                // Switch back on error
+                $this->db->select_db($recruitDbName ?? 'recruitment_db');
+            }
         }
 
         return $this->json(['success' => true, 'data' => $app]);

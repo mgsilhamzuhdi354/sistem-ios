@@ -6,32 +6,39 @@
 class ErpSync {
     private $erpDb;
     private $recruitDb;
+    private $erpDbName;
+    private $recruitDbName;
     
     public function __construct($recruitDb) {
         $this->recruitDb = $recruitDb;
-        $this->erpDb = $this->getErpConnection();
+        
+        // Both DBs are on the SAME MySQL server, so reuse the existing connection
+        // Just switch databases when needed
+        $dbConfig = require APPPATH . 'Config/Database.php';
+        $this->erpDbName = $dbConfig['erp']['database'] ?? 'erp_db';
+        $this->recruitDbName = $dbConfig['default']['database'] ?? 'recruitment_db';
+        
+        // Reuse existing connection — just switch DB
+        $this->erpDb = $recruitDb;
+        if (!$this->erpDb->select_db($this->erpDbName)) {
+            throw new Exception('ERP database not found: ' . $this->erpDbName);
+        }
+        // Switch back to recruitment DB (caller expects it)
+        $this->erpDb->select_db($this->recruitDbName);
     }
     
     /**
-     * Get connection to ERP database
+     * Switch to ERP database for operations
      */
-    private function getErpConnection() {
-        // Load ERP database config from Config/Database.php
-        $dbConfig = require APPPATH . 'Config/Database.php';
-        $erp = $dbConfig['erp'] ?? $dbConfig['default'];
-        
-        $conn = @new mysqli(
-            $erp['hostname'] ?? 'localhost',
-            $erp['username'] ?? 'root',
-            $erp['password'] ?? '',
-            $erp['database'] ?? 'erp_db',
-            $erp['port'] ?? 3306
-        );
-        if ($conn->connect_error) {
-            throw new Exception('ERP database connection failed: ' . $conn->connect_error);
-        }
-        $conn->set_charset($erp['charset'] ?? 'utf8mb4');
-        return $conn;
+    private function useErpDb() {
+        $this->erpDb->select_db($this->erpDbName);
+    }
+    
+    /**
+     * Switch back to recruitment database
+     */
+    private function useRecruitDb() {
+        $this->erpDb->select_db($this->recruitDbName);
     }
     
     /**
@@ -41,6 +48,8 @@ class ErpSync {
      * @return int Crew ID in ERP
      */
     public function createCrew($data) {
+        $this->useErpDb();
+        try {
         // Validate required fields
         $this->validateCrewData($data);
         
@@ -116,7 +125,9 @@ class ErpSync {
         $crewId = $this->erpDb->insert_id;
         $stmt->close();
         
+        $this->useRecruitDb();
         return $crewId;
+        } catch (Exception $e) { $this->useRecruitDb(); throw $e; }
     }
     
     /**
@@ -149,15 +160,18 @@ class ErpSync {
      * @return int|false Crew ID if exists, false otherwise
      */
     public function getCrewByCandidateId($candidateId) {
+        $this->useErpDb();
         $stmt = $this->erpDb->prepare("SELECT id FROM crews WHERE candidate_id = ? AND source = 'recruitment'");
         $stmt->bind_param('i', $candidateId);
         $stmt->execute();
         $result = $stmt->get_result();
         
         if ($row = $result->fetch_assoc()) {
+            $this->useRecruitDb();
             return $row['id'];
         }
         
+        $this->useRecruitDb();
         return false;
     }
     
@@ -169,6 +183,7 @@ class ErpSync {
      * @return bool
      */
     public function updateCrew($crewId, $data) {
+        $this->useErpDb();
         $updates = [];
         $types = '';
         $values = [];
@@ -202,7 +217,9 @@ class ErpSync {
         $stmt = $this->erpDb->prepare($sql);
         $stmt->bind_param($types, ...$values);
         
-        return $stmt->execute();
+        $result = $stmt->execute();
+        $this->useRecruitDb();
+        return $result;
     }
     
     /**
@@ -214,6 +231,7 @@ class ErpSync {
      * @return int Number of documents synced
      */
     public function syncDocuments($crewId, $documents, $uploadedBy = null) {
+        $this->useErpDb();
         $synced = 0;
         
         foreach ($documents as $doc) {
@@ -298,6 +316,7 @@ class ErpSync {
             $stmt->close();
         }
         
+        $this->useRecruitDb();
         return $synced;
     }
     
@@ -455,6 +474,7 @@ class ErpSync {
      * @return array
      */
     public function getRanks() {
+        $this->useErpDb();
         // Check if ranks table exists
         $tableCheck = $this->erpDb->query("SHOW TABLES LIKE 'ranks'");
         if (!$tableCheck || $tableCheck->num_rows === 0) {
@@ -479,13 +499,16 @@ class ErpSync {
             throw new Exception('Cannot read ranks table: ' . $this->erpDb->error);
         }
         
-        return $result->fetch_all(MYSQLI_ASSOC);
+        $ranks = $result->fetch_all(MYSQLI_ASSOC);
+        $this->useRecruitDb();
+        return $ranks;
     }
     
     /**
      * Create default ranks table if it doesn't exist
      */
     private function createDefaultRanksTable() {
+        $this->useErpDb();
         $this->erpDb->query("
             CREATE TABLE IF NOT EXISTS `ranks` (
                 `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -528,15 +551,14 @@ class ErpSync {
             $stmt->execute();
         }
         $stmt->close();
+        $this->useRecruitDb();
     }
     
     /**
      * Close connections
      */
     public function __destruct() {
-        if ($this->erpDb) {
-            $this->erpDb->close();
-        }
+        // Don't close - connection is shared with recruitment module
     }
 }
 
