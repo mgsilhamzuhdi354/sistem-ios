@@ -96,7 +96,7 @@
         <div class="sidebar-header">
             <a href="<?= url('/crewing/dashboard') ?>" class="logo">
                 <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;width:100%;padding:1rem 0.75rem;">
-                    <img src="<?= asset('images/logo-circle.png') ?>" alt="PT Indo Ocean Crew Services" style="width:120px;height:120px;object-fit:cover;border-radius:50%;background:white;padding:6px;box-shadow:0 6px 24px rgba(0,0,0,0.3);border:3px solid rgba(255,255,255,0.35);">
+                    <img src="<?= asset('images/logo-circle.png') ?>" alt="PT Indo Ocean Crew Services" style="width:120px;height:120px;object-fit:contain;">
                     <span style="color:rgba(255,255,255,0.9);font-size:11px;font-weight:600;letter-spacing:0.5px;text-align:center;margin-top:4px;line-height:1.3;">Recruitment Systems IOS</span>
                 </div>
             </a>
