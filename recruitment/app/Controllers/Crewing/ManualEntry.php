@@ -326,6 +326,15 @@ class ManualEntry extends BaseController {
             // 5. Handle document uploads
             $this->handleDocumentUploads($userId);
             
+            // 5b. Handle photo upload
+            if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+                $avatarPath = $this->handlePhotoUpload($_FILES['photo'], $userId);
+                if ($avatarPath) {
+                    $photoStmt = $this->db->prepare("UPDATE users SET avatar = ? WHERE id = ?");
+                    if ($photoStmt) { $photoStmt->bind_param('si', $avatarPath, $userId); $photoStmt->execute(); }
+                }
+            }
+            
             // 6. Log
             logAutomation('manual_entry', 'applications', $applicationId, 'create', [
                 'entered_by' => $crewingId, 'candidate_name' => $fullName, 'vacancy_id' => $vacancyId
@@ -650,6 +659,15 @@ class ManualEntry extends BaseController {
             $stmt->bind_param('sssi', $fullName, $email, $phone, $userId);
             $stmt->execute();
             
+            // Handle photo upload
+            if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+                $avatarPath = $this->handlePhotoUpload($_FILES['photo'], $userId);
+                if ($avatarPath) {
+                    $photoStmt = $this->db->prepare("UPDATE users SET avatar = ? WHERE id = ?");
+                    if ($photoStmt) { $photoStmt->bind_param('si', $avatarPath, $userId); $photoStmt->execute(); }
+                }
+            }
+            
             // Update profile
             $stmt = $this->db->prepare("
                 UPDATE applicant_profiles SET
@@ -661,16 +679,22 @@ class ManualEntry extends BaseController {
                     total_sea_service_months = ?, last_rank = ?, last_vessel_name = ?, last_vessel_type = ?, last_sign_off = ?
                 WHERE user_id = ?
             ");
-            $stmt->bind_param('ssssssssssssssiisssissssssi',
-                $ktpNumber, $dob, $gender, $nationality, $placeOfBirth,
-                $address, $city, $country, $postalCode, $bloodType,
-                $seamanBookNo, $seamanBookExpiry, $passportNo, $passportExpiry,
-                $heightCm, $weightKg, $shoeSize, $overallSize,
-                $emergencyName, $emergencyPhone, $emergencyRelation,
-                $totalSeaMonths, $lastRank, $lastVesselName, $lastVesselType, $lastSignOff,
-                $userId
-            );
-            $stmt->execute();
+            if ($stmt) {
+                $stmt->bind_param('ssssssssssssssiisssissssssi',
+                    $ktpNumber, $dob, $gender, $nationality, $placeOfBirth,
+                    $address, $city, $country, $postalCode, $bloodType,
+                    $seamanBookNo, $seamanBookExpiry, $passportNo, $passportExpiry,
+                    $heightCm, $weightKg, $shoeSize, $overallSize,
+                    $emergencyName, $emergencyPhone, $emergencyRelation,
+                    $totalSeaMonths, $lastRank, $lastVesselName, $lastVesselType, $lastSignOff,
+                    $userId
+                );
+                $stmt->execute();
+            } else {
+                // Fallback: core columns only
+                $stmt = $this->db->prepare("UPDATE applicant_profiles SET date_of_birth=?, gender=?, nationality=?, address=?, city=?, emergency_name=?, emergency_phone=?, passport_no=? WHERE user_id=?");
+                if ($stmt) { $stmt->bind_param('ssssssssi', $dob, $gender, $nationality, $address, $city, $emergencyName, $emergencyPhone, $passportNo, $userId); $stmt->execute(); }
+            }
             
             // Check if changing vacancy would create duplicate application
             if ($vacancyId != $app['vacancy_id']) {
@@ -1115,5 +1139,26 @@ class ManualEntry extends BaseController {
         
         extract($data);
         include APPPATH . 'Views/layouts/crewing.php';
+    }
+
+    /**
+     * Handle photo/avatar upload
+     */
+    private function handlePhotoUpload($file, $userId) {
+        $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'avif'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        
+        if (!in_array($ext, $allowedExts)) return false;
+        if ($file['size'] > 100 * 1024 * 1024) return false;
+        
+        $uploadDir = dirname(APPPATH) . '/public/uploads/avatars/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+        
+        $filename = 'avatar_' . $userId . '_' . time() . '.' . $ext;
+        
+        if (move_uploaded_file($file['tmp_name'], $uploadDir . $filename)) {
+            return 'uploads/avatars/' . $filename;
+        }
+        return false;
     }
 }
