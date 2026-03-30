@@ -498,7 +498,7 @@ class ManualEntry extends BaseController {
                 $profStmt->bind_param('i', $entry['user_id']);
                 $profStmt->execute();
                 $profile = $profStmt->get_result()->fetch_assoc();
-                if ($profile) $entry = array_merge($entry, $profile);
+                if ($profile) { unset($profile['id']); $entry = array_merge($entry, $profile); }
             }
         }
         
@@ -562,7 +562,7 @@ class ManualEntry extends BaseController {
                 $profStmt->bind_param('i', $entry['user_id']);
                 $profStmt->execute();
                 $profile = $profStmt->get_result()->fetch_assoc();
-                if ($profile) $entry = array_merge($entry, $profile);
+                if ($profile) { unset($profile['id']); $entry = array_merge($entry, $profile); }
             }
         }
         
