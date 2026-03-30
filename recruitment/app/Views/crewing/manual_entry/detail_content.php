@@ -23,15 +23,16 @@
 <!-- Status & ERP Badges -->
 <div class="detail-status-bar">
     <div class="status-info">
-        <span class="status-badge-lg" style="background-color: <?= $entry['status_color'] ?>">
-            <?= htmlspecialchars($entry['status_name_id'] ?? $entry['status_name']) ?>
+        <span class="status-badge-lg" style="background-color: <?= $entry['status_color'] ?? '#6b7280' ?>">
+            <?= htmlspecialchars($entry['status_name_id'] ?? $entry['status_name'] ?? 'Unknown') ?>
         </span>
-        <span class="source-badge-lg <?= $entry['entry_source'] ?>">
-            <i class="fas fa-<?= $entry['entry_source'] === 'manual' ? 'hand-point-right' : 'globe' ?>"></i>
-            <?= $entry['entry_source'] === 'manual' ? 'Manual Entry' : 'Online' ?>
+        <?php $entrySource = $entry['entry_source'] ?? 'manual'; ?>
+        <span class="source-badge-lg <?= $entrySource ?>">
+            <i class="fas fa-<?= $entrySource === 'manual' ? 'hand-point-right' : 'globe' ?>"></i>
+            <?= $entrySource === 'manual' ? 'Manual Entry' : 'Online' ?>
         </span>
         <?php if (!empty($entry['is_synced_to_erp'])): ?>
-        <span class="erp-badge synced"><i class="fas fa-check-circle"></i> Synced ke ERP (<?= $entry['erp_employee_id'] ?>)</span>
+        <span class="erp-badge synced"><i class="fas fa-check-circle"></i> Synced ke ERP (<?= $entry['erp_employee_id'] ?? '' ?>)</span>
         <?php endif; ?>
     </div>
     <div class="status-actions">
