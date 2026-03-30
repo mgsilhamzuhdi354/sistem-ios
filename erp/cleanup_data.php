@@ -1,14 +1,13 @@
 <?php
 /**
  * PT Indo Ocean - Database Cleanup Script
+ * Tries multiple DB hosts to find the working one
  * DELETE THIS FILE AFTER USE!
  */
 
-// Replicate the same bootstrap as index.php
 define('BASEPATH', __DIR__ . '/');
 define('APPPATH', BASEPATH . 'app/');
 
-// Load Composer autoload & .env (same as index.php)
 if (file_exists(BASEPATH . 'vendor/autoload.php')) {
     require_once BASEPATH . 'vendor/autoload.php';
     if (class_exists('Dotenv\\Dotenv')) {
@@ -17,21 +16,31 @@ if (file_exists(BASEPATH . 'vendor/autoload.php')) {
     }
 }
 
-// Now load database config (will have correct env vars)
 $dbConfig = require APPPATH . 'Config/Database.php';
-$erpCfg = $dbConfig['default'];
+$cfg = $dbConfig['default'];
 $recCfg = $dbConfig['recruitment'];
 
 header('Content-Type: text/html; charset=utf-8');
 echo "<h1>🧹 Database Cleanup</h1><pre>";
-echo "Host: {$erpCfg['hostname']}, User: {$erpCfg['username']}, DB: {$erpCfg['database']}, Port: {$erpCfg['port']}\n\n";
 
-// Connect to ERP
-$erpDb = new mysqli($erpCfg['hostname'], $erpCfg['username'], $erpCfg['password'], $erpCfg['database'], $erpCfg['port']);
-if ($erpDb->connect_error) {
-    die("❌ ERP DB failed: " . $erpDb->connect_error);
+// Try multiple hosts since Docker networking varies
+$hostsToTry = [$cfg['hostname'], '127.0.0.1', 'localhost', 'mysql', 'indoocean_mysql'];
+$erpDb = null;
+
+foreach ($hostsToTry as $host) {
+    echo "Trying host: $host ... ";
+    $erpDb = @new mysqli($host, $cfg['username'], $cfg['password'], $cfg['database'], $cfg['port']);
+    if (!$erpDb->connect_error) {
+        echo "✅ Connected!\n\n";
+        break;
+    }
+    echo "❌ {$erpDb->connect_error}\n";
+    $erpDb = null;
 }
-echo "✅ Connected to ERP\n\n";
+
+if (!$erpDb) {
+    die("\n❌ Cannot connect to ERP database with any host. Check MySQL is running.");
+}
 
 $erpDb->query("SET FOREIGN_KEY_CHECKS = 0");
 
@@ -49,10 +58,7 @@ $erpTables = [
 foreach ($erpTables as $table) {
     $r = @$erpDb->query("TRUNCATE TABLE `$table`");
     if ($r) { echo "  ✅ $table\n"; }
-    else {
-        $r2 = @$erpDb->query("DELETE FROM `$table`");
-        echo ($r2 ? "  ✅ $table (delete)\n" : "  ⚠️ $table (skip)\n");
-    }
+    else { @$erpDb->query("DELETE FROM `$table`"); echo "  ⚠️ $table\n"; }
 }
 
 $erpDb->query("SET FOREIGN_KEY_CHECKS = 1");
@@ -61,11 +67,20 @@ foreach (['crews','contracts','payroll_items','admin_checklists'] as $t) {
     $r = @$erpDb->query("SELECT COUNT(*) as c FROM `$t`");
     echo "  $t: " . ($r ? $r->fetch_assoc()['c'] : '?') . "\n";
 }
+
+// Find working host for recruitment
+$workingHost = $erpDb->host_info;
+$hostUsed = $cfg['hostname']; // will be overridden
+foreach ($hostsToTry as $h) {
+    $test = @new mysqli($h, $recCfg['username'], $recCfg['password'], $recCfg['database'], $recCfg['port']);
+    if (!$test->connect_error) { $hostUsed = $h; $test->close(); break; }
+    @$test->close();
+}
+
 $erpDb->close();
 
-// Recruitment
 echo "\n━━━━━━━━━━━━━━━━━━\n\n";
-$recDb = @new mysqli($recCfg['hostname'], $recCfg['username'], $recCfg['password'], $recCfg['database'], $recCfg['port']);
+$recDb = @new mysqli($hostUsed, $recCfg['username'], $recCfg['password'], $recCfg['database'], $recCfg['port']);
 if ($recDb->connect_error) {
     echo "⚠️ Recruitment DB: " . $recDb->connect_error . "\n";
 } else {
@@ -78,10 +93,7 @@ if ($recDb->connect_error) {
     foreach (['application_assignments','application_status_history','pipeline_requests','status_change_requests','job_claim_requests','medical_checkups','interview_answers','interview_sessions','archived_applications','applicant_documents','email_logs','applications'] as $t) {
         $r = @$recDb->query("TRUNCATE TABLE `$t`");
         if ($r) { echo "  ✅ $t\n"; }
-        else {
-            $r2 = @$recDb->query("DELETE FROM `$t`");
-            echo ($r2 ? "  ✅ $t (delete)\n" : "  ⚠️ $t (skip)\n");
-        }
+        else { @$recDb->query("DELETE FROM `$t`"); echo "  ⚠️ $t\n"; }
     }
     
     @$recDb->query("DELETE FROM users WHERE role_id = 3");
