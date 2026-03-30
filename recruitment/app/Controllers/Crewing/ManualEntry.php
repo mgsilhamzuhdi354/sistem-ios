@@ -464,9 +464,16 @@ class ManualEntry extends BaseController {
             INNER JOIN application_statuses s ON a.status_id = s.id
             LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
             WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ?
+                   OR a.entry_source = 'manual'
                    OR a.id IN (SELECT application_id FROM application_assignments WHERE assigned_to = ? AND status = 'active'))
         ");
-        $stmt->bind_param('iiii', $applicationId, $crewingId, $crewingId, $crewingId);
+        if (!$stmt) {
+            // Fallback without recruiter columns
+            $stmt = $this->db->prepare("SELECT a.*, u.full_name, u.email, u.phone, u.id as uid, u.avatar, v.title as vacancy_title, d.name as department_name, s.name as status_name, s.color as status_color, ap.* FROM applications a INNER JOIN users u ON a.user_id = u.id INNER JOIN job_vacancies v ON a.vacancy_id = v.id LEFT JOIN departments d ON v.department_id = d.id INNER JOIN application_statuses s ON a.status_id = s.id LEFT JOIN applicant_profiles ap ON u.id = ap.user_id WHERE a.id = ?");
+            $stmt->bind_param('i', $applicationId);
+        } else {
+            $stmt->bind_param('iiii', $applicationId, $crewingId, $crewingId, $crewingId);
+        }
         $stmt->execute();
         $entry = $stmt->get_result()->fetch_assoc();
         
@@ -514,9 +521,14 @@ class ManualEntry extends BaseController {
             INNER JOIN users u ON a.user_id = u.id
             INNER JOIN job_vacancies v ON a.vacancy_id = v.id
             LEFT JOIN applicant_profiles ap ON u.id = ap.user_id
-            WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ?)
+            WHERE a.id = ? AND (a.entered_by = ? OR a.current_crewing_id = ? OR a.entry_source = 'manual')
         ");
-        $stmt->bind_param('iii', $applicationId, $crewingId, $crewingId);
+        if (!$stmt) {
+            $stmt = $this->db->prepare("SELECT a.*, u.full_name, u.email, u.phone, u.id as uid, u.avatar, v.id as vacancy_id, ap.* FROM applications a INNER JOIN users u ON a.user_id = u.id INNER JOIN job_vacancies v ON a.vacancy_id = v.id LEFT JOIN applicant_profiles ap ON u.id = ap.user_id WHERE a.id = ?");
+            $stmt->bind_param('i', $applicationId);
+        } else {
+            $stmt->bind_param('iii', $applicationId, $crewingId, $crewingId);
+        }
         $stmt->execute();
         $entry = $stmt->get_result()->fetch_assoc();
         
