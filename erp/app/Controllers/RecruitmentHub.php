@@ -571,6 +571,9 @@ class RecruitmentHub extends BaseController
             $nameStmt = $this->recruitmentDb->prepare("
                 SELECT u.full_name FROM applications a JOIN users u ON a.user_id = u.id WHERE a.id = ?
             ");
+            if (!$nameStmt) {
+                throw new \Exception('DB prepare error: ' . $this->recruitmentDb->error);
+            }
             $nameStmt->bind_param('i', $applicationId);
             $nameStmt->execute();
             $candidate = $nameStmt->get_result()->fetch_assoc();
@@ -586,9 +589,15 @@ class RecruitmentHub extends BaseController
             $stmt = $this->recruitmentDb->prepare("
                 UPDATE applications SET status_id = 7, status_updated_at = NOW(), updated_at = NOW() WHERE id = ?
             ");
-            $stmt->bind_param('i', $applicationId);
-            $stmt->execute();
-            $stmt->close();
+            if (!$stmt) {
+                // Fallback without status_updated_at
+                $stmt = $this->recruitmentDb->prepare("UPDATE applications SET status_id = 7, updated_at = NOW() WHERE id = ?");
+            }
+            if ($stmt) {
+                $stmt->bind_param('i', $applicationId);
+                $stmt->execute();
+                $stmt->close();
+            }
 
             $this->logActivity('reject_recruitment', "Rejected recruitment candidate: {$candidate['full_name']} (App ID: {$applicationId}). Reason: {$reason}");
 
@@ -828,9 +837,11 @@ class RecruitmentHub extends BaseController
                 $updateStmt = $this->recruitmentDb->prepare("
                     UPDATE users SET is_synced_to_erp = 1 WHERE id = ?
                 ");
-                $updateStmt->bind_param('i', $application['user_id']);
-                $updateStmt->execute();
-                $updateStmt->close();
+                if ($updateStmt) {
+                    $updateStmt->bind_param('i', $application['user_id']);
+                    $updateStmt->execute();
+                    $updateStmt->close();
+                }
 
                 // Update application: set erp_crew_id + status to 'Admin Review' (9)
                 // Status goes: Pending → Admin Review → Processing → Approved → On Board
