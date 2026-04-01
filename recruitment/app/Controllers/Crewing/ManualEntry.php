@@ -680,32 +680,74 @@ class ManualEntry extends BaseController {
             // Photo upload is handled by handleDocumentUploads() via doc_file[7]
             // which also updates users.avatar and applicant_profiles.profile_photo
             
-            // Update profile
-            $stmt = $this->db->prepare("
-                UPDATE applicant_profiles SET
-                    ktp_number = ?, date_of_birth = ?, gender = ?, nationality = ?, place_of_birth = ?,
-                    address = ?, city = ?, country = ?, postal_code = ?, blood_type = ?,
-                    seaman_book_no = ?, seaman_book_expiry = ?, passport_no = ?, passport_expiry = ?,
-                    height_cm = ?, weight_kg = ?, shoe_size = ?, overall_size = ?,
-                    emergency_name = ?, emergency_phone = ?, emergency_relation = ?,
-                    total_sea_service_months = ?, last_rank = ?, last_vessel_name = ?, last_vessel_type = ?, last_sign_off = ?
-                WHERE user_id = ?
-            ");
-            if ($stmt) {
-                $stmt->bind_param('ssssssssssssssiisssissssssi',
-                    $ktpNumber, $dob, $gender, $nationality, $placeOfBirth,
-                    $address, $city, $country, $postalCode, $bloodType,
-                    $seamanBookNo, $seamanBookExpiry, $passportNo, $passportExpiry,
-                    $heightCm, $weightKg, $shoeSize, $overallSize,
-                    $emergencyName, $emergencyPhone, $emergencyRelation,
-                    $totalSeaMonths, $lastRank, $lastVesselName, $lastVesselType, $lastSignOff,
-                    $userId
-                );
-                $stmt->execute();
+            // Update or Insert profile (UPSERT pattern)
+            // First check if profile exists
+            $profileCheck = $this->db->prepare("SELECT id FROM applicant_profiles WHERE user_id = ?");
+            $profileCheck->bind_param('i', $userId);
+            $profileCheck->execute();
+            $hasProfile = $profileCheck->get_result()->fetch_assoc();
+            
+            if ($hasProfile) {
+                // UPDATE existing profile
+                $stmt = $this->db->prepare("
+                    UPDATE applicant_profiles SET
+                        ktp_number = ?, date_of_birth = ?, gender = ?, nationality = ?, place_of_birth = ?,
+                        address = ?, city = ?, country = ?, postal_code = ?, blood_type = ?,
+                        seaman_book_no = ?, seaman_book_expiry = ?, passport_no = ?, passport_expiry = ?,
+                        height_cm = ?, weight_kg = ?, shoe_size = ?, overall_size = ?,
+                        emergency_name = ?, emergency_phone = ?, emergency_relation = ?,
+                        total_sea_service_months = ?, last_rank = ?, last_vessel_name = ?, last_vessel_type = ?, last_sign_off = ?
+                    WHERE user_id = ?
+                ");
+                if ($stmt) {
+                    $stmt->bind_param('ssssssssssssssiisssissssssi',
+                        $ktpNumber, $dob, $gender, $nationality, $placeOfBirth,
+                        $address, $city, $country, $postalCode, $bloodType,
+                        $seamanBookNo, $seamanBookExpiry, $passportNo, $passportExpiry,
+                        $heightCm, $weightKg, $shoeSize, $overallSize,
+                        $emergencyName, $emergencyPhone, $emergencyRelation,
+                        $totalSeaMonths, $lastRank, $lastVesselName, $lastVesselType, $lastSignOff,
+                        $userId
+                    );
+                    $stmt->execute();
+                    error_log("[MANUAL_UPDATE] Profile UPDATED for user $userId, affected_rows=" . $stmt->affected_rows);
+                } else {
+                    error_log("[MANUAL_UPDATE] Profile UPDATE prepare failed: " . $this->db->error);
+                    // Fallback: core columns only
+                    $stmt = $this->db->prepare("UPDATE applicant_profiles SET date_of_birth=?, gender=?, nationality=?, address=?, city=?, emergency_name=?, emergency_phone=?, passport_no=? WHERE user_id=?");
+                    if ($stmt) { $stmt->bind_param('ssssssssi', $dob, $gender, $nationality, $address, $city, $emergencyName, $emergencyPhone, $passportNo, $userId); $stmt->execute(); }
+                }
             } else {
-                // Fallback: core columns only
-                $stmt = $this->db->prepare("UPDATE applicant_profiles SET date_of_birth=?, gender=?, nationality=?, address=?, city=?, emergency_name=?, emergency_phone=?, passport_no=? WHERE user_id=?");
-                if ($stmt) { $stmt->bind_param('ssssssssi', $dob, $gender, $nationality, $address, $city, $emergencyName, $emergencyPhone, $passportNo, $userId); $stmt->execute(); }
+                // INSERT new profile (profile didn't exist yet)
+                error_log("[MANUAL_UPDATE] Profile NOT FOUND for user $userId, creating new profile");
+                $stmt = $this->db->prepare("
+                    INSERT INTO applicant_profiles (
+                        user_id, ktp_number, date_of_birth, gender, nationality, place_of_birth,
+                        address, city, country, postal_code, blood_type,
+                        seaman_book_no, seaman_book_expiry, passport_no, passport_expiry,
+                        height_cm, weight_kg, shoe_size, overall_size,
+                        emergency_name, emergency_phone, emergency_relation,
+                        total_sea_service_months, last_rank, last_vessel_name, last_vessel_type, last_sign_off,
+                        created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                ");
+                if ($stmt) {
+                    $stmt->bind_param('issssssssssssssiisisssissss',
+                        $userId, $ktpNumber, $dob, $gender, $nationality, $placeOfBirth,
+                        $address, $city, $country, $postalCode, $bloodType,
+                        $seamanBookNo, $seamanBookExpiry, $passportNo, $passportExpiry,
+                        $heightCm, $weightKg, $shoeSize, $overallSize,
+                        $emergencyName, $emergencyPhone, $emergencyRelation,
+                        $totalSeaMonths, $lastRank, $lastVesselName, $lastVesselType, $lastSignOff
+                    );
+                    $stmt->execute();
+                    error_log("[MANUAL_UPDATE] Profile INSERTED for user $userId");
+                } else {
+                    error_log("[MANUAL_UPDATE] Profile INSERT prepare failed: " . $this->db->error);
+                    // Fallback
+                    $stmt = $this->db->prepare("INSERT INTO applicant_profiles (user_id, date_of_birth, gender, nationality, address, city, emergency_name, emergency_phone, passport_no, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                    if ($stmt) { $stmt->bind_param('issssssss', $userId, $dob, $gender, $nationality, $address, $city, $emergencyName, $emergencyPhone, $passportNo); $stmt->execute(); }
+                }
             }
             
             // Check if changing vacancy would create duplicate application
