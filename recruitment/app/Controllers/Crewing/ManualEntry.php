@@ -988,28 +988,73 @@ class ManualEntry extends BaseController {
             return;
         }
         
-        $allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg',
-                         'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-        $maxSize = 5 * 1024 * 1024; // 5MB
+        // Use extension-based validation (more reliable than browser MIME type on NAS/nginx)
+        $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'doc', 'docx', 'bmp'];
+        $maxSize = 10 * 1024 * 1024; // 10MB (increased for production use)
         
         $uploadDir = FCPATH . 'uploads/documents/' . $userId . '/';
         if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
+            if (!mkdir($uploadDir, 0755, true)) {
+                error_log("[DOC_UPLOAD] Failed to create directory: $uploadDir");
+                return;
+            }
         }
+        
+        // Check directory is writable
+        if (!is_writable($uploadDir)) {
+            error_log("[DOC_UPLOAD] Upload directory not writable: $uploadDir");
+            // Try to fix permissions
+            @chmod($uploadDir, 0755);
+            if (!is_writable($uploadDir)) {
+                error_log("[DOC_UPLOAD] Still not writable after chmod: $uploadDir");
+                return;
+            }
+        }
+        
+        $uploadCount = 0;
         
         foreach ($_FILES['doc_file']['name'] as $typeId => $fileName) {
             if (empty($fileName) || $_FILES['doc_file']['error'][$typeId] !== UPLOAD_ERR_OK) {
+                if (!empty($fileName)) {
+                    $errCode = $_FILES['doc_file']['error'][$typeId] ?? 'unknown';
+                    error_log("[DOC_UPLOAD] Upload error for type $typeId: error code $errCode, file: $fileName");
+                }
                 continue;
             }
             
             $tmpName  = $_FILES['doc_file']['tmp_name'][$typeId];
             $fileSize = $_FILES['doc_file']['size'][$typeId];
-            $fileType = $_FILES['doc_file']['type'][$typeId];
             
-            if ($fileSize > $maxSize) continue;
-            if (!in_array($fileType, $allowedTypes)) continue;
-            
+            // Validate by extension (reliable across all servers)
             $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowedExtensions)) {
+                error_log("[DOC_UPLOAD] Extension not allowed: $ext for file: $fileName (type $typeId)");
+                continue;
+            }
+            
+            if ($fileSize > $maxSize) {
+                error_log("[DOC_UPLOAD] File too large: $fileSize bytes for file: $fileName (type $typeId)");
+                continue;
+            }
+            
+            // Additional MIME check using finfo (server-side, not browser-reported)
+            if (function_exists('finfo_open')) {
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $detectedMime = finfo_file($finfo, $tmpName);
+                finfo_close($finfo);
+                
+                $allowedMimes = [
+                    'application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp',
+                    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'application/octet-stream' // Some NAS systems report this for valid files
+                ];
+                
+                if (!in_array($detectedMime, $allowedMimes)) {
+                    error_log("[DOC_UPLOAD] MIME check failed: $detectedMime for file: $fileName (type $typeId) - allowing by extension");
+                    // Don't block - extension check already passed, just log it
+                }
+            }
+
             $newName = 'doc_' . $typeId . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
             $filePath = $uploadDir . $newName;
             
@@ -1022,13 +1067,13 @@ class ManualEntry extends BaseController {
                     $oldDocs = $oldDocStmt->get_result()->fetch_all(MYSQLI_ASSOC);
                     foreach ($oldDocs as $old) {
                         $oldPath = FCPATH . $old['file_path'];
-                        if (file_exists($oldPath)) unlink($oldPath);
+                        if (file_exists($oldPath)) @unlink($oldPath);
                     }
                 }
                 $delDocStmt = $this->db->prepare("DELETE FROM documents WHERE user_id = ? AND document_type_id = ?");
                 if ($delDocStmt) { $delDocStmt->bind_param('ii', $userId, $typeId); $delDocStmt->execute(); }
                 
-                // Insert new
+                // Insert new document record
                 $relPath = 'uploads/documents/' . $userId . '/' . $newName;
                 $docNumber  = trim($_POST['doc_number'][$typeId] ?? '');
                 $expiryDate = !empty($_POST['doc_expiry'][$typeId]) ? $_POST['doc_expiry'][$typeId] : null;
@@ -1037,7 +1082,17 @@ class ManualEntry extends BaseController {
                     INSERT INTO documents (user_id, document_type_id, file_name, file_path, original_name, document_number, expiry_date, created_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
                 ");
-                if ($stmt) { $stmt->bind_param('iisssss', $userId, $typeId, $newName, $relPath, $fileName, $docNumber, $expiryDate); $stmt->execute(); }
+                if ($stmt) {
+                    $stmt->bind_param('iisssss', $userId, $typeId, $newName, $relPath, $fileName, $docNumber, $expiryDate);
+                    if ($stmt->execute()) {
+                        $uploadCount++;
+                        error_log("[DOC_UPLOAD] SUCCESS: Uploaded type $typeId for user $userId: $relPath");
+                    } else {
+                        error_log("[DOC_UPLOAD] DB INSERT failed for type $typeId: " . $stmt->error);
+                    }
+                } else {
+                    error_log("[DOC_UPLOAD] Prepare INSERT failed: " . $this->db->error);
+                }
                 
                 // Special handling: if this is a photo (type 7), also update users.avatar and applicant_profiles.profile_photo
                 if ($typeId == 7) {
@@ -1047,7 +1102,14 @@ class ManualEntry extends BaseController {
                     $profilePhotoStmt = $this->db->prepare("UPDATE applicant_profiles SET profile_photo = ? WHERE user_id = ?");
                     if ($profilePhotoStmt) { $profilePhotoStmt->bind_param('si', $relPath, $userId); $profilePhotoStmt->execute(); }
                 }
+            } else {
+                error_log("[DOC_UPLOAD] move_uploaded_file FAILED: $tmpName -> $filePath (type $typeId, user $userId)");
+                error_log("[DOC_UPLOAD] tmp exists: " . (file_exists($tmpName) ? 'yes' : 'no') . ", dir writable: " . (is_writable($uploadDir) ? 'yes' : 'no'));
             }
+        }
+        
+        if ($uploadCount > 0) {
+            error_log("[DOC_UPLOAD] Total $uploadCount documents uploaded for user $userId");
         }
     }
 
