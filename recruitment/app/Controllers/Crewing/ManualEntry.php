@@ -475,10 +475,12 @@ class ManualEntry extends BaseController {
         $stmt = $this->db->prepare("
             SELECT 
                 a.id, a.user_id, a.vacancy_id, a.status_id, a.created_at,
+                a.entry_source, a.expected_salary, a.available_date, a.cover_letter,
+                a.is_synced_to_erp, a.erp_employee_id,
                 u.full_name, u.email, u.phone, u.avatar, u.created_at as user_created_at,
                 v.title as vacancy_title,
                 d.name as department_name,
-                s.name as status_name, s.color as status_color
+                s.name as status_name, s.name_id as status_name_id, s.color as status_color
             FROM applications a
             LEFT JOIN users u ON a.user_id = u.id
             LEFT JOIN job_vacancies v ON a.vacancy_id = v.id
@@ -543,6 +545,7 @@ class ManualEntry extends BaseController {
         $stmt = $this->db->prepare("
             SELECT 
                 a.id, a.user_id, a.vacancy_id, a.status_id,
+                a.expected_salary, a.available_date, a.cover_letter,
                 u.full_name, u.email, u.phone, u.id as uid, u.avatar,
                 v.id as vacancy_id
             FROM applications a
@@ -674,14 +677,8 @@ class ManualEntry extends BaseController {
             $stmt->bind_param('sssi', $fullName, $email, $phone, $userId);
             $stmt->execute();
             
-            // Handle photo upload
-            if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
-                $avatarPath = $this->handlePhotoUpload($_FILES['photo'], $userId);
-                if ($avatarPath) {
-                    $photoStmt = $this->db->prepare("UPDATE users SET avatar = ? WHERE id = ?");
-                    if ($photoStmt) { $photoStmt->bind_param('si', $avatarPath, $userId); $photoStmt->execute(); }
-                }
-            }
+            // Photo upload is handled by handleDocumentUploads() via doc_file[7]
+            // which also updates users.avatar and applicant_profiles.profile_photo
             
             // Update profile
             $stmt = $this->db->prepare("
