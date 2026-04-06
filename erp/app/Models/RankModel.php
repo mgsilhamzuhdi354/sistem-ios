@@ -15,7 +15,7 @@ class RankModel extends BaseModel
     
     public function getForDropdown()
     {
-        return $this->query("SELECT id, name, department FROM ranks WHERE is_active = 1 ORDER BY department, level");
+        return $this->query("SELECT MIN(id) as id, name, department FROM ranks WHERE is_active = 1 GROUP BY name, department ORDER BY department, level");
     }
     
     public function getByDepartment($department)

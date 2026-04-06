@@ -203,7 +203,81 @@ if ($checkUnique && $checkUnique->num_rows == 0) {
 echo "\n";
 
 // ============================================
-// 3. VERIFY RESULTS
+// 3. FIX RANKS DUPLICATES
+// ============================================
+echo "--- Fixing ranks ---\n";
+
+$dupeQuery = "SELECT name, department, MIN(id) as keep_id, COUNT(*) as cnt 
+              FROM ranks 
+              GROUP BY name, department 
+              HAVING cnt > 1";
+$dupes = $conn->query($dupeQuery);
+
+if ($dupes && $dupes->num_rows > 0) {
+    while ($row = $dupes->fetch_assoc()) {
+        $name = $row['name'];
+        $dept = $row['department'];
+        $keepId = $row['keep_id'];
+        $count = $row['cnt'];
+        echo "  Found {$count}x '{$name}' ({$dept}) — keeping id={$keepId}\n";
+
+        // Get all duplicate IDs
+        $stmt = $conn->prepare("SELECT id FROM ranks WHERE name = ? AND department = ? AND id != ?");
+        $stmt->bind_param('ssi', $name, $dept, $keepId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $dupeIds = [];
+        while ($d = $result->fetch_assoc()) {
+            $dupeIds[] = $d['id'];
+        }
+        $stmt->close();
+
+        if (!empty($dupeIds)) {
+            // Reassign contracts pointing to duplicate rank IDs
+            $placeholders = implode(',', array_fill(0, count($dupeIds), '?'));
+            $types = str_repeat('i', count($dupeIds));
+            
+            $updateSql = "UPDATE contracts SET rank_id = ? WHERE rank_id IN ({$placeholders})";
+            $stmt = $conn->prepare($updateSql);
+            $params = array_merge([$keepId], $dupeIds);
+            $stmt->bind_param('i' . $types, ...$params);
+            $stmt->execute();
+            $affected = $stmt->affected_rows;
+            $stmt->close();
+            if ($affected > 0) {
+                echo "    Reassigned {$affected} contract(s) to rank id={$keepId}\n";
+            }
+
+            // Delete duplicate rows
+            $deleteSql = "DELETE FROM ranks WHERE name = ? AND department = ? AND id != ?";
+            $stmt = $conn->prepare($deleteSql);
+            $stmt->bind_param('ssi', $name, $dept, $keepId);
+            $stmt->execute();
+            $deleted = $stmt->affected_rows;
+            $stmt->close();
+            echo "    Deleted {$deleted} duplicate row(s)\n";
+        }
+    }
+} else {
+    echo "  No duplicates found.\n";
+}
+
+// Add UNIQUE constraint if not exists
+$checkUnique = $conn->query("SHOW INDEX FROM ranks WHERE Key_name = 'unique_rank_name_dept'");
+if ($checkUnique && $checkUnique->num_rows == 0) {
+    if ($conn->query("ALTER TABLE ranks ADD UNIQUE INDEX unique_rank_name_dept (name, department)")) {
+        echo "  Added UNIQUE constraint on ranks(name, department)\n";
+    } else {
+        echo "  Warning: Could not add UNIQUE constraint: " . $conn->error . "\n";
+    }
+} else {
+    echo "  UNIQUE constraint already exists.\n";
+}
+
+echo "\n";
+
+// ============================================
+// 4. VERIFY RESULTS
 // ============================================
 echo "--- Verification ---\n";
 
@@ -217,6 +291,12 @@ $result = $conn->query("SELECT id, name FROM flag_states WHERE is_active = 1 ORD
 echo "  Flag States (" . $result->num_rows . "):\n";
 while ($row = $result->fetch_assoc()) {
     echo "    [{$row['id']}] {$row['name']}\n";
+}
+
+$result = $conn->query("SELECT id, name, department FROM ranks WHERE is_active = 1 ORDER BY department, level");
+echo "  Ranks (" . $result->num_rows . "):\n";
+while ($row = $result->fetch_assoc()) {
+    echo "    [{$row['id']}] {$row['name']} ({$row['department']})\n";
 }
 
 echo "\n✅ Done!\n";

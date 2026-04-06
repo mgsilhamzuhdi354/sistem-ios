@@ -28,7 +28,7 @@ class Vessel extends BaseController
     {
         $this->requirePermission('vessels', 'view');
         // Check UI mode from session
-        $uiMode = $_SESSION['ui_mode'] ?? 'classic';
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
 
         $vessels = $this->vesselModel->getAllWithDetails();
 
@@ -292,15 +292,15 @@ class Vessel extends BaseController
 
     public function crewList($id)
     {
-        $vessel = $this->vesselModel->getWithDetails($id);
+        return $this->show($id);
+    }
 
-        $data = [
-            'title' => 'Crew List - ' . $vessel['name'],
-            'vessel' => $vessel,
-            'crewList' => $this->vesselModel->getCrewList($id),
-        ];
-
-        return $this->view('vessels/crew', $data);
+    /**
+     * Alias for crewList - handles /vessels/crew/{id} URL
+     */
+    public function crew($id)
+    {
+        return $this->show($id);
     }
 
     /**
