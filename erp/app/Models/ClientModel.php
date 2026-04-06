@@ -113,13 +113,13 @@ class ClientModel extends BaseModel
         if (!$client)
             return null;
 
-        // Get vessel count (only vessels with active contracts)
+        // Get vessel count (vessels assigned to client OR with active contracts)
         $result = $this->query(
             "SELECT COUNT(DISTINCT v.id) as count FROM vessels v
-             INNER JOIN contracts ct ON ct.vessel_id = v.id AND ct.client_id = ? AND ct.status IN ('active', 'onboard')
-             WHERE v.is_active = 1",
-            [$id],
-            'i'
+             LEFT JOIN contracts ct ON ct.vessel_id = v.id AND ct.client_id = ? AND ct.status IN ('active', 'onboard')
+             WHERE v.is_active = 1 AND (v.client_id = ? OR ct.id IS NOT NULL)",
+            [$id, $id],
+            'ii'
         );
         $client['vessel_count'] = $result[0]['count'] ?? 0;
 
@@ -153,8 +153,8 @@ class ClientModel extends BaseModel
         // First get basic client data
         $sql = "SELECT c.*,
                     (SELECT COUNT(DISTINCT v.id) FROM vessels v
-                     INNER JOIN contracts ct3 ON ct3.vessel_id = v.id AND ct3.client_id = c.id AND ct3.status IN ('active', 'onboard')
-                     WHERE v.is_active = 1) AS vessel_count,
+                     LEFT JOIN contracts ct3 ON ct3.vessel_id = v.id AND ct3.client_id = c.id AND ct3.status IN ('active', 'onboard')
+                     WHERE v.is_active = 1 AND (v.client_id = c.id OR ct3.id IS NOT NULL)) AS vessel_count,
                     (SELECT COUNT(*) FROM contracts ct WHERE ct.client_id = c.id AND ct.status IN ('active', 'onboard')) AS active_crew_count
                 FROM clients c
                 WHERE c.is_active = 1
@@ -214,14 +214,14 @@ class ClientModel extends BaseModel
                     (SELECT MAX(ct2.sign_off_date) FROM contracts ct2 
                      WHERE ct2.vessel_id = v.id AND ct2.client_id = ? AND ct2.status IN ('active', 'onboard')) AS latest_sign_off
                 FROM vessels v
-                INNER JOIN contracts c ON c.vessel_id = v.id AND c.client_id = ? AND c.status IN ('active', 'onboard')
+                LEFT JOIN contracts c ON c.vessel_id = v.id AND c.client_id = ? AND c.status IN ('active', 'onboard')
                 LEFT JOIN vessel_types vt ON v.vessel_type_id = vt.id
                 LEFT JOIN flag_states fs ON v.flag_state_id = fs.id
-                WHERE v.is_active = 1
+                WHERE v.is_active = 1 AND (v.client_id = ? OR c.id IS NOT NULL)
                 GROUP BY v.id
                 ORDER BY v.name";
 
-        return $this->query($sql, [$clientId, $clientId, $clientId], 'iii');
+        return $this->query($sql, [$clientId, $clientId, $clientId, $clientId], 'iiii');
     }
 
     /**

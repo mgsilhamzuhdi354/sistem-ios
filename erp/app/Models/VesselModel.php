@@ -316,7 +316,7 @@ class VesselTypeModel extends BaseModel
 
     public function getForDropdown()
     {
-        return $this->query("SELECT id, name FROM vessel_types WHERE is_active = 1 ORDER BY name");
+        return $this->query("SELECT MIN(id) as id, name FROM vessel_types WHERE is_active = 1 GROUP BY name ORDER BY name");
     }
 }
 
@@ -330,7 +330,7 @@ class FlagStateModel extends BaseModel
 
     public function getForDropdown()
     {
-        return $this->query("SELECT id, name, emoji FROM flag_states WHERE is_active = 1 ORDER BY name");
+        return $this->query("SELECT MIN(id) as id, name, MIN(emoji) as emoji FROM flag_states WHERE is_active = 1 GROUP BY name ORDER BY name");
     }
 }
 
