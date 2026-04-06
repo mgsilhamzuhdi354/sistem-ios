@@ -70,6 +70,8 @@ class Vessel extends BaseController
             $this->redirect('vessels');
         }
 
+        $uiMode = $_SESSION['ui_mode'] ?? 'modern';
+
         $data = [
             'title' => $vessel['name'],
             'vessel' => $vessel,
@@ -78,7 +80,8 @@ class Vessel extends BaseController
             'flash' => $this->getFlash()
         ];
 
-        return $this->view('vessels/view', $data);
+        $view = $uiMode === 'modern' ? 'vessels/view_modern' : 'vessels/view';
+        return $this->view($view, $data);
     }
 
     public function create()
