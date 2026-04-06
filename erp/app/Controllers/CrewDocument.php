@@ -221,19 +221,26 @@ class CrewDocument extends BaseController
 
         $doc = $this->docModel->find($id);
 
-        if (!$doc || !file_exists($doc['file_path'])) {
+        // Resolve relative path to absolute path using FCPATH
+        $filePath = $doc['file_path'] ?? '';
+        if ($filePath && !file_exists($filePath)) {
+            $baseDir = defined('FCPATH') ? FCPATH : dirname(dirname(__DIR__)) . '/';
+            $filePath = $baseDir . ltrim($filePath, '/');
+        }
+
+        if (!$doc || !file_exists($filePath)) {
             $this->setFlash('error', 'Document tidak ditemukan');
             $this->redirect('documents');
             return;
         }
 
-        $mimeType = $doc['mime_type'] ?: mime_content_type($doc['file_path']);
+        $mimeType = $doc['mime_type'] ?: mime_content_type($filePath);
 
         header('Content-Type: ' . $mimeType);
         header('Content-Disposition: inline; filename="' . $doc['file_name'] . '"');
-        header('Content-Length: ' . filesize($doc['file_path']));
+        header('Content-Length: ' . filesize($filePath));
 
-        readfile($doc['file_path']);
+        readfile($filePath);
         exit;
     }
 
@@ -247,7 +254,14 @@ class CrewDocument extends BaseController
 
         $doc = $this->docModel->find($id);
 
-        if (!$doc || !file_exists($doc['file_path'])) {
+        // Resolve relative path to absolute path using FCPATH
+        $filePath = $doc['file_path'] ?? '';
+        if ($filePath && !file_exists($filePath)) {
+            $baseDir = defined('FCPATH') ? FCPATH : dirname(dirname(__DIR__)) . '/';
+            $filePath = $baseDir . ltrim($filePath, '/');
+        }
+
+        if (!$doc || !file_exists($filePath)) {
             $this->setFlash('error', 'Document tidak ditemukan');
             $this->redirect('documents');
             return;
@@ -255,9 +269,9 @@ class CrewDocument extends BaseController
 
         header('Content-Type: application/octet-stream');
         header('Content-Disposition: attachment; filename="' . $doc['file_name'] . '"');
-        header('Content-Length: ' . filesize($doc['file_path']));
+        header('Content-Length: ' . filesize($filePath));
 
-        readfile($doc['file_path']);
+        readfile($filePath);
         exit;
     }
 
@@ -339,10 +353,19 @@ class CrewDocument extends BaseController
      */
     private function uploadDocument($file, $crewId)
     {
-        $uploadDir = 'uploads/documents/' . $crewId . '/';
+        // Use absolute path based on ERP public directory
+        // FCPATH is defined in erp/index.php as __DIR__ . '/'
+        $baseDir = defined('FCPATH') ? FCPATH : dirname(dirname(__DIR__)) . '/';
+        $uploadDir = $baseDir . 'uploads/documents/' . $crewId . '/';
 
         if (!file_exists($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
+            mkdir($uploadDir, 0777, true);
+        }
+
+        // Check directory is writable
+        if (!is_writable($uploadDir)) {
+            error_log("[ERP_DOC_UPLOAD] Directory not writable: $uploadDir");
+            @chmod($uploadDir, 0777);
         }
 
         $allowedTypes = [
@@ -376,13 +399,28 @@ class CrewDocument extends BaseController
         // Check MIME type OR file extension (be lenient)
         $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         if (!in_array($detectedType, $allowedTypes) && !in_array($extension, $allowedExtensions)) {
-            error_log("Document upload rejected: MIME={$detectedType}, ext={$extension}, file={$file['name']}");
+            error_log("[ERP_DOC_UPLOAD] Rejected: MIME={$detectedType}, ext={$extension}, file={$file['name']}");
             return null;
         }
 
-        $maxSize = 20 * 1024 * 1024; // 20MB
+        $maxSize = 100 * 1024 * 1024; // 100MB (matches .user.ini)
         if ($file['size'] > $maxSize) {
-            error_log("Document upload rejected: size={$file['size']} exceeds 20MB limit");
+            error_log("[ERP_DOC_UPLOAD] Rejected: size={$file['size']} exceeds 100MB limit");
+            return null;
+        }
+
+        // Check for upload errors
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            $errorMessages = [
+                UPLOAD_ERR_INI_SIZE => 'File exceeds upload_max_filesize',
+                UPLOAD_ERR_FORM_SIZE => 'File exceeds MAX_FILE_SIZE',
+                UPLOAD_ERR_PARTIAL => 'File was only partially uploaded',
+                UPLOAD_ERR_NO_FILE => 'No file was uploaded',
+                UPLOAD_ERR_NO_TMP_DIR => 'Missing temp directory',
+                UPLOAD_ERR_CANT_WRITE => 'Failed to write to disk',
+            ];
+            $errMsg = $errorMessages[$file['error']] ?? "Unknown error code: {$file['error']}";
+            error_log("[ERP_DOC_UPLOAD] Upload error: $errMsg for {$file['name']}");
             return null;
         }
 
@@ -390,15 +428,18 @@ class CrewDocument extends BaseController
         $filepath = $uploadDir . $filename;
 
         if (move_uploaded_file($file['tmp_name'], $filepath)) {
+            // Store relative path for portability (relative to FCPATH)
+            $relativePath = 'uploads/documents/' . $crewId . '/' . $filename;
+            error_log("[ERP_DOC_UPLOAD] Success: {$file['name']} -> $relativePath");
             return [
-                'path' => $filepath,
+                'path' => $relativePath,
                 'name' => $file['name'],
                 'size' => $file['size'],
                 'type' => $detectedType
             ];
         }
 
-        error_log("Document upload failed: move_uploaded_file() returned false for {$file['name']}");
+        error_log("[ERP_DOC_UPLOAD] move_uploaded_file() FAILED for {$file['name']} -> $filepath");
         return null;
     }
 

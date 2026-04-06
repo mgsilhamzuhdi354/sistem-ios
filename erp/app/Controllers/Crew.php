@@ -923,19 +923,28 @@ class Crew extends BaseController
             $filePath = null;
         } else {
             $file = $_FILES['document_file'];
-            $uploadDir = 'uploads/documents/' . $crewId . '/';
+            // Use absolute path based on FCPATH for reliable file placement (NAS/Docker)
+            $baseDir = defined('FCPATH') ? FCPATH : dirname(dirname(__DIR__)) . '/';
+            $uploadDir = $baseDir . 'uploads/documents/' . $crewId . '/';
             if (!file_exists($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
+                mkdir($uploadDir, 0777, true);
+            }
+            // Ensure directory is writable
+            if (!is_writable($uploadDir)) {
+                @chmod($uploadDir, 0777);
             }
             $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
             $filename = 'doc_' . time() . '_' . uniqid() . '.' . $ext;
-            $filepath = $uploadDir . $filename;
-            if (!move_uploaded_file($file['tmp_name'], $filepath)) {
+            $absolutePath = $uploadDir . $filename;
+            if (!move_uploaded_file($file['tmp_name'], $absolutePath)) {
+                error_log("[ERP_CREW_DOC] move_uploaded_file FAILED: {$file['name']} -> $absolutePath");
                 $this->setFlash('error', 'Gagal upload file');
                 $this->redirect('crews/view/' . $crewId);
                 return;
             }
-            $filePath = $filepath;
+            // Store relative path in DB for portability
+            $filePath = 'uploads/documents/' . $crewId . '/' . $filename;
+            error_log("[ERP_CREW_DOC] Upload success: {$file['name']} -> $filePath");
         }
 
         $docModel = new \App\Models\CrewDocumentModel($this->db);

@@ -334,7 +334,7 @@ function getStatusIcon($status) {
                                 <!-- Actions -->
                                 <div class="col-span-2 text-right">
                                     <?php $statusName = $candidate['status_name'] ?? ''; ?>
-                                    <?php if (in_array($statusName, ['Pending', 'Applied', 'New'])): ?>
+                                    <?php if (in_array($statusName, ['Pending', 'Applied', 'New']) && empty($candidate['sent_to_erp_at'])): ?>
                                         <!-- INLINE APPROVE/REJECT for Pending candidates -->
                                         <div class="flex items-center justify-end gap-1" id="inline-actions-<?= $candidate['id'] ?>">
                                             <a href="<?= BASE_URL ?>recruitment/candidate/<?= $candidate['id'] ?>"

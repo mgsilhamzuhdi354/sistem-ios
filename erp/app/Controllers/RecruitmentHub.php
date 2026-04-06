@@ -50,7 +50,8 @@ class RecruitmentHub extends BaseController
                 }
             }
 
-            // Get candidates list with ERP tracking & checklist progress
+            // Get candidates list — use safe query without optional columns that may not exist
+            // First try with all columns, fallback to basic query
             $candidatesQuery = "
                 SELECT 
                     a.id,
@@ -63,11 +64,7 @@ class RecruitmentHub extends BaseController
                     s.name as status_name,
                     s.color as status_color,
                     a.submitted_at,
-                    a.interview_score,
-                    a.overall_score,
-                    a.erp_crew_id,
-                    a.checklist_progress,
-                    a.sent_to_erp_at
+                    a.updated_at
                 FROM applications a
                 JOIN users u ON a.user_id = u.id
                 JOIN job_vacancies v ON a.vacancy_id = v.id
@@ -85,11 +82,39 @@ class RecruitmentHub extends BaseController
             }
         }
 
-        // Check which candidates already have contracts in ERP (to hide "Buat Kontrak" button)
+        // === USE ERP's recruitment_sync TABLE as SOURCE OF TRUTH ===
+        // This table is in our own ERP DB, so we have full control
+        $syncedAppIds = [];  // application_id => crew_id mapping
+        $syncResult = $this->db->query("SELECT recruitment_applicant_id, crew_id FROM recruitment_sync");
+        if ($syncResult) {
+            while ($row = $syncResult->fetch_assoc()) {
+                $syncedAppIds[(int)$row['recruitment_applicant_id']] = (int)$row['crew_id'];
+            }
+        }
+
+        // Get admin checklist progress for synced crews
+        $checklistProgress = [];
+        $syncedCrewIds = array_values(array_filter($syncedAppIds));
+        if (!empty($syncedCrewIds)) {
+            $idList = implode(',', array_map('intval', $syncedCrewIds));
+            $clResult = $this->db->query("
+                SELECT crew_id,
+                    (IFNULL(step1_complete,0) + IFNULL(step2_complete,0) + IFNULL(step3_complete,0) + 
+                     IFNULL(step4_complete,0) + IFNULL(step5_complete,0) + IFNULL(step6_complete,0)) as progress
+                FROM admin_checklists 
+                WHERE crew_id IN ($idList)
+            ");
+            if ($clResult) {
+                while ($row = $clResult->fetch_assoc()) {
+                    $checklistProgress[(int)$row['crew_id']] = (int)$row['progress'];
+                }
+            }
+        }
+
+        // Check which candidates already have contracts in ERP
         $crewIdsWithContracts = [];
-        $erpCrewIds = array_filter(array_column($candidates, 'erp_crew_id'));
-        if (!empty($erpCrewIds)) {
-            $idList = implode(',', array_map('intval', $erpCrewIds));
+        if (!empty($syncedCrewIds)) {
+            $idList = implode(',', array_map('intval', $syncedCrewIds));
             $contractCheckResult = $this->db->query("
                 SELECT DISTINCT crew_id FROM contracts 
                 WHERE crew_id IN ($idList) 
@@ -102,9 +127,23 @@ class RecruitmentHub extends BaseController
             }
         }
 
-        // Add has_contract flag to each candidate
+        // Enrich each candidate with ERP data from our own tables
         foreach ($candidates as &$c) {
-            $c['has_contract'] = in_array((int)($c['erp_crew_id'] ?? 0), $crewIdsWithContracts);
+            $appId = (int)($c['id'] ?? 0);
+            $crewId = $syncedAppIds[$appId] ?? null;
+            
+            // Mark as already processed if found in recruitment_sync
+            $c['is_synced_to_erp'] = ($crewId !== null);
+            $c['erp_crew_id'] = $crewId;
+            $c['sent_to_erp_at'] = $c['is_synced_to_erp'] ? 'yes' : null;
+            $c['checklist_progress'] = $crewId ? ($checklistProgress[$crewId] ?? 0) : 0;
+            $c['has_contract'] = in_array($crewId, $crewIdsWithContracts);
+            
+            // Override status_name for synced candidates that still show as Pending
+            // (recruitment DB update may have failed, but ERP sync is the source of truth)
+            if ($c['is_synced_to_erp'] && in_array($c['status_name'] ?? '', ['Pending', 'Applied', 'New'])) {
+                $c['status_name'] = 'Admin Review';
+            }
         }
         unset($c);
 
@@ -670,15 +709,70 @@ class RecruitmentHub extends BaseController
                 // Already imported - update status to admin_review and redirect to admin checklist
                 $crewId = $existing['crew_id'];
 
-                // Update recruitment DB: set erp_crew_id and status to admin_review (9)
+                // Ensure status_id=9 ('Admin Review') exists in recruitment DB
                 if ($this->recruitmentDb && !$this->recruitmentDb->connect_error) {
+                    $statusCheck = $this->recruitmentDb->query("SELECT id FROM application_statuses WHERE id = 9");
+                    if (!$statusCheck || $statusCheck->num_rows === 0) {
+                        $this->recruitmentDb->query("INSERT IGNORE INTO application_statuses (id, name, color, sort_order) VALUES (9, 'Admin Review', '#3b82f6', 9)");
+                    }
+                }
+
+                // Update recruitment DB: set status to admin_review (9) with progressive fallback
+                if ($this->recruitmentDb && !$this->recruitmentDb->connect_error) {
+                    $updateSuccess = false;
+                    
+                    // Try 1: Full update with all optional columns
                     $updateStmt = $this->recruitmentDb->prepare(
                         "UPDATE applications SET erp_crew_id = ?, status_id = 9, sent_to_erp_at = IFNULL(sent_to_erp_at, NOW()), status_updated_at = NOW(), updated_at = NOW() WHERE id = ?"
                     );
                     if ($updateStmt) {
                         $updateStmt->bind_param('ii', $crewId, $applicationId);
-                        $updateStmt->execute();
+                        $updateSuccess = $updateStmt->execute();
+                        error_log("[APPROVE_RECRUITMENT] Synced branch - full update: affected=" . $updateStmt->affected_rows);
                         $updateStmt->close();
+                    }
+                    
+                    // Try 2: Without status_updated_at
+                    if (!$updateSuccess) {
+                        error_log("[APPROVE_RECRUITMENT] Fallback 1: without status_updated_at");
+                        $updateStmt = $this->recruitmentDb->prepare(
+                            "UPDATE applications SET erp_crew_id = ?, status_id = 9, sent_to_erp_at = NOW(), updated_at = NOW() WHERE id = ?"
+                        );
+                        if ($updateStmt) {
+                            $updateStmt->bind_param('ii', $crewId, $applicationId);
+                            $updateSuccess = $updateStmt->execute();
+                            $updateStmt->close();
+                        }
+                    }
+                    
+                    // Try 3: Without sent_to_erp_at and status_updated_at
+                    if (!$updateSuccess) {
+                        error_log("[APPROVE_RECRUITMENT] Fallback 2: without sent_to_erp_at");
+                        $updateStmt = $this->recruitmentDb->prepare(
+                            "UPDATE applications SET erp_crew_id = ?, status_id = 9, updated_at = NOW() WHERE id = ?"
+                        );
+                        if ($updateStmt) {
+                            $updateStmt->bind_param('ii', $crewId, $applicationId);
+                            $updateSuccess = $updateStmt->execute();
+                            $updateStmt->close();
+                        }
+                    }
+                    
+                    // Try 4: Minimal — just status_id (most basic, should always work)
+                    if (!$updateSuccess) {
+                        error_log("[APPROVE_RECRUITMENT] Fallback 3: status_id only");
+                        $updateStmt = $this->recruitmentDb->prepare(
+                            "UPDATE applications SET status_id = 9 WHERE id = ?"
+                        );
+                        if ($updateStmt) {
+                            $updateStmt->bind_param('i', $applicationId);
+                            $updateSuccess = $updateStmt->execute();
+                            $updateStmt->close();
+                        }
+                    }
+                    
+                    if (!$updateSuccess) {
+                        error_log("[APPROVE_RECRUITMENT] CRITICAL: All recruitment DB update attempts failed for app_id=$applicationId. Error: " . $this->recruitmentDb->error);
                     }
                 }
 
@@ -701,6 +795,108 @@ class RecruitmentHub extends BaseController
                 $crewUpd->bind_param('i', $crewId);
                 $crewUpd->execute();
                 $crewUpd->close();
+
+                // === SYNC DOCUMENTS (for already-imported candidates that may be missing documents) ===
+                try {
+                    // Get user_id from application
+                    $userStmt = $this->recruitmentDb->prepare("SELECT a.user_id FROM applications a WHERE a.id = ?");
+                    if ($userStmt) {
+                        $userStmt->bind_param('i', $applicationId);
+                        $userStmt->execute();
+                        $userRow = $userStmt->get_result()->fetch_assoc();
+                        $userStmt->close();
+
+                        if ($userRow) {
+                            // Get existing ERP documents count for this crew
+                            $erpDocCheck = $this->db->prepare("SELECT COUNT(*) as cnt FROM crew_documents WHERE crew_id = ?");
+                            $erpDocCheck->bind_param('i', $crewId);
+                            $erpDocCheck->execute();
+                            $erpDocCount = $erpDocCheck->get_result()->fetch_assoc()['cnt'];
+                            $erpDocCheck->close();
+
+                            // Only sync if ERP has no documents yet
+                            if ($erpDocCount == 0) {
+                                $docStmt = $this->recruitmentDb->prepare("
+                                    SELECT d.*, dt.name as type_name 
+                                    FROM documents d
+                                    LEFT JOIN document_types dt ON d.document_type_id = dt.id
+                                    WHERE d.user_id = ?
+                                ");
+                                if ($docStmt) {
+                                    $docStmt->bind_param('i', $userRow['user_id']);
+                                    $docStmt->execute();
+                                    $docResult = $docStmt->get_result();
+                                    $syncedCount = 0;
+                                    
+                                    $typeMap = [
+                                        'CV / Resume' => 'OTHER', 'Passport' => 'PASSPORT',
+                                        'Seaman Book' => 'SEAMAN_BOOK', 'COC Certificate' => 'COC',
+                                        'COP / STCW Certificates' => 'BST', 'Medical Certificate' => 'MEDICAL',
+                                        'Photo' => 'OTHER', 'Other Certificates' => 'OTHER',
+                                    ];
+
+                                    $erpBaseDir = defined('FCPATH') ? FCPATH : dirname(dirname(__DIR__)) . '/';
+                                    $erpDocDir = $erpBaseDir . 'uploads/crew_documents/' . $crewId . '/';
+                                    if (!is_dir($erpDocDir)) mkdir($erpDocDir, 0777, true);
+
+                                    while ($doc = $docResult->fetch_assoc()) {
+                                        $docTypeCode = $typeMap[$doc['type_name'] ?? ''] ?? 'OTHER';
+                                        $docName = $doc['type_name'] ?? ($doc['original_name'] ?? 'Document');
+                                        $erpFilePath = null; $erpFileName = null;
+                                        $fileSize = $doc['file_size'] ?? null;
+
+                                        if (!empty($doc['file_path'])) {
+                                            $recruitBase = str_replace('/erp/', '/recruitment/', $erpBaseDir);
+                                            $sourcePaths = [
+                                                $recruitBase . 'public/' . ltrim($doc['file_path'], '/'),
+                                                $recruitBase . ltrim($doc['file_path'], '/'),
+                                                dirname(dirname($erpBaseDir)) . '/recruitment/public/' . ltrim($doc['file_path'], '/'),
+                                            ];
+                                            foreach ($sourcePaths as $sp) {
+                                                if (file_exists($sp)) {
+                                                    $ext = pathinfo($sp, PATHINFO_EXTENSION);
+                                                    $newFn = 'rec_' . time() . '_' . $doc['id'] . '.' . $ext;
+                                                    if (copy($sp, $erpDocDir . $newFn)) {
+                                                        $erpFilePath = 'uploads/crew_documents/' . $crewId . '/' . $newFn;
+                                                        $erpFileName = $doc['original_name'] ?? $newFn;
+                                                        $fileSize = filesize($erpDocDir . $newFn);
+                                                    }
+                                                    break;
+                                                }
+                                            }
+                                        }
+
+                                        $status = 'pending';
+                                        if (!empty($doc['expiry_date'])) {
+                                            $dl = (strtotime($doc['expiry_date']) - time()) / 86400;
+                                            if ($dl < 0) $status = 'expired';
+                                            elseif ($dl < 90) $status = 'expiring_soon';
+                                            else $status = 'valid';
+                                        }
+
+                                        $ins = $this->db->prepare("INSERT INTO crew_documents (crew_id, document_type, document_name, document_number, file_path, file_name, file_size, mime_type, issue_date, expiry_date, issuing_authority, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                                        if ($ins) {
+                                            $mt = $doc['file_type'] ?? 'application/octet-stream';
+                                            $dn = $doc['document_number'] ?? '';
+                                            $id2 = $doc['issue_date'] ?? null;
+                                            $ed = $doc['expiry_date'] ?? null;
+                                            $ib = $doc['issued_by'] ?? null;
+                                            $ins->bind_param('isssssississs', $crewId, $docTypeCode, $docName, $dn, $erpFilePath, $erpFileName, $fileSize, $mt, $id2, $ed, $ib, $status);
+                                            if ($ins->execute()) $syncedCount++;
+                                            $ins->close();
+                                        }
+                                    }
+                                    $docStmt->close();
+                                    if ($syncedCount > 0) {
+                                        error_log("[APPROVE_RECRUITMENT] Re-sync: $syncedCount documents synced for existing crew $crewId");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    error_log("[APPROVE_RECRUITMENT] Document re-sync error: " . $e->getMessage());
+                }
 
                 if ($this->isAjax()) {
                     // Log any buffered warnings then clean
@@ -834,30 +1030,73 @@ class RecruitmentHub extends BaseController
 
             // Update recruitment DB - mark as synced, set erp_crew_id, and status to Admin Review
             try {
-                $updateStmt = $this->recruitmentDb->prepare("
-                    UPDATE users SET is_synced_to_erp = 1 WHERE id = ?
-                ");
+                // Ensure status_id=9 ('Admin Review') exists in recruitment DB
+                $statusCheck = $this->recruitmentDb->query("SELECT id FROM application_statuses WHERE id = 9");
+                if (!$statusCheck || $statusCheck->num_rows === 0) {
+                    $this->recruitmentDb->query("INSERT IGNORE INTO application_statuses (id, name, color, sort_order) VALUES (9, 'Admin Review', '#3b82f6', 9)");
+                }
+
+                // Try to mark user as synced (optional — column may not exist)
+                $updateStmt = $this->recruitmentDb->prepare("UPDATE users SET is_synced_to_erp = 1 WHERE id = ?");
                 if ($updateStmt) {
                     $updateStmt->bind_param('i', $application['user_id']);
                     $updateStmt->execute();
                     $updateStmt->close();
                 }
 
-                // Update application: set erp_crew_id + status to 'Admin Review' (9)
-                // Status goes: Pending → Admin Review → Processing → Approved → On Board
+                // Progressive fallback for application status update
+                $updateSuccess = false;
+                
+                // Try 1: Full update with all columns
                 $syncStatusStmt = $this->recruitmentDb->prepare("
-                    UPDATE applications 
-                    SET status_id = 9,
-                        erp_crew_id = ?,
-                        sent_to_erp_at = NOW(),
-                        status_updated_at = NOW(),
-                        updated_at = NOW()
-                    WHERE id = ?
+                    UPDATE applications SET status_id = 9, erp_crew_id = ?, sent_to_erp_at = NOW(), status_updated_at = NOW(), updated_at = NOW() WHERE id = ?
                 ");
                 if ($syncStatusStmt) {
                     $syncStatusStmt->bind_param('ii', $crewId, $applicationId);
-                    $syncStatusStmt->execute();
+                    $updateSuccess = $syncStatusStmt->execute();
+                    error_log("[APPROVE_RECRUITMENT] New branch - full update: affected=" . $syncStatusStmt->affected_rows);
                     $syncStatusStmt->close();
+                }
+                
+                // Try 2: Without status_updated_at
+                if (!$updateSuccess) {
+                    error_log("[APPROVE_RECRUITMENT] New branch fallback 1");
+                    $syncStatusStmt = $this->recruitmentDb->prepare("
+                        UPDATE applications SET status_id = 9, erp_crew_id = ?, sent_to_erp_at = NOW(), updated_at = NOW() WHERE id = ?
+                    ");
+                    if ($syncStatusStmt) {
+                        $syncStatusStmt->bind_param('ii', $crewId, $applicationId);
+                        $updateSuccess = $syncStatusStmt->execute();
+                        $syncStatusStmt->close();
+                    }
+                }
+                
+                // Try 3: Without erp_crew_id and sent_to_erp_at
+                if (!$updateSuccess) {
+                    error_log("[APPROVE_RECRUITMENT] New branch fallback 2");
+                    $syncStatusStmt = $this->recruitmentDb->prepare("
+                        UPDATE applications SET status_id = 9, updated_at = NOW() WHERE id = ?
+                    ");
+                    if ($syncStatusStmt) {
+                        $syncStatusStmt->bind_param('i', $applicationId);
+                        $updateSuccess = $syncStatusStmt->execute();
+                        $syncStatusStmt->close();
+                    }
+                }
+                
+                // Try 4: Minimal — just status_id
+                if (!$updateSuccess) {
+                    error_log("[APPROVE_RECRUITMENT] New branch fallback 3: status_id only");
+                    $syncStatusStmt = $this->recruitmentDb->prepare("UPDATE applications SET status_id = 9 WHERE id = ?");
+                    if ($syncStatusStmt) {
+                        $syncStatusStmt->bind_param('i', $applicationId);
+                        $updateSuccess = $syncStatusStmt->execute();
+                        $syncStatusStmt->close();
+                    }
+                }
+                
+                if (!$updateSuccess) {
+                    error_log("[APPROVE_RECRUITMENT] CRITICAL: All new-branch update attempts failed. Error: " . $this->recruitmentDb->error);
                 }
             } catch (\Exception $e) {
                 error_log("Recruitment DB update warning: " . $e->getMessage());
@@ -889,6 +1128,134 @@ class RecruitmentHub extends BaseController
                 "Kandidat {$application['full_name']} dari recruitment telah di-import ke ERP (ID: {$employeeId}). Lanjut ke Admin Checklist.",
                 "AdminChecklist/detail/{$crewId}"
             );
+
+            // === SYNC DOCUMENTS FROM RECRUITMENT TO ERP ===
+            try {
+                // Fetch documents from recruitment DB
+                $docStmt = $this->recruitmentDb->prepare("
+                    SELECT d.*, dt.name as type_name 
+                    FROM documents d
+                    LEFT JOIN document_types dt ON d.document_type_id = dt.id
+                    WHERE d.user_id = ?
+                ");
+                if ($docStmt) {
+                    $docStmt->bind_param('i', $application['user_id']);
+                    $docStmt->execute();
+                    $docResult = $docStmt->get_result();
+                    $documents = [];
+                    while ($doc = $docResult->fetch_assoc()) {
+                        $documents[] = $doc;
+                    }
+                    $docStmt->close();
+
+                    if (!empty($documents)) {
+                        $syncedCount = 0;
+                        
+                        // Map recruitment document types to ERP document type codes
+                        $typeMap = [
+                            'CV / Resume' => 'OTHER',
+                            'Passport' => 'PASSPORT',
+                            'Seaman Book' => 'SEAMAN_BOOK',
+                            'COC Certificate' => 'COC',
+                            'COP / STCW Certificates' => 'BST',
+                            'Medical Certificate' => 'MEDICAL',
+                            'Photo' => 'OTHER',
+                            'Other Certificates' => 'OTHER',
+                        ];
+
+                        // ERP upload directory
+                        $erpBaseDir = defined('FCPATH') ? FCPATH : dirname(dirname(__DIR__)) . '/';
+                        $erpDocDir = $erpBaseDir . 'uploads/crew_documents/' . $crewId . '/';
+                        if (!is_dir($erpDocDir)) {
+                            mkdir($erpDocDir, 0777, true);
+                        }
+
+                        foreach ($documents as $doc) {
+                            $docTypeCode = $typeMap[$doc['type_name'] ?? ''] ?? 'OTHER';
+                            $docName = $doc['type_name'] ?? ($doc['original_name'] ?? 'Document');
+                            $docNumber = $doc['document_number'] ?? '';
+
+                            // Try to copy the actual file from recruitment to ERP
+                            $erpFilePath = null;
+                            $erpFileName = null;
+                            $fileSize = $doc['file_size'] ?? null;
+
+                            if (!empty($doc['file_path'])) {
+                                // Build absolute source path from recruitment public dir
+                                $recruitBase = str_replace('/erp/', '/recruitment/', $erpBaseDir);
+                                // Also try: the path could be like uploads/documents/26/file.pdf
+                                $sourcePaths = [
+                                    $recruitBase . 'public/' . ltrim($doc['file_path'], '/'),
+                                    $recruitBase . ltrim($doc['file_path'], '/'),
+                                    dirname(dirname($erpBaseDir)) . '/recruitment/public/' . ltrim($doc['file_path'], '/'),
+                                ];
+                                
+                                $sourceFile = null;
+                                foreach ($sourcePaths as $sp) {
+                                    if (file_exists($sp)) {
+                                        $sourceFile = $sp;
+                                        break;
+                                    }
+                                }
+
+                                if ($sourceFile) {
+                                    $ext = pathinfo($sourceFile, PATHINFO_EXTENSION);
+                                    $newFileName = 'rec_' . time() . '_' . $doc['id'] . '.' . $ext;
+                                    $destPath = $erpDocDir . $newFileName;
+                                    
+                                    if (copy($sourceFile, $destPath)) {
+                                        $erpFilePath = 'uploads/crew_documents/' . $crewId . '/' . $newFileName;
+                                        $erpFileName = $doc['original_name'] ?? $newFileName;
+                                        $fileSize = filesize($destPath);
+                                    }
+                                }
+                            }
+
+                            // Determine status
+                            $status = 'pending';
+                            if (!empty($doc['expiry_date'])) {
+                                $daysLeft = (strtotime($doc['expiry_date']) - time()) / 86400;
+                                if ($daysLeft < 0) $status = 'expired';
+                                elseif ($daysLeft < 90) $status = 'expiring_soon';
+                                else $status = 'valid';
+                            }
+
+                            // Insert into ERP crew_documents
+                            $insertDoc = $this->db->prepare("
+                                INSERT INTO crew_documents (
+                                    crew_id, document_type, document_name, document_number,
+                                    file_path, file_name, file_size, mime_type,
+                                    issue_date, expiry_date, issuing_authority,
+                                    status, created_at
+                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                            ");
+                            if ($insertDoc) {
+                                $mimeType = $doc['file_type'] ?? 'application/octet-stream';
+                                $issueDate = $doc['issue_date'] ?? null;
+                                $expiryDate = $doc['expiry_date'] ?? null;
+                                $issuedBy = $doc['issued_by'] ?? null;
+
+                                $insertDoc->bind_param(
+                                    'isssssississs',
+                                    $crewId, $docTypeCode, $docName, $docNumber,
+                                    $erpFilePath, $erpFileName, $fileSize, $mimeType,
+                                    $issueDate, $expiryDate, $issuedBy,
+                                    $status
+                                );
+                                if ($insertDoc->execute()) {
+                                    $syncedCount++;
+                                }
+                                $insertDoc->close();
+                            }
+                        }
+                        
+                        error_log("[APPROVE_RECRUITMENT] Synced $syncedCount/" . count($documents) . " documents from recruitment to ERP for crew $crewId");
+                    }
+                }
+            } catch (\Exception $e) {
+                error_log("[APPROVE_RECRUITMENT] Document sync error: " . $e->getMessage());
+                // Don't fail the whole approval for document sync issues
+            }
 
             // Auto-award recruiter performance points
             try {
