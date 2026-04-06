@@ -15,22 +15,40 @@ if (php_sapi_name() !== 'cli') {
     exit;
 }
 
-// Load config
-$configFile = __DIR__ . '/../../app/Config/database.php';
-if (file_exists($configFile)) {
-    $config = require $configFile;
-    $host = $config['host'] ?? 'localhost';
-    $user = $config['username'] ?? 'root';
-    $pass = $config['password'] ?? '';
-    $db   = $config['database'] ?? 'erp_db';
-} else {
-    $host = 'localhost';
-    $user = 'root';
-    $pass = '';
-    $db   = 'erp_db';
+// Load config - same logic as app/Config/Database.php
+if (!function_exists('getEnvVar')) {
+    function getEnvVar($keys, $default = '') {
+        if (!is_array($keys)) $keys = [$keys];
+        foreach ($keys as $key) {
+            if (isset($_ENV[$key]) && $_ENV[$key] !== '') return $_ENV[$key];
+            $val = getenv($key);
+            if ($val !== false && $val !== '') return $val;
+            if (isset($_SERVER[$key]) && $_SERVER[$key] !== '') return $_SERVER[$key];
+        }
+        return $default;
+    }
 }
 
-$conn = new mysqli($host, $user, $pass, $db);
+$isWindows = (PHP_OS_FAMILY === 'Windows' || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
+
+if (!$isWindows) {
+    // Docker / NAS UGreen
+    $host = getEnvVar(['DB_HOST'], 'mysql');
+    $user = getEnvVar(['DB_USER', 'DB_USERNAME'], 'root');
+    $pass = getEnvVar(['DB_PASS', 'DB_PASSWORD'], 'rahasia123');
+    $port = (int) getEnvVar(['DB_PORT'], 3306);
+    $db   = getEnvVar(['ERP_DB_NAME', 'DB_DATABASE'], 'erp_db');
+} else {
+    // Windows / Laragon
+    $host = getEnvVar(['DB_HOST'], 'localhost');
+    $user = getEnvVar(['DB_USERNAME', 'DB_USER'], 'root');
+    $pass = getEnvVar(['DB_PASSWORD', 'DB_PASS'], '');
+    $port = (int) getEnvVar(['DB_PORT'], 3306);
+    $db   = getEnvVar(['DB_DATABASE', 'ERP_DB_NAME'], 'erp_db');
+}
+
+echo "Connecting to {$host}:{$port} as {$user}...\n";
+$conn = new mysqli($host, $user, $pass, $db, $port);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error . "\n");
 }
